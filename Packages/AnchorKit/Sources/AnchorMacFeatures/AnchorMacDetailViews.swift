@@ -45,6 +45,7 @@ struct MacCurrentWorkView: View {
                                     MacProcessRow(process: process, isSelected: selectedProcessID == process.id)
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityAddTraits(selectedProcessID == process.id ? .isSelected : [])
                             }
                         }
                         .frame(maxWidth: .infinity)

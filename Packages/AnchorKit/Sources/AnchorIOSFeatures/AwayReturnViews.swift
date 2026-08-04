@@ -9,8 +9,12 @@ struct HandoffView: View {
 
     var body: some View {
         VStack(spacing: AnchorSpacing.large) {
-            AnchorMark(size: 88)
-                .symbolEffect(.breathe, options: reduceMotion ? .nonRepeating : .repeating)
+            if reduceMotion {
+                AnchorMark(size: 88)
+            } else {
+                AnchorMark(size: 88)
+                    .symbolEffect(.breathe, options: .repeating)
+            }
             Text(L10n.handoff)
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)

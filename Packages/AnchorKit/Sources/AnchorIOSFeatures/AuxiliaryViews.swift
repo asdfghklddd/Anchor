@@ -186,13 +186,13 @@ struct HistoryDetailView: View {
                     }
                 }
                 Text(L10n.processes).font(.title2.bold())
-                ForEach(projection.session?.processes ?? []) { process in
+                ForEach(displayedProcesses) { process in
                     ProcessCard(process: process, isRemote: false)
                 }
-                if let notes = projection.session?.notes, !notes.isEmpty {
+                if !displayedNotes.isEmpty {
                     Text(L10n.notes).font(.title2.bold())
-                    ForEach(notes) { note in
-                        Text(note.text)
+                    ForEach(displayedNotes, id: \.self) { note in
+                        Text(note)
                             .padding(AnchorSpacing.medium)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .background(AnchorPalette.surface, in: .rect(cornerRadius: 18))
@@ -215,6 +215,15 @@ struct HistoryDetailView: View {
     }
     private var date: Date? {
         snapshot?.createdAt ?? projection.session?.startedAt
+    }
+    private var displayedProcesses: [AnchorProcess] {
+        snapshot?.processes ?? projection.session?.processes ?? []
+    }
+    private var displayedNotes: [String] {
+        if let snapshot {
+            return snapshot.latestNote.map { [$0] } ?? []
+        }
+        return projection.session?.notes.map(\.text) ?? []
     }
 }
 

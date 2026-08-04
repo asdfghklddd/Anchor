@@ -129,6 +129,7 @@ public enum SessionReducer {
             }
 
         case let .mergeRemoteSession(envelope, remoteSession):
+            guard envelope.sessionID == remoteSession.id else { return result }
             if result.session?.processedEventIDs.contains(envelope.id) == true {
                 return result
             }
@@ -212,7 +213,7 @@ private extension AnchorSession {
         ContextSnapshot(
             createdAt: date,
             goalTitle: goal.title,
-            processStates: Dictionary(uniqueKeysWithValues: processes.map { ($0.id, $0.status) }),
+            processes: processes,
             openDecisionIDs: decisions.filter { $0.status == .open }.map(\.id),
             latestNote: notes.first?.text
         )

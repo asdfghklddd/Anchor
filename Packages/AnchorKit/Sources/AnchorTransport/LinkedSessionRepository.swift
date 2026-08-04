@@ -43,13 +43,15 @@ public actor LinkedSessionRepository: SessionRepository {
             type: "session.projection.v1",
             payload: payload
         )
-        try client.send(envelope)
+        try await client.send(envelope)
     }
 }
 
 public enum LinkedSessionDecoder {
     public static func session(from envelope: EventEnvelope) -> AnchorSession? {
         guard envelope.type == "session.projection.v1" else { return nil }
-        return try? JSONDecoder.anchor.decode(AnchorSession.self, from: envelope.payload)
+        guard let session = try? JSONDecoder.anchor.decode(AnchorSession.self, from: envelope.payload),
+              session.id == envelope.sessionID else { return nil }
+        return session
     }
 }

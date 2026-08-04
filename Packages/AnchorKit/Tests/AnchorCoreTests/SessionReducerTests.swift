@@ -72,4 +72,102 @@ struct SessionReducerTests {
         #expect(result.session?.decisions.first?.status == .resolved)
         #expect(result.session?.processes.first?.status == .running)
     }
+
+    @Test("A context snapshot owns its historical process values")
+    func snapshotDoesNotReadLiveProcessState() throws {
+        let process = AnchorProcess(
+            sourceName: "Test",
+            sourceSymbol: "T",
+            sourceTone: "cyan",
+            title: "Historical work",
+            status: .running,
+            progress: 0.25
+        )
+        let session = AnchorSession(
+            goal: AnchorGoal(title: "Test", completionCriteria: "Done"),
+            presence: .atDesk,
+            processes: [process]
+        )
+        let away = try SessionReducer.reduce(
+            SessionProjection(session: session),
+            command: .updatePresence(.away, at: .now)
+        )
+        var completedProcess = process
+        completedProcess.status = .completed
+        completedProcess.progress = 1
+        let updated = try SessionReducer.reduce(
+            away,
+            command: .updateProcess(completedProcess)
+        )
+
+        #expect(updated.session?.processes.first?.status == .completed)
+        #expect(updated.session?.snapshots.first?.processes.first?.status == .running)
+        #expect(updated.session?.snapshots.first?.processes.first?.progress == 0.25)
+    }
+
+    @Test("A remote envelope cannot mislabel a different session")
+    func remoteSessionMustMatchEnvelope() throws {
+        let local = AnchorSession(goal: AnchorGoal(title: "Local", completionCriteria: "Done"))
+        let remote = AnchorSession(goal: AnchorGoal(title: "Remote", completionCriteria: "Done"))
+        let envelope = EventEnvelope(
+            sessionID: UUID(),
+            sourceID: UUID(),
+            sequence: 1,
+            type: "session.projection.v1",
+            payload: Data()
+        )
+        let result = try SessionReducer.reduce(
+            SessionProjection(session: local),
+            command: .mergeRemoteSession(envelope, session: remote)
+        )
+
+        #expect(result.session?.id == local.id)
+    }
+
+    @Test("Context snapshots remain compatible with the v1 wire payload")
+    func contextSnapshotWireCompatibility() throws {
+        let process = AnchorProcess(
+            sourceName: "Test",
+            sourceSymbol: "T",
+            sourceTone: "cyan",
+            title: "Historical work",
+            status: .running
+        )
+        let legacy = LegacyContextSnapshot(
+            id: UUID(),
+            createdAt: .now,
+            goalTitle: "Legacy goal",
+            processStates: [process.id: .running],
+            openDecisionIDs: [],
+            latestNote: "Legacy note"
+        )
+
+        let decodedCurrent = try JSONDecoder().decode(
+            ContextSnapshot.self,
+            from: JSONEncoder().encode(legacy)
+        )
+        #expect(decodedCurrent.processes.isEmpty)
+        #expect(decodedCurrent.processStates == legacy.processStates)
+
+        let current = ContextSnapshot(
+            goalTitle: "Current goal",
+            processes: [process],
+            openDecisionIDs: [],
+            latestNote: nil
+        )
+        let decodedLegacy = try JSONDecoder().decode(
+            LegacyContextSnapshot.self,
+            from: JSONEncoder().encode(current)
+        )
+        #expect(decodedLegacy.processStates == [process.id: .running])
+    }
+}
+
+private struct LegacyContextSnapshot: Codable {
+    let id: UUID
+    let createdAt: Date
+    let goalTitle: String
+    let processStates: [UUID: ProcessStatus]
+    let openDecisionIDs: [UUID]
+    let latestNote: String?
 }

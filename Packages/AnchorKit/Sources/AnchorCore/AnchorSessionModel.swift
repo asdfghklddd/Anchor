@@ -16,6 +16,7 @@ public final class AnchorSessionModel {
     private var presenceReducer: PresenceReducer
     private var currentPosture = DevicePosture.unknown
     private var latestSignals: PresenceSignals
+    private var pendingPresenceStatus: PresenceStatus?
 
     public init(
         repository: any SessionRepository,
@@ -45,14 +46,23 @@ public final class AnchorSessionModel {
             let stream = await repository.projections()
             for await projection in stream {
                 guard !Task.isCancelled else { break }
-                if self?.projection.session?.id != projection.session?.id,
-                   let presence = projection.session?.presence {
-                    self?.presenceReducer.correct(to: presence)
+                guard let self else { break }
+                let previousSessionID = self.projection.session?.id
+                let previousPresence = self.projection.session?.presence
+                if let presence = projection.session?.presence {
+                    if previousSessionID != projection.session?.id {
+                        self.pendingPresenceStatus = nil
+                        self.presenceReducer.correct(to: presence)
+                    } else if self.pendingPresenceStatus == presence {
+                        self.pendingPresenceStatus = nil
+                    } else if previousPresence != presence {
+                        self.presenceReducer.correct(to: presence)
+                    }
                 }
-                self?.latestSignals.connection = projection.connection
-                self?.latestSignals.proximity = projection.proximity
-                self?.projection = projection
-                self?.isLoading = false
+                self.latestSignals.connection = projection.connection
+                self.latestSignals.proximity = projection.proximity
+                self.projection = projection
+                self.isLoading = false
             }
         }
 
@@ -74,39 +84,57 @@ public final class AnchorSessionModel {
         presenceTask = nil
         presenceEvaluationTask?.cancel()
         presenceEvaluationTask = nil
+        isLoading = false
     }
 
-    public func send(_ command: SessionCommand) async {
+    public func dismissLastError() {
+        lastError = nil
+    }
+
+    @discardableResult
+    public func send(_ command: SessionCommand) async -> Bool {
         do {
             try await repository.send(command)
             lastError = nil
+            return true
         } catch {
             lastError = error.localizedDescription
+            return false
         }
     }
 
-    public func createSession(goal: AnchorGoal, processes: [AnchorProcess]) async {
+    @discardableResult
+    public func createSession(goal: AnchorGoal, processes: [AnchorProcess]) async -> Bool {
         await send(.createSession(goal: goal, processes: processes))
     }
 
-    public func addNote(_ text: String) async {
+    @discardableResult
+    public func addNote(_ text: String) async -> Bool {
         await send(.addNote(text))
     }
 
-    public func resolve(decision: Decision, option: DecisionOption) async {
+    @discardableResult
+    public func resolve(decision: Decision, option: DecisionOption) async -> Bool {
         await send(.resolveDecision(decisionID: decision.id, optionID: option.id))
     }
 
-    public func continueWorking() async {
+    @discardableResult
+    public func continueWorking() async -> Bool {
         presenceReducer.acknowledgeReturn()
-        await send(.acknowledgeReturn)
+        let succeeded = await send(.acknowledgeReturn)
+        if !succeeded {
+            presenceReducer.correct(to: projection.session?.presence ?? .unknown)
+        }
         schedulePresenceEvaluation(for: latestSignals)
+        return succeeded
     }
 
-    public func correctPresence(to status: PresenceStatus) async {
+    @discardableResult
+    public func correctPresence(to status: PresenceStatus) async -> Bool {
         presenceReducer.correct(to: status)
-        await send(.updatePresence(status, at: .now))
+        let succeeded = await publishPresence(status, at: .now)
         schedulePresenceEvaluation(for: latestSignals)
+        return succeeded
     }
 
     public func updatePosture(_ posture: DevicePosture) async {
@@ -136,9 +164,20 @@ public final class AnchorSessionModel {
         )
         let newStatus = presenceReducer.reduce(signals)
         if newStatus != projection.session?.presence {
-            await send(.updatePresence(newStatus, at: signals.observedAt))
+            await publishPresence(newStatus, at: signals.observedAt)
         }
         schedulePresenceEvaluation(for: signals)
+    }
+
+    @discardableResult
+    private func publishPresence(_ status: PresenceStatus, at date: Date) async -> Bool {
+        pendingPresenceStatus = status
+        let succeeded = await send(.updatePresence(status, at: date))
+        if !succeeded {
+            pendingPresenceStatus = nil
+            presenceReducer.correct(to: projection.session?.presence ?? .unknown)
+        }
+        return succeeded
     }
 
     private func schedulePresenceEvaluation(for signals: PresenceSignals) {
