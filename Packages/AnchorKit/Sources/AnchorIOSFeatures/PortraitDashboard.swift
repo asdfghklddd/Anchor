@@ -12,6 +12,7 @@ struct PortraitDashboard: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var anchorPulse = 0
 
     var body: some View {
@@ -92,7 +93,13 @@ struct PortraitDashboard: View {
                         .padding(.top, 8)
                     }
                 }
-                .background(.ultraThinMaterial, in: .capsule)
+                .background {
+                    if reduceTransparency {
+                        Capsule().fill(AnchorPalette.surface)
+                    } else {
+                        Capsule().fill(.ultraThinMaterial)
+                    }
+                }
                 .buttonStyle(.plain)
                 .frame(minWidth: 88, minHeight: 76)
                 .accessibilityLabel(L10n.anchorNote)
@@ -107,27 +114,25 @@ struct PortraitDashboard: View {
         }
     }
 
-    @ViewBuilder
     private var processHeader: some View {
-        if dynamicTypeSize.isAccessibilitySize {
-            VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-                processTitle
-                layoutButton
-            }
-        } else {
-            HStack {
-                processTitle
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: AnchorSpacing.small))
+            : AnyLayout(HStackLayout(spacing: AnchorSpacing.small))
+
+        return layout {
+            processTitle
+            if !dynamicTypeSize.isAccessibilitySize {
                 Spacer()
-                layoutButton
             }
+            layoutButton
         }
     }
 
     private var processTitle: some View {
         Text(L10n.processes)
-            .font(.title2.bold())
+            .font(.title2)
+            .bold()
             .foregroundStyle(AnchorPalette.ink)
-            .fixedSize(horizontal: false, vertical: true)
             .accessibilityIdentifier("processes.title")
     }
 
@@ -231,7 +236,7 @@ struct PortraitDashboard: View {
                 }
             }
         }
-        .animation(reduceMotion ? .linear(duration: 0.15) : .spring(duration: 0.48), value: projection.session?.processes)
+        .animation(reduceMotion ? nil : .spring(duration: 0.48), value: projection.session?.processes)
     }
 
     private func latestEvent(_ event: ProcessEvent) -> some View {

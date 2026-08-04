@@ -7,6 +7,10 @@ public enum AnchorLinkError: LocalizedError, Sendable {
     case invalidPeerKey
     case malformedFrame
     case notPaired
+    case operationInProgress
+    case pairingTimedOut
+    case acknowledgementTimedOut
+    case connectionLost
     case unsupportedOperation
 
     public var errorDescription: String? {
@@ -33,6 +37,30 @@ public enum AnchorLinkError: LocalizedError, Sendable {
             String(
                 localized: "error.link.not-paired",
                 defaultValue: "Pair this device before sending events.",
+                bundle: .module
+            )
+        case .operationInProgress:
+            String(
+                localized: "error.link.operation-in-progress",
+                defaultValue: "A local connection operation is already in progress.",
+                bundle: .module
+            )
+        case .pairingTimedOut:
+            String(
+                localized: "error.link.pairing-timeout",
+                defaultValue: "Pairing timed out. Check the code and try again.",
+                bundle: .module
+            )
+        case .acknowledgementTimedOut:
+            String(
+                localized: "error.link.acknowledgement-timeout",
+                defaultValue: "The Mac did not confirm the update. Try reconnecting.",
+                bundle: .module
+            )
+        case .connectionLost:
+            String(
+                localized: "error.link.connection-lost",
+                defaultValue: "The local Anchor connection was interrupted.",
                 bundle: .module
             )
         case .unsupportedOperation:
@@ -121,7 +149,8 @@ enum AnchorLinkCodec {
         clientID: UUID,
         serverID: UUID
     ) throws -> Data {
-        guard pairingCode.count == 6, pairingCode.allSatisfy(\.isNumber) else {
+        guard pairingCode.utf8.count == 6,
+              pairingCode.utf8.allSatisfy({ (48...57).contains($0) }) else {
             throw AnchorLinkError.invalidPairingCode
         }
         let peerKey: Curve25519.KeyAgreement.PublicKey

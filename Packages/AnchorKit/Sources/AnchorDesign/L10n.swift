@@ -3,6 +3,10 @@ import Foundation
 
 public enum L10n {
     public static let appName = AnchorStrings.value("app.name", default: "Anchor")
+    public static let actionFailed = AnchorStrings.value(
+        "action.failed",
+        default: "Action not completed"
+    )
     public static let workspace = AnchorStrings.value("workspace", default: "Workspace")
     public static let currentGoal = AnchorStrings.value("current.goal", default: "CURRENT GOAL")
     public static let processes = AnchorStrings.value("processes", default: "Processes")

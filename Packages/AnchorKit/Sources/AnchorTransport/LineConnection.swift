@@ -2,6 +2,8 @@ import Foundation
 import Network
 
 final class LineConnection: @unchecked Sendable {
+    private static let maximumFrameLength = 1_048_576
+
     let connection: NWConnection
     private let queue: DispatchQueue
     private var buffer = Data()
@@ -26,11 +28,23 @@ final class LineConnection: @unchecked Sendable {
         connection.start(queue: queue)
     }
 
-    func send(_ frame: LinkFrame) {
-        guard let encoded = try? JSONEncoder.anchor.encode(frame) else { return }
-        var line = encoded
-        line.append(0x0A)
-        connection.send(content: line, completion: .contentProcessed { _ in })
+    func send(
+        _ frame: LinkFrame,
+        completion: @escaping @Sendable (Result<Void, any Error>) -> Void = { _ in }
+    ) {
+        do {
+            var line = try JSONEncoder.anchor.encode(frame)
+            line.append(0x0A)
+            connection.send(content: line, completion: .contentProcessed { error in
+                if let error {
+                    completion(.failure(error))
+                } else {
+                    completion(.success(()))
+                }
+            })
+        } catch {
+            completion(.failure(error))
+        }
     }
 
     func cancel() {
@@ -50,11 +64,18 @@ final class LineConnection: @unchecked Sendable {
     private func consume(_ data: Data) {
         buffer.append(data)
         while let newline = buffer.firstIndex(of: 0x0A) {
+            guard buffer.distance(from: buffer.startIndex, to: newline) <= Self.maximumFrameLength else {
+                cancel()
+                return
+            }
             let frameData = Data(buffer[..<newline])
             buffer.removeSubrange(...newline)
             if let frame = try? JSONDecoder.anchor.decode(LinkFrame.self, from: frameData), frame.version == 1 {
                 onFrame?(frame)
             }
+        }
+        if buffer.count > Self.maximumFrameLength {
+            cancel()
         }
     }
 }

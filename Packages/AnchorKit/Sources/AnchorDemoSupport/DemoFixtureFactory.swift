@@ -2,6 +2,8 @@ import AnchorCore
 import Foundation
 
 public enum DemoFixtureFactory {
+    public static let schemaVersion = 1
+
     public static func projection(
         for scenario: DemoScenario,
         now: Date = .now
@@ -21,7 +23,7 @@ public enum DemoFixtureFactory {
 
         switch scenario {
         case .active:
-            break
+            resolvePendingDecisions(in: &session, at: now)
         case .needsDecision:
             session.processes[1].status = .needsDecision
         case .away18Minutes:
@@ -41,6 +43,7 @@ public enum DemoFixtureFactory {
                 recommendedProcessID: session.processes[1].id
             )
         case .completed:
+            resolvePendingDecisions(in: &session, at: now)
             session.status = .completed
             session.completedAt = now.addingTimeInterval(-120)
             for index in session.processes.indices {
@@ -50,15 +53,19 @@ public enum DemoFixtureFactory {
         case .empty:
             break
         case .disconnected:
+            resolvePendingDecisions(in: &session, at: now)
             connection = .disconnected
             proximity = .unknown
         case .permissionDenied:
+            resolvePendingDecisions(in: &session, at: now)
             session.presence = .unknown
             connection = .permissionDenied
             proximity = .permissionDenied
         case .staleData:
+            resolvePendingDecisions(in: &session, at: now)
             observedAt = now.addingTimeInterval(-12 * 60)
         case .retryableError:
+            resolvePendingDecisions(in: &session, at: now)
             connection = .failed
             proximity = .unknown
             errorMessage = text("demo.error.connection", default: "The Mac connection was interrupted. Try again.")
@@ -275,10 +282,26 @@ public enum DemoFixtureFactory {
         ContextSnapshot(
             createdAt: date,
             goalTitle: session.goal.title,
-            processStates: Dictionary(uniqueKeysWithValues: session.processes.map { ($0.id, $0.status) }),
+            processes: session.processes,
             openDecisionIDs: session.decisions.filter { $0.status == .open }.map(\.id),
             latestNote: session.notes.first?.text
         )
+    }
+
+    private static func resolvePendingDecisions(in session: inout AnchorSession, at date: Date) {
+        for decisionIndex in session.decisions.indices where session.decisions[decisionIndex].status == .open {
+            let selectedOptionID = session.decisions[decisionIndex].options.first?.id
+            session.decisions[decisionIndex].status = .resolved
+            session.decisions[decisionIndex].selectedOptionID = selectedOptionID
+            session.decisions[decisionIndex].resolvedAt = date
+
+            let processID = session.decisions[decisionIndex].processID
+            if let processIndex = session.processes.firstIndex(where: { $0.id == processID }),
+               session.processes[processIndex].status == .needsDecision {
+                session.processes[processIndex].status = .running
+                session.processes[processIndex].updatedAt = date
+            }
+        }
     }
 
     private static func stableID(_ value: String) -> UUID {

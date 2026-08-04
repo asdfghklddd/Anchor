@@ -234,6 +234,8 @@ private struct StripePattern: View {
 }
 
 public struct AnchorPrimaryButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     public init() {}
 
     public func makeBody(configuration: Configuration) -> some View {
@@ -243,8 +245,12 @@ public struct AnchorPrimaryButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity, minHeight: 52)
             .padding(.horizontal, AnchorSpacing.medium)
             .background(AnchorPalette.deepSea, in: .capsule)
-            .shadow(color: AnchorPalette.deepSea.opacity(0.25), radius: 0, y: configuration.isPressed ? 2 : 5)
-            .offset(y: configuration.isPressed ? 3 : 0)
-            .animation(.snappy(duration: 0.18), value: configuration.isPressed)
+            .shadow(
+                color: AnchorPalette.deepSea.opacity(0.25),
+                radius: 0,
+                y: reduceMotion ? 3 : (configuration.isPressed ? 2 : 5)
+            )
+            .offset(y: reduceMotion ? 0 : (configuration.isPressed ? 3 : 0))
+            .animation(reduceMotion ? nil : .snappy(duration: 0.18), value: configuration.isPressed)
     }
 }

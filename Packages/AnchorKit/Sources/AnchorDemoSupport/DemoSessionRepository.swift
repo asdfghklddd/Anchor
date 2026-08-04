@@ -3,8 +3,15 @@ import Foundation
 
 public actor DemoSessionRepository: SessionRepository, PresenceSignalProviding, DemoControlling {
     private struct PersistedState: Codable, Sendable {
+        var schemaVersion: Int
         var scenario: DemoScenario
         var projection: SessionProjection
+
+        init(scenario: DemoScenario, projection: SessionProjection) {
+            schemaVersion = DemoFixtureFactory.schemaVersion
+            self.scenario = scenario
+            self.projection = projection
+        }
     }
 
     private var state: PersistedState
@@ -21,13 +28,20 @@ public actor DemoSessionRepository: SessionRepository, PresenceSignalProviding, 
         self.storageURL = resolvedURL
         if restoresSavedState,
            let data = try? Data(contentsOf: resolvedURL),
-           let persisted = try? JSONDecoder().decode(PersistedState.self, from: data) {
+           let persisted = try? JSONDecoder().decode(PersistedState.self, from: data),
+           persisted.schemaVersion == DemoFixtureFactory.schemaVersion {
             state = persisted
         } else {
-            state = PersistedState(
+            var initialState = PersistedState(
                 scenario: initialScenario,
                 projection: DemoFixtureFactory.projection(for: initialScenario)
             )
+            do {
+                try Self.write(initialState, to: resolvedURL)
+            } catch {
+                initialState.projection.errorMessage = error.localizedDescription
+            }
+            state = initialState
         }
     }
 
@@ -98,12 +112,8 @@ public actor DemoSessionRepository: SessionRepository, PresenceSignalProviding, 
 
     private func persist() {
         do {
-            try FileManager.default.createDirectory(
-                at: storageURL.deletingLastPathComponent(),
-                withIntermediateDirectories: true
-            )
-            let data = try JSONEncoder().encode(state)
-            try data.write(to: storageURL, options: .atomic)
+            state.projection.errorMessage = nil
+            try Self.write(state, to: storageURL)
         } catch {
             state.projection.errorMessage = error.localizedDescription
         }
@@ -121,5 +131,14 @@ public actor DemoSessionRepository: SessionRepository, PresenceSignalProviding, 
         URL.applicationSupportDirectory
             .appending(path: "Anchor Demo", directoryHint: .isDirectory)
             .appending(path: "demo-state.json")
+    }
+
+    private static func write(_ state: PersistedState, to url: URL) throws {
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        let data = try JSONEncoder().encode(state)
+        try data.write(to: url, options: .atomic)
     }
 }

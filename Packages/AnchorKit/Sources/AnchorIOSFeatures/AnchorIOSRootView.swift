@@ -77,6 +77,19 @@ public struct AnchorIOSRootView: View {
             guard sessionID != nil else { return }
             Task { await model.updatePosture(posture) }
         }
+        .alert(
+            L10n.actionFailed,
+            isPresented: Binding(
+                get: { model.lastError != nil },
+                set: { isPresented in
+                    if !isPresented { model.dismissLastError() }
+                }
+            )
+        ) {
+            Button(L10n.done) { model.dismissLastError() }
+        } message: {
+            Text(model.lastError ?? "")
+        }
         .task { model.start() }
     }
 

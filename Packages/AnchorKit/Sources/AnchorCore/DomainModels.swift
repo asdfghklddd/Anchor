@@ -158,6 +158,7 @@ public struct ContextSnapshot: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public let createdAt: Date
     public let goalTitle: String
+    public let processes: [AnchorProcess]
     public let processStates: [UUID: ProcessStatus]
     public let openDecisionIDs: [UUID]
     public let latestNote: String?
@@ -166,16 +167,54 @@ public struct ContextSnapshot: Identifiable, Codable, Hashable, Sendable {
         id: UUID = UUID(),
         createdAt: Date = .now,
         goalTitle: String,
-        processStates: [UUID: ProcessStatus],
+        processes: [AnchorProcess],
         openDecisionIDs: [UUID],
         latestNote: String?
     ) {
         self.id = id
         self.createdAt = createdAt
         self.goalTitle = goalTitle
-        self.processStates = processStates
+        self.processes = processes
+        processStates = Dictionary(uniqueKeysWithValues: processes.map { ($0.id, $0.status) })
         self.openDecisionIDs = openDecisionIDs
         self.latestNote = latestNote
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case createdAt
+        case goalTitle
+        case processes
+        case processStates
+        case openDecisionIDs
+        case latestNote
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        goalTitle = try container.decode(String.self, forKey: .goalTitle)
+        processes = try container.decodeIfPresent([AnchorProcess].self, forKey: .processes) ?? []
+        processStates = try container.decodeIfPresent(
+            [UUID: ProcessStatus].self,
+            forKey: .processStates
+        ) ?? Dictionary(uniqueKeysWithValues: processes.map { ($0.id, $0.status) })
+        openDecisionIDs = try container.decode([UUID].self, forKey: .openDecisionIDs)
+        latestNote = try container.decodeIfPresent(String.self, forKey: .latestNote)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(goalTitle, forKey: .goalTitle)
+        try container.encode(processes, forKey: .processes)
+        // Keep the original v1 field so a peer running the previous build can
+        // still decode a session while newer peers receive immutable details.
+        try container.encode(processStates, forKey: .processStates)
+        try container.encode(openDecisionIDs, forKey: .openDecisionIDs)
+        try container.encodeIfPresent(latestNote, forKey: .latestNote)
     }
 }
 

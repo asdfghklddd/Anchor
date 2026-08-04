@@ -14,8 +14,10 @@ struct AnchorMacApp: App {
         let server = AnchorBonjourServer()
         let advertiser = AnchorProximityAdvertiser()
         server.onEvent = { envelope in
-            guard let session = LinkedSessionDecoder.session(from: envelope) else { return }
-            Task { try? await repository.send(.mergeRemoteSession(envelope, session: session)) }
+            guard let session = LinkedSessionDecoder.session(from: envelope) else {
+                throw AnchorLinkError.malformedFrame
+            }
+            try await repository.send(.mergeRemoteSession(envelope, session: session))
         }
         server.onConnectionState = { state in
             Task {
@@ -24,7 +26,15 @@ struct AnchorMacApp: App {
                 )
             }
         }
-        try? server.start()
+        do {
+            try server.start()
+        } catch {
+            Task {
+                try? await repository.send(
+                    .updateSignals(connection: .failed, proximity: .unknown, at: .now)
+                )
+            }
+        }
         advertiser.start()
         self.server = server
         proximityAdvertiser = advertiser

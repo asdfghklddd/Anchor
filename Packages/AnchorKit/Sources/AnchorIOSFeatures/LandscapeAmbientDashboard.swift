@@ -58,32 +58,34 @@ struct LandscapeAmbientDashboard: View {
     }
 
     private var ambientWorkspace: some View {
-        VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(Date.now, style: .time)
-                        .font(.largeTitle.bold())
-                        .foregroundStyle(AnchorPalette.ink)
-                        .accessibilityIdentifier("ambient.time")
-                    Text(L10n.ambient)
-                        .font(.caption.bold())
-                        .foregroundStyle(AnchorPalette.secondaryInk)
+        TimelineView(.periodic(from: .now, by: 60)) { context in
+            VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(context.date, style: .time)
+                            .font(.largeTitle.bold())
+                            .foregroundStyle(AnchorPalette.ink)
+                            .accessibilityIdentifier("ambient.time")
+                        Text(L10n.ambient)
+                            .font(.caption.bold())
+                            .foregroundStyle(AnchorPalette.secondaryInk)
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(focusDuration(at: context.date))
+                            .font(.title.bold())
+                        Text(L10n.focusTime)
+                            .font(.caption)
+                            .foregroundStyle(AnchorPalette.secondaryInk)
+                    }
                 }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(focusDuration)
-                        .font(.title.bold())
-                    Text(L10n.focusTime)
-                        .font(.caption)
-                        .foregroundStyle(AnchorPalette.secondaryInk)
-                }
-            }
-            Text(projection.session?.goal.title ?? "")
-                .font(.title2.bold())
-                .lineLimit(2)
-                .foregroundStyle(AnchorPalette.ink)
+                Text(projection.session?.goal.title ?? "")
+                    .font(.title2.bold())
+                    .lineLimit(2)
+                    .foregroundStyle(AnchorPalette.ink)
 
-            processSelector
+                processSelector
+            }
         }
     }
 
@@ -123,6 +125,7 @@ struct LandscapeAmbientDashboard: View {
                 process.progress?.formatted(.percent.precision(.fractionLength(0)))
                     ?? L10n.status(process.status)
             )
+            .accessibilityAddTraits(selectedProcessID == process.id ? .isSelected : [])
         }
     }
 
@@ -199,9 +202,9 @@ struct LandscapeAmbientDashboard: View {
     private var selectedProcess: AnchorProcess? {
         projection.session?.processes.first { $0.id == selectedProcessID }
     }
-    private var focusDuration: String {
+    private func focusDuration(at date: Date) -> String {
         guard let startedAt = projection.session?.startedAt else { return "—" }
-        let minutes = max(0, Int(Date.now.timeIntervalSince(startedAt) / 60))
+        let minutes = max(0, Int(date.timeIntervalSince(startedAt) / 60))
         return L10n.minuteCount(minutes)
     }
 }
@@ -210,110 +213,51 @@ private struct AmbientProcessCard: View {
     let process: AnchorProcess
     let isSelected: Bool
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @ScaledMetric(relativeTo: .body) private var scale: CGFloat = 1
 
     var body: some View {
         let tint = AnchorPalette.source(process.sourceTone)
-        let visualScale = min(scale, 1.5)
-        Canvas { context, size in
-            let card = Path(
-                roundedRect: CGRect(origin: .zero, size: size),
-                cornerRadius: 18 * visualScale
-            )
-            context.fill(card, with: .color(tint.opacity(0.23)))
-            if isSelected {
-                context.stroke(card, with: .color(tint), lineWidth: 3 * visualScale)
-            }
-
-            let padding = 10 * visualScale
-            let availableWidth = max(1, size.width - padding * 2)
-            let sourceSize = fittedFontSize(
-                preferred: 13 * visualScale,
-                text: process.sourceName,
-                availableWidth: max(1, availableWidth - 24 * visualScale)
-            )
-            let source = context.resolve(
+        VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
+            HStack(spacing: AnchorSpacing.xSmall) {
                 Text(process.sourceName)
-                    .font(.system(size: sourceSize, weight: .bold))
-                    .foregroundStyle(AnchorPalette.ink)
-            )
-            context.draw(source, at: CGPoint(x: padding, y: padding), anchor: .topLeading)
+                    .font(.caption.bold())
+                    .lineLimit(1)
+                Spacer(minLength: AnchorSpacing.xSmall)
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                }
+                Image(systemName: statusSymbol)
+            }
+            .foregroundStyle(AnchorPalette.ink)
 
-            var icon = context.resolve(Image(systemName: statusSymbol))
-            icon.shading = .color(AnchorPalette.ink)
-            let iconSize = 17 * visualScale
-            context.draw(
-                icon,
-                in: CGRect(
-                    x: size.width - padding - iconSize,
-                    y: padding,
-                    width: iconSize,
-                    height: iconSize
-                )
-            )
-
-            let metricSize = fittedFontSize(
-                preferred: 28 * visualScale,
-                text: process.metric,
-                availableWidth: availableWidth
-            )
-            let metric = context.resolve(
-                Text(process.metric)
-                    .font(.system(size: metricSize, weight: .bold))
-                    .foregroundStyle(AnchorPalette.ink)
-            )
-            context.draw(
-                metric,
-                at: CGPoint(x: padding, y: padding + 27 * visualScale),
-                anchor: .topLeading
-            )
-
-            let labelSize = fittedFontSize(
-                preferred: 12 * visualScale,
-                text: process.metricLabel,
-                availableWidth: availableWidth
-            )
-            let label = context.resolve(
-                Text(process.metricLabel)
-                    .font(.system(size: labelSize, weight: .medium))
-                    .foregroundStyle(AnchorPalette.secondaryInk)
-            )
-            context.draw(
-                label,
-                at: CGPoint(x: padding, y: padding + 65 * visualScale),
-                anchor: .topLeading
-            )
-
+            Text(process.metric)
+                .font(.title.bold().monospacedDigit())
+                .foregroundStyle(AnchorPalette.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+            Text(process.metricLabel)
+                .font(.caption)
+                .foregroundStyle(AnchorPalette.secondaryInk)
+                .lineLimit(2)
+            Spacer(minLength: 2)
             if let progress = process.progress {
-                let barHeight = 7 * visualScale
-                let barY = size.height - padding - barHeight
-                let trackRect = CGRect(x: padding, y: barY, width: availableWidth, height: barHeight)
-                let track = Path(roundedRect: trackRect, cornerRadius: barHeight / 2)
-                context.fill(track, with: .color(AnchorPalette.ink.opacity(0.12)))
-                let progressRect = CGRect(
-                    x: padding,
-                    y: barY,
-                    width: availableWidth * min(max(progress, 0), 1),
-                    height: barHeight
-                )
-                context.fill(
-                    Path(roundedRect: progressRect, cornerRadius: barHeight / 2),
-                    with: .color(tint)
-                )
+                AnchorProgress(value: progress, tint: tint)
             }
         }
+        .padding(AnchorSpacing.small)
         .frame(
             maxWidth: .infinity,
             minHeight: dynamicTypeSize.isAccessibilitySize ? 160 : 112,
             alignment: .topLeading
         )
+        .background(tint.opacity(0.23), in: .rect(cornerRadius: 18))
+        .overlay {
+            if isSelected {
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(tint, lineWidth: 3)
+            }
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityHidden(true)
-    }
-
-    private func fittedFontSize(preferred: CGFloat, text: String, availableWidth: CGFloat) -> CGFloat {
-        let estimatedWidthPerPoint = max(CGFloat(text.count) * 0.62, 1)
-        return min(preferred, availableWidth / estimatedWidthPerPoint)
     }
 
     private var statusSymbol: String {
