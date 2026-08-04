@@ -1,7 +1,13 @@
 .DS_Store
 build/
 DerivedData/
+dist/
+node_modules/
+tmp/
 *.xcuserstate
 xcuserdata/
 *.xccheckout
 *.xcscmblueprint
+
+# Local import archive; the curated contents live under Product/Prototype.
+ANCHOR.zip
