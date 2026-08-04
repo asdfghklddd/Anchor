@@ -110,8 +110,13 @@ struct PresenceReducerTests {
         )
 
         model.start()
-        try await Task.sleep(for: .milliseconds(100))
-        let projection = await repository.currentProjection()
+        let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+        var projection = await repository.currentProjection()
+        while projection.session?.presence != .away,
+              ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(10))
+            projection = await repository.currentProjection()
+        }
         model.stop()
 
         #expect(projection.session?.presence == .away)

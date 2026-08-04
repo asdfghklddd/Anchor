@@ -22,7 +22,7 @@ jobs:
     name: Shared package tests
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Show toolchain
         run: xcodebuild -version
       - name: Test reducers, demo persistence, and transport
@@ -49,7 +49,7 @@ jobs:
             scheme: Anchor macOS Demo
             destination: platform=macOS,arch=arm64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build
         run: >-
           xcodebuild build
@@ -75,7 +75,7 @@ jobs:
             destination: generic/platform=macOS
             archive: Anchor-macOS
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Archive without distribution signing
         run: >-
           xcodebuild archive
