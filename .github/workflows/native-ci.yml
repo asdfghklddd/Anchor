@@ -1,0 +1,101 @@
+name: Native CI
+
+on:
+  push:
+    branches:
+      - main
+      - "codex/**"
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+
+jobs:
+  package-tests:
+    name: Shared package tests
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show toolchain
+        run: xcodebuild -version
+      - name: Test reducers, demo persistence, and transport
+        working-directory: Packages/AnchorKit
+        run: swift test
+
+  native-builds:
+    name: ${{ matrix.name }} Release build
+    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: iOS Production
+            scheme: Anchor iOS
+            destination: generic/platform=iOS Simulator
+          - name: iOS Demo
+            scheme: Anchor iOS Demo
+            destination: generic/platform=iOS Simulator
+          - name: macOS Production
+            scheme: Anchor macOS
+            destination: platform=macOS,arch=arm64
+          - name: macOS Demo
+            scheme: Anchor macOS Demo
+            destination: platform=macOS,arch=arm64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: >-
+          xcodebuild build
+          -project Anchor.xcodeproj
+          -scheme "${{ matrix.scheme }}"
+          -configuration Release
+          -destination "${{ matrix.destination }}"
+          CODE_SIGNING_ALLOWED=NO
+
+  production-archives:
+    name: ${{ matrix.name }} archive boundary
+    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: iOS Production
+            scheme: Anchor iOS
+            destination: generic/platform=iOS
+            archive: Anchor-iOS
+          - name: macOS Production
+            scheme: Anchor macOS
+            destination: generic/platform=macOS
+            archive: Anchor-macOS
+    steps:
+      - uses: actions/checkout@v4
+      - name: Archive without distribution signing
+        run: >-
+          xcodebuild archive
+          -project Anchor.xcodeproj
+          -scheme "${{ matrix.scheme }}"
+          -configuration Release
+          -destination "${{ matrix.destination }}"
+          -archivePath "$RUNNER_TEMP/${{ matrix.archive }}.xcarchive"
+          CODE_SIGNING_ALLOWED=NO
+      - name: Reject demo resources in production
+        shell: bash
+        run: |
+          set -euo pipefail
+          app_path="$(find "$RUNNER_TEMP/${{ matrix.archive }}.xcarchive/Products/Applications" -maxdepth 1 -name '*.app' -print -quit)"
+          test -n "$app_path"
+          if find "$app_path" \( -iname '*AnchorDemoSupport*' -o -iname '*fixture*' -o -name 'demo-state.json' \) -print | grep -q .; then
+            echo "Production archive contains Demo support data."
+            exit 1
+          fi
+          if grep -R -a -E 'Demo controls|Restore baseline data|scenario\.active' "$app_path" >/dev/null; then
+            echo "Production archive contains Demo-only copy."
+            exit 1
+          fi

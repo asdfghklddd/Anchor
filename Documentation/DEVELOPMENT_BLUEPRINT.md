@@ -1,6 +1,11 @@
 # Anchor native development blueprint
 
-Status: proposed architecture, version 0.1, 2026-08-04.
+Status: native frontends and minimum local-link foundation implemented, version
+0.3, 2026-08-05. The iPhone app, macOS menu bar/detail app, isolated Demo apps,
+shared reducers, conservative presence state machine, authenticated Bonjour/BLE
+link, bilingual resources, accessibility adaptations, and CI archive boundary
+are in place. SwiftData, CloudKit, offline merge, CLI/Safari adapters, and
+production source integrations remain planned follow-up phases.
 
 This document turns the product baseline into a buildable iOS and macOS system.
 It intentionally starts with one thin, trustworthy end-to-end path and leaves
@@ -73,31 +78,34 @@ same-network transport, while CloudKit remains the offline and away fallback.
 
 ## Xcode target structure
 
-The current single multiplatform target is useful as a scaffold but should be
-split before product code grows because the app lifecycles, entitlements,
-permissions, and release concerns diverge.
+The repository now has independent app lifecycles, entitlements, permissions,
+and release boundaries. Production targets share `com.andywang.anchor` for
+universal purchase; Demo targets use `com.andywang.anchor.demo` and are the only
+apps that link `AnchorDemoSupport`.
 
-Proposed targets:
+Current targets and shared package modules:
 
 ```text
 Anchor.xcodeproj
-├── Anchor iOS                 iPhone application
-├── Anchor macOS               menu bar companion and settings window
-├── Anchor Widgets             widgets and Live Activity, added after the core loop
-├── Anchor Safari Extension    optional browser source adapter, later phase
-├── anchor                     optional signed CLI executable, later phase
-├── AnchorCore                 shared domain, use cases, event contracts and merge logic
-├── AnchorDesign               shared semantic tokens and small reusable SwiftUI views
-├── AnchorCoreTests
-├── AnchorIOSTests
-├── AnchorMacTests
-└── AnchorUITests
+├── Anchor iOS                 production iPhone application
+├── Anchor iOS Demo            persisted fixtures and scenario controls
+├── Anchor macOS               production menu bar and detail window
+├── Anchor macOS Demo          desktop fixtures and scenario controls
+├── AnchorIOSUITests
+└── AnchorMacUITests
+Packages/AnchorKit
+├── AnchorCore                 domain, commands, projections and presence reducer
+├── AnchorDesign               semantic tokens, shared controls and localization
+├── AnchorDemoSupport          fixtures, mock repository and Demo-only controls
+├── AnchorIOSFeatures          native iPhone feature UI
+├── AnchorMacFeatures          native macOS feature UI
+└── AnchorTransport            Bonjour, Keychain trust, encrypted events and BLE RSSI
 ```
 
-`AnchorCore` and `AnchorDesign` may begin as local Swift package targets. Do not
-split every feature into a package. Package boundaries are justified only where
-both apps or extensions need the same code and where the code can be tested
-without platform UI.
+The package boundaries keep production UI independent of fixtures and allow
+reducers, persistence behavior, and transport framing to run without a simulator.
+Widgets, Live Activities, Safari integration, and a signed CLI remain later
+targets rather than empty scaffolds.
 
 Feature folders inside each app target should follow user capabilities rather
 than generic technical layers:
@@ -123,12 +131,11 @@ timestamps and derive localized strings only in the view layer.
 
 ### `AnchorSession`
 
-- `id`, `title`, `completionCriteria`
-- `status`, `createdAt`, `startedAt`, `completedAt`
-- `originDeviceID`, `revision`, `lastModifiedAt`
-- optional relationship identifiers for processes, notes, and snapshots
+- `id`, `goal`, `status`, `presence`
+- `startedAt`, optional `completedAt`
+- processes, decisions, notes, snapshots, timeline, and processed event IDs
 
-### `TrackedProcess`
+### `AnchorProcess`
 
 - `id`, `sessionID`, `sourceID`, optional `externalID`
 - `title`, optional `detail`, `status`
@@ -146,7 +153,7 @@ timestamps and derive localized strings only in the view layer.
 Events are append-only. Corrections are new events that supersede an earlier
 event; history is not silently rewritten.
 
-### `DecisionRequest`
+### `Decision`
 
 - `id`, `processID`, `createdByEventID`
 - prompt, ordered options, status, priority, expiry
@@ -177,17 +184,13 @@ or API adapters.
 
 ```json
 {
-  "schemaVersion": 1,
-  "eventID": "uuid",
+  "id": "uuid",
   "sessionID": "uuid",
-  "sourceID": "anchor.cli",
-  "processExternalID": "render-04",
-  "observedAt": "2026-08-04T13:41:00Z",
-  "kind": "progress",
-  "summary": "Rendering shot 04 of 10",
-  "progress": 0.4,
-  "requiresAttention": false,
-  "deepLink": null
+  "sourceID": "uuid",
+  "sequence": 42,
+  "timestamp": "2026-08-04T13:41:00Z",
+  "type": "process.progress.v1",
+  "payload": "base64-encoded typed payload"
 }
 ```
 
@@ -411,25 +414,24 @@ This phase proves the architecture before reproducing every prototype screen.
 - TestFlight and notarized Mac beta telemetry limited to explicit diagnostics.
 - Lock the production CloudKit schema and release checklist.
 
-## First implementation backlog
+## Next implementation backlog
 
-Work in this order:
+The native UI, Demo boundary, reducers, presence flow, and minimum local-link code
+are complete. Continue in this order:
 
-1. Record the unresolved product decisions listed in the product baseline.
-2. Create dedicated iOS and macOS targets without changing current behavior.
-3. Add `AnchorCore` and define enums, DTOs, and event validation.
-4. Implement the SwiftData schema and migration test harness.
-5. Implement repository actors and deterministic event projection.
-6. Add fixture sessions matching the supplied promotion-video scenario.
-7. Build the native session setup and portrait dashboard.
-8. Build the Mac menu bar shell and simulator source.
-9. Implement pairing and one local event round trip.
-10. Implement decision resolution and idempotent receipt.
-11. Add CloudKit and offline reconciliation.
-12. Build handoff, away, and return from the proven event history.
-
-Do not start the Safari extension, automatic presence, or broad visual polish until
-steps 1-10 pass automated tests.
+1. Validate Bonjour pairing, encrypted event acknowledgement, BLE RSSI, dictation,
+   rotation, haptics, and VoiceOver on a physical iPhone and Mac.
+2. Introduce the SwiftData schema, repository actor, and migration harness behind
+   the existing `SessionRepository` protocol.
+3. Make event projection deterministic under duplicate, delayed, reordered, and
+   conflicting events, then add offline restart tests.
+4. Enable the private CloudKit store and surface local/cloud freshness without
+   treating CloudKit as a real-time bus.
+5. Add the signed CLI contract and manual Mac event capture.
+6. Add production source adapters only after their permission and privacy scopes
+   are documented and tested.
+7. Add widgets, Live Activities, and Safari integration after the persistence and
+   merge contracts are stable.
 
 ## Definition of done for every feature
 
