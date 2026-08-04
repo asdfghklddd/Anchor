@@ -1,28 +1,87 @@
 # Anchor
 
-Anchor is a native SwiftUI companion for people coordinating several AI-assisted
-workflows at once. It keeps the original goal, live process state, key decisions,
-and the context needed to return to work after an interruption.
+Anchor is a native iPhone and macOS attention companion for people coordinating
+several AI-assisted processes at once. It preserves the goal, live process state,
+human decisions, and the context needed to return after an interruption.
+
+## Current implementation
+
+- Dedicated iOS and macOS production apps with the shared bundle identifier
+  `com.andywang.anchor` for universal purchase.
+- Dedicated iOS and macOS Demo apps with `com.andywang.anchor.demo`.
+- `AnchorCore`: immutable projections, typed commands, reducers, repository
+  contracts, presence inference, return summaries, and event deduplication.
+- `AnchorDesign`: adaptive Candy Harbor semantic colors, accessible shared
+  components, and a complete English/Simplified Chinese String Catalog.
+- `AnchorDemoSupport`: persisted, resettable fixtures and raw presence scenarios.
+- `AnchorIOSFeatures`: setup, portrait dashboard, landscape Ambient workspace,
+  decisions, anchor notes, handoff/away/return, history, management, and settings.
+- `AnchorMacFeatures`: menu bar status plus a native detail window using
+  `NavigationSplitView`.
+- `AnchorTransport`: Bonjour discovery, one-time-code key agreement, Keychain
+  trust, authenticated event envelopes and acknowledgements, plus BLE RSSI
+  proximity advertising/scanning.
+
+SwiftData, CloudKit, offline conflict resolution, CLI/Safari adapters, and real
+AI source adapters intentionally remain later phases.
 
 ## Repository map
 
-- `Anchor/` - current native SwiftUI application scaffold.
-- `AnchorTests/` and `AnchorUITests/` - native test targets.
-- `Product/Prototype/` - imported product brief, visual references, React/Vite
-  high-fidelity prototype, and prototype verification screenshots.
-- `Documentation/PRODUCT_BASELINE.md` - agreed product intent, state model, MVP
-  boundary, and acceptance outcomes.
-- `Documentation/DEVELOPMENT_BLUEPRINT.md` - proposed native architecture,
-  platform boundaries, data and sync strategy, testing policy, and delivery plan.
+```text
+Anchor.xcodeproj
+Apps/
+├── AnchorIOS/             production iPhone launcher
+├── AnchorIOSDemo/         iPhone demo launcher
+├── AnchorMac/             production menu bar app
+├── AnchorMacDemo/         macOS demo launcher
+├── AnchorIOSUITests/
+├── AnchorMacUITests/
+└── Shared/                app icon and accent assets
+Packages/AnchorKit/
+├── Sources/AnchorCore/
+├── Sources/AnchorDesign/
+├── Sources/AnchorDemoSupport/
+├── Sources/AnchorIOSFeatures/
+├── Sources/AnchorMacFeatures/
+└── Sources/AnchorTransport/
+Product/Prototype/         original definition, React prototype and captures
+Documentation/
+```
 
-## Requirements
+## Run and test
 
-- Xcode 26.2 or later
-- iOS 26.2 or later
-- macOS 26.2 or later
+Requirements: Xcode 26.2 or later, iOS 26+, and macOS 26+.
 
-Open `Anchor.xcodeproj` in Xcode and select either an iPhone simulator or **My Mac** as the run destination.
+Open `Anchor.xcodeproj`, then choose one of the four shared schemes:
 
-The current Xcode project is a shared multiplatform scaffold. Before feature
-development, it should be separated into dedicated iOS and macOS app targets
-that share a small domain layer, as described in the development blueprint.
+- `Anchor iOS`
+- `Anchor iOS Demo`
+- `Anchor macOS`
+- `Anchor macOS Demo`
+
+Run package tests without booting a simulator:
+
+```sh
+cd Packages/AnchorKit
+swift test
+```
+
+GitHub Actions builds all four Release schemes, runs the package tests, archives
+both production apps, and rejects Demo resources or copy in either archive. The
+local acceptance matrix and remaining device-only checks are recorded in
+[`Documentation/VALIDATION.md`](Documentation/VALIDATION.md).
+
+The Demo apps persist user actions under Application Support. Their developer
+controls can switch scenarios or restore the versioned baseline.
+
+## Production data boundary
+
+Production app targets do not link `AnchorDemoSupport` and have no fallback path
+to fixtures. To remove all demo infrastructure later:
+
+1. Delete the `Anchor iOS Demo` and `Anchor macOS Demo` targets and schemes.
+2. Delete `Apps/AnchorIOSDemo`, `Apps/AnchorMacDemo`, and their UI-test fixtures.
+3. Remove the `AnchorDemoSupport` product/target from `Packages/AnchorKit/Package.swift`.
+4. Delete `Packages/AnchorKit/Sources/AnchorDemoSupport` and its tests.
+
+No business view or production repository code needs to change.
