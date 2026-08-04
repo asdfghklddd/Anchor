@@ -1,0 +1,153 @@
+import AnchorCore
+import Foundation
+
+public enum L10n {
+    public static let appName = AnchorStrings.value("app.name", default: "Anchor")
+    public static let workspace = AnchorStrings.value("workspace", default: "Workspace")
+    public static let currentGoal = AnchorStrings.value("current.goal", default: "CURRENT GOAL")
+    public static let processes = AnchorStrings.value("processes", default: "Processes")
+    public static let recentEvent = AnchorStrings.value("recent.event", default: "Latest event")
+    public static let notifications = AnchorStrings.value("notifications", default: "Notifications")
+    public static let profile = AnchorStrings.value("profile", default: "My Anchor")
+    public static let insights = AnchorStrings.value("insights", default: "Work context")
+    public static let history = AnchorStrings.value("history", default: "History")
+    public static let settings = AnchorStrings.value("settings", default: "Settings")
+    public static let editGoal = AnchorStrings.value("goal.edit", default: "Edit goal")
+    public static let layout = AnchorStrings.value("layout", default: "Task layout")
+    public static let finish = AnchorStrings.value("finish", default: "Finish session")
+    public static let cancel = AnchorStrings.value("cancel", default: "Cancel")
+    public static let save = AnchorStrings.value("save", default: "Save")
+    public static let done = AnchorStrings.value("done", default: "Done")
+    public static let continueAction = AnchorStrings.value("continue", default: "Continue")
+    public static let retry = AnchorStrings.value("retry", default: "Try again")
+    public static let close = AnchorStrings.value("close", default: "Close")
+    public static let add = AnchorStrings.value("add", default: "Add")
+    public static let delete = AnchorStrings.value("delete", default: "Delete")
+    public static let goalTitle = AnchorStrings.value("goal.title", default: "What are you finishing?")
+    public static let completionCriteria = AnchorStrings.value("goal.criteria", default: "What does done look like?")
+    public static let contextNote = AnchorStrings.value("goal.context", default: "Context worth keeping")
+    public static let establishAnchor = AnchorStrings.value("setup.title", default: "Establish an anchor")
+    public static let setupIntro = AnchorStrings.value("setup.intro", default: "Name the outcome, then add the work already in motion.")
+    public static let beginSession = AnchorStrings.value("setup.begin", default: "Begin this session")
+    public static let processName = AnchorStrings.value("process.name", default: "Process or source name")
+    public static let addProcess = AnchorStrings.value("process.add", default: "Add process")
+    public static let setupHint = AnchorStrings.value("setup.dictation.hint", default: "Use the microphone on the system keyboard whenever dictation is helpful.")
+    public static let anchorNote = AnchorStrings.value("note.anchor", default: "Drop an anchor")
+    public static let anchorNotePrompt = AnchorStrings.value("note.prompt", default: "Capture a judgment, next step, or context marker.")
+    public static let noteSaved = AnchorStrings.value("note.saved", default: "Anchor saved")
+    public static let attentionNeeded = AnchorStrings.value("attention", default: "Needs your judgment")
+    public static let noAttentionNeeded = AnchorStrings.value("attention.none", default: "Nothing needs your attention")
+    public static let chooseDirection = AnchorStrings.value("decision.choose", default: "Choose an option")
+    public static let confirmChoice = AnchorStrings.value("decision.confirm", default: "Confirm choice")
+    public static let activity = AnchorStrings.value("activity", default: "Activity")
+    public static let estimated = AnchorStrings.value("estimated", default: "Estimate")
+    public static let overallProgress = AnchorStrings.value("progress.overall", default: "Overall progress")
+    public static let focusTime = AnchorStrings.value("focus.time", default: "Focus time")
+    public static let ambient = AnchorStrings.value("ambient", default: "Ambient workspace")
+    public static let selectedProcess = AnchorStrings.value("process.selected", default: "Selected process")
+    public static let handoff = AnchorStrings.value("handoff", default: "Securing your context…")
+    public static let away = AnchorStrings.value("away", default: "Your work is still moving")
+    public static let awayDetail = AnchorStrings.value("away.detail", default: "Anchor is holding the goal and watching for meaningful changes.")
+    public static let atDeskCorrection = AnchorStrings.value("presence.at.desk", default: "I’m still at my desk")
+    public static let returning = AnchorStrings.value("return.title", default: "Welcome back")
+    public static let returnDetail = AnchorStrings.value("return.detail", default: "Here is what changed while you were away.")
+    public static let continueWorking = AnchorStrings.value("return.continue", default: "Continue working")
+    public static let recommendedNext = AnchorStrings.value("return.recommended", default: "Recommended next")
+    public static let connectionUnknown = AnchorStrings.value("connection.unknown", default: "Presence is unknown")
+    public static let connectionUnknownDetail = AnchorStrings.value("connection.unknown.detail", default: "Anchor cannot confirm that you left. Check Mac, local network, and Bluetooth access.")
+    public static let disconnected = AnchorStrings.value("disconnected", default: "Mac disconnected")
+    public static let stale = AnchorStrings.value("stale", default: "Data may be out of date")
+    public static let emptyTitle = AnchorStrings.value("empty.title", default: "No active anchor")
+    public static let emptyDetail = AnchorStrings.value("empty.detail", default: "Start with one clear outcome and the processes supporting it.")
+    public static let sessionSummary = AnchorStrings.value("summary", default: "Session summary")
+    public static let completeSession = AnchorStrings.value("complete.session", default: "Complete and preserve")
+    public static let completed = AnchorStrings.value("completed", default: "Session complete")
+    public static let resume = AnchorStrings.value("resume", default: "Resume session")
+    public static let notes = AnchorStrings.value("notes", default: "Anchor notes")
+    public static let decisions = AnchorStrings.value("decisions", default: "Decisions")
+    public static let completedWork = AnchorStrings.value("work.completed", default: "Completed work")
+    public static let taskManagement = AnchorStrings.value("task.management", default: "Manage processes")
+    public static let moveHint = AnchorStrings.value("task.move.hint", default: "Reorder the processes or change their dashboard footprint.")
+    public static let connections = AnchorStrings.value("connections", default: "Connections")
+    public static let sources = AnchorStrings.value("sources", default: "Sources")
+    public static let privacy = AnchorStrings.value("privacy", default: "Privacy")
+    public static let accessibility = AnchorStrings.value("accessibility", default: "Accessibility")
+    public static let notificationsSettings = AnchorStrings.value("notifications.settings", default: "Notifications")
+    public static let macConnection = AnchorStrings.value("connection.mac", default: "Mac connection")
+    public static let bluetoothProximity = AnchorStrings.value("connection.bluetooth", default: "Bluetooth proximity")
+    public static let localOnly = AnchorStrings.value("privacy.local", default: "Local by default")
+    public static let localOnlyDetail = AnchorStrings.value("privacy.local.detail", default: "Raw work content stays on your devices unless you explicitly connect a source.")
+    public static let notificationMeaningful = AnchorStrings.value("notifications.meaningful", default: "Meaningful changes")
+    public static let notificationDecisions = AnchorStrings.value("notifications.decisions", default: "Decision requests")
+    public static let displaySupport = AnchorStrings.value("accessibility.display", default: "Display accommodations")
+    public static let displaySupportDetail = AnchorStrings.value("accessibility.display.detail", default: "Anchor follows Dynamic Type, VoiceOver, Reduce Motion, Increase Contrast, and Reduce Transparency automatically.")
+    public static let sourceHealth = AnchorStrings.value("source.health", default: "Source health")
+    public static let connected = AnchorStrings.value("connected", default: "Connected")
+    public static let unknown = AnchorStrings.value("unknown", default: "Unknown")
+    public static let permissionDenied = AnchorStrings.value("permission.denied", default: "Permission denied")
+    public static let lastUpdated = AnchorStrings.value("last.updated", default: "Last updated")
+    public static let noEvents = AnchorStrings.value("events.none", default: "No events yet")
+    public static let openDetails = AnchorStrings.value("mac.open.details", default: "Open Anchor")
+    public static let openCurrentProcess = AnchorStrings.value("mac.open.current", default: "Open current process")
+    public static let currentWork = AnchorStrings.value("mac.current.work", default: "Current work")
+    public static let timeline = AnchorStrings.value("timeline", default: "Timeline")
+    public static let pairDevice = AnchorStrings.value("pair.device", default: "Pair device")
+    public static let pairingCode = AnchorStrings.value("pair.code", default: "Pairing code")
+    public static let startAtLogin = AnchorStrings.value("start.login", default: "Open at login")
+    public static let quit = AnchorStrings.value("quit", default: "Quit Anchor")
+    public static let voiceOver = AnchorStrings.value("accessibility.voiceover", default: "VoiceOver")
+    public static let dynamicType = AnchorStrings.value("accessibility.dynamic.type", default: "Dynamic Type")
+    public static let reduceMotion = AnchorStrings.value("accessibility.reduce.motion", default: "Reduce Motion")
+    public static let increaseContrast = AnchorStrings.value("accessibility.increase.contrast", default: "Increase Contrast")
+    public static let reduceTransparency = AnchorStrings.value("accessibility.reduce.transparency", default: "Reduce Transparency")
+
+    public static func processCount(_ count: Int) -> String {
+        String.localizedStringWithFormat(AnchorStrings.value("process.count", default: "%lld processes"), count)
+    }
+
+    public static func noteCount(_ count: Int) -> String {
+        String.localizedStringWithFormat(AnchorStrings.value("note.count", default: "%lld notes"), count)
+    }
+
+    public static func decisionCount(_ count: Int) -> String {
+        String.localizedStringWithFormat(AnchorStrings.value("decision.count", default: "%lld decisions"), count)
+    }
+
+    public static func minuteCount(_ count: Int) -> String {
+        String.localizedStringWithFormat(AnchorStrings.value("minute.count", default: "%lldm"), count)
+    }
+
+    public static func tileSize(_ size: ProcessTileSize) -> String {
+        switch size {
+        case .compact: AnchorStrings.value("tile.compact", default: "Compact")
+        case .standard: AnchorStrings.value("tile.standard", default: "Standard")
+        case .wide: AnchorStrings.value("tile.wide", default: "Wide")
+        case .large: AnchorStrings.value("tile.large", default: "Large")
+        }
+    }
+
+    public static func status(_ status: ProcessStatus) -> String {
+        switch status {
+        case .queued: AnchorStrings.value("status.queued", default: "Queued")
+        case .running: AnchorStrings.value("status.running", default: "Running")
+        case .needsDecision: AnchorStrings.value("status.decision", default: "Needs decision")
+        case .blocked: AnchorStrings.value("status.blocked", default: "Blocked")
+        case .completed: AnchorStrings.value("status.completed", default: "Completed")
+        case .failed: AnchorStrings.value("status.failed", default: "Failed")
+        case .disconnected: AnchorStrings.value("status.disconnected", default: "Disconnected")
+        }
+    }
+
+    public static func compactStatus(_ status: ProcessStatus) -> String {
+        switch status {
+        case .queued: AnchorStrings.value("status.compact.queued", default: "Queued")
+        case .running: AnchorStrings.value("status.compact.running", default: "Running")
+        case .needsDecision: AnchorStrings.value("status.compact.decision", default: "Decision")
+        case .blocked: AnchorStrings.value("status.compact.blocked", default: "Blocked")
+        case .completed: AnchorStrings.value("status.compact.completed", default: "Done")
+        case .failed: AnchorStrings.value("status.compact.failed", default: "Failed")
+        case .disconnected: AnchorStrings.value("status.compact.disconnected", default: "Offline")
+        }
+    }
+
+}
