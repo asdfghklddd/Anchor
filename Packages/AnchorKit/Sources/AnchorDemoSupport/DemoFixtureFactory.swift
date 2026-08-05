@@ -232,11 +232,11 @@ public enum DemoFixtureFactory {
                 title: text("demo.goal.title", default: "Finish the Anchor product film"),
                 completionCriteria: text("demo.goal.criteria", default: "Export a polished 60-second cut today."),
                 note: text("demo.goal.note", default: "Lock the script and storyboard, generate the shots, then make the final rhythm and taste decisions."),
-                createdAt: now.addingTimeInterval(-31 * 60)
+                createdAt: now.addingTimeInterval(-42 * 60)
             ),
             status: .active,
             presence: .atDesk,
-            startedAt: now.addingTimeInterval(-31 * 60),
+            startedAt: now.addingTimeInterval(-42 * 60),
             processes: processes,
             decisions: [decision],
             timeline: processes.flatMap(\.events).sorted { $0.occurredAt > $1.occurredAt }

@@ -1,114 +1,291 @@
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
+import Foundation
 import SwiftUI
 
 struct AnchorSetupView: View {
     let model: AnchorSessionModel
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var goalTitle = ""
     @State private var completionCriteria = ""
-    @State private var context = ""
     @State private var processNames = [""]
     @FocusState private var focusedField: Field?
 
     private enum Field: Hashable {
         case goal
         case criteria
-        case context
         case process(Int)
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AnchorSpacing.large) {
-                VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-                    AnchorMark(size: 64)
-                    Text(L10n.establishAnchor)
-                        .font(.largeTitle.bold())
-                        .foregroundStyle(AnchorPalette.ink)
-                    Text(L10n.setupIntro)
-                        .font(.title3)
-                        .foregroundStyle(AnchorPalette.secondaryInk)
-                }
-                .accessibilityElement(children: .combine)
+        ZStack {
+            HarborBackground()
 
-                AnchorCard(tint: AnchorPalette.seafoam) {
-                    VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
-                        TextField(L10n.goalTitle, text: $goalTitle, axis: .vertical)
-                            .font(.title2.bold())
-                            .focused($focusedField, equals: .goal)
-                            .submitLabel(.next)
-                            .onSubmit { focusedField = .criteria }
-                        Divider()
-                        TextField(L10n.completionCriteria, text: $completionCriteria, axis: .vertical)
-                            .focused($focusedField, equals: .criteria)
-                            .submitLabel(.next)
-                            .onSubmit { focusedField = .context }
-                        Divider()
-                        TextField(L10n.contextNote, text: $context, axis: .vertical)
-                            .focused($focusedField, equals: .context)
-                    }
-                    .textFieldStyle(.plain)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    setupNavigation
+                    setupHero
+                        .padding(.bottom, AnchorSpacing.large)
+                    goalForm
+                    processForm
                 }
-
-                VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-                    Text(L10n.processes)
-                        .font(.headline)
-                    ForEach(processNames.indices, id: \.self) { index in
-                        HStack {
-                            TextField(L10n.processName, text: $processNames[index])
-                                .focused($focusedField, equals: .process(index))
-                                .textFieldStyle(.roundedBorder)
-                                .frame(minHeight: 44)
-                            if processNames.count > 1 {
-                                Button(role: .destructive) {
-                                    processNames.remove(at: index)
-                                } label: {
-                                    Image(systemName: "minus.circle.fill")
-                                        .frame(width: 44, height: 44)
-                                }
-                                .accessibilityLabel(L10n.delete)
-                            }
-                        }
-                    }
-                    Button {
-                        processNames.append("")
-                        focusedField = .process(processNames.endIndex - 1)
-                    } label: {
-                        Label(L10n.addProcess, systemImage: "plus.circle.fill")
-                    }
-                    .disabled(processNames.count >= 6)
-                    .frame(minHeight: 44)
-                }
-
-                Label(L10n.setupHint, systemImage: "mic.fill")
-                    .font(.footnote)
-                    .foregroundStyle(AnchorPalette.secondaryInk)
-
-                Button(L10n.beginSession) {
-                    establishSession()
-                }
-                .buttonStyle(AnchorPrimaryButtonStyle())
-                .disabled(!isValid)
+                .padding(.horizontal, AnchorSpacing.medium)
+                .padding(.bottom, AnchorSpacing.xLarge)
+                .frame(maxWidth: 680)
+                .frame(maxWidth: .infinity)
             }
-            .padding(AnchorSpacing.large)
-            .frame(maxWidth: 680)
-            .frame(maxWidth: .infinity)
+            .scrollDismissesKeyboard(.interactively)
         }
-        .background(AnchorPalette.paper)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            startDock
+        }
         .navigationBarHidden(true)
-        .accessibilityIdentifier("setup.screen")
+    }
+
+    private var setupNavigation: some View {
+        HStack {
+            Color.clear
+                .frame(width: 44, height: 44)
+                .accessibilityHidden(true)
+            Spacer()
+            Text(L10n.setupNewWork)
+                .font(.subheadline.bold())
+                .foregroundStyle(AnchorPalette.ink)
+                .accessibilityIdentifier("setup.screen")
+            Spacer()
+            Text("01")
+                .font(.caption.bold().monospacedDigit())
+                .foregroundStyle(AnchorPalette.link)
+                .frame(width: 44, height: 44, alignment: .trailing)
+        }
+        .frame(minHeight: 54)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var setupHero: some View {
+        HarborHeroSurface {
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
+                        heroCopy
+                        Divider().overlay(.white.opacity(0.14))
+                        heroStats
+                    }
+                } else {
+                    HStack(alignment: .center, spacing: AnchorSpacing.small) {
+                        heroCopy
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Divider().overlay(.white.opacity(0.14))
+                        heroStats
+                            .frame(width: 100)
+                    }
+                }
+            }
+            .padding(AnchorSpacing.medium)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var heroCopy: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HarborBrandMark()
+                .padding(.bottom, 3)
+            Text(L10n.establishAnchor)
+                .font(.caption.bold())
+                .foregroundStyle(AnchorPalette.oceanHighlight)
+            Text(L10n.setupMantra)
+                .font(.title.bold())
+                .foregroundStyle(.white)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var heroStats: some View {
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                HStack(spacing: AnchorSpacing.large) {
+                    setupStat(value: "\(processCount)", label: L10n.parallelProcesses)
+                    setupStat(value: completionCriteria.isEmpty ? "—" : "✓", label: L10n.completionReady)
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 0) {
+                    setupStat(value: "\(processCount)", label: L10n.parallelProcesses)
+                        .padding(.bottom, AnchorSpacing.small)
+                    Divider().overlay(.white.opacity(0.14))
+                    setupStat(value: completionCriteria.isEmpty ? "—" : "✓", label: L10n.completionReady)
+                        .padding(.top, AnchorSpacing.small)
+                }
+            }
+        }
+    }
+
+    private func setupStat(value: String, label: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(value)
+                .font(.title2.bold().monospacedDigit())
+                .foregroundStyle(AnchorPalette.seafoam)
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.white.opacity(0.62))
+                .lineLimit(2)
+        }
+    }
+
+    private var goalForm: some View {
+        VStack(alignment: .leading, spacing: AnchorSpacing.large) {
+            VStack(alignment: .leading, spacing: 7) {
+                Text(L10n.setupGoalLabel)
+                    .font(.caption.bold())
+                    .foregroundStyle(AnchorPalette.secondaryInk)
+                TextField(L10n.goalTitle, text: $goalTitle, axis: .vertical)
+                    .font(.body.bold())
+                    .lineLimit(1 ... 3)
+                    .focused($focusedField, equals: .goal)
+                    .submitLabel(.next)
+                    .onSubmit { focusedField = .criteria }
+                    .harborInputSurface()
+            }
+
+            VStack(alignment: .leading, spacing: 7) {
+                HStack {
+                    Text(L10n.setupCriteriaLabel)
+                        .font(.caption.bold())
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                    Spacer()
+                    Button {
+                        focusedField = .criteria
+                    } label: {
+                        Image(systemName: "mic.fill")
+                            .font(.subheadline.bold())
+                            .foregroundStyle(AnchorPalette.link)
+                            .frame(width: 44, height: 44)
+                            .background(AnchorPalette.cyan.opacity(0.16), in: .circle)
+                    }
+                    .accessibilityLabel(L10n.keyboardDictation)
+                }
+                .frame(minHeight: 44)
+
+                TextField(L10n.completionCriteria, text: $completionCriteria, axis: .vertical)
+                    .font(.body)
+                    .lineLimit(4 ... 7)
+                    .focused($focusedField, equals: .criteria)
+                    .harborInputSurface()
+            }
+        }
+    }
+
+    private var processForm: some View {
+        VStack(alignment: .leading, spacing: AnchorSpacing.small) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.parallelProcesses)
+                        .font(.caption.bold())
+                        .foregroundStyle(AnchorPalette.link)
+                    Text(L10n.readyProcesses)
+                        .font(.title3.bold())
+                        .foregroundStyle(AnchorPalette.ink)
+                }
+                Spacer()
+                Text("\(processCount)/6")
+                    .font(.caption.bold().monospacedDigit())
+                    .foregroundStyle(AnchorPalette.secondaryInk)
+            }
+            .padding(.top, AnchorSpacing.xLarge)
+
+            VStack(spacing: 7) {
+                ForEach(processNames.indices, id: \.self) { index in
+                    processRow(index: index)
+                }
+            }
+
+            if processNames.count < 6 {
+                Button {
+                    processNames.append("")
+                    focusedField = .process(processNames.endIndex - 1)
+                } label: {
+                    Label(L10n.addAnotherProcess, systemImage: "plus")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(AnchorPalette.link)
+                        .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+                        .padding(.horizontal, AnchorSpacing.medium)
+                        .background(AnchorPalette.surface.opacity(0.72), in: .rect(cornerRadius: 18, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func processRow(index: Int) -> some View {
+        let tone = tone(at: index)
+
+        return HStack(spacing: AnchorSpacing.small) {
+            Text(String(format: "%02d", index + 1))
+                .font(.caption.bold().monospacedDigit())
+                .foregroundStyle(AnchorPalette.source(tone))
+                .frame(width: 30, height: 30)
+                .background(AnchorPalette.source(tone).opacity(0.12), in: .rect(cornerRadius: 10, style: .continuous))
+
+            TextField(L10n.processName, text: $processNames[index])
+                .font(.subheadline.bold())
+                .focused($focusedField, equals: .process(index))
+                .textFieldStyle(.plain)
+                .frame(minHeight: 44)
+
+            if processNames.count > 1 {
+                Button(role: .destructive) {
+                    processNames.remove(at: index)
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.subheadline)
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .frame(width: 44, height: 44)
+                }
+                .accessibilityLabel("\(L10n.delete) \(index + 1)")
+            }
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 4)
+        .background(AnchorPalette.surface, in: .rect(cornerRadius: 20, style: .continuous))
+        .overlay(alignment: .leading) {
+            Capsule()
+                .fill(AnchorPalette.source(tone))
+                .frame(width: 4)
+                .padding(.vertical, 12)
+        }
+        .shadow(color: AnchorPalette.ink.opacity(0.07), radius: 10, y: 6)
+    }
+
+    private var startDock: some View {
+        VStack(spacing: 0) {
+            Divider().overlay(AnchorPalette.ink.opacity(0.08))
+            Button(action: establishSession) {
+                Label(L10n.startAnchoring, systemImage: "play.fill")
+            }
+            .buttonStyle(HarborPrimaryButtonStyle())
+            .disabled(!isValid)
+            .padding(.horizontal, AnchorSpacing.medium)
+            .padding(.vertical, AnchorSpacing.small)
+        }
+        .background(AnchorPalette.paper.opacity(0.97))
+    }
+
+    private var processCount: Int {
+        processNames.lazy.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }.count
     }
 
     private var isValid: Bool {
         !goalTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !completionCriteria.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        processNames.contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        processCount > 0
+    }
+
+    private func tone(at index: Int) -> String {
+        ["coral", "periwinkle", "cyan", "ink", "seafoam", "sand"][index % 6]
     }
 
     private func establishSession() {
-        let tones = ["coral", "periwinkle", "cyan", "ink", "seafoam", "sand"]
         let processes = processNames
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
@@ -117,7 +294,7 @@ struct AnchorSetupView: View {
                 AnchorProcess(
                     sourceName: name,
                     sourceSymbol: name.first.map(String.init) ?? "•",
-                    sourceTone: tones[index % tones.count],
+                    sourceTone: tone(at: index),
                     title: name,
                     status: .queued,
                     metric: "—",
@@ -125,10 +302,11 @@ struct AnchorSetupView: View {
                     detail: L10n.noEvents
                 )
             }
+        let criteria = completionCriteria.trimmingCharacters(in: .whitespacesAndNewlines)
         let goal = AnchorGoal(
             title: goalTitle.trimmingCharacters(in: .whitespacesAndNewlines),
-            completionCriteria: completionCriteria.trimmingCharacters(in: .whitespacesAndNewlines),
-            note: context.trimmingCharacters(in: .whitespacesAndNewlines)
+            completionCriteria: criteria,
+            note: criteria
         )
         Task { await model.createSession(goal: goal, processes: processes) }
     }

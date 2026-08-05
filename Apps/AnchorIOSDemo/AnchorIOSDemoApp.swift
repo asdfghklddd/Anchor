@@ -17,7 +17,7 @@ struct AnchorIOSDemoApp: App {
         let scenarioName = argumentScenario ?? ProcessInfo.processInfo.environment["ANCHOR_DEMO_SCENARIO"]
         let forcedScenario = scenarioName.flatMap(DemoScenario.init(rawValue:))
         let repository = DemoSessionRepository(
-            initialScenario: forcedScenario ?? .active,
+            initialScenario: forcedScenario ?? .needsDecision,
             restoresSavedState: forcedScenario == nil
         )
         self.repository = repository

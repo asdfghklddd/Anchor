@@ -13,6 +13,17 @@ public enum L10n {
     public static let recentEvent = AnchorStrings.value("recent.event", default: "Latest event")
     public static let notifications = AnchorStrings.value("notifications", default: "Notifications")
     public static let profile = AnchorStrings.value("profile", default: "My Anchor")
+    public static let personalAnchor = AnchorStrings.value("profile.personal", default: "PERSONAL ANCHOR")
+    public static let contextSyncStable = AnchorStrings.value("profile.sync.stable", default: "Context sync is stable")
+    public static let macOnline = AnchorStrings.value("profile.mac.online", default: "Mac online")
+    public static let guardedFocus = AnchorStrings.value("profile.focus.guarded", default: "Focus protected")
+    public static let savedContexts = AnchorStrings.value("profile.contexts.saved", default: "Saved contexts")
+    public static let completedAnchors = AnchorStrings.value("profile.anchors.completed", default: "Completed anchors")
+    public static let thisSessionData = AnchorStrings.value("profile.session.data", default: "THIS SESSION")
+    public static let runningWork = AnchorStrings.value("profile.work.running", default: "Work in progress")
+    public static let memoryTrace = AnchorStrings.value("profile.memory.trace", default: "MEMORY TRACE")
+    public static let recentlyHeld = AnchorStrings.value("profile.memory.recent", default: "Recently held by Anchor")
+    public static let workStyle = AnchorStrings.value("profile.work.style", default: "WORK STYLE")
     public static let insights = AnchorStrings.value("insights", default: "Work context")
     public static let history = AnchorStrings.value("history", default: "History")
     public static let settings = AnchorStrings.value("settings", default: "Settings")
@@ -36,25 +47,75 @@ public enum L10n {
     public static let processName = AnchorStrings.value("process.name", default: "Process or source name")
     public static let addProcess = AnchorStrings.value("process.add", default: "Add process")
     public static let setupHint = AnchorStrings.value("setup.dictation.hint", default: "Use the microphone on the system keyboard whenever dictation is helpful.")
+    public static let setupNewWork = AnchorStrings.value("setup.new.work", default: "New work")
+    public static let setupMantra = AnchorStrings.value("setup.mantra", default: "Remember why first,\nthen decide what to do.")
+    public static let setupGoalLabel = AnchorStrings.value("setup.goal.label", default: "What are you completing this time?")
+    public static let setupCriteriaLabel = AnchorStrings.value("setup.criteria.label", default: "What should completion look like?")
+    public static let parallelProcesses = AnchorStrings.value("process.parallel", default: "PARALLEL PROCESSES")
+    public static let readyProcesses = AnchorStrings.value("process.ready", default: "Work ready to sync")
+    public static let completionReady = AnchorStrings.value("setup.completion.ready", default: "Completion criteria")
+    public static let addAnotherProcess = AnchorStrings.value("process.add.another", default: "Add another process")
+    public static let startAnchoring = AnchorStrings.value("setup.start.anchoring", default: "Start anchoring")
+    public static let keyboardDictation = AnchorStrings.value("setup.keyboard.dictation", default: "Use keyboard dictation")
     public static let anchorNote = AnchorStrings.value("note.anchor", default: "Drop an anchor")
     public static let anchorNotePrompt = AnchorStrings.value("note.prompt", default: "Capture a judgment, next step, or context marker.")
+    public static let anchorCaptureHeadline = AnchorStrings.value("note.capture.headline", default: "Remember this moment, then keep moving.")
+    public static let currentWorkKicker = AnchorStrings.value("work.current", default: "CURRENT WORK")
+    public static let currentSnapshot = AnchorStrings.value("work.snapshot", default: "Work snapshot")
+    public static let momentToRemember = AnchorStrings.value("note.moment", default: "What should be remembered now")
+    public static let notePlaceholder = AnchorStrings.value("note.placeholder", default: "A judgment, next step, or context worth preserving")
+    public static let recentAnchor = AnchorStrings.value("note.recent", default: "Most recent anchor")
+    public static let dropAnchor = AnchorStrings.value("note.drop", default: "Drop anchor")
     public static let noteSaved = AnchorStrings.value("note.saved", default: "Anchor saved")
     public static let attentionNeeded = AnchorStrings.value("attention", default: "Needs your judgment")
     public static let noAttentionNeeded = AnchorStrings.value("attention.none", default: "Nothing needs your attention")
     public static let chooseDirection = AnchorStrings.value("decision.choose", default: "Choose an option")
     public static let confirmChoice = AnchorStrings.value("decision.confirm", default: "Confirm choice")
+    public static let chooseVisualDirection = AnchorStrings.value("decision.visual.direction", default: "Choose a visual direction")
+    public static let taskProgress = AnchorStrings.value("task.progress", default: "Task progress")
+    public static let currentStatus = AnchorStrings.value("task.current.status", default: "CURRENT STATUS")
+    public static let activityLog = AnchorStrings.value("task.activity.log", default: "ACTIVITY LOG")
     public static let activity = AnchorStrings.value("activity", default: "Activity")
     public static let estimated = AnchorStrings.value("estimated", default: "Estimate")
     public static let overallProgress = AnchorStrings.value("progress.overall", default: "Overall progress")
+    public static let focusSession = AnchorStrings.value("focus.session", default: "FOCUS SESSION")
+    public static let greetingMorning = AnchorStrings.value("greeting.morning", default: "Good morning")
+    public static let greetingAfternoon = AnchorStrings.value("greeting.afternoon", default: "Good afternoon")
+    public static let greetingEvening = AnchorStrings.value("greeting.evening", default: "Good evening")
+    public static let focusHeadline = AnchorStrings.value("focus.headline", default: "Keep your attention for judgment.")
+    public static let currentAnchorMap = AnchorStrings.value("goal.anchor.map", default: "ANCHOR MAP · CURRENT GOAL")
+    public static let liveProcesses = AnchorStrings.value("process.live", default: "LIVE PROCESSES")
+    public static let happeningNow = AnchorStrings.value("process.happening.now", default: "What is happening now")
+    public static let live = AnchorStrings.value("status.live", default: "LIVE")
+    public static let processFlow = AnchorStrings.value("process.flow", default: "Process flow")
+    public static let parallelEfficiency = AnchorStrings.value("process.parallel.efficiency", default: "Parallel efficiency 2.4×")
+    public static let macConnected = AnchorStrings.value("connection.mac.connected", default: "Mac connected")
+    public static let remoteSyncing = AnchorStrings.value("connection.remote.syncing", default: "Remote syncing")
+    public static let generating = AnchorStrings.value("status.generating", default: "Generating")
+    public static let rendering = AnchorStrings.value("status.rendering", default: "Rendering")
+    public static let preparing = AnchorStrings.value("status.preparing", default: "Preparing")
+    public static let waitingConfirmation = AnchorStrings.value("status.waiting.confirmation", default: "Waiting for you")
     public static let focusTime = AnchorStrings.value("focus.time", default: "Focus time")
     public static let ambient = AnchorStrings.value("ambient", default: "Ambient workspace")
+    public static let ambientActive = AnchorStrings.value("ambient.active", default: "ANCHOR ACTIVE")
+    public static let latestProgress = AnchorStrings.value("ambient.latest.progress", default: "LATEST PROGRESS")
+    public static let allProcessesRunning = AnchorStrings.value("ambient.all.running", default: "All processes keep running")
     public static let selectedProcess = AnchorStrings.value("process.selected", default: "Selected process")
     public static let handoff = AnchorStrings.value("handoff", default: "Securing your context…")
+    public static let handoffSecured = AnchorStrings.value("handoff.secured", default: "Secured. You can step away.")
+    public static let handoffDetail = AnchorStrings.value("handoff.detail", default: "Anchor is gathering every process around the same goal.")
     public static let away = AnchorStrings.value("away", default: "Your work is still moving")
     public static let awayDetail = AnchorStrings.value("away.detail", default: "Anchor is holding the goal and watching for meaningful changes.")
+    public static let remoteProcesses = AnchorStrings.value("away.processes", default: "REMOTE PROCESSES")
+    public static let synchronizedWork = AnchorStrings.value("away.synchronized.work", default: "Work that keeps syncing")
+    public static let currentAnchor = AnchorStrings.value("away.current.anchor", default: "CURRENT ANCHOR · CURRENT GOAL")
     public static let atDeskCorrection = AnchorStrings.value("presence.at.desk", default: "I’m still at my desk")
     public static let returning = AnchorStrings.value("return.title", default: "Welcome back")
     public static let returnDetail = AnchorStrings.value("return.detail", default: "Here is what changed while you were away.")
+    public static let returnHeadline = AnchorStrings.value("return.headline", default: "Your work was held safely.")
+    public static let returnImpact = AnchorStrings.value("return.impact", default: "IMPACT WHILE AWAY")
+    public static let returnChanges = AnchorStrings.value("return.changes", default: "Changes while you were away")
+    public static let yourNextStep = AnchorStrings.value("return.next.step", default: "YOUR NEXT STEP")
     public static let continueWorking = AnchorStrings.value("return.continue", default: "Continue working")
     public static let recommendedNext = AnchorStrings.value("return.recommended", default: "Recommended next")
     public static let connectionUnknown = AnchorStrings.value("connection.unknown", default: "Presence is unknown")
@@ -119,6 +180,79 @@ public enum L10n {
 
     public static func minuteCount(_ count: Int) -> String {
         String.localizedStringWithFormat(AnchorStrings.value("minute.count", default: "%lldm"), count)
+    }
+
+    public static func focusSummary(running: Int, attention: Int) -> String {
+        if attention > 0 {
+            String.localizedStringWithFormat(
+                AnchorStrings.value("focus.summary.attention", default: "%1$lld processes moving, %2$lld waiting for you"),
+                running,
+                attention
+            )
+        } else {
+            String.localizedStringWithFormat(
+                AnchorStrings.value("focus.summary", default: "%lld processes moving"),
+                running
+            )
+        }
+    }
+
+    public static func routesRunning(_ count: Int) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value("process.routes.running", default: "%lld routes running"),
+            count
+        )
+    }
+
+    public static func anchoredCount(_ count: Int) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value("note.anchored.count", default: "%lld anchors dropped"),
+            count
+        )
+    }
+
+    public static func focusDuration(_ minutes: Int) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value("focus.duration", default: "%lldm"),
+            minutes
+        )
+    }
+
+    public static func awayDuration(_ minutes: Int) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value("away.duration", default: "Away for %lld minutes"),
+            minutes
+        )
+    }
+
+    public static func runningAndWaiting(running: Int, attention: Int) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value("snapshot.running.waiting", default: "%1$lld running · %2$lld waiting"),
+            running,
+            attention
+        )
+    }
+
+    public static func processAttentionSummary(processes: Int, attention: Int) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value("process.attention.summary", default: "%1$lld processes · %2$lld waiting"),
+            processes,
+            attention
+        )
+    }
+
+    public static func returnProgress(_ percent: Int) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value("return.progress", default: "The work moved forward %lld%%"),
+            percent
+        )
+    }
+
+    public static func startedAt(_ time: String) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value("session.started.at", default: "Started %@"),
+            time
+        )
     }
 
     public static func tileSize(_ size: ProcessTileSize) -> String {

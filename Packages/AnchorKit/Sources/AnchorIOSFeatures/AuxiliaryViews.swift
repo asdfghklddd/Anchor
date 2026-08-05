@@ -66,51 +66,259 @@ private struct MetricTile: View {
 }
 
 struct ProfileView: View {
+    let projection: SessionProjection
     let onRoute: (AnchorRoute) -> Void
 
     var body: some View {
-        List {
-            Section {
-                HStack(spacing: AnchorSpacing.medium) {
-                    AnchorMark(size: 62)
-                    VStack(alignment: .leading) {
-                        Text(L10n.profile).font(.title2.bold())
-                        Text(L10n.localOnly)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+        ZStack {
+            HarborBackground()
+            ScrollView {
+                VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
+                    identityCard
+                    metricStrip
+                    sessionCard
+                    memorySection
+                    workStyleSection
                 }
-                .padding(.vertical, AnchorSpacing.small)
+                .padding(.horizontal, AnchorSpacing.medium)
+                .padding(.bottom, AnchorSpacing.xLarge)
+                .frame(maxWidth: 720)
+                .frame(maxWidth: .infinity)
             }
-            Section {
-                routeRow(L10n.history, symbol: "clock.arrow.circlepath", route: .history)
-                routeRow(L10n.taskManagement, symbol: "square.grid.2x2", route: .taskManagement)
-            }
-            Section(L10n.settings) {
-                routeRow(L10n.connections, symbol: "macbook.and.iphone", route: .connections)
-                routeRow(L10n.sources, symbol: "point.3.filled.connected.trianglepath.dotted", route: .sources)
-                routeRow(L10n.notificationsSettings, symbol: "bell", route: .notificationSettings)
-                routeRow(L10n.privacy, symbol: "hand.raised", route: .privacy)
-                routeRow(L10n.accessibility, symbol: "accessibility", route: .accessibility)
-            }
+            .scrollIndicators(.hidden)
         }
         .navigationTitle(L10n.profile)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var identityCard: some View {
+        HarborHeroSurface(cornerRadius: 26) {
+            HStack(spacing: 13) {
+                HarborBrandMark(size: 54)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.personalAnchor)
+                        .font(.caption2.bold())
+                        .foregroundStyle(AnchorPalette.oceanHighlight)
+                    Text(L10n.profile)
+                        .font(.title.bold())
+                        .foregroundStyle(.white)
+                    Label(L10n.contextSyncStable, systemImage: "wifi")
+                        .font(.caption.bold())
+                        .foregroundStyle(AnchorPalette.oceanHighlight)
+                }
+                Spacer()
+                VStack(spacing: 1) {
+                    Text(projection.connection == .connected ? "1" : "0")
+                        .font(.title.bold().monospacedDigit())
+                        .foregroundStyle(AnchorPalette.warmYellow)
+                    Text(L10n.macOnline)
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.62))
+                }
+            }
+            .padding(18)
+        }
+        .padding(.top, 8)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var metricStrip: some View {
+        HStack(spacing: 9) {
+            profileMetric(value: L10n.minuteCount(focusMinutes), label: L10n.guardedFocus, tint: AnchorPalette.coral, progress: min(1, Double(focusMinutes) / 60))
+            profileMetric(value: "\(savedContextCount)", label: L10n.savedContexts, tint: AnchorPalette.periwinkle, progress: min(1, Double(savedContextCount) / 10))
+            profileMetric(value: "\(completedCount)", label: L10n.completedAnchors, tint: AnchorPalette.seafoam, progress: min(1, Double(completedCount) / 4))
+        }
+    }
+
+    private func profileMetric(value: String, label: String, tint: Color, progress: Double) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(value)
+                    .font(.title3.bold().monospacedDigit())
+                    .foregroundStyle(AnchorPalette.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                Spacer(minLength: 2)
+                Image(systemName: "chevron.right").font(.caption2.bold()).foregroundStyle(AnchorPalette.secondaryInk)
+            }
+            Text(label)
+                .font(.caption2.bold())
+                .foregroundStyle(AnchorPalette.secondaryInk)
+                .lineLimit(2)
+            GeometryReader { proxy in
+                Capsule()
+                    .fill(tint.opacity(0.16))
+                    .overlay(alignment: .leading) {
+                        Capsule().fill(tint).frame(width: proxy.size.width * progress)
+                    }
+            }
+            .frame(height: 5)
+        }
+        .padding(11)
+        .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
+        .background(tint.opacity(0.16), in: .rect(cornerRadius: 20, style: .continuous))
+        .shadow(color: tint.opacity(0.09), radius: 8, y: 5)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var sessionCard: some View {
+        Button { onRoute(.insights) } label: {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .bottom) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L10n.thisSessionData)
+                            .font(.caption2.bold())
+                            .foregroundStyle(AnchorPalette.link)
+                        Text(L10n.runningWork)
+                            .font(.title3.bold())
+                            .foregroundStyle(AnchorPalette.ink)
+                    }
+                    Spacer()
+                    HStack(spacing: 4) {
+                        Text(L10n.runningAndWaiting(running: runningCount, attention: projection.openDecisions.count))
+                            .font(.caption2.bold())
+                            .foregroundStyle(AnchorPalette.secondaryInk)
+                        Image(systemName: "chevron.right").font(.caption2.bold())
+                    }
+                }
+
+                HStack(spacing: 0) {
+                    sessionMetric(L10n.minuteCount(focusMinutes), label: L10n.focusTime)
+                    Divider().padding(.vertical, 6)
+                    sessionMetric(projection.overallProgress?.formatted(.percent.precision(.fractionLength(0))) ?? "—", label: L10n.overallProgress)
+                    Divider().padding(.vertical, 6)
+                    sessionMetric("\(completedCount)/\(processCount)", label: L10n.completedWork)
+                }
+
+                HStack(spacing: 12) {
+                    Label(L10n.parallelEfficiency, systemImage: "gauge.with.dots.needle.67percent")
+                    Label(L10n.anchoredCount((projection.session?.notes.count ?? 0) + 1), systemImage: "mappin.and.ellipse")
+                }
+                .font(.caption2.bold())
+                .foregroundStyle(AnchorPalette.secondaryInk)
+            }
+            .padding(15)
+            .background(AnchorPalette.surface, in: .rect(cornerRadius: 24, style: .continuous))
+            .shadow(color: AnchorPalette.deepSea.opacity(0.08), radius: 12, y: 7)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func sessionMetric(_ value: String, label: String) -> some View {
+        VStack(spacing: 2) {
+            Text(value).font(.title3.bold().monospacedDigit()).foregroundStyle(AnchorPalette.ink).lineLimit(1)
+            Text(label).font(.caption2).foregroundStyle(AnchorPalette.secondaryInk).lineLimit(1)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var memorySection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .bottom) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.memoryTrace)
+                        .font(.caption2.bold())
+                        .foregroundStyle(AnchorPalette.link)
+                    Text(L10n.recentlyHeld)
+                        .font(.title3.bold())
+                        .foregroundStyle(AnchorPalette.ink)
+                }
+                Spacer()
+                Button(L10n.history) { onRoute(.history) }
+                    .font(.caption.bold())
+            }
+
+            VStack(spacing: 0) {
+                ForEach(Array((projection.session?.timeline ?? []).prefix(3).enumerated()), id: \.element.id) { index, event in
+                    Button { onRoute(.history) } label: {
+                        HStack(alignment: .top, spacing: 11) {
+                            Image(systemName: eventSymbol(event.kind))
+                                .font(.subheadline.bold())
+                                .foregroundStyle(memoryTint(index))
+                                .frame(width: 34, height: 34)
+                                .background(memoryTint(index).opacity(0.14), in: .circle)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(event.occurredAt, style: .relative)
+                                    .font(.caption2)
+                                    .foregroundStyle(AnchorPalette.secondaryInk)
+                                Text(event.title).font(.subheadline.bold()).foregroundStyle(AnchorPalette.ink)
+                                if !event.detail.isEmpty {
+                                    Text(event.detail).font(.caption).foregroundStyle(AnchorPalette.secondaryInk).lineLimit(2)
+                                }
+                            }
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right").font(.caption2.bold()).foregroundStyle(AnchorPalette.secondaryInk)
+                        }
+                        .padding(.vertical, 11)
+                        .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    if index < min(2, (projection.session?.timeline.count ?? 1) - 1) {
+                        Divider().padding(.leading, 45)
+                    }
+                }
+            }
+            .padding(.horizontal, 13)
+            .background(AnchorPalette.surface, in: .rect(cornerRadius: 22, style: .continuous))
+        }
+    }
+
+    private var workStyleSection: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            Text(L10n.workStyle)
+                .font(.caption2.bold())
+                .foregroundStyle(AnchorPalette.link)
+
+            VStack(spacing: 0) {
+                routeRow(L10n.taskManagement, symbol: "square.grid.2x2", route: .taskManagement)
+                Divider().padding(.leading, 48)
+                routeRow(L10n.connections, symbol: "macbook.and.iphone", route: .connections)
+                Divider().padding(.leading, 48)
+                routeRow(L10n.sources, symbol: "point.3.connected.trianglepath.dotted", route: .sources)
+                Divider().padding(.leading, 48)
+                routeRow(L10n.notificationsSettings, symbol: "bell", route: .notificationSettings)
+                Divider().padding(.leading, 48)
+                routeRow(L10n.privacy, symbol: "hand.raised", route: .privacy)
+                Divider().padding(.leading, 48)
+                routeRow(L10n.accessibility, symbol: "accessibility", route: .accessibility)
+            }
+            .padding(.horizontal, 12)
+            .background(AnchorPalette.surface, in: .rect(cornerRadius: 22, style: .continuous))
+        }
     }
 
     private func routeRow(_ title: String, symbol: String, route: AnchorRoute) -> some View {
         Button { onRoute(route) } label: {
-            HStack {
-                Label(title, systemImage: symbol)
+            HStack(spacing: 12) {
+                Image(systemName: symbol)
+                    .foregroundStyle(AnchorPalette.link)
+                    .frame(width: 32, height: 32)
+                    .background(AnchorPalette.cyan.opacity(0.12), in: .rect(cornerRadius: 10, style: .continuous))
+                Text(title).font(.subheadline.bold()).foregroundStyle(AnchorPalette.ink)
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption.bold())
-                    .foregroundStyle(.tertiary)
-                    .accessibilityHidden(true)
+                Image(systemName: "chevron.right").font(.caption2.bold()).foregroundStyle(AnchorPalette.secondaryInk)
             }
+            .frame(minHeight: 50)
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .frame(minHeight: 44)
+    }
+
+    private func memoryTint(_ index: Int) -> Color {
+        switch index {
+        case 0: AnchorPalette.seafoam
+        case 1: AnchorPalette.coral
+        default: AnchorPalette.periwinkle
+        }
+    }
+
+    private var processCount: Int { projection.session?.processes.count ?? 0 }
+    private var runningCount: Int { projection.session?.processes.filter { $0.status == .running }.count ?? 0 }
+    private var completedCount: Int { projection.session?.processes.filter { $0.status == .completed }.count ?? 0 }
+    private var savedContextCount: Int { (projection.session?.notes.count ?? 0) + (projection.session?.snapshots.count ?? 0) }
+    private var focusMinutes: Int {
+        guard let startedAt = projection.session?.startedAt else { return 0 }
+        return max(0, Int(Date.now.timeIntervalSince(startedAt) / 60))
     }
 }
 

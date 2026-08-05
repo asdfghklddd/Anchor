@@ -80,79 +80,28 @@ struct DecisionView: View {
     let decision: Decision
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var selectedOptionID: UUID?
     @State private var feedbackTrigger = 0
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: AnchorSpacing.large) {
-                    VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-                        StatusBadge(status: .needsDecision, text: L10n.attentionNeeded)
-                        Text(decision.title)
-                            .font(.largeTitle.bold())
-                            .foregroundStyle(AnchorPalette.ink)
-                        Text(decision.prompt)
-                            .font(.title3)
-                            .foregroundStyle(AnchorPalette.secondaryInk)
+            ZStack {
+                HarborBackground()
+                ScrollView {
+                    VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
+                        decisionHero
+                        directionPanel
+                        confirmButton
                     }
-                    ForEach(decision.options) { option in
-                        Button {
-                            selectedOptionID = option.id
-                        } label: {
-                            HStack(alignment: .top, spacing: AnchorSpacing.medium) {
-                                Image(systemName: selectedOptionID == option.id ? "checkmark.circle.fill" : "circle")
-                                    .font(.title2)
-                                    .foregroundStyle(selectedOptionID == option.id ? AnchorPalette.deepSea : AnchorPalette.secondaryInk)
-                                    .accessibilityHidden(true)
-                                VStack(alignment: .leading, spacing: 5) {
-                                    Text(option.title)
-                                        .font(.headline)
-                                    Text(option.detail)
-                                        .font(.subheadline)
-                                        .foregroundStyle(AnchorPalette.secondaryInk)
-                                }
-                                Spacer()
-                            }
-                            .foregroundStyle(AnchorPalette.ink)
-                            .padding(AnchorSpacing.medium)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(
-                                selectedOptionID == option.id
-                                    ? AnchorPalette.sand.opacity(0.34)
-                                    : AnchorPalette.surface,
-                                in: .rect(cornerRadius: 20, style: .continuous)
-                            )
-                            .overlay {
-                                if selectedOptionID == option.id {
-                                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                        .stroke(AnchorPalette.sand, lineWidth: 3)
-                                }
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityAddTraits(selectedOptionID == option.id ? .isSelected : [])
-                    }
-                    Button(L10n.confirmChoice) {
-                        guard let selectedOptionID,
-                              let option = decision.options.first(where: { $0.id == selectedOptionID }) else { return }
-                        feedbackTrigger += 1
-                        Task {
-                            await model.resolve(decision: decision, option: option)
-                            dismiss()
-                        }
-                    }
-                    .buttonStyle(AnchorPrimaryButtonStyle())
-                    .disabled(selectedOptionID == nil)
-                    .sensoryFeedback(.success, trigger: feedbackTrigger)
-                    .accessibilityIdentifier("decision.confirm.button")
+                    .padding(.horizontal, AnchorSpacing.medium)
+                    .padding(.bottom, AnchorSpacing.xLarge)
+                    .frame(maxWidth: 680)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(AnchorSpacing.large)
-                .frame(maxWidth: 680)
-                .frame(maxWidth: .infinity)
+                .scrollIndicators(.hidden)
             }
-            .background(AnchorPalette.paper)
-            .navigationTitle(L10n.chooseDirection)
+            .navigationTitle(process?.sourceName ?? L10n.chooseDirection)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -164,7 +113,155 @@ struct DecisionView: View {
             }
         }
         .presentationDetents([.large])
-        .accessibilityIdentifier("decision.screen")
+        .presentationCornerRadius(30)
+        .onAppear { selectedOptionID = decision.options.dropFirst().first?.id ?? decision.options.first?.id }
+    }
+
+    private var decisionHero: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                SourceMark(
+                    symbol: process?.sourceSymbol ?? "?",
+                    tone: process?.sourceTone ?? "periwinkle",
+                    size: 48
+                )
+                VStack(alignment: .leading, spacing: 5) {
+                    StatusBadge(status: .needsDecision, text: L10n.attentionNeeded)
+                    Text(process?.title ?? decision.title)
+                        .font(.title2.bold())
+                        .foregroundStyle(AnchorPalette.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            HStack(spacing: 16) {
+                StoryboardPreview(tint: AnchorPalette.source(process?.sourceTone ?? "periwinkle"))
+                    .frame(width: 118, height: 86)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(process?.metric ?? "")
+                        .font(.largeTitle.bold().monospacedDigit())
+                        .foregroundStyle(AnchorPalette.sourceInk(process?.sourceTone ?? "periwinkle"))
+                    Text(process?.metricLabel ?? decision.prompt)
+                        .font(.subheadline)
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                    Text(decision.prompt)
+                        .font(.caption)
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(14)
+            .background(
+                LinearGradient(
+                    colors: AnchorPalette.sourceSurface(process?.sourceTone ?? "periwinkle"),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                in: .rect(cornerRadius: 24, style: .continuous)
+            )
+        }
+        .padding(.top, 8)
+    }
+
+    private var directionPanel: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.attentionNeeded.uppercased())
+                        .font(.caption2.bold())
+                        .foregroundStyle(AnchorPalette.link)
+                        .accessibilityHidden(true)
+                    Text(L10n.chooseVisualDirection)
+                        .font(.title3.bold())
+                        .foregroundStyle(AnchorPalette.ink)
+                        .accessibilityIdentifier("decision.screen")
+                }
+                Spacer()
+                Text("\((decision.options.firstIndex { $0.id == selectedOptionID } ?? 0) + 1) / \(decision.options.count)")
+                    .font(.caption.bold().monospacedDigit())
+                    .foregroundStyle(AnchorPalette.secondaryInk)
+            }
+
+            ForEach(Array(decision.options.enumerated()), id: \.element.id) { index, option in
+                directionButton(option, index: index)
+            }
+        }
+        .padding(14)
+        .background(AnchorPalette.surface, in: .rect(cornerRadius: 24, style: .continuous))
+        .shadow(color: AnchorPalette.deepSea.opacity(0.08), radius: 14, y: 8)
+    }
+
+    private func directionButton(_ option: DecisionOption, index: Int) -> some View {
+        let selected = selectedOptionID == option.id
+        return Button {
+            selectedOptionID = option.id
+        } label: {
+            HStack(spacing: 12) {
+                StoryboardPreview(
+                    tint: index == 0 ? AnchorPalette.coral : index == 1 ? AnchorPalette.periwinkle : AnchorPalette.cyan,
+                    compact: true
+                )
+                .frame(width: 72, height: 54)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("\(Character(UnicodeScalar(65 + index)!)) · \(option.title)")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(AnchorPalette.ink)
+                    Text(option.detail)
+                        .font(.caption)
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(selected ? AnchorPalette.deepSea : AnchorPalette.secondaryInk.opacity(0.55))
+                    .accessibilityHidden(true)
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                selected ? AnchorPalette.warmYellow.opacity(0.72) : AnchorPalette.paper,
+                in: .rect(cornerRadius: 18, style: .continuous)
+            )
+            .overlay {
+                if selected {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(AnchorPalette.sand, lineWidth: 2)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityHint(option.detail)
+    }
+
+    private var confirmButton: some View {
+        Button {
+            guard let selectedOptionID,
+                  let option = decision.options.first(where: { $0.id == selectedOptionID }) else { return }
+            feedbackTrigger += 1
+            Task {
+                await model.resolve(decision: decision, option: option)
+                dismiss()
+            }
+        } label: {
+            HStack {
+                Text(L10n.confirmChoice)
+                Image(systemName: "chevron.right")
+            }
+            .accessibilityIdentifier("decision.confirm.label")
+        }
+        .buttonStyle(HarborPrimaryButtonStyle())
+        .disabled(selectedOptionID == nil)
+        .sensoryFeedback(.success, trigger: feedbackTrigger)
+        .accessibilityIdentifier("decision.confirm.button")
+    }
+
+    private var process: AnchorProcess? {
+        model.projection.session?.processes.first { $0.id == decision.processID }
     }
 }
 
@@ -178,46 +275,142 @@ struct AnchorNoteView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
-                HStack(spacing: AnchorSpacing.medium) {
-                    AnchorMark(size: 52)
-                    VStack(alignment: .leading) {
-                        Text(L10n.anchorNote).font(.title2.bold())
-                        Text(L10n.anchorNotePrompt)
-                            .font(.subheadline)
-                            .foregroundStyle(AnchorPalette.secondaryInk)
+            ZStack {
+                HarborBackground()
+                ScrollView {
+                    VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
+                        HStack(spacing: 12) {
+                            HarborBrandMark(size: 46)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L10n.currentWorkKicker)
+                                    .font(.caption.bold())
+                                    .foregroundStyle(AnchorPalette.link)
+                                Text(L10n.anchorCaptureHeadline)
+                                    .font(.title2.bold())
+                                    .foregroundStyle(AnchorPalette.ink)
+                            }
+                        }
+
+                        snapshotStrip
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(L10n.momentToRemember)
+                                .font(.headline)
+                                .foregroundStyle(AnchorPalette.ink)
+                            ZStack(alignment: .topLeading) {
+                                if note.isEmpty {
+                                    Text(L10n.notePlaceholder)
+                                        .font(.body)
+                                        .foregroundStyle(AnchorPalette.secondaryInk.opacity(0.62))
+                                        .padding(.horizontal, 5)
+                                        .padding(.vertical, 8)
+                                        .allowsHitTesting(false)
+                                }
+                                TextEditor(text: $note)
+                                    .font(.body)
+                                    .focused($isFocused)
+                                    .scrollContentBackground(.hidden)
+                                    .frame(minHeight: 126)
+                                    .accessibilityLabel(L10n.momentToRemember)
+                                    .onChange(of: note) { _, newValue in
+                                        if newValue.count > 140 { note = String(newValue.prefix(140)) }
+                                    }
+                            }
+                            .padding(10)
+                            .background(AnchorPalette.surface, in: .rect(cornerRadius: 20, style: .continuous))
+                            .shadow(color: AnchorPalette.deepSea.opacity(0.08), radius: 12, y: 7)
+
+                            HStack {
+                                Button {
+                                    isFocused = true
+                                } label: {
+                                    Label(L10n.keyboardDictation, systemImage: "mic.fill")
+                                        .font(.caption.bold())
+                                        .padding(.horizontal, 12)
+                                        .frame(minHeight: 36)
+                                        .background(AnchorPalette.cyan.opacity(0.14), in: .capsule)
+                                }
+                                .buttonStyle(.plain)
+                                Spacer()
+                                Text("\(note.count)/140")
+                                    .font(.caption.monospacedDigit())
+                                    .foregroundStyle(AnchorPalette.secondaryInk)
+                            }
+                        }
+
+                        if let recent = model.projection.session?.notes.first {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Label(L10n.recentAnchor, systemImage: "checkmark.circle.fill")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(AnchorPalette.mintInk)
+                                Text(recent.text)
+                                    .font(.subheadline)
+                                    .foregroundStyle(AnchorPalette.secondaryInk)
+                            }
+                            .padding(13)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(AnchorPalette.seafoam.opacity(0.17), in: .rect(cornerRadius: 18, style: .continuous))
+                        }
+
+                        Button {
+                            savedTrigger += 1
+                            Task {
+                                await model.addNote(note)
+                                dismiss()
+                            }
+                        } label: {
+                            Label(L10n.dropAnchor, systemImage: "scope")
+                        }
+                        .buttonStyle(HarborPrimaryButtonStyle())
+                        .disabled(note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .sensoryFeedback(.success, trigger: savedTrigger)
                     }
+                    .padding(.horizontal, AnchorSpacing.medium)
+                    .padding(.bottom, AnchorSpacing.large)
+                    .frame(maxWidth: 680)
+                    .frame(maxWidth: .infinity)
                 }
-                TextEditor(text: $note)
-                    .font(.body)
-                    .focused($isFocused)
-                    .padding(AnchorSpacing.small)
-                    .scrollContentBackground(.hidden)
-                    .background(AnchorPalette.surface, in: .rect(cornerRadius: 18))
-                    .accessibilityLabel(L10n.anchorNotePrompt)
-                Label(L10n.setupHint, systemImage: "mic.fill")
-                    .font(.caption)
-                    .foregroundStyle(AnchorPalette.secondaryInk)
-                Button(L10n.save) {
-                    savedTrigger += 1
-                    Task {
-                        await model.addNote(note)
-                        dismiss()
-                    }
-                }
-                .buttonStyle(AnchorPrimaryButtonStyle())
-                .disabled(note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .sensoryFeedback(.success, trigger: savedTrigger)
             }
-            .padding(AnchorSpacing.large)
-            .background(AnchorPalette.paper)
+            .navigationTitle(L10n.anchorNote)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(L10n.cancel) { dismiss() }
+                    Button(action: { dismiss() }) { Image(systemName: "xmark") }
+                        .accessibilityLabel(L10n.cancel)
                 }
             }
             .onAppear { isFocused = true }
         }
+        .presentationCornerRadius(30)
+    }
+
+    private var snapshotStrip: some View {
+        let session = model.projection.session
+        let running = session?.processes.filter { $0.status == .running }.count ?? 0
+        let attention = session?.processes.filter { $0.status == .needsDecision }.count ?? 0
+        return HStack(spacing: 0) {
+            snapshotCell(symbol: "mappin.and.ellipse", label: L10n.currentGoal, value: session?.goal.title ?? "")
+            Divider().padding(.vertical, 10)
+            snapshotCell(symbol: "waveform.path.ecg", label: L10n.currentSnapshot, value: L10n.runningAndWaiting(running: running, attention: attention))
+        }
+        .padding(.vertical, 5)
+        .background(AnchorPalette.surface, in: .rect(cornerRadius: 20, style: .continuous))
+        .shadow(color: AnchorPalette.deepSea.opacity(0.07), radius: 10, y: 6)
+    }
+
+    private func snapshotCell(symbol: String, label: String, value: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: symbol)
+                .foregroundStyle(AnchorPalette.link)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label).font(.caption2).foregroundStyle(AnchorPalette.secondaryInk)
+                Text(value).font(.caption.bold()).foregroundStyle(AnchorPalette.ink).lineLimit(2)
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 }
 

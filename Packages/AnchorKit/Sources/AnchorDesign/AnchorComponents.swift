@@ -42,15 +42,31 @@ public struct AnchorMark: View {
     public var body: some View {
         ZStack {
             Circle()
-                .fill(AnchorPalette.deepSea)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.79, green: 0.97, blue: 0.91),
+                            AnchorPalette.seafoam,
+                            AnchorPalette.cyan,
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
             Circle()
-                .stroke(AnchorPalette.seafoam, lineWidth: max(3, size * 0.08))
-                .padding(size * 0.13)
-            Image(systemName: "scope")
-                .font(.system(size: size * 0.38, weight: .bold))
-                .foregroundStyle(.white)
+                .stroke(AnchorPalette.cyan.opacity(0.30), lineWidth: max(3, size * 0.07))
+                .padding(size * 0.08)
+            HarborAnchorGlyph(lineWidth: max(2, size * 0.045))
+                .frame(width: size * 0.48, height: size * 0.48)
         }
         .frame(width: size, height: size)
+        .overlay(alignment: .top) {
+            Capsule()
+                .fill(.white.opacity(0.48))
+                .frame(width: size * 0.52, height: max(3, size * 0.11))
+                .padding(.top, size * 0.12)
+        }
+        .shadow(color: AnchorPalette.cyan.opacity(0.22), radius: size * 0.22, y: size * 0.12)
         .accessibilityHidden(true)
     }
 }
@@ -75,7 +91,7 @@ public struct SourceMark: View {
             let mark = context.resolve(
                 Text(symbol)
                     .font(.system(size: canvasSize.width * 0.48, weight: .bold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.white)
             )
             context.draw(
                 mark,
@@ -85,9 +101,16 @@ public struct SourceMark: View {
         }
         .frame(width: size, height: size)
         .background(
-            AnchorPalette.sourceMark(tone),
+            AnchorPalette.source(tone),
             in: .rect(cornerRadius: size * 0.29, style: .continuous)
         )
+        .overlay(alignment: .top) {
+            Capsule()
+                .fill(.white.opacity(0.34))
+                .frame(width: size * 0.55, height: max(2, size * 0.08))
+                .padding(.top, size * 0.08)
+        }
+        .shadow(color: AnchorPalette.source(tone).opacity(0.24), radius: size * 0.18, y: size * 0.10)
         .accessibilityHidden(true)
     }
 }
