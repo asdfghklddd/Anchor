@@ -156,7 +156,10 @@ struct DecisionView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(L10n.cancel) { dismiss() }
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark")
+                    }
+                    .accessibilityLabel(L10n.cancel)
                 }
             }
         }

@@ -22,6 +22,7 @@ struct HandoffView: View {
                 Task { await model.correctPresence(to: .atDesk) }
             }
             .buttonStyle(.bordered)
+            .tint(AnchorPalette.ink)
             .controlSize(.large)
         }
         .foregroundStyle(AnchorPalette.ink)
@@ -45,6 +46,8 @@ struct AwayView: View {
                         Text(L10n.awayDetail)
                             .font(.title3)
                             .foregroundStyle(AnchorPalette.secondaryInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("away.detail")
                     }
                     AnchorCard(tint: AnchorPalette.seafoam) {
                         VStack(alignment: .leading, spacing: AnchorSpacing.small) {
@@ -88,6 +91,7 @@ struct AwayView: View {
                         Task { await model.correctPresence(to: .atDesk) }
                     }
                     .buttonStyle(.bordered)
+                    .tint(AnchorPalette.ink)
                     .controlSize(.large)
                     .frame(maxWidth: .infinity)
                 }
@@ -98,6 +102,7 @@ struct AwayView: View {
             .background(AnchorPalette.paper)
             .toolbar(.hidden, for: .navigationBar)
         }
+        .accessibilityIdentifier("away.screen")
     }
 }
 
