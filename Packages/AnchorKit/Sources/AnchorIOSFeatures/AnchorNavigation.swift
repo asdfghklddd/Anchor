@@ -17,6 +17,7 @@ public enum AnchorRoute: Hashable {
 }
 
 enum AnchorSheet: Hashable, Identifiable {
+    case setup
     case note
     case goal
     case notifications

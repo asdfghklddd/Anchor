@@ -98,6 +98,25 @@ struct AnchorLinkCodecTests {
         }
     }
 
+    @Test("A disconnected Mac does not reject a committed local session")
+    func linkedRepositoryKeepsLocalSessionOffline() async throws {
+        let service = "com.andywang.anchor.tests.offline.\(UUID().uuidString)"
+        defer { deleteKeychainItems(service: service) }
+        let client = AnchorBonjourClient(
+            identityStore: PairingIdentityStore(service: service)
+        )
+        let repository = LinkedSessionRepository(
+            base: InMemorySessionRepository(),
+            client: client
+        )
+        let goal = AnchorGoal(title: "Offline goal", completionCriteria: "Done")
+
+        try await repository.send(.createSession(goal: goal, processes: []))
+
+        let session = try #require(await repository.currentProjection().session)
+        #expect(session.goal == goal)
+    }
+
     @Test("Updating trust material does not delete the existing Keychain item first")
     func keychainUpdate() throws {
         let service = "com.andywang.anchor.tests.keychain.\(UUID().uuidString)"

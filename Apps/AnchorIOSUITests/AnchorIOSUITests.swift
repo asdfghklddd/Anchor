@@ -18,6 +18,45 @@ final class AnchorIOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testEmptyWorkspaceOpensAnchorSetup() throws {
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo-scenario", "empty"]
+        app.launch()
+
+        XCTAssertTrue(app.descendants(matching: .any)["workspace.screen"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["workspace.empty.processes"].exists)
+        try audit(app)
+
+        let anchorButton = app.buttons["anchor.note.button"]
+        XCTAssertTrue(anchorButton.exists)
+        anchorButton.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["setup.screen"].waitForExistence(timeout: 3))
+
+        let goalField = app.descendants(matching: .any)["setup.goal.field"]
+        let criteriaField = app.descendants(matching: .any)["setup.criteria.field"]
+        let processField = app.descendants(matching: .any)["setup.process.field.0"]
+        XCTAssertTrue(goalField.exists)
+        XCTAssertTrue(criteriaField.exists)
+        XCTAssertTrue(processField.exists)
+
+        goalField.tap()
+        goalField.typeText("Ship the first Anchor workspace")
+        criteriaField.tap()
+        criteriaField.typeText("The workspace is ready for daily use")
+        processField.tap()
+        processField.typeText("Build the iPhone experience")
+
+        let startButton = app.buttons["setup.start.button"]
+        XCTAssertTrue(startButton.isEnabled)
+        startButton.tap()
+
+        XCTAssertTrue(app.descendants(matching: .any)["setup.screen"].waitForNonExistence(timeout: 3))
+        XCTAssertTrue(app.descendants(matching: .any)["workspace.screen"].exists)
+        XCTAssertFalse(app.descendants(matching: .any)["workspace.empty.processes"].exists)
+    }
+
+    @MainActor
     func testDecisionFlow() throws {
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
@@ -120,6 +159,7 @@ final class AnchorIOSUITests: XCTestCase {
                 "workspace.focus.kicker",
                 "workspace.focus.summary",
                 "workspace.focus.duration",
+                "workspace.empty.processes",
                 "topbar.connection",
                 "away.summary.progress",
                 "return.next.content",

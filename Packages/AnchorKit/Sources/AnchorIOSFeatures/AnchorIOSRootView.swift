@@ -30,25 +30,22 @@ public struct AnchorIOSRootView: View {
         AnchorLaunchGate {
             NavigationStack(path: $path) {
                 Group {
-                    if let session = model.projection.session {
-                        if posture == .landscape,
-                           session.presence != .away,
-                           session.presence != .returning {
-                            LandscapeAmbientDashboard(
-                                projection: model.projection,
-                                onResolve: resolve
-                            )
-                        } else {
-                            PortraitDashboard(
-                                projection: model.projection,
-                                auxiliaryToolbarLabel: auxiliaryToolbarLabel,
-                                auxiliaryToolbarAction: auxiliaryToolbarAction,
-                                onRoute: { path.append($0) },
-                                onSheet: { sheet = $0 }
-                            )
-                        }
+                    if let session = model.projection.session,
+                       posture == .landscape,
+                       session.presence != .away,
+                       session.presence != .returning {
+                        LandscapeAmbientDashboard(
+                            projection: model.projection,
+                            onResolve: resolve
+                        )
                     } else {
-                        AnchorSetupView(model: model)
+                        PortraitDashboard(
+                            projection: model.projection,
+                            auxiliaryToolbarLabel: auxiliaryToolbarLabel,
+                            auxiliaryToolbarAction: auxiliaryToolbarAction,
+                            onRoute: { path.append($0) },
+                            onSheet: { sheet = $0 }
+                        )
                     }
                 }
                 .navigationDestination(for: AnchorRoute.self) { route in
@@ -70,8 +67,8 @@ public struct AnchorIOSRootView: View {
         } action: { newPosture in
             guard newPosture != posture else { return }
             posture = newPosture
-            // The setup screen has no session to reduce a presence update into.
-            // Remember the posture now and apply it once a session exists.
+            // The empty workspace has no session to reduce a presence update into.
+            // Remember the posture now and apply it once an anchor exists.
             guard model.projection.session != nil else { return }
             Task { await model.updatePosture(newPosture) }
         }
@@ -139,6 +136,11 @@ public struct AnchorIOSRootView: View {
     @ViewBuilder
     private func sheetDestination(for item: AnchorSheet) -> some View {
         switch item {
+        case .setup:
+            NavigationStack {
+                AnchorSetupView(model: model)
+            }
+            .presentationDetents([.large])
         case .note:
             AnchorNoteView(model: model)
                 .presentationDetents([.large])

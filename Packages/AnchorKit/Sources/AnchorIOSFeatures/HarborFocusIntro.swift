@@ -5,7 +5,7 @@ import Foundation
 import SwiftUI
 
 struct HarborFocusIntro: View {
-    let session: AnchorSession
+    let session: AnchorSession?
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -64,15 +64,16 @@ struct HarborFocusIntro: View {
     }
 
     private var runningCount: Int {
-        session.processes.lazy.filter { $0.status == .running }.count
+        session?.processes.lazy.filter { $0.status == .running }.count ?? 0
     }
 
     private var attentionCount: Int {
-        session.processes.lazy.filter { $0.status == .needsDecision }.count
+        session?.processes.lazy.filter { $0.status == .needsDecision }.count ?? 0
     }
 
     private var focusMinutes: Int {
-        max(1, Int(Date.now.timeIntervalSince(session.startedAt) / 60))
+        guard let session else { return 0 }
+        return max(1, Int(Date.now.timeIntervalSince(session.startedAt) / 60))
     }
 }
 #endif

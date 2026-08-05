@@ -18,36 +18,36 @@ struct PortraitDashboard: View {
         ZStack(alignment: .bottom) {
             HarborBackground()
 
-            if let session = projection.session {
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        ProjectionStatusBanners(projection: projection)
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    ProjectionStatusBanners(projection: projection)
 
-                        HarborFocusIntro(session: session)
-                            .padding(.top, 10)
-                            .padding(.bottom, 12)
+                    HarborFocusIntro(session: projection.session)
+                        .padding(.top, 10)
+                        .padding(.bottom, 12)
 
-                        HarborMissionCard(session: session) {
-                            onSheet(.goal)
-                        }
-
-                        HarborWaveDivider()
-
-                        processHeader
-
-                        processGrid(session: session)
+                    HarborMissionCard(session: projection.session) {
+                        onSheet(projection.session == nil ? .setup : .goal)
                     }
-                    .padding(.horizontal, AnchorSpacing.medium)
-                    .padding(.bottom, 138)
-                    .frame(maxWidth: 760)
-                    .frame(maxWidth: .infinity)
-                }
-                .scrollIndicators(.hidden)
-            }
 
-            if projection.session != nil {
-                anchorFooter
+                    HarborWaveDivider()
+
+                    processHeader
+
+                    if let session = projection.session, !session.processes.isEmpty {
+                        processGrid(session: session)
+                    } else {
+                        WorkspaceEmptyProcessesView()
+                    }
+                }
+                .padding(.horizontal, AnchorSpacing.medium)
+                .padding(.bottom, 138)
+                .frame(maxWidth: 760)
+                .frame(maxWidth: .infinity)
             }
+            .scrollIndicators(.hidden)
+
+            anchorFooter
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             HarborTopBar(
@@ -77,7 +77,10 @@ struct PortraitDashboard: View {
             }
             Spacer()
             HStack(spacing: 7) {
-                Label(L10n.live, systemImage: "circle.fill")
+                Label(
+                    projection.session == nil ? L10n.preparing : L10n.live,
+                    systemImage: projection.session == nil ? "circle.dotted" : "circle.fill"
+                )
                     .labelStyle(.titleAndIcon)
                     .font(.caption2.bold())
                     .foregroundStyle(AnchorPalette.mintInk)
@@ -87,7 +90,7 @@ struct PortraitDashboard: View {
                     .accessibilityIdentifier("processes.live")
 
                 Button {
-                    onSheet(.layout)
+                    onSheet(projection.session == nil ? .setup : .layout)
                 } label: {
                     Image(systemName: "square.grid.2x2")
                         .font(.subheadline.bold())
@@ -147,7 +150,7 @@ struct PortraitDashboard: View {
             Spacer()
             HarborAnchorControl(label: L10n.dropAnchor) {
                 anchorPulse += 1
-                onSheet(.note)
+                onSheet(projection.session == nil ? .setup : .note)
             }
             .sensoryFeedback(.impact(weight: .medium), trigger: anchorPulse)
             Spacer()
