@@ -7,6 +7,7 @@ import SwiftUI
 struct AnchorSetupView: View {
     let model: AnchorSessionModel
 
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var goalTitle = ""
     @State private var completionCriteria = ""
@@ -46,9 +47,16 @@ struct AnchorSetupView: View {
 
     private var setupNavigation: some View {
         HStack {
-            Color.clear
-                .frame(width: 44, height: 44)
-                .accessibilityHidden(true)
+            Button(action: dismiss.callAsFunction) {
+                Image(systemName: "xmark")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(AnchorPalette.ink)
+                    .frame(width: 44, height: 44)
+                    .background(AnchorPalette.surface, in: .circle)
+            }
+            // [VERIFY] Confirm “Close” matches the intended setup dismissal wording.
+            .accessibilityLabel(L10n.close)
+            .accessibilityIdentifier("setup.close.button")
             Spacer()
             Text(L10n.setupNewWork)
                 .font(.subheadline.bold())
@@ -61,7 +69,6 @@ struct AnchorSetupView: View {
                 .frame(width: 44, height: 44, alignment: .trailing)
         }
         .frame(minHeight: 54)
-        .accessibilityElement(children: .combine)
     }
 
     private var setupHero: some View {
@@ -145,6 +152,7 @@ struct AnchorSetupView: View {
                     .focused($focusedField, equals: .goal)
                     .submitLabel(.next)
                     .onSubmit { focusedField = .criteria }
+                    .accessibilityIdentifier("setup.goal.field")
                     .harborInputSurface()
             }
 
@@ -171,6 +179,7 @@ struct AnchorSetupView: View {
                     .font(.body)
                     .lineLimit(4 ... 7)
                     .focused($focusedField, equals: .criteria)
+                    .accessibilityIdentifier("setup.criteria.field")
                     .harborInputSurface()
             }
         }
@@ -232,6 +241,7 @@ struct AnchorSetupView: View {
                 .focused($focusedField, equals: .process(index))
                 .textFieldStyle(.plain)
                 .frame(minHeight: 44)
+                .accessibilityIdentifier("setup.process.field.\(index)")
 
             if processNames.count > 1 {
                 Button(role: .destructive) {
@@ -265,6 +275,7 @@ struct AnchorSetupView: View {
             }
             .buttonStyle(HarborPrimaryButtonStyle())
             .disabled(!isValid)
+            .accessibilityIdentifier("setup.start.button")
             .padding(.horizontal, AnchorSpacing.medium)
             .padding(.vertical, AnchorSpacing.small)
         }
@@ -308,7 +319,11 @@ struct AnchorSetupView: View {
             completionCriteria: criteria,
             note: criteria
         )
-        Task { await model.createSession(goal: goal, processes: processes) }
+        Task {
+            if await model.createSession(goal: goal, processes: processes) {
+                dismiss()
+            }
+        }
     }
 }
 #endif

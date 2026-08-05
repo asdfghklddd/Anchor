@@ -34,16 +34,21 @@ public actor LinkedSessionRepository: SessionRepository {
             break
         }
         guard let session = await base.currentProjection().session else { return }
-        sequence &+= 1
-        let payload = try JSONEncoder.anchor.encode(session)
-        let envelope = EventEnvelope(
-            sessionID: session.id,
-            sourceID: sourceID,
-            sequence: sequence,
-            type: "session.projection.v1",
-            payload: payload
-        )
-        try await client.send(envelope)
+        do {
+            sequence &+= 1
+            let payload = try JSONEncoder.anchor.encode(session)
+            let envelope = EventEnvelope(
+                sessionID: session.id,
+                sourceID: sourceID,
+                sequence: sequence,
+                type: "session.projection.v1",
+                payload: payload
+            )
+            try await client.send(envelope)
+        } catch {
+            // The local command is already committed. Connection state tells
+            // the UI that Mac delivery is unavailable until sync gains an outbox.
+        }
     }
 }
 

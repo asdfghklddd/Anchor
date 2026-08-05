@@ -258,7 +258,12 @@ public struct HarborPrimaryButtonStyle: ButtonStyle {
             .padding(.horizontal, AnchorSpacing.medium)
             .background(
                 LinearGradient(
-                    colors: [Color(red: 0.11, green: 0.32, blue: 0.42), AnchorPalette.deepSea],
+                    colors: isEnabled
+                        ? [Color(red: 0.11, green: 0.32, blue: 0.42), AnchorPalette.deepSea]
+                        : [
+                            Color(red: 0.31, green: 0.37, blue: 0.39),
+                            Color(red: 0.23, green: 0.30, blue: 0.33),
+                        ],
                     startPoint: .top,
                     endPoint: .bottom
                 ),
@@ -268,7 +273,6 @@ public struct HarborPrimaryButtonStyle: ButtonStyle {
                 Capsule().fill(.white.opacity(0.18)).frame(height: 2)
             }
             .shadow(color: AnchorPalette.deepSea.opacity(0.24), radius: 10, y: configuration.isPressed ? 3 : 7)
-            .opacity(isEnabled ? 1 : 0.42)
             .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.98)
             .offset(y: reduceMotion || !configuration.isPressed ? 0 : 2)
             .animation(reduceMotion ? nil : .snappy(duration: 0.18), value: configuration.isPressed)
