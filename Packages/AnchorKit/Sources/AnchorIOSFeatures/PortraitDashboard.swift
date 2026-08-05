@@ -15,16 +15,17 @@ struct PortraitDashboard: View {
     @State private var anchorPulse = 0
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             HarborBackground()
 
             if let session = projection.session {
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: AnchorSpacing.small) {
+                    LazyVStack(alignment: .leading, spacing: 0) {
                         ProjectionStatusBanners(projection: projection)
 
                         HarborFocusIntro(session: session)
-                            .padding(.top, 4)
+                            .padding(.top, 10)
+                            .padding(.bottom, 12)
 
                         HarborMissionCard(session: session) {
                             onSheet(.goal)
@@ -37,11 +38,15 @@ struct PortraitDashboard: View {
                         processGrid(session: session)
                     }
                     .padding(.horizontal, AnchorSpacing.medium)
-                    .padding(.bottom, 116)
+                    .padding(.bottom, 138)
                     .frame(maxWidth: 760)
                     .frame(maxWidth: .infinity)
                 }
                 .scrollIndicators(.hidden)
+            }
+
+            if projection.session != nil {
+                anchorFooter
             }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
@@ -54,9 +59,6 @@ struct PortraitDashboard: View {
                 onAuxiliary: auxiliaryToolbarAction
             )
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            anchorFooter
-        }
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarHidden(true)
     }
@@ -65,11 +67,11 @@ struct PortraitDashboard: View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(L10n.liveProcesses)
-                    .font(.caption.bold())
+                    .font(.caption2.bold())
                     .foregroundStyle(AnchorPalette.link)
                     .accessibilityIdentifier("processes.kicker")
                 Text(L10n.happeningNow)
-                    .font(.title2.bold())
+                    .font(.headline.bold())
                     .foregroundStyle(AnchorPalette.ink)
                     .accessibilityIdentifier("processes.title")
             }
@@ -96,7 +98,7 @@ struct PortraitDashboard: View {
                 .accessibilityLabel(L10n.layout)
             }
         }
-        .padding(.bottom, 2)
+        .padding(.bottom, 4)
     }
 
     private func processGrid(session: AnchorSession) -> some View {
@@ -143,27 +145,22 @@ struct PortraitDashboard: View {
     private var anchorFooter: some View {
         HStack {
             Spacer()
-            HarborAnchorControl(label: L10n.anchorNote) {
+            HarborAnchorControl(label: L10n.dropAnchor) {
                 anchorPulse += 1
                 onSheet(.note)
             }
             .sensoryFeedback(.impact(weight: .medium), trigger: anchorPulse)
             Spacer()
         }
-        .padding(.top, 8)
-        .padding(.bottom, 3)
+        .padding(.top, 10)
+        .padding(.bottom, 2)
+        .frame(maxWidth: .infinity)
         .background {
-            AnchorPalette.paper
-                .ignoresSafeArea()
-        }
-        .overlay(alignment: .top) {
             LinearGradient(
-                colors: [AnchorPalette.paper.opacity(0), AnchorPalette.paper],
+                colors: [AnchorPalette.paper.opacity(0), AnchorPalette.paper.opacity(0.82)],
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(height: 34)
-            .offset(y: -34)
             .accessibilityHidden(true)
         }
     }

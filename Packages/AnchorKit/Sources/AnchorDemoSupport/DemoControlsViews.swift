@@ -7,23 +7,14 @@ import AnchorIOSFeatures
 
 public struct AnchorIOSDemoRootView: View {
     private let model: AnchorSessionModel
-    private let controller: any DemoControlling
-    @State private var showingControls = false
 
     public init(model: AnchorSessionModel, controller: any DemoControlling) {
         self.model = model
-        self.controller = controller
+        _ = controller
     }
 
     public var body: some View {
-        AnchorIOSRootView(
-            model: model,
-            auxiliaryToolbarLabel: DemoL10n.controls,
-            auxiliaryToolbarAction: { showingControls = true }
-        )
-        .sheet(isPresented: $showingControls) {
-            IOSDemoControlsView(controller: controller)
-        }
+        AnchorIOSRootView(model: model)
     }
 }
 

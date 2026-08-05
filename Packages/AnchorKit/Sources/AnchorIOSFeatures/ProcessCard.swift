@@ -14,7 +14,7 @@ struct ProcessCard: View {
     @State private var hasAppeared = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
                 SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 29)
                 Spacer(minLength: 4)
@@ -22,7 +22,7 @@ struct ProcessCard: View {
             }
 
             Text(process.title)
-                .font(.subheadline.bold())
+                .font(.footnote.bold())
                 .foregroundStyle(AnchorPalette.ink)
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
                 .accessibilityIdentifier("process.card.title")
@@ -44,10 +44,10 @@ struct ProcessCard: View {
                 }
             }
         }
-        .padding(10)
+        .padding(8)
         .frame(
             maxWidth: .infinity,
-            minHeight: dynamicTypeSize.isAccessibilitySize ? 190 : 132,
+            minHeight: dynamicTypeSize.isAccessibilitySize ? 190 : 122,
             alignment: .topLeading
         )
         .background(
@@ -115,10 +115,11 @@ struct ProcessCard: View {
     private var metricContent: some View {
         HStack(alignment: .bottom, spacing: 7) {
             ProcessMiniVisual(tone: process.sourceTone, tint: tint, progress: process.progress ?? 0)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: 58, alignment: .leading)
             VStack(alignment: .trailing, spacing: 0) {
                 Text(process.metric)
                     .font(.title.bold().monospacedDigit())
+                    .fixedSize(horizontal: true, vertical: false)
                     .foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
                     .accessibilityIdentifier("process.card.metric")
                 Text(process.metricLabel)
@@ -127,7 +128,7 @@ struct ProcessCard: View {
                     .accessibilityIdentifier("process.card.metric.label")
             }
         }
-        .frame(minHeight: 38)
+        .frame(minHeight: 34)
     }
 
     private var decisionContent: some View {
@@ -149,15 +150,15 @@ struct ProcessCard: View {
             Spacer(minLength: 0)
         }
         .overlay(alignment: .bottom) {
-            Label(L10n.chooseDirection, systemImage: "arrow.right.circle")
+            Label(L10n.goChooseDirection, systemImage: "arrow.right.circle")
                 .font(.caption2.bold())
                 .foregroundStyle(.white)
-                .frame(maxWidth: .infinity, minHeight: 28)
+                .frame(maxWidth: .infinity, minHeight: 30)
                 .background(AnchorPalette.deepSea, in: .capsule)
-                .offset(y: 27)
+                .offset(y: 24)
                 .accessibilityIdentifier("process.card.action")
         }
-        .padding(.bottom, 26)
+        .padding(.bottom, 22)
     }
 
     private var tint: Color {

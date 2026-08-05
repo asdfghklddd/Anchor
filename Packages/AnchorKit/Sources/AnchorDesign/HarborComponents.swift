@@ -192,12 +192,12 @@ public struct HarborAnchorControl: View {
     }
 
     public var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 4) {
             Button(action: action) {
                 ZStack {
                     Circle()
                         .stroke(AnchorPalette.cyan.opacity(0.25), lineWidth: 2)
-                        .frame(width: 82, height: 82)
+                        .frame(width: 76, height: 76)
                         .scaleEffect(isRippling ? 1.18 : 0.82)
                         .opacity(isRippling ? 0 : 0.55)
 
@@ -209,20 +209,20 @@ public struct HarborAnchorControl: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 64, height: 64)
+                        .frame(width: 62, height: 62)
                         .overlay {
                             Circle().stroke(AnchorPalette.cyan.opacity(0.30), lineWidth: 4).padding(-7)
                         }
                         .overlay(alignment: .top) {
-                            Capsule().fill(.white.opacity(0.45)).frame(width: 34, height: 10).padding(.top, 8)
+                            Capsule().fill(.white.opacity(0.45)).frame(width: 32, height: 9).padding(.top, 8)
                         }
                         .shadow(color: Color(red: 0.18, green: 0.51, blue: 0.57), radius: 0, y: 7)
                         .shadow(color: AnchorPalette.deepSea.opacity(0.24), radius: 14, y: 12)
 
                     HarborAnchorGlyph(lineWidth: 2.8)
-                        .frame(width: 29, height: 29)
+                        .frame(width: 27, height: 27)
                 }
-                .frame(width: 88, height: 76)
+                .frame(width: 78, height: 68)
             }
             .buttonStyle(HarborAnchorButtonStyle())
             .accessibilityIdentifier("anchor.note.button")
@@ -230,8 +230,10 @@ public struct HarborAnchorControl: View {
             .accessibilityInputLabels([Text(label)])
 
             Text(label)
-                .font(.caption.bold())
+                .font(.caption2.bold())
                 .foregroundStyle(AnchorPalette.ink)
+                .accessibilityHidden(true)
+                .accessibilityIdentifier("anchor.note.label")
         }
         .task {
             guard !reduceMotion else { return }

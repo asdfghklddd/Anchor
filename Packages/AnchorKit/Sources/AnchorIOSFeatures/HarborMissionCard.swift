@@ -42,7 +42,7 @@ struct HarborMissionCard: View {
                         .font(.caption2.bold())
                         .foregroundStyle(AnchorPalette.oceanHighlight)
                     Text(session.goal.title)
-                        .font(.title3.bold())
+                        .font(.headline.bold())
                         .foregroundStyle(.white)
                         .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                         .accessibilityIdentifier("goal.title")
@@ -52,15 +52,16 @@ struct HarborMissionCard: View {
                     Image(systemName: "pencil")
                         .font(.subheadline.bold())
                         .foregroundStyle(.white)
-                        .frame(width: 44, height: 44)
+                        .frame(width: 32, height: 32)
                         .background(.white.opacity(0.12), in: .rect(cornerRadius: 14, style: .continuous))
+                        .frame(width: 44, height: 44)
                 }
                 .accessibilityLabel(L10n.editGoal)
                 .accessibilityIdentifier("goal.edit.button")
             }
 
             Text(goalNote)
-                .font(.caption)
+                .font(.caption2)
                 .foregroundStyle(.white.opacity(0.90))
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
                 .accessibilityIdentifier("goal.note")

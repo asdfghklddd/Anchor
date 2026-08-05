@@ -82,7 +82,7 @@
     "note.drop" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Drop anchor" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "投下锚点" } }
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "投锚" } }
       }
     },
     "note.moment" : {
@@ -2538,6 +2538,7 @@
     "greeting.evening" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Good evening" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "晚上好" } } } },
     "greeting.morning" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Good morning" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "早上好" } } } },
     "note.anchored.count" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld anchors dropped" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已投锚 %lld 次" } } } },
+    "process.choose.direction" : { "extractionState" : "manual", "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose direction" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "去选择方向" } } } },
     "process.add.another" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Add another process" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加另一个进程" } } } },
     "process.flow" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Process flow" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进程流向" } } } },
     "process.happening.now" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "What is happening now" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "现在发生的事" } } } },

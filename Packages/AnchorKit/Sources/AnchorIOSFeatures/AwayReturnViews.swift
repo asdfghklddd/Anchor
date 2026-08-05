@@ -145,9 +145,12 @@ struct AwayView: View {
                         Button(L10n.atDeskCorrection) {
                             Task { await model.correctPresence(to: .atDesk) }
                         }
-                        .buttonStyle(.bordered)
-                        .tint(AnchorPalette.ink)
-                        .controlSize(.large)
+                        .font(.headline.bold())
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, AnchorSpacing.large)
+                        .frame(minHeight: 50)
+                        .background(Color.black, in: .capsule)
+                        .buttonStyle(.plain)
                         .frame(maxWidth: .infinity)
                         .padding(.top, AnchorSpacing.large)
                     }
@@ -270,6 +273,9 @@ struct AwayView: View {
             ))
                 .font(.caption.bold().monospacedDigit())
                 .foregroundStyle(AnchorPalette.ink)
+                .padding(.horizontal, 8)
+                .frame(minHeight: 30)
+                .background(AnchorPalette.paper, in: .capsule)
                 .accessibilityIdentifier("away.process.summary")
         }
     }
