@@ -30,17 +30,17 @@ struct HarborFocusIntro: View {
     private var focusCopy: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text("\(greeting) · \(L10n.focusSession)")
-                .font(.caption.bold())
+                .font(.caption2.bold())
                 .foregroundStyle(AnchorPalette.link)
                 .accessibilityIdentifier("workspace.focus.kicker")
             Text(L10n.focusHeadline)
-                .font(.title.bold())
+                .font(.title.scaled(by: 0.9).bold())
                 .foregroundStyle(AnchorPalette.ink)
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
                 .minimumScaleFactor(0.84)
                 .accessibilityIdentifier("workspace.screen")
             Text(L10n.focusSummary(running: runningCount, attention: attentionCount))
-                .font(.subheadline)
+                .font(.caption)
                 .foregroundStyle(AnchorPalette.secondaryInk)
                 .accessibilityIdentifier("workspace.focus.summary")
         }

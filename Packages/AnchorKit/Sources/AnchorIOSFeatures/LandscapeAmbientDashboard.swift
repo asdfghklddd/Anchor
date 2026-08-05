@@ -262,7 +262,11 @@ private struct AmbientProcessTile: View {
                     Spacer(minLength: 0)
                     Image(systemName: statusSymbol).font(.caption2.bold()).foregroundStyle(tint)
                 }
-                Text(process.title).font(.caption.bold()).lineLimit(1)
+                Text(process.title)
+                    .font(.caption.bold())
+                    .foregroundStyle(AnchorPalette.ink)
+                    .lineLimit(1)
+                    .accessibilityIdentifier("ambient.tile.title")
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(process.metric).font(.headline.bold().monospacedDigit()).foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
                     Spacer(minLength: 0)

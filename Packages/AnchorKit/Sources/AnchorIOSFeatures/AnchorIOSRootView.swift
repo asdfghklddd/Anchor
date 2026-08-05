@@ -27,31 +27,33 @@ public struct AnchorIOSRootView: View {
     }
 
     public var body: some View {
-        NavigationStack(path: $path) {
-            Group {
-                if let session = model.projection.session {
-                    if posture == .landscape,
-                       session.presence != .away,
-                       session.presence != .returning {
-                        LandscapeAmbientDashboard(
-                            projection: model.projection,
-                            onResolve: resolve
-                        )
+        AnchorLaunchGate {
+            NavigationStack(path: $path) {
+                Group {
+                    if let session = model.projection.session {
+                        if posture == .landscape,
+                           session.presence != .away,
+                           session.presence != .returning {
+                            LandscapeAmbientDashboard(
+                                projection: model.projection,
+                                onResolve: resolve
+                            )
+                        } else {
+                            PortraitDashboard(
+                                projection: model.projection,
+                                auxiliaryToolbarLabel: auxiliaryToolbarLabel,
+                                auxiliaryToolbarAction: auxiliaryToolbarAction,
+                                onRoute: { path.append($0) },
+                                onSheet: { sheet = $0 }
+                            )
+                        }
                     } else {
-                        PortraitDashboard(
-                            projection: model.projection,
-                            auxiliaryToolbarLabel: auxiliaryToolbarLabel,
-                            auxiliaryToolbarAction: auxiliaryToolbarAction,
-                            onRoute: { path.append($0) },
-                            onSheet: { sheet = $0 }
-                        )
+                        AnchorSetupView(model: model)
                     }
-                } else {
-                    AnchorSetupView(model: model)
                 }
-            }
-            .navigationDestination(for: AnchorRoute.self) { route in
-                destination(for: route)
+                .navigationDestination(for: AnchorRoute.self) { route in
+                    destination(for: route)
+                }
             }
         }
         .tint(AnchorPalette.link)

@@ -2,7 +2,7 @@ import AnchorCore
 import Foundation
 
 public enum DemoFixtureFactory {
-    public static let schemaVersion = 1
+    public static let schemaVersion = 2
 
     public static func projection(
         for scenario: DemoScenario,

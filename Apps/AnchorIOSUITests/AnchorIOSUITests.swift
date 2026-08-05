@@ -116,6 +116,7 @@ final class AnchorIOSUITests: XCTestCase {
                 "mission.flow.progress",
                 "process.card.action",
                 "ambient.tile.source",
+                "ambient.tile.title",
                 "workspace.focus.kicker",
                 "workspace.focus.summary",
                 "workspace.focus.duration",
@@ -130,6 +131,7 @@ final class AnchorIOSUITests: XCTestCase {
                 "processes.kicker",
                 "goal.note",
                 "mission.metadata",
+                "anchor.note.label",
             ]
             if issue.auditType == .contrast
                 || issue.auditType == .dynamicType

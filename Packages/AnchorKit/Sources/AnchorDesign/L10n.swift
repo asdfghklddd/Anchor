@@ -72,6 +72,7 @@ public enum L10n {
     public static let chooseDirection = AnchorStrings.value("decision.choose", default: "Choose an option")
     public static let confirmChoice = AnchorStrings.value("decision.confirm", default: "Confirm choice")
     public static let chooseVisualDirection = AnchorStrings.value("decision.visual.direction", default: "Choose a visual direction")
+    public static let goChooseDirection = AnchorStrings.value("process.choose.direction", default: "Choose direction")
     public static let taskProgress = AnchorStrings.value("task.progress", default: "Task progress")
     public static let currentStatus = AnchorStrings.value("task.current.status", default: "CURRENT STATUS")
     public static let activityLog = AnchorStrings.value("task.activity.log", default: "ACTIVITY LOG")

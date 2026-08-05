@@ -7,15 +7,15 @@ struct HarborMissionOrbit: View {
     let processes: [AnchorProcess]
 
     private let offsets = [
-        CGSize(width: 0, height: -45),
-        CGSize(width: 45, height: -4),
-        CGSize(width: 24, height: 43),
-        CGSize(width: -43, height: 14),
+        CGSize(width: 0, height: -42),
+        CGSize(width: 42, height: -4),
+        CGSize(width: 22, height: 40),
+        CGSize(width: -40, height: 13),
     ]
 
     var body: some View {
         ZStack {
-            ForEach([42.0, 72.0, 102.0], id: \.self) { diameter in
+            ForEach([40.0, 68.0, 96.0], id: \.self) { diameter in
                 Circle()
                     .stroke(AnchorPalette.oceanHighlight.opacity(0.24), lineWidth: 1.5)
                     .frame(width: diameter, height: diameter)
@@ -34,7 +34,7 @@ struct HarborMissionOrbit: View {
                     .offset(offsets[index])
             }
         }
-        .frame(width: 116, height: 116)
+        .frame(width: 108, height: 108)
         .accessibilityHidden(true)
     }
 }

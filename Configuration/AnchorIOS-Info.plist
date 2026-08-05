@@ -32,7 +32,10 @@
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Anchor uses the local network to connect your paired iPhone and Mac.</string>
 	<key>UILaunchScreen</key>
-	<dict/>
+	<dict>
+		<key>UIColorName</key>
+		<string>AnchorLaunchBackground</string>
+	</dict>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
