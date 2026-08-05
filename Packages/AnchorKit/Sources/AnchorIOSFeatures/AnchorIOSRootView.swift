@@ -68,6 +68,9 @@ public struct AnchorIOSRootView: View {
         } action: { newPosture in
             guard newPosture != posture else { return }
             posture = newPosture
+            // The setup screen has no session to reduce a presence update into.
+            // Remember the posture now and apply it once a session exists.
+            guard model.projection.session != nil else { return }
             Task { await model.updatePosture(newPosture) }
         }
         .onChange(of: model.projection.session?.presence, initial: true) { _, presence in
@@ -111,7 +114,7 @@ public struct AnchorIOSRootView: View {
         case .insights:
             InsightsView(projection: model.projection)
         case .profile:
-            ProfileView(onRoute: { path.append($0) })
+            ProfileView(projection: model.projection, onRoute: { path.append($0) })
         case .history:
             HistoryView(projection: model.projection) { path.append(.historyDetail($0)) }
         case let .historyDetail(id):
@@ -136,7 +139,7 @@ public struct AnchorIOSRootView: View {
         switch item {
         case .note:
             AnchorNoteView(model: model)
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.large])
         case .goal:
             if let goal = model.projection.session?.goal {
                 GoalEditorView(model: model, goal: goal)

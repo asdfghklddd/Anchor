@@ -162,6 +162,10 @@ public final class AnchorSessionModel {
                 at: signals.observedAt
             )
         )
+        // Connection health is meaningful on the setup screen, but presence is
+        // session-scoped. Do not publish a presence command until an Anchor
+        // session exists.
+        guard projection.session != nil else { return }
         let newStatus = presenceReducer.reduce(signals)
         if newStatus != projection.session?.presence {
             await publishPresence(newStatus, at: signals.observedAt)
