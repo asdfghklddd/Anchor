@@ -5,9 +5,12 @@ import SwiftUI
 
 struct LandscapeAmbientDashboard: View {
     let projection: SessionProjection
+    let onGoal: () -> Void
+    let onAnchor: () -> Void
     let onResolve: (Decision, DecisionOption) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var inspectedProcessID: UUID?
     @State private var selectedOptionID: UUID?
@@ -15,33 +18,39 @@ struct LandscapeAmbientDashboard: View {
     var body: some View {
         VStack(spacing: 0) {
             progressEdge
-            ambientHeader
 
             if dynamicTypeSize.isAccessibilitySize {
                 ScrollView {
                     VStack(spacing: 12) {
+                        ambientHeader
                         goalLine
                         processGrid
                         inspector
+                        ticker
                     }
-                    .padding(12)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 12)
                 }
             } else {
-                HStack(spacing: 10) {
-                    VStack(spacing: 9) {
-                        goalLine
-                        processGrid
+                ambientHeader
+
+                VStack(spacing: 0) {
+                    HStack(spacing: 10) {
+                        VStack(spacing: 9) {
+                            goalLine
+                            processGrid
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        inspector
+                            .frame(width: 310)
                     }
-                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 9)
 
-                    inspector
-                        .frame(width: 310)
+                    ticker
                 }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 9)
             }
-
-            ticker
         }
         .background(AnchorPalette.paper)
         .overlay(alignment: .trailing) {
@@ -67,67 +76,125 @@ struct LandscapeAmbientDashboard: View {
 
     private var ambientHeader: some View {
         TimelineView(.periodic(from: .now, by: 30)) { context in
-            HStack {
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 8) {
                     Text(context.date, style: .time)
                         .font(.title.bold().monospacedDigit())
                         .foregroundStyle(AnchorPalette.ink)
                         .accessibilityLabel(context.date.formatted(date: .omitted, time: .shortened))
                         .accessibilityValue(L10n.ambientActive)
                         .accessibilityIdentifier("ambient.time")
-                    if !dynamicTypeSize.isAccessibilitySize {
-                        Label(L10n.ambientActive, systemImage: "circle.fill")
-                            .font(.caption2.bold())
-                            .foregroundStyle(AnchorPalette.mintInk)
-                            .accessibilityHidden(true)
-                    }
-                }
-                Spacer()
-                HStack(alignment: .firstTextBaseline, spacing: 7) {
+
+                    Label(L10n.ambientActive, systemImage: "circle.fill")
+                        .font(.headline.bold())
+                        .foregroundStyle(ambientActiveColor)
+
+                    Divider()
+
                     Text(L10n.focusTime)
-                        .font(.caption.bold())
+                        .font(.headline.bold())
                         .foregroundStyle(AnchorPalette.secondaryInk)
                     Text(focusDuration(at: context.date))
                         .font(.title2.bold().monospacedDigit())
                         .foregroundStyle(AnchorPalette.ink)
                 }
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(AnchorPalette.surface, in: .rect(cornerRadius: 20, style: .continuous))
+            } else {
+                HStack {
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Text(context.date, style: .time)
+                            .font(.title.bold().monospacedDigit())
+                            .foregroundStyle(AnchorPalette.ink)
+                            .accessibilityLabel(context.date.formatted(date: .omitted, time: .shortened))
+                            .accessibilityValue(L10n.ambientActive)
+                            .accessibilityIdentifier("ambient.time")
+                        Label(L10n.ambientActive, systemImage: "circle.fill")
+                            .font(.caption2.bold())
+                            .foregroundStyle(ambientActiveColor)
+                            .accessibilityHidden(true)
+                    }
+                    Spacer()
+                    HStack(alignment: .firstTextBaseline, spacing: 7) {
+                        Text(L10n.focusTime)
+                            .font(.caption.bold())
+                            .foregroundStyle(AnchorPalette.secondaryInk)
+                        Text(focusDuration(at: context.date))
+                            .font(.title2.bold().monospacedDigit())
+                            .foregroundStyle(AnchorPalette.ink)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .frame(minHeight: 48)
             }
-            .padding(.horizontal, 14)
-            .frame(minHeight: 48)
         }
     }
 
     private var goalLine: some View {
-        HStack(spacing: 10) {
-            HarborBrandMark(size: 38)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("\(L10n.currentGoal) · \(L10n.anchoredCount((projection.session?.notes.count ?? 0) + 1))")
-                    .font(.caption2.bold())
-                    .foregroundStyle(.white.opacity(0.68))
-                Text(projection.session?.goal.title ?? "")
-                    .font(.headline.bold())
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .accessibilityIdentifier("ambient.screen")
-            }
-            Spacer(minLength: 8)
-            if let progress = projection.overallProgress {
-                VStack(alignment: .trailing, spacing: 0) {
-                    Text(progress, format: .percent.precision(.fractionLength(0)))
+        Button(action: onGoal) {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 10) {
+                    HarborBrandMark(size: 44)
+                    Text("\(L10n.currentGoal) · \(L10n.anchoredCount(anchorCount))")
+                        .font(.headline.bold())
+                        .foregroundStyle(.white.opacity(0.68))
+                    Text(projection.session?.goal.title ?? L10n.emptyTitle)
+                        .font(.title3.bold())
+                        .foregroundStyle(.white)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("ambient.screen")
+
+                    Divider()
+                        .overlay(.white.opacity(0.3))
+
+                    Text(projection.overallProgress ?? 0, format: .percent.precision(.fractionLength(0)))
                         .font(.title2.bold().monospacedDigit())
-                        .foregroundStyle(AnchorPalette.warmYellow)
+                        .foregroundStyle(AnchorPalette.oceanHighlight)
                     Text(L10n.overallProgress)
-                        .font(.caption2)
+                        .font(.headline)
                         .foregroundStyle(.white.opacity(0.62))
                 }
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .overlay(alignment: .topTrailing) {
+                    Image(systemName: "chevron.right")
+                        .font(.headline.bold())
+                        .foregroundStyle(.white.opacity(0.45))
+                        .padding(16)
+                        .accessibilityHidden(true)
+                }
+            } else {
+                HStack(spacing: 10) {
+                    HarborBrandMark(size: 38)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("\(L10n.currentGoal) · \(L10n.anchoredCount(anchorCount))")
+                            .font(.caption2.bold())
+                            .foregroundStyle(.white.opacity(0.68))
+                        Text(projection.session?.goal.title ?? L10n.emptyTitle)
+                            .font(.headline.bold())
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                            .accessibilityIdentifier("ambient.screen")
+                    }
+                    Spacer(minLength: 8)
+                    VStack(alignment: .trailing, spacing: 0) {
+                        Text(projection.overallProgress ?? 0, format: .percent.precision(.fractionLength(0)))
+                            .font(.title2.bold().monospacedDigit())
+                            .foregroundStyle(AnchorPalette.oceanHighlight)
+                        Text(L10n.overallProgress)
+                            .font(.caption2)
+                            .foregroundStyle(.white.opacity(0.62))
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white.opacity(0.45))
+                        .accessibilityHidden(true)
+                }
+                .padding(.horizontal, 12)
+                .frame(height: 60)
             }
-            Image(systemName: "chevron.right")
-                .font(.caption.bold())
-                .foregroundStyle(.white.opacity(0.45))
-                .accessibilityHidden(true)
         }
-        .padding(.horizontal, 12)
-        .frame(height: 60)
         .background(
             LinearGradient(
                 colors: [Color(red: 0.10, green: 0.31, blue: 0.40), AnchorPalette.deepSea],
@@ -137,35 +204,65 @@ struct LandscapeAmbientDashboard: View {
             in: .rect(cornerRadius: 19, style: .continuous)
         )
         .shadow(color: AnchorPalette.deepSea.opacity(0.18), radius: 10, y: 6)
+        .contentShape(.rect)
+        .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
+        .accessibilityLabel(projection.session?.goal.title ?? L10n.dropAnchor)
+        .accessibilityHint(projection.session == nil ? L10n.emptyDetail : L10n.currentGoal)
+        .accessibilityIdentifier("ambient.goal.button")
     }
 
+    @ViewBuilder
     private var processGrid: some View {
-        LazyVGrid(
-            columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)],
-            spacing: 8
-        ) {
-            ForEach(projection.session?.processes ?? []) { process in
-                Button {
-                    inspectedProcessID = process.id
-                    if let decision = projection.openDecisions.first(where: { $0.processID == process.id }) {
-                        selectedOptionID = decision.options.dropFirst().first?.id ?? decision.options.first?.id
+        if let processes = projection.session?.processes, !processes.isEmpty {
+            LazyVGrid(
+                columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)],
+                spacing: 8
+            ) {
+                ForEach(processes) { process in
+                    Button {
+                        inspectedProcessID = process.id
+                        if let decision = projection.openDecisions.first(where: { $0.processID == process.id }) {
+                            selectedOptionID = decision.options.dropFirst().first?.id ?? decision.options.first?.id
+                        }
+                    } label: {
+                        AmbientProcessTile(process: process, selected: inspectedProcessID == process.id)
                     }
-                } label: {
-                    AmbientProcessTile(process: process, selected: inspectedProcessID == process.id)
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(process.sourceName), \(process.title), \(L10n.status(process.status))")
+                    .accessibilityValue(process.progress?.formatted(.percent.precision(.fractionLength(0))) ?? L10n.status(process.status))
+                    .accessibilityAddTraits(inspectedProcessID == process.id ? .isSelected : [])
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(process.sourceName), \(process.title), \(L10n.status(process.status))")
-                .accessibilityValue(process.progress?.formatted(.percent.precision(.fractionLength(0))) ?? L10n.status(process.status))
-                .accessibilityAddTraits(inspectedProcessID == process.id ? .isSelected : [])
             }
+            .animation(reduceMotion ? nil : .spring(duration: 0.45), value: inspectedProcessID)
+        } else {
+            VStack(spacing: 8) {
+                Image(systemName: "square.grid.2x2")
+                    .font(.title2.bold())
+                    .accessibilityHidden(true)
+                Text(L10n.noEvents)
+                    .font(.headline.bold())
+                Text(L10n.emptyDetail)
+                    .font(.subheadline)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .foregroundStyle(AnchorPalette.ink)
+            .padding(18)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(AnchorPalette.surface.opacity(0.72), in: .rect(cornerRadius: 20, style: .continuous))
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(L10n.noEvents)
+            .accessibilityValue(L10n.emptyDetail)
+            .accessibilityIdentifier("ambient.empty.processes")
         }
-        .animation(reduceMotion ? nil : .spring(duration: 0.45), value: inspectedProcessID)
     }
 
     @ViewBuilder
     private var inspector: some View {
-        if let decision = selectedDecision ?? openDecision,
+        if projection.session == nil {
+            AmbientEmptyWorkspaceInspector(onAnchor: onAnchor)
+        } else if let decision = selectedDecision ?? openDecision,
            let process = projection.session?.processes.first(where: { $0.id == decision.processID }) {
             AmbientDecisionInspector(
                 process: process,
@@ -193,33 +290,48 @@ struct LandscapeAmbientDashboard: View {
             if !dynamicTypeSize.isAccessibilitySize {
                 Label(L10n.latestProgress, systemImage: "waveform.path.ecg")
                     .font(.caption2.bold())
-                    .foregroundStyle(AnchorPalette.link)
-                Divider().frame(height: 18)
+                    .foregroundStyle(AnchorPalette.seafoam)
+                    .accessibilityIdentifier("ambient.ticker.label")
+                Divider()
+                    .overlay(.white.opacity(0.34))
+                    .frame(height: 18)
             }
             Text(tickerText)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(AnchorPalette.ink)
+                .foregroundStyle(.white.opacity(0.92))
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
                 .fixedSize(horizontal: false, vertical: true)
                 .contentTransition(.interpolate)
+                .accessibilityIdentifier("ambient.ticker.text")
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 14)
         .frame(minHeight: 36)
-        .background(AnchorPalette.surface)
+        .background(
+            LinearGradient(
+                colors: [AnchorPalette.deepSea, Color(red: 0.09, green: 0.30, blue: 0.39)],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        )
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("ambient.ticker")
     }
 
     private var progressEdge: some View {
         GeometryReader { proxy in
-            HStack(spacing: 2) {
-                ForEach(projection.session?.processes ?? []) { process in
-                    ZStack(alignment: .leading) {
-                        AnchorPalette.source(process.sourceTone).opacity(0.18)
-                        AnchorPalette.source(process.sourceTone)
-                            .frame(width: proxy.size.width / CGFloat(max(processCount, 1)) * (process.progress ?? 0))
+            if processCount == 0 {
+                AnchorPalette.secondaryInk.opacity(0.16)
+            } else {
+                HStack(spacing: 2) {
+                    ForEach(projection.session?.processes ?? []) { process in
+                        ZStack(alignment: .leading) {
+                            AnchorPalette.source(process.sourceTone).opacity(0.18)
+                            AnchorPalette.source(process.sourceTone)
+                                .frame(width: proxy.size.width / CGFloat(processCount) * (process.progress ?? 0))
+                        }
+                        .frame(width: proxy.size.width / CGFloat(processCount))
                     }
-                    .frame(width: proxy.size.width / CGFloat(max(processCount, 1)))
                 }
             }
         }
@@ -235,13 +347,48 @@ struct LandscapeAmbientDashboard: View {
         projection.session?.processes.first { $0.id == inspectedProcessID }
     }
     private var processCount: Int { projection.session?.processes.count ?? 0 }
+    private var ambientActiveColor: Color {
+        colorScheme == .dark ? AnchorPalette.seafoam : AnchorPalette.mintInk
+    }
+    private var anchorCount: Int {
+        guard let session = projection.session else { return 0 }
+        return session.notes.count + 1
+    }
     private var tickerText: String {
         let text = projection.session?.timeline.prefix(3).map(\.title).joined(separator: "  ·  ") ?? ""
         return text.isEmpty ? L10n.noEvents : text
     }
     private func focusDuration(at date: Date) -> String {
-        guard let startedAt = projection.session?.startedAt else { return "—" }
+        guard let startedAt = projection.session?.startedAt else { return L10n.minuteCount(0) }
         return L10n.minuteCount(max(0, Int(date.timeIntervalSince(startedAt) / 60)))
+    }
+}
+
+private struct AmbientEmptyWorkspaceInspector: View {
+    let onAnchor: () -> Void
+
+    var body: some View {
+        VStack(spacing: 10) {
+            HarborBrandMark(size: 52)
+            Text(L10n.emptyTitle)
+                .font(.headline.bold())
+                .foregroundStyle(AnchorPalette.ink)
+                .accessibilityIdentifier("ambient.empty.workspace")
+            Text(L10n.emptyDetail)
+                .font(.caption)
+                .foregroundStyle(AnchorPalette.secondaryInk)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            Button(action: onAnchor) {
+                Label(L10n.dropAnchor, systemImage: "scope")
+            }
+            .buttonStyle(HarborPrimaryButtonStyle())
+            .accessibilityIdentifier("ambient.anchor.button")
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(AnchorPalette.seafoam.opacity(0.18), in: .rect(cornerRadius: 20, style: .continuous))
+        .accessibilityElement(children: .contain)
     }
 }
 
