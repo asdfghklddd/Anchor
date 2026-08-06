@@ -1,0 +1,4247 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "settings.icloud" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "iCloud Sync" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "iCloud 同步" } }
+      }
+    },
+    "profile.account.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Account settings" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "账户设置" } }
+      }
+    },
+    "profile.account.copy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anchor uses this iPhone as your local identity. No sign-in is required." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anchor 使用这台 iPhone 作为本机身份，不需要登录。" } }
+      }
+    },
+    "profile.account.device" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Device" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设备" } }
+      }
+    },
+    "profile.account.device.value" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This iPhone" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这台 iPhone" } }
+      }
+    },
+    "profile.account.workspace" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Workspace" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "工作区" } }
+      }
+    },
+    "profile.account.workspace.value" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Personal" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "个人空间" } }
+      }
+    },
+    "profile.account.identity" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sync identity" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "同步身份" } }
+      }
+    },
+    "profile.account.identity.value" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "iCloud account on this device" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "本机 iCloud 账户" } }
+      }
+    },
+    "profile.icloud.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "iCloud sync" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "iCloud 同步" } }
+      }
+    },
+    "profile.icloud.copy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Goals, process states, and return notes stay consistent across your Apple devices." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "目标、进程状态与返航记录会在你的 Apple 设备间保持一致。" } }
+      }
+    },
+    "profile.icloud.status" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Current status" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前状态" } }
+      }
+    },
+    "profile.icloud.last.sync" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last sync" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近同步" } }
+      }
+    },
+    "profile.icloud.just.now" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Just now" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "刚刚" } }
+      }
+    },
+    "profile.icloud.scope" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sync scope" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "同步范围" } }
+      }
+    },
+    "profile.icloud.scope.value" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Goals and process states" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "目标与任务状态" } }
+      }
+    },
+    "profile.detail.focus.kicker" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "FOCUS ARCHIVE · LAST 30 DAYS" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "FOCUS ARCHIVE · 近 30 天" } } } },
+    "profile.detail.contexts.kicker" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "CONTEXT VAULT · ALL MEMORY" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CONTEXT VAULT · 全部记忆" } } } },
+    "profile.detail.anchors.kicker" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "ANCHOR LOG · FOUR WEEKS" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "ANCHOR LOG · 连续 4 周" } } } },
+    "profile.detail.session.kicker" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "CURRENT ANCHOR" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CURRENT ANCHOR" } } } },
+    "profile.detail.return.kicker" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "RETURN MEMORY · TODAY" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "RETURN MEMORY · 今天" } } } },
+    "profile.detail.decision.kicker" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "DECISION TRACE · TODAY" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "DECISION TRACE · 今天" } } } },
+    "profile.detail.snapshot.kicker" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "CONTEXT SNAPSHOT · TODAY" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CONTEXT SNAPSHOT · 今天" } } } },
+    "profile.detail.focus.headline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Focus is not just time. It is continuity." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "专注不是时长，是连续做对判断。" } } } },
+    "profile.detail.contexts.headline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Every departure keeps a world to return to." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每一次离开，都有完整世界可返回。" } } } },
+    "profile.detail.anchors.headline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Completion preserves the thread of the work." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "完成不是清空，而是把脉络收好。" } } } },
+    "profile.detail.session.headline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The full shape of this work, held in one place." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这段工作的完整脉络，都在这里。" } } } },
+    "profile.detail.return.headline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The work stayed in the right place while you were away." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "离开 18 分钟后，工作仍停在正确的位置。" } } } },
+    "profile.detail.decision.headline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "A clear judgment keeps the next steps moving." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清晰的判断，让下一步继续推进。" } } } },
+    "profile.detail.snapshot.headline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Goal, processes, decisions, and position in one memory." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "目标、进程、判断与位置，都在同一张记忆里。" } } } },
+    "profile.detail.focus.subline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This week, 2h 18m more focus was protected." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "本周较上周多守住 2h 18m" } } } },
+    "profile.detail.contexts.subline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Average context completeness is 96%." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "平均上下文完整度 96%" } } } },
+    "profile.detail.anchors.subline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Completion rate this month is 86%." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "本月完成率 86%" } } } },
+    "profile.detail.decision.resolved" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The current decision has been resolved." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前判断已经完成。" } } } },
+    "profile.detail.decision.waiting" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "A decision is waiting for your judgment." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "还有一个判断等待你的决定。" } } } },
+    "profile.detail.process.pulse" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "PROCESS PULSE" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "PROCESS PULSE" } } } },
+    "profile.detail.memory.trace" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "MEMORY TRACE" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "MEMORY TRACE" } } } },
+    "profile.detail.key.memory" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Key memories" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这段工作的关键记忆" } } } },
+    "profile.detail.trend" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "TREND" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "趋势" } } } },
+    "profile.detail.recent.records" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent records" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近 12 次记录" } } } },
+    "profile.detail.steady" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Stable" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "稳定向上" } } } },
+    "profile.detail.chart" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent twelve records trend" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近十二次记录趋势" } } } },
+    "%1$@ · %2$@ %3$@ awaiting judgment" : {
+
+    },
+    "%1$@ · Completed %@" : {
+
+    },
+    "%1$lld automatic · %2$lld queued" : {
+
+    },
+    "%1$lld processes · %2$lld waiting" : {
+
+    },
+    "%1$lld processes moving, %2$lld waiting for you" : {
+
+    },
+    "%1$lld running · %2$lld waiting" : {
+
+    },
+    "%lld anchors dropped" : {
+
+    },
+    "%lld automatic" : {
+
+    },
+    "%lld decisions" : {
+
+    },
+    "%lld notes" : {
+
+    },
+    "%lld processes" : {
+
+    },
+    "%lld processes moving" : {
+
+    },
+    "%lld routes running" : {
+
+    },
+    "%lldm" : {
+
+    },
+    "A judgment, next step, or context worth preserving" : {
+
+    },
+    "accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accessibility"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "辅助功能"
+          }
+        }
+      }
+    },
+    "Accessibility" : {
+
+    },
+    "accessibility.display" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Display accommodations"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示辅助"
+          }
+        }
+      }
+    },
+    "accessibility.display.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor follows Dynamic Type, VoiceOver, Reduce Motion, Increase Contrast, and Reduce Transparency automatically."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor 会自动遵循动态字体、旁白、减弱动态效果、增强对比度和降低透明度设置。"
+          }
+        }
+      }
+    },
+    "accessibility.dynamic.type" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dynamic Type"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "动态字体"
+          }
+        }
+      }
+    },
+    "accessibility.increase.contrast" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Increase Contrast"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "增强对比度"
+          }
+        }
+      }
+    },
+    "accessibility.reduce.motion" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reduce Motion"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "减弱动态效果"
+          }
+        }
+      }
+    },
+    "accessibility.reduce.transparency" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reduce Transparency"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "降低透明度"
+          }
+        }
+      }
+    },
+    "accessibility.voiceover" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceOver"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "旁白"
+          }
+        }
+      }
+    },
+    "Action not completed" : {
+
+    },
+    "action.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Action not completed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作未完成"
+          }
+        }
+      }
+    },
+    "activity" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activity"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "活动"
+          }
+        }
+      }
+    },
+    "Activity" : {
+
+    },
+    "ACTIVITY LOG" : {
+
+    },
+    "add" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加"
+          }
+        }
+      }
+    },
+    "Add" : {
+
+    },
+    "Add another process" : {
+
+    },
+    "Add process" : {
+
+    },
+    "All processes keep running" : {
+
+    },
+    "ambient" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambient workspace"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "环境工作台"
+          }
+        }
+      }
+    },
+    "Ambient workspace" : {
+
+    },
+    "ambient.active" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ANCHOR ACTIVE"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ANCHOR ACTIVE"
+          }
+        }
+      }
+    },
+    "ambient.all.running" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All processes keep running"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有进程保持运行"
+          }
+        }
+      }
+    },
+    "ambient.clear.headline" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No action needed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无需处理"
+          }
+        }
+      }
+    },
+    "ambient.clear.summary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld automatic"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个自动推进"
+          }
+        }
+      }
+    },
+    "ambient.clear.summary.queued" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld automatic · %2$lld queued"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld 个自动推进 · %2$lld 个准备中"
+          }
+        }
+      }
+    },
+    "ambient.latest.completed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · Completed %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · 已完成 %2$@"
+          }
+        }
+      }
+    },
+    "ambient.latest.decision" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ %3$@ awaiting judgment"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ 个%3$@等待判断"
+          }
+        }
+      }
+    },
+    "ambient.latest.progress" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LATEST PROGRESS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新进展"
+          }
+        }
+      }
+    },
+    "Anchor" : {
+
+    },
+    "ANCHOR" : {
+
+    },
+    "ANCHOR ACTIVE" : {
+
+    },
+    "Anchor cannot confirm that you left. Check Mac, local network, and Bluetooth access." : {
+
+    },
+    "Anchor follows Dynamic Type, VoiceOver, Reduce Motion, Increase Contrast, and Reduce Transparency automatically." : {
+
+    },
+    "Anchor is gathering every process around the same goal." : {
+
+    },
+    "Anchor is holding the goal and watching for meaningful changes." : {
+
+    },
+    "ANCHOR MAP · CURRENT GOAL" : {
+
+    },
+    "Anchor notes" : {
+
+    },
+    "Anchor saved" : {
+
+    },
+    "app.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor"
+          }
+        }
+      }
+    },
+    "attention" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs your judgment"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要你的判断"
+          }
+        }
+      }
+    },
+    "attention.none" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing needs your attention"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无需要你处理的内容"
+          }
+        }
+      }
+    },
+    "away" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your work is still moving"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作仍在向前。"
+          }
+        }
+      }
+    },
+    "Away for %lld minutes" : {
+
+    },
+    "away.current.anchor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CURRENT ANCHOR · CURRENT GOAL"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CURRENT ANCHOR · 当前目标"
+          }
+        }
+      }
+    },
+    "away.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor is holding the goal and watching for meaningful changes."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor 只把需要判断的节点带到你面前。"
+          }
+        }
+      }
+    },
+    "away.duration" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Away for %lld minutes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开 %lld 分钟"
+          }
+        }
+      }
+    },
+    "away.processes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "REMOTE PROCESSES"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远程进程"
+          }
+        }
+      }
+    },
+    "away.synchronized.work" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work that keeps syncing"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "持续同步的工作"
+          }
+        }
+      }
+    },
+    "Begin this session" : {
+
+    },
+    "Blocked" : {
+
+    },
+    "Bluetooth proximity" : {
+
+    },
+    "cancel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+
+    },
+    "Capture a judgment, next step, or context marker." : {
+
+    },
+    "Changes while you were away" : {
+
+    },
+    "Choose a visual direction" : {
+
+    },
+    "Choose an option" : {
+
+    },
+    "Choose direction" : {
+
+    },
+    "close" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭"
+          }
+        }
+      }
+    },
+    "Close" : {
+
+    },
+    "Compact" : {
+
+    },
+    "Complete and preserve" : {
+
+    },
+    "complete.session" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complete and preserve"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成并保存"
+          }
+        }
+      }
+    },
+    "completed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session complete"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会话已完成"
+          }
+        }
+      }
+    },
+    "Completed" : {
+
+    },
+    "Completed anchors" : {
+
+    },
+    "Completed work" : {
+
+    },
+    "Completion criteria" : {
+
+    },
+    "Confirm choice" : {
+
+    },
+    "Confirm direction" : {
+
+    },
+    "Confirmed" : {
+
+    },
+    "connected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已连接"
+          }
+        }
+      }
+    },
+    "Connected" : {
+
+    },
+    "connection.bluetooth" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth proximity"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "蓝牙近场"
+          }
+        }
+      }
+    },
+    "connection.mac" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac connection"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 连接"
+          }
+        }
+      }
+    },
+    "connection.mac.connected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac connected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已连接 Mac"
+          }
+        }
+      }
+    },
+    "connection.remote.syncing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote syncing"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远程同步中"
+          }
+        }
+      }
+    },
+    "connection.unknown" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Presence is unknown"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在席状态未知"
+          }
+        }
+      }
+    },
+    "connection.unknown.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor cannot confirm that you left. Check Mac, local network, and Bluetooth access."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor 无法确认你是否离开。请检查 Mac、本地网络和蓝牙权限。"
+          }
+        }
+      }
+    },
+    "connections" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connections"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接"
+          }
+        }
+      }
+    },
+    "Connections" : {
+
+    },
+    "Context sync is stable" : {
+
+    },
+    "Context worth keeping" : {
+
+    },
+    "continue" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续"
+          }
+        }
+      }
+    },
+    "Continue" : {
+
+    },
+    "Continue working" : {
+
+    },
+    "CURRENT ANCHOR · CURRENT GOAL" : {
+
+    },
+    "CURRENT GOAL" : {
+
+    },
+    "CURRENT STATUS" : {
+
+    },
+    "Current work" : {
+
+    },
+    "CURRENT WORK" : {
+
+    },
+    "current.goal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CURRENT GOAL"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前目标"
+          }
+        }
+      }
+    },
+    "Data may be out of date" : {
+
+    },
+    "Decision" : {
+
+    },
+    "Decision requests" : {
+
+    },
+    "decision.choose" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose an option"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择一个选项"
+          }
+        }
+      }
+    },
+    "decision.confirm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm choice"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确认选择"
+          }
+        }
+      }
+    },
+    "decision.confirm.direction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm direction"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确认方向"
+          }
+        }
+      }
+    },
+    "decision.count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld decisions"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 项判断"
+          }
+        }
+      }
+    },
+    "decision.visual.direction" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a visual direction"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择视觉方向"
+          }
+        }
+      }
+    },
+    "decisions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decisions"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "判断"
+          }
+        }
+      }
+    },
+    "Decisions" : {
+
+    },
+    "delete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除"
+          }
+        }
+      }
+    },
+    "Delete" : {
+
+    },
+    "disconnected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac disconnected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 已断开"
+          }
+        }
+      }
+    },
+    "Disconnected" : {
+
+    },
+    "Display accommodations" : {
+
+    },
+    "done" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
+          }
+        }
+      }
+    },
+    "Done" : {
+
+    },
+    "Drop an anchor" : {
+
+    },
+    "Drop anchor" : {
+
+    },
+    "Dynamic Type" : {
+
+    },
+    "Edit goal" : {
+
+    },
+    "empty.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start with one clear outcome and the processes supporting it."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从一个清晰结果和支持它的工作进程开始。"
+          }
+        }
+      }
+    },
+    "empty.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No active anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前没有锚点"
+          }
+        }
+      }
+    },
+    "Establish an anchor" : {
+
+    },
+    "Estimate" : {
+
+    },
+    "estimated" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estimate"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预计"
+          }
+        }
+      }
+    },
+    "events.none" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No events yet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无事件"
+          }
+        }
+      }
+    },
+    "Failed" : {
+
+    },
+    "finish" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish session"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "结束工作"
+          }
+        }
+      }
+    },
+    "Finish session" : {
+
+    },
+    "Focus protected" : {
+
+    },
+    "FOCUS SESSION" : {
+
+    },
+    "Focus time" : {
+
+    },
+    "focus.active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In focus"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "专注中"
+          }
+        }
+      }
+    },
+    "focus.duration" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldm"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldm"
+          }
+        }
+      }
+    },
+    "focus.headline" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep your attention for judgment."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把注意力留给判断。"
+          }
+        }
+      }
+    },
+    "focus.session" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FOCUS SESSION"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FOCUS SESSION"
+          }
+        }
+      }
+    },
+    "focus.summary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld processes moving"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个进程正在推进"
+          }
+        }
+      }
+    },
+    "focus.summary.attention" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld processes moving, %2$lld waiting for you"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld 个进程正在推进，%2$lld 个节点等你"
+          }
+        }
+      }
+    },
+    "focus.time" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus time"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "专注时长"
+          }
+        }
+      }
+    },
+    "Generating" : {
+
+    },
+    "goal.anchor.map" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ANCHOR MAP · CURRENT GOAL"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ANCHOR MAP · 本次目标"
+          }
+        }
+      }
+    },
+    "goal.context" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Context worth keeping"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "值得保留的上下文"
+          }
+        }
+      }
+    },
+    "goal.criteria" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What does done look like?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "怎样才算完成？"
+          }
+        }
+      }
+    },
+    "goal.edit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit goal"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑目标"
+          }
+        }
+      }
+    },
+    "goal.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What are you finishing?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你要完成什么？"
+          }
+        }
+      }
+    },
+    "Good afternoon" : {
+
+    },
+    "Good evening" : {
+
+    },
+    "Good morning" : {
+
+    },
+    "greeting.afternoon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good afternoon"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下午好"
+          }
+        }
+      }
+    },
+    "greeting.evening" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good evening"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "晚上好"
+          }
+        }
+      }
+    },
+    "greeting.morning" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good morning"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "早上好"
+          }
+        }
+      }
+    },
+    "handoff" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Securing your context…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在保护你的上下文…"
+          }
+        }
+      }
+    },
+    "handoff.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor is gathering every process around the same goal."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor 正在把每个进程收回同一个锚点。"
+          }
+        }
+      }
+    },
+    "handoff.secured" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secured. You can step away."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已接管，放心离开。"
+          }
+        }
+      }
+    },
+    "Here is what changed while you were away." : {
+
+    },
+    "history" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "历史"
+          }
+        }
+      }
+    },
+    "History" : {
+
+    },
+    "I’m still at my desk" : {
+
+    },
+    "IMPACT WHILE AWAY" : {
+
+    },
+    "In focus" : {
+
+    },
+    "Increase Contrast" : {
+
+    },
+    "insights" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work context"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作脉络"
+          }
+        }
+      }
+    },
+    "Keep your attention for judgment." : {
+
+    },
+    "Large" : {
+
+    },
+    "Last updated" : {
+
+    },
+    "last.updated" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last updated"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近更新"
+          }
+        }
+      }
+    },
+    "Latest event" : {
+
+    },
+    "LATEST PROGRESS" : {
+
+    },
+    "layout" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task layout"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务布局"
+          }
+        }
+      }
+    },
+    "LIVE" : {
+
+    },
+    "LIVE PROCESSES" : {
+
+    },
+    "Local by default" : {
+
+    },
+    "Mac connected" : {
+
+    },
+    "Mac connection" : {
+
+    },
+    "Mac disconnected" : {
+
+    },
+    "Mac online" : {
+
+    },
+    "mac.current.work" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current work"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前工作"
+          }
+        }
+      }
+    },
+    "mac.open.current" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open current process"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开当前进程"
+          }
+        }
+      }
+    },
+    "mac.open.details" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开 Anchor"
+          }
+        }
+      }
+    },
+    "Manage processes" : {
+
+    },
+    "Meaningful changes" : {
+
+    },
+    "MEMORY TRACE" : {
+
+    },
+    "minute.count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldm"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 分钟"
+          }
+        }
+      }
+    },
+    "Most recent anchor" : {
+
+    },
+    "My Anchor" : {
+
+    },
+    "Name the outcome, then add the work already in motion." : {
+
+    },
+    "Needs decision" : {
+
+    },
+    "Needs your judgment" : {
+
+    },
+    "New work" : {
+
+    },
+    "No action needed" : {
+
+    },
+    "No active anchor" : {
+
+    },
+    "No events yet" : {
+
+    },
+    "note.anchor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop an anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "投下锚点"
+          }
+        }
+      }
+    },
+    "note.anchored.count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld anchors dropped"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已投锚 %lld 次"
+          }
+        }
+      }
+    },
+    "note.capture.headline" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remember this moment, then keep moving."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记下此刻，继续向前。"
+          }
+        }
+      }
+    },
+    "note.count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld notes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 条投锚记录"
+          }
+        }
+      }
+    },
+    "note.drop" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "投锚"
+          }
+        }
+      }
+    },
+    "note.moment" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What should be remembered now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此刻要记住的事"
+          }
+        }
+      }
+    },
+    "note.placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A judgment, next step, or context worth preserving"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "判断、下一步，或需要保留的上下文"
+          }
+        }
+      }
+    },
+    "note.prompt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capture a judgment, next step, or context marker."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录判断、下一步或上下文标记。"
+          }
+        }
+      }
+    },
+    "note.recent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Most recent anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近一次投锚"
+          }
+        }
+      }
+    },
+    "note.saved" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor saved"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "锚点已保存"
+          }
+        }
+      }
+    },
+    "notes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor notes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "投锚记录"
+          }
+        }
+      }
+    },
+    "Nothing needs your attention" : {
+
+    },
+    "notifications" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知"
+          }
+        }
+      }
+    },
+    "Notifications" : {
+
+    },
+    "notifications.decisions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decision requests"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "判断请求"
+          }
+        }
+      }
+    },
+    "notifications.meaningful" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meaningful changes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重要变化"
+          }
+        }
+      }
+    },
+    "notifications.permission.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow notifications in System Settings to receive decision requests."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在系统设置中允许通知，才能接收判断请求。"
+          }
+        }
+      }
+    },
+    "notifications.settings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知"
+          }
+        }
+      }
+    },
+    "Offline" : {
+
+    },
+    "Open Anchor" : {
+
+    },
+    "Open at login" : {
+
+    },
+    "Open current process" : {
+
+    },
+    "Overall progress" : {
+
+    },
+    "Pair device" : {
+
+    },
+    "pair.code" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing code"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对码"
+          }
+        }
+      }
+    },
+    "pair.device" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pair device"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对设备"
+          }
+        }
+      }
+    },
+    "pair.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter this six-digit code in Anchor on your iPhone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 iPhone 上的 Anchor 中输入这组六位配对码。"
+          }
+        }
+      }
+    },
+    "pair.copy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy pairing code"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制配对码"
+          }
+        }
+      }
+    },
+    "pair.copied" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing code copied"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对码已复制"
+          }
+        }
+      }
+    },
+    "pair.unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device pairing is unavailable in this build."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前构建不提供设备配对。"
+          }
+        }
+      }
+    },
+    "Pairing code" : {
+
+    },
+    "Parallel efficiency 2.4×" : {
+
+    },
+    "PARALLEL PROCESSES" : {
+
+    },
+    "Permission denied" : {
+
+    },
+    "permission.denied" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permission denied"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "权限已拒绝"
+          }
+        }
+      }
+    },
+    "permission.denied.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Local Network and Bluetooth access in System Settings, then try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在系统设置中允许本地网络和蓝牙访问，然后重试。"
+          }
+        }
+      }
+    },
+    "connection.failed.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor could not reach the Mac service. Check the local connection and try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor 无法连接到 Mac 服务，请检查本地连接后重试。"
+          }
+        }
+      }
+    },
+    "PERSONAL ANCHOR" : {
+
+    },
+    "Preparing" : {
+
+    },
+    "Presence is unknown" : {
+
+    },
+    "presence.at.desk" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I’m still at my desk"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我仍在工位"
+          }
+        }
+      }
+    },
+    "privacy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐私"
+          }
+        }
+      }
+    },
+    "Privacy" : {
+
+    },
+    "privacy.local" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local by default"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认仅在本地"
+          }
+        }
+      }
+    },
+    "privacy.local.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raw work content stays on your devices unless you explicitly connect a source."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "除非你明确连接来源，原始工作内容只保留在你的设备上。"
+          }
+        }
+      }
+    },
+    "Process flow" : {
+
+    },
+    "Process or source name" : {
+
+    },
+    "process.action.run.now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提前运行"
+          }
+        }
+      }
+    },
+    "process.action.view.output" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View output"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看产出"
+          }
+        }
+      }
+    },
+    "process.add" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add process"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加进程"
+          }
+        }
+      }
+    },
+    "process.add.another" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add another process"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加另一个进程"
+          }
+        }
+      }
+    },
+    "process.attention.summary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld processes · %2$lld waiting"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld 个 · %2$lld 待判断"
+          }
+        }
+      }
+    },
+    "process.choose.direction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose direction"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "去选择方向"
+          }
+        }
+      }
+    },
+    "process.count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld processes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个进程"
+          }
+        }
+      }
+    },
+    "process.flow" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Process flow"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进程流向"
+          }
+        }
+      }
+    },
+    "process.happening.now" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What is happening now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "现在发生的事"
+          }
+        }
+      }
+    },
+    "process.live" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LIVE PROCESSES"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实时进程"
+          }
+        }
+      }
+    },
+    "process.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Process or source name"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进程或来源名称"
+          }
+        }
+      }
+    },
+    "process.parallel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PARALLEL PROCESSES"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "并行进程"
+          }
+        }
+      }
+    },
+    "process.parallel.efficiency" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parallel efficiency 2.4×"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "并行效率 2.4×"
+          }
+        }
+      }
+    },
+    "process.ready" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work ready to sync"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "准备同步的任务"
+          }
+        }
+      }
+    },
+    "process.routes.running" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld routes running"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 条航线运行中"
+          }
+        }
+      }
+    },
+    "process.selected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected process"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所选进程"
+          }
+        }
+      }
+    },
+    "processes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Processes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作进程"
+          }
+        }
+      }
+    },
+    "Processes" : {
+
+    },
+    "profile" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My Anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我的 Anchor"
+          }
+        }
+      }
+    },
+    "profile.anchors.completed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed anchors"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成的锚点"
+          }
+        }
+      }
+    },
+    "profile.contexts.saved" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved contexts"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存的上下文"
+          }
+        }
+      }
+    },
+    "profile.focus.guarded" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus protected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已守住的专注"
+          }
+        }
+      }
+    },
+    "profile.mac.online" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac online"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 在线"
+          }
+        }
+      }
+    },
+    "profile.memory.recent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recently held by Anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近被 Anchor 接住的事"
+          }
+        }
+      }
+    },
+    "profile.memory.trace" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MEMORY TRACE"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记忆航迹"
+          }
+        }
+      }
+    },
+    "profile.personal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PERSONAL ANCHOR"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PERSONAL ANCHOR"
+          }
+        }
+      }
+    },
+    "profile.session.data" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "THIS SESSION"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本次工作数据"
+          }
+        }
+      }
+    },
+    "profile.sync.stable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Context sync is stable"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上下文同步稳定"
+          }
+        }
+      }
+    },
+    "profile.work.running" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work in progress"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在运行的工作"
+          }
+        }
+      }
+    },
+    "profile.work.style" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WORK STYLE"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作方式"
+          }
+        }
+      }
+    },
+    "progress" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进度"
+          }
+        }
+      }
+    },
+    "Progress" : {
+
+    },
+    "progress.overall" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overall progress"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "总体进度"
+          }
+        }
+      }
+    },
+    "Queued" : {
+
+    },
+    "quit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit Anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出 Anchor"
+          }
+        }
+      }
+    },
+    "Quit Anchor" : {
+
+    },
+    "system.settings.open" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open System Settings"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开系统设置"
+          }
+        }
+      }
+    },
+    "Raw work content stays on your devices unless you explicitly connect a source." : {
+
+    },
+    "recent.event" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Latest event"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新事件"
+          }
+        }
+      }
+    },
+    "Recently held by Anchor" : {
+
+    },
+    "Recommended next" : {
+
+    },
+    "Reduce Motion" : {
+
+    },
+    "Reduce Transparency" : {
+
+    },
+    "Remember this moment, then keep moving." : {
+
+    },
+    "Remember why first,\nthen decide what to do." : {
+
+    },
+    "REMOTE PROCESSES" : {
+
+    },
+    "Remote syncing" : {
+
+    },
+    "Rendering" : {
+
+    },
+    "Reorder the processes or change their dashboard footprint." : {
+
+    },
+    "resume" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume session"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复会话"
+          }
+        }
+      }
+    },
+    "Resume session" : {
+
+    },
+    "retry" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重试"
+          }
+        }
+      }
+    },
+    "return.changes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changes while you were away"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开期间的变化"
+          }
+        }
+      }
+    },
+    "return.continue" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue working"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续工作"
+          }
+        }
+      }
+    },
+    "return.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Here is what changed while you were away."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这是你离开期间发生的变化。"
+          }
+        }
+      }
+    },
+    "return.headline" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your work was held safely."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作已经被接住。"
+          }
+        }
+      }
+    },
+    "return.impact" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IMPACT WHILE AWAY"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开期间总影响"
+          }
+        }
+      }
+    },
+    "return.next.step" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YOUR NEXT STEP"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的下一步"
+          }
+        }
+      }
+    },
+    "return.progress" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The work moved forward %lld%%"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作向前推进了 %lld%%"
+          }
+        }
+      }
+    },
+    "return.recommended" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recommended next"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "建议下一步"
+          }
+        }
+      }
+    },
+    "return.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome back"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "欢迎回来"
+          }
+        }
+      }
+    },
+    "Run now" : {
+
+    },
+    "Running" : {
+
+    },
+    "save" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        }
+      }
+    },
+    "Save" : {
+
+    },
+    "Saved contexts" : {
+
+    },
+    "Secured. You can step away." : {
+
+    },
+    "Securing your context…" : {
+
+    },
+    "Selected process" : {
+
+    },
+    "Session complete" : {
+
+    },
+    "Session summary" : {
+
+    },
+    "session.started.at" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Started %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 开始"
+          }
+        }
+      }
+    },
+    "settings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置"
+          }
+        }
+      }
+    },
+    "Settings" : {
+
+    },
+    "setup.begin" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begin this session"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始本次工作"
+          }
+        }
+      }
+    },
+    "setup.completion.ready" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completion criteria"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成标准"
+          }
+        }
+      }
+    },
+    "setup.criteria.label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What should completion look like?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成时应该是什么样"
+          }
+        }
+      }
+    },
+    "setup.dictation.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the microphone on the system keyboard whenever dictation is helpful."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要听写时，可直接使用系统键盘上的麦克风。"
+          }
+        }
+      }
+    },
+    "setup.goal.label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What are you completing this time?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这次要完成什么"
+          }
+        }
+      }
+    },
+    "setup.intro" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name the outcome, then add the work already in motion."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先写下结果，再加入已经启动的工作进程。"
+          }
+        }
+      }
+    },
+    "setup.keyboard.dictation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use keyboard dictation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用系统键盘听写"
+          }
+        }
+      }
+    },
+    "setup.mantra" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remember why first,\nthen decide what to do."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先记住为什么，\n再开始做什么。"
+          }
+        }
+      }
+    },
+    "setup.new.work" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New work"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新工作"
+          }
+        }
+      }
+    },
+    "setup.start.anchoring" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start anchoring"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始锚定"
+          }
+        }
+      }
+    },
+    "setup.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establish an anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "建立锚点"
+          }
+        }
+      }
+    },
+    "snapshot.running.waiting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld running · %2$lld waiting"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld 运行 · %2$lld 待判断"
+          }
+        }
+      }
+    },
+    "Source health" : {
+
+    },
+    "source.health" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source health"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来源健康"
+          }
+        }
+      }
+    },
+    "source.connected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected sources"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已连接的来源"
+          }
+        }
+      }
+    },
+    "source.details" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source details"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来源详情"
+          }
+        }
+      }
+    },
+    "source.progress" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source progress"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来源进度"
+          }
+        }
+      }
+    },
+    "source.activity" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent source activity"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来源最近动态"
+          }
+        }
+      }
+    },
+    "source.open.details" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open source details"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开来源详情"
+          }
+        }
+      }
+    },
+    "connection.nearby" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearby"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "就在附近"
+          }
+        }
+      }
+    },
+    "connection.out.of.range" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Out of range"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不在附近"
+          }
+        }
+      }
+    },
+    "disconnected.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Mac is offline. Work already synced remains available."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 当前离线，已经同步的工作仍可查看。"
+          }
+        }
+      }
+    },
+    "sources" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sources"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来源"
+          }
+        }
+      }
+    },
+    "Sources" : {
+
+    },
+    "stale" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data may be out of date"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数据可能已经过期"
+          }
+        }
+      }
+    },
+    "Standard" : {
+
+    },
+    "Start anchoring" : {
+
+    },
+    "Start with one clear outcome and the processes supporting it." : {
+
+    },
+    "start.login" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open at login"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录时打开"
+          }
+        }
+      }
+    },
+    "Started %@" : {
+
+    },
+    "status.blocked" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blocked"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已阻塞"
+          }
+        }
+      }
+    },
+    "status.compact.blocked" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blocked"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阻塞"
+          }
+        }
+      }
+    },
+    "status.compact.completed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
+          }
+        }
+      }
+    },
+    "status.compact.decision" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decision"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待判断"
+          }
+        }
+      }
+    },
+    "status.compact.disconnected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离线"
+          }
+        }
+      }
+    },
+    "status.compact.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "失败"
+          }
+        }
+      }
+    },
+    "status.compact.queued" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queued"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "准备中"
+          }
+        }
+      }
+    },
+    "status.compact.running" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Running"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进行中"
+          }
+        }
+      }
+    },
+    "status.completed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成"
+          }
+        }
+      }
+    },
+    "status.confirmed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已确认"
+          }
+        }
+      }
+    },
+    "status.decision" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs decision"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待判断"
+          }
+        }
+      }
+    },
+    "status.disconnected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已断开"
+          }
+        }
+      }
+    },
+    "status.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "失败"
+          }
+        }
+      }
+    },
+    "status.generating" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generating"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生成中"
+          }
+        }
+      }
+    },
+    "status.live" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LIVE"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LIVE"
+          }
+        }
+      }
+    },
+    "status.preparing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "准备中"
+          }
+        }
+      }
+    },
+    "status.queued" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queued"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "准备中"
+          }
+        }
+      }
+    },
+    "status.rendering" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendering"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "渲染中"
+          }
+        }
+      }
+    },
+    "status.running" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Running"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进行中"
+          }
+        }
+      }
+    },
+    "status.waiting.confirmation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for you"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等你确认"
+          }
+        }
+      }
+    },
+    "summary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session summary"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成总结"
+          }
+        }
+      }
+    },
+    "Task layout" : {
+
+    },
+    "Task progress" : {
+
+    },
+    "task.activity.log" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ACTIVITY LOG"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "活动记录"
+          }
+        }
+      }
+    },
+    "task.current.status" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CURRENT STATUS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前状态"
+          }
+        }
+      }
+    },
+    "task.management" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage processes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务管理"
+          }
+        }
+      }
+    },
+    "task.move.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reorder the processes or change their dashboard footprint."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调整进程顺序或它们在工作台中的尺寸。"
+          }
+        }
+      }
+    },
+    "task.progress" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task progress"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务进度"
+          }
+        }
+      }
+    },
+    "The work moved forward %lld%%" : {
+
+    },
+    "THIS SESSION" : {
+
+    },
+    "tile.compact" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compact"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "紧凑"
+          }
+        }
+      }
+    },
+    "tile.large" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Large"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大型"
+          }
+        }
+      }
+    },
+    "tile.standard" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标准"
+          }
+        }
+      }
+    },
+    "tile.wide" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wide"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "横向"
+          }
+        }
+      }
+    },
+    "timeline" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timeline"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "时间线"
+          }
+        }
+      }
+    },
+    "Timeline" : {
+
+    },
+    "Try again" : {
+
+    },
+    "unknown" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未知"
+          }
+        }
+      }
+    },
+    "Unknown" : {
+
+    },
+    "Use keyboard dictation" : {
+
+    },
+    "Use the microphone on the system keyboard whenever dictation is helpful." : {
+
+    },
+    "View output" : {
+
+    },
+    "VoiceOver" : {
+
+    },
+    "Waiting for you" : {
+
+    },
+    "Welcome back" : {
+
+    },
+    "What are you completing this time?" : {
+
+    },
+    "What are you finishing?" : {
+
+    },
+    "What does done look like?" : {
+
+    },
+    "What is happening now" : {
+
+    },
+    "What should be remembered now" : {
+
+    },
+    "What should completion look like?" : {
+
+    },
+    "Wide" : {
+
+    },
+    "Work context" : {
+
+    },
+    "Work in progress" : {
+
+    },
+    "Work ready to sync" : {
+
+    },
+    "Work snapshot" : {
+
+    },
+    "WORK STYLE" : {
+
+    },
+    "Work that keeps syncing" : {
+
+    },
+    "work.completed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed work"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成工作"
+          }
+        }
+      }
+    },
+    "work.current" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CURRENT WORK"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前工作"
+          }
+        }
+      }
+    },
+    "work.snapshot" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work snapshot"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进程快照"
+          }
+        }
+      }
+    },
+    "workspace" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workspace"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作台"
+          }
+        }
+      }
+    },
+    "Workspace" : {
+
+    },
+    "YOUR NEXT STEP" : {
+
+    },
+    "Your work is still moving" : {
+
+    },
+    "Your work was held safely." : {
+
+    }
+  },
+  "version" : "1.0"
+}

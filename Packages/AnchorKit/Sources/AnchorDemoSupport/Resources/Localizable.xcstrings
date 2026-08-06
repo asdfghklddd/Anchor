@@ -1,0 +1,1096 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "About 7 minutes" : {
+
+    },
+    "About 18 minutes" : {
+
+    },
+    "Active work" : {
+
+    },
+    "Away for 18 minutes" : {
+
+    },
+    "Candidate frames" : {
+
+    },
+    "Candy Harbor" : {
+
+    },
+    "Choose a visual direction" : {
+
+    },
+    "Choose the lead visual direction" : {
+
+    },
+    "Claude compressed the script to 58 seconds" : {
+
+    },
+    "Completed" : {
+
+    },
+    "Completed the first three shots" : {
+
+    },
+    "Compressing the closing narration and aligning the product voice." : {
+
+    },
+    "Confident color, tactile cards, playful transitions" : {
+
+    },
+    "Confirm the storyboard" : {
+
+    },
+    "Created 12 candidate frames" : {
+
+    },
+    "Created the 60-second timeline" : {
+
+    },
+    "Current shot" : {
+
+    },
+    "Demo controls" : {
+
+    },
+    "demo.controls" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demo controls"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "演示控制"
+          }
+        }
+      }
+    },
+    "demo.decision.prompt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which direction best carries the calm, capable personality of Anchor?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "哪套方向最能表达 Anchor 冷静而可靠的个性？"
+          }
+        }
+      }
+    },
+    "demo.decision.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the lead visual direction"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择主视觉方向"
+          }
+        }
+      }
+    },
+    "demo.edit.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The project is ready and waiting for storyboard approval."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "素材工程已建立，等待分镜确认后继续。"
+          }
+        }
+      }
+    },
+    "demo.edit.eta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting on prerequisite"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前置任务未完成"
+          }
+        }
+      }
+    },
+    "demo.edit.event.created" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created the 60-second timeline"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "建立 60 秒时间线"
+          }
+        }
+      }
+    },
+    "demo.edit.event.waiting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for storyboard approval"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待确认分镜"
+          }
+        }
+      }
+    },
+    "demo.edit.metric" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit timeline"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剪辑时间线"
+          }
+        }
+      }
+    },
+    "demo.edit.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish the rhythm edit"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成节奏剪辑"
+          }
+        }
+      }
+    },
+    "demo.error.connection" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Mac connection was interrupted. Try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 连接已中断，请重试。"
+          }
+        }
+      }
+    },
+    "demo.explanation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scenarios inject raw events and signals into the same reducers used by production."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "场景只向生产环境共用的状态机注入原始事件和信号。"
+          }
+        }
+      }
+    },
+    "demo.goal.criteria" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export a polished 60-second cut today."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天导出一支精致的 60 秒成片。"
+          }
+        }
+      }
+    },
+    "demo.goal.note" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lock the script and storyboard, generate the shots, then make the final rhythm and taste decisions."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先定脚本与分镜，再生成镜头，最后完成节奏和审美判断。"
+          }
+        }
+      }
+    },
+    "demo.goal.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish the Anchor product film"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成 Anchor 产品宣传片"
+          }
+        }
+      }
+    },
+    "demo.option.candy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Product focus"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "产品聚焦"
+          }
+        }
+      }
+    },
+    "demo.option.candy.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor as visual center"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor 为视觉中心"
+          }
+        }
+      }
+    },
+    "demo.option.documentary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentary negative space"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "纪实留白"
+          }
+        }
+      }
+    },
+    "demo.option.documentary.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "People and workflow"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "人物与工作流"
+          }
+        }
+      }
+    },
+    "demo.option.minimal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dynamic narrative"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "动势叙事"
+          }
+        }
+      }
+    },
+    "demo.option.minimal.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stronger rhythm and transitions"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更强节奏与转场"
+          }
+        }
+      }
+    },
+    "demo.render.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shot 04 is rendering with stable motion."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "镜头 04 / 10 正在渲染，运动稳定性良好"
+          }
+        }
+      }
+    },
+    "demo.render.eta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About 18 minutes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "约 18 分钟"
+          }
+        }
+      }
+    },
+    "demo.render.event.four" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendering shot 04"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在渲染镜头 04"
+          }
+        }
+      }
+    },
+    "demo.render.event.three" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed the first three shots"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成前三个镜头"
+          }
+        }
+      }
+    },
+    "demo.render.metric" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current shot"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前镜头"
+          }
+        }
+      }
+    },
+    "demo.render.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generate transition shots"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生成转场镜头"
+          }
+        }
+      }
+    },
+    "demo.reset" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore baseline data"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复基准数据"
+          }
+        }
+      }
+    },
+    "demo.return.render" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seedance completed shot 03"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seedance 完成第 3 个镜头"
+          }
+        }
+      }
+    },
+    "demo.return.render.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motion stability passed."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "运动稳定性检查通过。"
+          }
+        }
+      }
+    },
+    "demo.return.script" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude compressed the script to 58 seconds"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude 将脚本压缩至 58 秒"
+          }
+        }
+      }
+    },
+    "demo.return.script.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The narration now fits the target."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "旁白已达到成片目标。"
+          }
+        }
+      }
+    },
+    "demo.return.storyboard" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gemini completed 12 storyboard frames"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gemini 完成 12 张分镜"
+          }
+        }
+      }
+    },
+    "demo.return.storyboard.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Three directions are waiting for judgment."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3 套视觉方向等待判断。"
+          }
+        }
+      }
+    },
+    "demo.script.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compressing the third-act narration and aligning the product voice."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在压缩第三幕旁白，并统一产品语气"
+          }
+        }
+      }
+    },
+    "demo.script.eta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About 7 minutes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "约 7 分钟"
+          }
+        }
+      }
+    },
+    "demo.script.event.merged" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merged two narrative directions"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合并两版产品叙事"
+          }
+        }
+      }
+    },
+    "demo.script.event.rewriting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rewriting the third-act narration"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在重写第三幕旁白"
+          }
+        }
+      }
+    },
+    "demo.script.metric" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target length"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标时长"
+          }
+        }
+      }
+    },
+    "demo.script.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Polish the third-act script"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打磨第三幕脚本"
+          }
+        }
+      }
+    },
+    "demo.storyboard.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "12 candidate frames are ready; choose a visual direction."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "12 张候选分镜已生成，需要选择视觉方向"
+          }
+        }
+      }
+    },
+    "demo.storyboard.confirmed.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direction B is confirmed; shot descriptions are being generated."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已采用方向 B，正在生成镜头描述"
+          }
+        }
+      }
+    },
+    "demo.storyboard.confirmed.eta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About 5 minutes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "约 5 分钟"
+          }
+        }
+      }
+    },
+    "demo.storyboard.eta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs your decision"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要你的判断"
+          }
+        }
+      }
+    },
+    "demo.storyboard.event.choose" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a visual direction"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择主视觉方向"
+          }
+        }
+      }
+    },
+    "demo.storyboard.event.created" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created 12 candidate frames"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成 12 张候选分镜"
+          }
+        }
+      }
+    },
+    "demo.storyboard.confirmed.event" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmed direction B"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你确认了方向 B"
+          }
+        }
+      }
+    },
+    "demo.storyboard.metric" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Candidate frames"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "候选分镜"
+          }
+        }
+      }
+    },
+    "demo.storyboard.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm the storyboard"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确认故事分镜"
+          }
+        }
+      }
+    },
+    "Edit timeline" : {
+
+    },
+    "Empty" : {
+
+    },
+    "Export a polished 60-second cut today." : {
+
+    },
+    "Finish the Anchor product film" : {
+
+    },
+    "Finish the rhythm edit" : {
+
+    },
+    "Gemini completed 12 storyboard frames" : {
+
+    },
+    "Generate transition shots" : {
+
+    },
+    "Lock the script and storyboard, generate the shots, then make the final rhythm and taste decisions." : {
+
+    },
+    "Mac disconnected" : {
+
+    },
+    "Merged two narrative directions" : {
+
+    },
+    "Motion stability passed." : {
+
+    },
+    "Natural light, restrained motion, human details" : {
+
+    },
+    "Needs decision" : {
+
+    },
+    "Needs your decision" : {
+
+    },
+    "Permission denied" : {
+
+    },
+    "Polish the third-act script" : {
+
+    },
+    "Product minimal" : {
+
+    },
+    "Quiet typography and close product framing" : {
+
+    },
+    "Rendering shot 04" : {
+
+    },
+    "Restore baseline data" : {
+
+    },
+    "Retryable error" : {
+
+    },
+    "Returning" : {
+
+    },
+    "Rewriting the closing narration" : {
+
+    },
+    "scenario.active" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active work"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作中"
+          }
+        }
+      }
+    },
+    "scenario.away" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Away for 18 minutes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开 18 分钟"
+          }
+        }
+      }
+    },
+    "scenario.completed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成"
+          }
+        }
+      }
+    },
+    "scenario.decision" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs decision"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待判断"
+          }
+        }
+      }
+    },
+    "scenario.disconnected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac disconnected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 断连"
+          }
+        }
+      }
+    },
+    "scenario.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empty"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空状态"
+          }
+        }
+      }
+    },
+    "scenario.error" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retryable error"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可重试错误"
+          }
+        }
+      }
+    },
+    "scenario.permission" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permission denied"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "权限拒绝"
+          }
+        }
+      }
+    },
+    "scenario.returning" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Returning"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返航"
+          }
+        }
+      }
+    },
+    "scenario.stale" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stale data"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数据过期"
+          }
+        }
+      }
+    },
+    "Scenarios inject raw events and signals into the same reducers used by production." : {
+
+    },
+    "Seedance completed shot 03" : {
+
+    },
+    "Shot 04 is rendering with stable motion." : {
+
+    },
+    "Stale data" : {
+
+    },
+    "Target length" : {
+
+    },
+    "The Mac connection was interrupted. Try again." : {
+
+    },
+    "The narration now fits the target." : {
+
+    },
+    "The project is ready and waiting for storyboard approval." : {
+
+    },
+    "Three directions are waiting for judgment." : {
+
+    },
+    "Three visual directions are ready for your judgment." : {
+
+    },
+    "Waiting on prerequisite" : {
+
+    },
+    "Warm documentary" : {
+
+    },
+    "Which direction best carries the calm, capable personality of Anchor?" : {
+
+    }
+  },
+  "version" : "1.0"
+}

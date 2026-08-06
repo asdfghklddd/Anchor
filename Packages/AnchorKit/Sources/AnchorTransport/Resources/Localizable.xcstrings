@@ -1,0 +1,60 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "error.link.acknowledgement-timeout": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The Mac did not confirm the update. Try reconnecting." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Mac 未确认这次更新，请重新连接后再试。" } }
+      }
+    },
+    "error.link.connection-lost": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The local Anchor connection was interrupted." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Anchor 本地连接已中断。" } }
+      }
+    },
+    "error.link.malformed-frame": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The local Anchor message could not be decoded." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "无法解码本地 Anchor 消息。" } }
+      }
+    },
+    "error.link.not-paired": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pair this device before sending events." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "发送事件前请先配对这台设备。" } }
+      }
+    },
+    "error.link.operation-in-progress": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "A local connection operation is already in progress." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "已有一项本地连接操作正在进行。" } }
+      }
+    },
+    "error.link.pairing-code": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Enter the six-digit pairing code shown on the Mac." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "请输入 Mac 上显示的六位配对码。" } }
+      }
+    },
+    "error.link.pairing-timeout": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pairing timed out. Check the code and try again." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "配对超时，请核对配对码后重试。" } }
+      }
+    },
+    "error.link.peer-key": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The peer supplied an invalid identity key." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "对端提供的身份密钥无效。" } }
+      }
+    },
+    "error.link.unsupported": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This pairing operation is unavailable on this device." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "这台设备不支持此配对操作。" } }
+      }
+    }
+  },
+  "version": "1.0"
+}
