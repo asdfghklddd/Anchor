@@ -39,7 +39,27 @@ public struct AnchorIOSRootView: View {
                             onAnchor: {
                                 sheet = model.projection.session == nil ? .setup : .note
                             },
-                            onResolve: resolve
+                            onResolve: resolve,
+                            onProcessAction: { process in
+                                Task {
+                                    if process.status == .queued {
+                                        var updated = process
+                                        updated.status = .running
+                                        updated.updatedAt = .now
+                                        _ = await model.send(.updateProcess(updated))
+                                    }
+
+                                    _ = await model.send(
+                                        .recordEvent(
+                                            ProcessEvent(
+                                                processID: process.id,
+                                                kind: .note,
+                                                title: L10n.openCurrentProcess
+                                            )
+                                        )
+                                    )
+                                }
+                            }
                         )
                     } else {
                         PortraitDashboard(
@@ -116,7 +136,11 @@ public struct AnchorIOSRootView: View {
         case .insights:
             InsightsView(projection: model.projection)
         case .profile:
-            ProfileView(projection: model.projection, onRoute: { path.append($0) })
+            ProfileView(
+                projection: model.projection,
+                onRoute: { path.append($0) },
+                onSheet: { sheet = $0 }
+            )
         case .history:
             HistoryView(projection: model.projection) { path.append(.historyDetail($0)) }
         case let .historyDetail(id):
@@ -139,6 +163,20 @@ public struct AnchorIOSRootView: View {
     @ViewBuilder
     private func sheetDestination(for item: AnchorSheet) -> some View {
         switch item {
+        case .account:
+            ProfileInfoSheet(kind: .account)
+                .presentationDetents([.large])
+        case .icloud:
+            ProfileInfoSheet(kind: .icloud)
+                .presentationDetents([.large])
+        case let .profileDetail(kind):
+            ProfileDetailSheet(
+                projection: model.projection,
+                kind: kind,
+                onManage: { sheet = .layout },
+                onFinish: { sheet = .finish }
+            )
+            .presentationDetents([.large])
         case .setup:
             NavigationStack {
                 AnchorSetupView(model: model)

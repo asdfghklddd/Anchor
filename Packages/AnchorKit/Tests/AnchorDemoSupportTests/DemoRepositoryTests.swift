@@ -34,13 +34,32 @@ struct DemoRepositoryTests {
     func scenarioSemantics() {
         let active = DemoFixtureFactory.projection(for: .active)
         let needsDecision = DemoFixtureFactory.projection(for: .needsDecision)
+        let returning = DemoFixtureFactory.projection(for: .returning)
         let completed = DemoFixtureFactory.projection(for: .completed)
 
         #expect(active.openDecisions.isEmpty)
         #expect(active.session?.processes.contains { $0.status == .needsDecision } == false)
+        let confirmedStoryboard = active.session?.processes.first { $0.sourceName == "Gemini" }
+        #expect(confirmedStoryboard?.progress == 0.85)
+        #expect(confirmedStoryboard?.events.last?.kind == .decisionResolved)
         #expect(needsDecision.openDecisions.count == 1)
         #expect(needsDecision.session?.processes.contains { $0.status == .needsDecision } == true)
+        #expect(returning.session?.snapshots.count == 1)
+        #expect(returning.session?.returnSummary?.changes.count == 3)
         #expect(completed.openDecisions.isEmpty)
+    }
+
+    @Test("Retryable error scenario keeps its visible error")
+    func retryableErrorPersists() async {
+        let storage = URL.temporaryDirectory.appending(path: "anchor-demo-(UUID().uuidString).json")
+        let repository = DemoSessionRepository(storageURL: storage, restoresSavedState: false)
+
+        await repository.switchScenario(to: .retryableError)
+        let projection = await repository.currentProjection()
+
+        #expect(projection.connection == .failed)
+        #expect(projection.errorMessage != nil)
+        try? FileManager.default.removeItem(at: storage)
     }
 
     @Test("The baseline fixture is copied before the first user action")

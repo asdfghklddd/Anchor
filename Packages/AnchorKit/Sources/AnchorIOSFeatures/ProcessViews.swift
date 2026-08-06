@@ -208,11 +208,13 @@ struct DecisionView: View {
                     Text("\(Character(UnicodeScalar(65 + index)!)) · \(option.title)")
                         .font(.subheadline.bold())
                         .foregroundStyle(AnchorPalette.ink)
+                        .accessibilityIdentifier("decision.option.title")
                     Text(option.detail)
                         .font(.caption)
                         .foregroundStyle(AnchorPalette.secondaryInk)
                         .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                         .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("decision.option.detail")
                 }
                 Spacer(minLength: 0)
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")

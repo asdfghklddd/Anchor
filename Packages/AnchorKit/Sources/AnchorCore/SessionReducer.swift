@@ -168,10 +168,12 @@ public enum SessionReducer {
                 }
             }
 
-        case let .updateSignals(connection, proximity, observedAt):
+        case let .updateSignals(connection, proximity, _):
             result.connection = connection
             result.proximity = proximity
-            result.dataObservedAt = observedAt
+            // Presence and connection signals describe transport health, not
+            // the age of the work data. Keep the last remote data timestamp
+            // intact so stale projections remain visible to the UI.
 
         case .acknowledgeReturn:
             try result.withSession { session in

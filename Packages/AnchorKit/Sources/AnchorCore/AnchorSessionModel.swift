@@ -91,6 +91,10 @@ public final class AnchorSessionModel {
         lastError = nil
     }
 
+    public func clearError() async {
+        _ = await send(.clearError)
+    }
+
     @discardableResult
     public func send(_ command: SessionCommand) async -> Bool {
         do {

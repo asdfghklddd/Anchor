@@ -71,7 +71,7 @@ public actor DemoSessionRepository: SessionRepository, PresenceSignalProviding, 
 
     public func send(_ command: SessionCommand) throws {
         state.projection = try SessionReducer.reduce(state.projection, command: command)
-        persist()
+        persist(clearExistingError: false)
         broadcastProjection()
     }
 
@@ -82,7 +82,7 @@ public actor DemoSessionRepository: SessionRepository, PresenceSignalProviding, 
             scenario: scenario,
             projection: DemoFixtureFactory.projection(for: scenario)
         )
-        persist()
+        persist(clearExistingError: false)
         broadcastProjection()
         broadcastSignals()
     }
@@ -110,9 +110,11 @@ public actor DemoSessionRepository: SessionRepository, PresenceSignalProviding, 
         }
     }
 
-    private func persist() {
+    private func persist(clearExistingError: Bool = true) {
         do {
-            state.projection.errorMessage = nil
+            if clearExistingError {
+                state.projection.errorMessage = nil
+            }
             try Self.write(state, to: storageURL)
         } catch {
             state.projection.errorMessage = error.localizedDescription

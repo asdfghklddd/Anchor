@@ -68,6 +68,7 @@ private struct MetricTile: View {
 struct ProfileView: View {
     let projection: SessionProjection
     let onRoute: (AnchorRoute) -> Void
+    let onSheet: (AnchorSheet) -> Void
 
     var body: some View {
         ZStack {
@@ -89,6 +90,18 @@ struct ProfileView: View {
         }
         .navigationTitle(L10n.profile)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    onSheet(.account)
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                }
+                .accessibilityLabel(L10n.settings)
+                .accessibilityIdentifier("profile.account.button")
+            }
+        }
     }
 
     private var identityCard: some View {
@@ -124,45 +137,60 @@ struct ProfileView: View {
 
     private var metricStrip: some View {
         HStack(spacing: 9) {
-            profileMetric(value: L10n.minuteCount(focusMinutes), label: L10n.guardedFocus, tint: AnchorPalette.coral, progress: min(1, Double(focusMinutes) / 60))
-            profileMetric(value: "\(savedContextCount)", label: L10n.savedContexts, tint: AnchorPalette.periwinkle, progress: min(1, Double(savedContextCount) / 10))
-            profileMetric(value: "\(completedCount)", label: L10n.completedAnchors, tint: AnchorPalette.seafoam, progress: min(1, Double(completedCount) / 4))
+            profileMetric(value: L10n.minuteCount(focusMinutes), label: L10n.guardedFocus, tint: AnchorPalette.coral, progress: min(1, Double(focusMinutes) / 60)) {
+                onSheet(.profileDetail(.focus))
+            }
+            profileMetric(value: "\(savedContextCount)", label: L10n.savedContexts, tint: AnchorPalette.periwinkle, progress: min(1, Double(savedContextCount) / 10)) {
+                onSheet(.profileDetail(.contexts))
+            }
+            profileMetric(value: "\(completedCount)", label: L10n.completedAnchors, tint: AnchorPalette.seafoam, progress: min(1, Double(completedCount) / 4)) {
+                onSheet(.profileDetail(.anchors))
+            }
         }
     }
 
-    private func profileMetric(value: String, label: String, tint: Color, progress: Double) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(value)
-                    .font(.title3.bold().monospacedDigit())
-                    .foregroundStyle(AnchorPalette.ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-                Spacer(minLength: 2)
-                Image(systemName: "chevron.right").font(.caption2.bold()).foregroundStyle(AnchorPalette.secondaryInk)
+    private func profileMetric(
+        value: String,
+        label: String,
+        tint: Color,
+        progress: Double,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(value)
+                        .font(.title3.bold().monospacedDigit())
+                        .foregroundStyle(AnchorPalette.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+                    Spacer(minLength: 2)
+                    Image(systemName: "chevron.right").font(.caption2.bold()).foregroundStyle(AnchorPalette.secondaryInk)
+                }
+                Text(label)
+                    .font(.caption2.bold())
+                    .foregroundStyle(AnchorPalette.secondaryInk)
+                    .lineLimit(2)
+                GeometryReader { proxy in
+                    Capsule()
+                        .fill(tint.opacity(0.16))
+                        .overlay(alignment: .leading) {
+                            Capsule().fill(tint).frame(width: proxy.size.width * progress)
+                        }
+                }
+                .frame(height: 5)
             }
-            Text(label)
-                .font(.caption2.bold())
-                .foregroundStyle(AnchorPalette.secondaryInk)
-                .lineLimit(2)
-            GeometryReader { proxy in
-                Capsule()
-                    .fill(tint.opacity(0.16))
-                    .overlay(alignment: .leading) {
-                        Capsule().fill(tint).frame(width: proxy.size.width * progress)
-                    }
-            }
-            .frame(height: 5)
+            .padding(11)
+            .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
+            .background(tint.opacity(0.16), in: .rect(cornerRadius: 20, style: .continuous))
+            .shadow(color: tint.opacity(0.09), radius: 8, y: 5)
         }
-        .padding(11)
-        .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
-        .background(tint.opacity(0.16), in: .rect(cornerRadius: 20, style: .continuous))
-        .shadow(color: tint.opacity(0.09), radius: 8, y: 5)
+        .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
     }
 
     private var sessionCard: some View {
-        Button { onRoute(.insights) } label: {
+        Button { onSheet(.profileDetail(.session)) } label: {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .bottom) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -230,7 +258,14 @@ struct ProfileView: View {
 
             VStack(spacing: 0) {
                 ForEach(Array((projection.session?.timeline ?? []).prefix(3).enumerated()), id: \.element.id) { index, event in
-                    Button { onRoute(.history) } label: {
+                    Button {
+                        let detail: ProfileDetailKind = switch index {
+                        case 0: .returnMemory
+                        case 1: .decisionTrace
+                        default: .contextSnapshot
+                        }
+                        onSheet(.profileDetail(detail))
+                    } label: {
                         HStack(alignment: .top, spacing: 11) {
                             Image(systemName: eventSymbol(event.kind))
                                 .font(.subheadline.bold())
@@ -272,6 +307,12 @@ struct ProfileView: View {
             VStack(spacing: 0) {
                 routeRow(L10n.taskManagement, symbol: "square.grid.2x2", route: .taskManagement)
                 Divider().padding(.leading, 48)
+                sheetRow(
+                    AnchorStrings.value("settings.icloud", default: "iCloud Sync"),
+                    symbol: "icloud",
+                    sheet: .icloud
+                )
+                Divider().padding(.leading, 48)
                 routeRow(L10n.connections, symbol: "macbook.and.iphone", route: .connections)
                 Divider().padding(.leading, 48)
                 routeRow(L10n.sources, symbol: "point.3.connected.trianglepath.dotted", route: .sources)
@@ -289,6 +330,23 @@ struct ProfileView: View {
 
     private func routeRow(_ title: String, symbol: String, route: AnchorRoute) -> some View {
         Button { onRoute(route) } label: {
+            HStack(spacing: 12) {
+                Image(systemName: symbol)
+                    .foregroundStyle(AnchorPalette.link)
+                    .frame(width: 32, height: 32)
+                    .background(AnchorPalette.cyan.opacity(0.12), in: .rect(cornerRadius: 10, style: .continuous))
+                Text(title).font(.subheadline.bold()).foregroundStyle(AnchorPalette.ink)
+                Spacer()
+                Image(systemName: "chevron.right").font(.caption2.bold()).foregroundStyle(AnchorPalette.secondaryInk)
+            }
+            .frame(minHeight: 50)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func sheetRow(_ title: String, symbol: String, sheet: AnchorSheet) -> some View {
+        Button { onSheet(sheet) } label: {
             HStack(spacing: 12) {
                 Image(systemName: symbol)
                     .foregroundStyle(AnchorPalette.link)

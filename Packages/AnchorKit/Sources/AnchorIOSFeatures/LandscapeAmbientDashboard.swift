@@ -8,70 +8,127 @@ struct LandscapeAmbientDashboard: View {
     let onGoal: () -> Void
     let onAnchor: () -> Void
     let onResolve: (Decision, DecisionOption) -> Void
+    let onProcessAction: (AnchorProcess) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var inspectedProcessID: UUID?
     @State private var selectedOptionID: UUID?
+    @State private var attentionEdgePulse = false
 
     var body: some View {
+        AnyView(
+            dashboardContent
+            .background(AnchorPalette.paper)
+            // The ticker is a non-interactive status rail. Let its background
+            // occupy the bottom home-indicator inset while keeping controls
+            // above it in the workspace grid.
+            .ignoresSafeArea(.container, edges: .bottom)
+            .overlay(alignment: .trailing) {
+                attentionEdge
+            }
+            .toolbar(.hidden, for: .navigationBar)
+            .accessibilityElement(children: .contain)
+            .onAppear(perform: initializeSelection)
+            .onChange(of: projection.openDecisions) { oldDecisions, newDecisions in
+                updateSelection(for: oldDecisions, and: newDecisions)
+            }
+            .onChange(of: projection.session?.id) { _, _ in
+                resetSelectionForSession()
+            }
+        )
+    }
+
+    private var dashboardContent: some View {
         VStack(spacing: 0) {
             progressEdge
 
             if dynamicTypeSize.isAccessibilitySize {
-                ScrollView {
-                    VStack(spacing: 12) {
-                        ambientHeader
-                        goalLine
-                        processGrid
-                        inspector
-                        ticker
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 12)
-                }
+                accessibilityLayout
             } else {
-                ambientHeader
-
-                VStack(spacing: 0) {
-                    HStack(spacing: 10) {
-                        VStack(spacing: 9) {
-                            goalLine
-                            processGrid
-                        }
-                        .frame(maxWidth: .infinity)
-
-                        inspector
-                            .frame(width: 310)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 9)
-
-                    ticker
-                }
+                standardLayout
             }
         }
-        .background(AnchorPalette.paper)
-        .overlay(alignment: .trailing) {
+    }
+
+    private var accessibilityLayout: some View {
+        ScrollView {
+            VStack(spacing: 12) {
+                ambientHeader
+                goalLine
+                processGrid
+                inspector
+                ticker
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 12)
+        }
+    }
+
+    private var standardLayout: some View {
+        VStack(spacing: 0) {
+            ambientHeader
+            HStack(spacing: 10) {
+                VStack(spacing: 9) {
+                    goalLine
+                    processGrid
+                }
+                .frame(maxWidth: .infinity)
+
+                inspector
+                    .frame(width: 248)
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 9)
+
+            ticker
+        }
+    }
+
+    @ViewBuilder
+    private var attentionEdge: some View {
             if openDecision != nil {
-                Capsule()
+                Rectangle()
                     .fill(AnchorPalette.sand)
-                    .frame(width: 3, height: 78)
+                    .frame(minWidth: 3, idealWidth: 3, maxWidth: 3, maxHeight: .infinity)
+                    .opacity(reduceMotion || attentionEdgePulse ? 1 : 0.78)
                     .shadow(color: AnchorPalette.sand.opacity(0.5), radius: 8)
+                    .ignoresSafeArea(.container, edges: [.horizontal, .bottom])
                     .accessibilityHidden(true)
             }
+    }
+
+    private func initializeSelection() {
+        // Match the prototype's default: an open decision owns the inspector;
+        // otherwise the workspace starts on the clear panel instead of silently
+        // selecting the first process.
+        resetSelectionForSession()
+        guard !reduceMotion else { return }
+        withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+            attentionEdgePulse = true
         }
-        .toolbar(.hidden, for: .navigationBar)
-        .accessibilityElement(children: .contain)
-        .onAppear {
-            inspectedProcessID = openDecision?.processID ?? projection.session?.processes.first?.id
-            selectedOptionID = openDecision?.options.dropFirst().first?.id ?? openDecision?.options.first?.id
+    }
+
+    private func resetSelectionForSession() {
+        inspectedProcessID = openDecision?.processID
+        selectedOptionID = openDecision?.options.dropFirst().first?.id ?? openDecision?.options.first?.id
+    }
+
+    private func updateSelection(for oldDecisions: [Decision], and newDecisions: [Decision]) {
+        // Keep an explicitly inspected process selected. If the decision being
+        // inspected resolves, return to the clear workspace just as the JSX
+        // prototype clears its selectedTaskId after an action.
+        if let inspectedProcessID,
+           oldDecisions.contains(where: { $0.processID == inspectedProcessID }),
+           !newDecisions.contains(where: { $0.processID == inspectedProcessID }) {
+            self.inspectedProcessID = nil
         }
-        .onChange(of: projection.openDecisions) { _, _ in
-            inspectedProcessID = openDecision?.processID ?? inspectedProcessID
-            selectedOptionID = openDecision?.options.dropFirst().first?.id ?? openDecision?.options.first?.id
-        }
+
+        let selectedDecision = newDecisions.first { $0.processID == self.inspectedProcessID }
+        let defaultDecision = self.inspectedProcessID == nil ? newDecisions.first : nil
+        let decision = selectedDecision ?? defaultDecision
+        selectedOptionID = decision?.options.dropFirst().first?.id ?? decision?.options.first?.id
     }
 
     private var ambientHeader: some View {
@@ -91,7 +148,7 @@ struct LandscapeAmbientDashboard: View {
 
                     Divider()
 
-                    Text(L10n.focusTime)
+                    Text(L10n.focusActive)
                         .font(.headline.bold())
                         .foregroundStyle(AnchorPalette.secondaryInk)
                     Text(focusDuration(at: context.date))
@@ -117,7 +174,7 @@ struct LandscapeAmbientDashboard: View {
                     }
                     Spacer()
                     HStack(alignment: .firstTextBaseline, spacing: 7) {
-                        Text(L10n.focusTime)
+                        Text(L10n.focusActive)
                             .font(.caption.bold())
                             .foregroundStyle(AnchorPalette.secondaryInk)
                         Text(focusDuration(at: context.date))
@@ -127,6 +184,7 @@ struct LandscapeAmbientDashboard: View {
                 }
                 .padding(.horizontal, 14)
                 .frame(minHeight: 48)
+                .padding(.bottom, 24)
             }
         }
     }
@@ -192,7 +250,7 @@ struct LandscapeAmbientDashboard: View {
                         .accessibilityHidden(true)
                 }
                 .padding(.horizontal, 12)
-                .frame(height: 60)
+                .frame(height: 54)
             }
         }
         .background(
@@ -201,7 +259,7 @@ struct LandscapeAmbientDashboard: View {
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ),
-            in: .rect(cornerRadius: 19, style: .continuous)
+            in: .rect(cornerRadius: 22, style: .continuous)
         )
         .shadow(color: AnchorPalette.deepSea.opacity(0.18), radius: 10, y: 6)
         .contentShape(.rect)
@@ -215,26 +273,16 @@ struct LandscapeAmbientDashboard: View {
     @ViewBuilder
     private var processGrid: some View {
         if let processes = projection.session?.processes, !processes.isEmpty {
-            LazyVGrid(
-                columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)],
-                spacing: 8
-            ) {
-                ForEach(processes) { process in
-                    Button {
-                        inspectedProcessID = process.id
-                        if let decision = projection.openDecisions.first(where: { $0.processID == process.id }) {
-                            selectedOptionID = decision.options.dropFirst().first?.id ?? decision.options.first?.id
-                        }
-                    } label: {
-                        AmbientProcessTile(process: process, selected: inspectedProcessID == process.id)
+            AmbientProcessGrid(
+                processes: processes,
+                inspectedProcessID: inspectedProcessID,
+                onSelect: { process in
+                    inspectedProcessID = process.id
+                    if let decision = projection.openDecisions.first(where: { $0.processID == process.id }) {
+                        selectedOptionID = decision.options.dropFirst().first?.id ?? decision.options.first?.id
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("\(process.sourceName), \(process.title), \(L10n.status(process.status))")
-                    .accessibilityValue(process.progress?.formatted(.percent.precision(.fractionLength(0))) ?? L10n.status(process.status))
-                    .accessibilityAddTraits(inspectedProcessID == process.id ? .isSelected : [])
                 }
-            }
-            .animation(reduceMotion ? nil : .spring(duration: 0.45), value: inspectedProcessID)
+            )
         } else {
             VStack(spacing: 8) {
                 Image(systemName: "square.grid.2x2")
@@ -262,7 +310,7 @@ struct LandscapeAmbientDashboard: View {
     private var inspector: some View {
         if projection.session == nil {
             AmbientEmptyWorkspaceInspector(onAnchor: onAnchor)
-        } else if let decision = selectedDecision ?? openDecision,
+        } else if let decision = activeDecision,
            let process = projection.session?.processes.first(where: { $0.id == decision.processID }) {
             AmbientDecisionInspector(
                 process: process,
@@ -271,16 +319,35 @@ struct LandscapeAmbientDashboard: View {
                 onResolve: onResolve
             )
         } else if let process = inspectedProcess {
-            AmbientProcessInspector(process: process)
+            AmbientProcessInspector(
+                process: process,
+                pendingDecision: openDecision,
+                onClose: { inspectedProcessID = nil },
+                onReturnToDecision: {
+                    inspectedProcessID = openDecision?.processID
+                },
+                onAction: {
+                    onProcessAction(process)
+                }
+            )
         } else {
             VStack(spacing: 8) {
-                HarborBrandMark(size: 52)
+                HarborCompanion(mood: .calm, size: 46)
                 Text(L10n.allProcessesRunning).font(.headline.bold())
-                Text(L10n.noAttentionNeeded).font(.caption).foregroundStyle(AnchorPalette.secondaryInk)
+                Text(L10n.ambientClearHeadline)
+                    .font(.title3.bold())
+                Text(
+                    L10n.ambientClearSummary(
+                        running: runningProcessCount,
+                        queued: queuedProcessCount
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(AnchorPalette.secondaryInk)
             }
             .foregroundStyle(AnchorPalette.ink)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(AnchorPalette.seafoam.opacity(0.18), in: .rect(cornerRadius: 20, style: .continuous))
+            .background(AnchorPalette.seafoam.opacity(0.18), in: .rect(cornerRadius: 24, style: .continuous))
             .accessibilityIdentifier("ambient.no-attention")
         }
     }
@@ -296,17 +363,15 @@ struct LandscapeAmbientDashboard: View {
                     .overlay(.white.opacity(0.34))
                     .frame(height: 18)
             }
-            Text(tickerText)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.92))
-                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
-                .fixedSize(horizontal: false, vertical: true)
-                .contentTransition(.interpolate)
+            AmbientTickerMarquee(text: tickerText)
                 .accessibilityIdentifier("ambient.ticker.text")
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 14)
-        .frame(minHeight: 36)
+        .frame(
+            minHeight: dynamicTypeSize.isAccessibilitySize ? 44 : 40,
+            maxHeight: dynamicTypeSize.isAccessibilitySize ? nil : 40
+        )
         .background(
             LinearGradient(
                 colors: [AnchorPalette.deepSea, Color(red: 0.09, green: 0.30, blue: 0.39)],
@@ -323,19 +388,20 @@ struct LandscapeAmbientDashboard: View {
             if processCount == 0 {
                 AnchorPalette.secondaryInk.opacity(0.16)
             } else {
-                HStack(spacing: 2) {
+                HStack(spacing: 0) {
                     ForEach(projection.session?.processes ?? []) { process in
                         ZStack(alignment: .leading) {
                             AnchorPalette.source(process.sourceTone).opacity(0.18)
                             AnchorPalette.source(process.sourceTone)
                                 .frame(width: proxy.size.width / CGFloat(processCount) * (process.progress ?? 0))
                         }
-                        .frame(width: proxy.size.width / CGFloat(processCount))
+                        .frame(maxWidth: .infinity)
                     }
                 }
             }
         }
         .frame(height: 3)
+        .ignoresSafeArea(.container, edges: .horizontal)
         .accessibilityHidden(true)
     }
 
@@ -343,10 +409,19 @@ struct LandscapeAmbientDashboard: View {
     private var selectedDecision: Decision? {
         projection.openDecisions.first { $0.processID == inspectedProcessID }
     }
+    private var activeDecision: Decision? {
+        selectedDecision ?? (inspectedProcessID == nil ? openDecision : nil)
+    }
     private var inspectedProcess: AnchorProcess? {
         projection.session?.processes.first { $0.id == inspectedProcessID }
     }
     private var processCount: Int { projection.session?.processes.count ?? 0 }
+    private var runningProcessCount: Int {
+        projection.session?.processes.filter { $0.status == .running }.count ?? 0
+    }
+    private var queuedProcessCount: Int {
+        projection.session?.processes.filter { $0.status == .queued }.count ?? 0
+    }
     private var ambientActiveColor: Color {
         colorScheme == .dark ? AnchorPalette.seafoam : AnchorPalette.mintInk
     }
@@ -355,12 +430,108 @@ struct LandscapeAmbientDashboard: View {
         return session.notes.count + 1
     }
     private var tickerText: String {
-        let text = projection.session?.timeline.prefix(3).map(\.title).joined(separator: "  ·  ") ?? ""
-        return text.isEmpty ? L10n.noEvents : text
+        projection.session?.processes
+            .prefix(4)
+            .map(tickerItem(for:))
+            .joined(separator: "   ·   ") ?? ""
+    }
+
+    private func tickerItem(for process: AnchorProcess) -> String {
+        switch process.status {
+        case .needsDecision:
+            return L10n.latestDecisionProgress(
+                source: process.sourceName,
+                metric: process.metric,
+                metricLabel: process.metricLabel
+            )
+        case .completed:
+            return L10n.latestCompletedProgress(source: process.sourceName, title: process.title)
+        default:
+            let latestEvent = process.events.max { $0.occurredAt < $1.occurredAt }
+            return "\(process.sourceName) · \(latestEvent?.title ?? process.title)"
+        }
     }
     private func focusDuration(at date: Date) -> String {
-        guard let startedAt = projection.session?.startedAt else { return L10n.minuteCount(0) }
-        return L10n.minuteCount(max(0, Int(date.timeIntervalSince(startedAt) / 60)))
+        guard let startedAt = projection.session?.startedAt else { return L10n.focusDuration(0) }
+        return L10n.focusDuration(max(0, Int(date.timeIntervalSince(startedAt) / 60)))
+    }
+}
+
+private struct AmbientTickerMarquee: View {
+    let text: String
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var copyWidth: CGFloat = 0
+    @State private var offset: CGFloat = 0
+    @State private var isPaused = false
+
+    var body: some View {
+        Group {
+            if text.isEmpty {
+                Text(L10n.noEvents)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.92))
+            } else if dynamicTypeSize.isAccessibilitySize || reduceMotion {
+                Text(text)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.92))
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                GeometryReader { _ in
+                    HStack(spacing: 34) {
+                        tickerCopy
+                        tickerCopy
+                    }
+                    .offset(x: offset)
+                }
+                .clipped()
+                .frame(minHeight: 24)
+                .contentShape(.rect)
+                .onLongPressGesture(minimumDuration: 0.01, maximumDistance: 30, pressing: { pressing in
+                    isPaused = pressing
+                    if !pressing { beginMarquee() }
+                }, perform: {})
+            }
+        }
+        .frame(height: dynamicTypeSize.isAccessibilitySize ? nil : 24)
+        .onAppear { beginMarquee() }
+        .onChange(of: copyWidth) { _, _ in beginMarquee() }
+    }
+
+    private var tickerCopy: some View {
+        Text(text)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.white.opacity(0.92))
+            .lineLimit(1)
+            .fixedSize()
+            .background {
+                GeometryReader { proxy in
+                    Color.clear
+                        .preference(key: TickerCopyWidthKey.self, value: proxy.size.width)
+                }
+            }
+            .onPreferenceChange(TickerCopyWidthKey.self) { width in
+                if width > 0, abs(copyWidth - width) > 0.5 {
+                    copyWidth = width
+                }
+            }
+    }
+
+    private func beginMarquee() {
+        guard !reduceMotion, !dynamicTypeSize.isAccessibilitySize, !isPaused, copyWidth > 0 else { return }
+        withAnimation(.linear(duration: 28).repeatForever(autoreverses: false)) {
+            offset = -(copyWidth + 34)
+        }
+    }
+}
+
+private struct TickerCopyWidthKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
 
@@ -369,7 +540,7 @@ private struct AmbientEmptyWorkspaceInspector: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            HarborBrandMark(size: 52)
+            HarborCompanion(mood: .calm, size: 46)
             Text(L10n.emptyTitle)
                 .font(.headline.bold())
                 .foregroundStyle(AnchorPalette.ink)
@@ -381,14 +552,96 @@ private struct AmbientEmptyWorkspaceInspector: View {
                 .fixedSize(horizontal: false, vertical: true)
             Button(action: onAnchor) {
                 Label(L10n.dropAnchor, systemImage: "scope")
+                    .accessibilityIdentifier("ambient.anchor.button.label")
             }
             .buttonStyle(HarborPrimaryButtonStyle())
+            // Treat the icon and title as one control so VoiceOver does not
+            // announce the title as a separate child of the button.
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(L10n.dropAnchor)
             .accessibilityIdentifier("ambient.anchor.button")
         }
         .padding(14)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(AnchorPalette.seafoam.opacity(0.18), in: .rect(cornerRadius: 20, style: .continuous))
+            .background(AnchorPalette.seafoam.opacity(0.18), in: .rect(cornerRadius: 24, style: .continuous))
         .accessibilityElement(children: .contain)
+    }
+}
+
+private struct AmbientProcessGrid: View {
+    let processes: [AnchorProcess]
+    let inspectedProcessID: UUID?
+    let onSelect: (AnchorProcess) -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Grid(horizontalSpacing: 8, verticalSpacing: 8) {
+            ForEach(Array(processRows.enumerated()), id: \.offset) { _, row in
+                GridRow {
+                    ForEach(row) { process in
+                        AmbientProcessGridCell(
+                            process: process,
+                            selected: inspectedProcessID == process.id,
+                            onSelect: onSelect
+                        )
+                        .gridCellColumns(gridSpan(for: process.tileSize))
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .animation(reduceMotion ? nil : .spring(duration: 0.45), value: inspectedProcessID)
+    }
+
+    private var processRows: [[AnchorProcess]] {
+        var rows: [[AnchorProcess]] = []
+        var current: [AnchorProcess] = []
+        var occupied = 0
+
+        for process in processes {
+            let span = gridSpan(for: process.tileSize)
+            if !current.isEmpty, occupied + span > 4 {
+                rows.append(current)
+                current = []
+                occupied = 0
+            }
+            current.append(process)
+            occupied += span
+        }
+
+        if !current.isEmpty {
+            rows.append(current)
+        }
+        return rows
+    }
+
+    private func gridSpan(for size: ProcessTileSize) -> Int {
+        switch size {
+        case .compact, .standard: 2
+        case .wide, .large: 4
+        }
+    }
+}
+
+private struct AmbientProcessGridCell: View {
+    let process: AnchorProcess
+    let selected: Bool
+    let onSelect: (AnchorProcess) -> Void
+
+    var body: some View {
+        Button {
+            onSelect(process)
+        } label: {
+            AmbientProcessTile(process: process, selected: selected)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(process.sourceName), \(process.title), \(L10n.status(process.status))")
+        .accessibilityValue(
+            process.progress?.formatted(.percent.precision(.fractionLength(0)))
+                ?? L10n.status(process.status)
+        )
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
@@ -396,54 +649,103 @@ private struct AmbientProcessTile: View {
     let process: AnchorProcess
     let selected: Bool
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         let tint = AnchorPalette.source(process.sourceTone)
-        HStack(spacing: 8) {
-            SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 31)
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 5) {
-                    Text(process.sourceName)
-                        .font(.caption2.bold())
-                        .lineLimit(1)
-                        .accessibilityIdentifier("ambient.tile.source")
-                    Spacer(minLength: 0)
-                    Image(systemName: statusSymbol).font(.caption2.bold()).foregroundStyle(tint)
-                }
-                Text(process.title)
-                    .font(.caption.bold())
-                    .foregroundStyle(AnchorPalette.ink)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 29)
+                Spacer(minLength: 4)
+                statusPill
+            }
+
+            Text(process.title)
+                .font(.caption.bold())
+                .foregroundStyle(AnchorPalette.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
+                .accessibilityIdentifier("ambient.tile.title")
+
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(process.metric)
+                    .font(.title2.bold().monospacedDigit())
+                    .foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
                     .lineLimit(1)
-                    .accessibilityIdentifier("ambient.tile.title")
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(process.metric).font(.headline.bold().monospacedDigit()).foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
-                    Spacer(minLength: 0)
-                    Text(process.progress ?? 0, format: .percent.precision(.fractionLength(0)))
-                        .font(.caption2.bold().monospacedDigit())
-                }
-                if let progress = process.progress {
+                    .minimumScaleFactor(0.75)
+                Spacer(minLength: 0)
+                Text(process.metricLabel)
+                    .font(.caption2)
+                    .foregroundStyle(AnchorPalette.secondaryInk)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+
+            Spacer(minLength: 0)
+
+            if let progress = process.progress {
+                HStack(spacing: 7) {
                     AnchorProgress(value: progress, tint: tint)
+                    Text(progress, format: .percent.precision(.fractionLength(0)))
+                        .font(.caption2.bold().monospacedDigit())
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .frame(width: 31, alignment: .trailing)
                 }
             }
         }
         .foregroundStyle(AnchorPalette.ink)
         .padding(9)
-        .frame(maxWidth: .infinity, minHeight: 80, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 104, alignment: .topLeading)
         .background(
             LinearGradient(
-                colors: AnchorPalette.sourceSurface(process.sourceTone),
+                colors: AnchorPalette.sourceSurface(process.sourceTone, dark: colorScheme == .dark),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ),
-            in: .rect(cornerRadius: 18, style: .continuous)
+            in: .rect(cornerRadius: 24, style: .continuous)
         )
-        .overlay {
-            if selected || process.status == .needsDecision {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(process.status == .needsDecision ? AnchorPalette.sand : tint, lineWidth: selected ? 2.5 : 1.5)
-            }
-        }
-        .shadow(color: tint.opacity(0.12), radius: 7, y: 4)
+        .shadow(
+            color: process.status == .needsDecision ? AnchorPalette.sand.opacity(0.20) : tint.opacity(0.12),
+            radius: process.status == .needsDecision ? 10 : 7,
+            y: 4
+        )
         .accessibilityHidden(true)
+    }
+
+    private var statusPill: some View {
+        Label(ambientStatusText, systemImage: statusSymbol)
+            .font(.caption2.bold())
+            .foregroundStyle(
+                process.status == .needsDecision
+                    ? Color(red: 0.47, green: 0.32, blue: 0)
+                    : AnchorPalette.sourceInk(process.sourceTone)
+            )
+            .padding(.horizontal, 7)
+            .frame(minHeight: 23)
+            .background(
+                process.status == .needsDecision ? AnchorPalette.warmYellow : .white.opacity(0.56),
+                in: .capsule
+            )
+            .lineLimit(1)
+            .minimumScaleFactor(0.78)
+            .accessibilityIdentifier("ambient.tile.status")
+    }
+
+    private var ambientStatusText: String {
+        switch process.status {
+        case .running:
+            if process.events.contains(where: { $0.kind == .decisionResolved }) {
+                L10n.confirmed
+            } else {
+                process.sourceTone == "cyan" ? L10n.rendering : L10n.generating
+            }
+        case .needsDecision:
+            L10n.waitingConfirmation
+        case .queued:
+            L10n.preparing
+        default:
+            L10n.compactStatus(process.status)
+        }
     }
 
     private var statusSymbol: String {
@@ -465,12 +767,18 @@ private struct AmbientDecisionInspector: View {
     @Binding var selectedOptionID: UUID?
     let onResolve: (Decision, DecisionOption) -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             inspectorHeader
 
             HStack(spacing: 9) {
-                StoryboardPreview(tint: AnchorPalette.source(process.sourceTone), compact: true)
+                StoryboardPreview(
+                    tint: AnchorPalette.source(process.sourceTone),
+                    compact: true,
+                    direction: directionID(for: selectedOptionIndex)
+                )
                     .frame(width: 94, height: 64)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(process.metric + " " + process.metricLabel)
@@ -481,7 +789,11 @@ private struct AmbientDecisionInspector: View {
                         .font(.headline.bold())
                         .lineLimit(2)
                         .accessibilityIdentifier("ambient.inspector.title")
-                    Text(process.detail).font(.caption2).foregroundStyle(AnchorPalette.secondaryInk).lineLimit(2)
+                    Text(process.detail)
+                        .font(.caption2)
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
@@ -490,24 +802,27 @@ private struct AmbientDecisionInspector: View {
                     Button { selectedOptionID = option.id } label: {
                         VStack(spacing: 4) {
                             StoryboardPreview(
-                                tint: index == 0 ? AnchorPalette.coral : index == 1 ? AnchorPalette.periwinkle : AnchorPalette.cyan,
-                                compact: true
+                                tint: decisionTint(for: index),
+                                compact: true,
+                                direction: directionID(for: index)
                             )
                             .frame(height: 34)
-                            Text(String(Character(UnicodeScalar(65 + index)!)))
+                            Text("\(directionID(for: index)) · \(option.title)")
                                 .font(.caption2.bold())
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.70)
                         }
                         .foregroundStyle(AnchorPalette.ink)
                         .padding(5)
                         .frame(maxWidth: .infinity)
                         .background(
-                            selectedOptionID == option.id ? AnchorPalette.warmYellow : AnchorPalette.paper,
+                            selectedOptionID == option.id ? AnchorPalette.seafoam.opacity(0.28) : AnchorPalette.paper,
                             in: .rect(cornerRadius: 12, style: .continuous)
                         )
                         .overlay {
                             if selectedOptionID == option.id {
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(AnchorPalette.sand, lineWidth: 2)
+                                    .stroke(AnchorPalette.mintInk, lineWidth: 2)
                             }
                         }
                     }
@@ -526,7 +841,7 @@ private struct AmbientDecisionInspector: View {
                 self.selectedOptionID = nil
             } label: {
                 HStack {
-                    Text(L10n.confirmChoice)
+                    Text("\(L10n.confirmDirection) \(directionID(for: selectedOptionIndex))")
                     Spacer()
                     Image(systemName: "chevron.right")
                 }
@@ -540,24 +855,40 @@ private struct AmbientDecisionInspector: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(
             LinearGradient(
-                colors: AnchorPalette.sourceSurface(process.sourceTone),
+                colors: AnchorPalette.sourceSurface(process.sourceTone, dark: colorScheme == .dark),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ),
-            in: .rect(cornerRadius: 20, style: .continuous)
+            in: .rect(cornerRadius: 24, style: .continuous)
         )
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(AnchorPalette.sand.opacity(0.72), lineWidth: 2)
-        }
         .shadow(color: AnchorPalette.sand.opacity(0.16), radius: 12, y: 7)
+    }
+
+    private var selectedOptionIndex: Int {
+        guard let selectedOptionID,
+              let index = decision.options.firstIndex(where: { $0.id == selectedOptionID }) else { return 1 }
+        return index
+    }
+
+    private func directionID(for index: Int) -> String {
+        String(Character(UnicodeScalar(65 + min(max(index, 0), 25))!))
+    }
+
+    private func decisionTint(for index: Int) -> Color {
+        switch index {
+        case 0: AnchorPalette.coral
+        case 1: AnchorPalette.periwinkle
+        default: AnchorPalette.cyan
+        }
     }
 
     private var inspectorHeader: some View {
         HStack(spacing: 8) {
             SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 32)
             VStack(alignment: .leading, spacing: 1) {
-                Text(process.sourceName).font(.caption.bold())
+                Text(process.sourceName)
+                    .font(.caption.bold())
+                    .foregroundStyle(colorScheme == .dark ? AnchorPalette.harborWhite : AnchorPalette.deepSea)
                 Label(L10n.attentionNeeded, systemImage: "exclamationmark.circle.fill")
                     .font(.caption2.bold())
                     .foregroundStyle(Color(red: 0.48, green: 0.33, blue: 0))
@@ -569,41 +900,146 @@ private struct AmbientDecisionInspector: View {
 
 private struct AmbientProcessInspector: View {
     let process: AnchorProcess
+    let pendingDecision: Decision?
+    let onClose: () -> Void
+    let onReturnToDecision: () -> Void
+    let onAction: () -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            inspectorHeader
+
+            if let pendingDecision, pendingDecision.processID != process.id {
+                Button(action: onReturnToDecision) {
+                    Label(
+                        "\(L10n.attentionNeeded) · \(pendingDecision.title)",
+                        systemImage: "exclamationmark.circle.fill"
+                    )
+                    .font(.caption2.bold())
+                    .lineLimit(1)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Color(red: 0.48, green: 0.33, blue: 0))
+                .padding(.horizontal, 9)
+                .frame(minHeight: 28)
+                .background(AnchorPalette.warmYellow, in: .capsule)
+                .accessibilityIdentifier("ambient.return-decision")
+            }
+
             HStack(spacing: 9) {
-                SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 38)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(process.sourceName).font(.caption.bold())
-                    Text(L10n.status(process.status)).font(.caption2).foregroundStyle(AnchorPalette.secondaryInk)
+                VStack(spacing: 2) {
+                    Text(process.metric)
+                        .font(.title2.bold().monospacedDigit())
+                        .foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
+                    Text(process.metricLabel)
+                        .font(.caption2)
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+                }
+                .frame(width: 74, height: 60)
+                .background(.white.opacity(0.52), in: .rect(cornerRadius: 15, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(process.title)
+                        .font(.headline.bold())
+                        .lineLimit(2)
+                    Text(process.detail)
+                        .font(.caption2)
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            Text(process.title).font(.title3.bold()).foregroundStyle(AnchorPalette.ink)
-            Text(process.detail).font(.caption).foregroundStyle(AnchorPalette.secondaryInk)
-            Spacer(minLength: 0)
-            HStack(alignment: .firstTextBaseline) {
-                Text(process.metric).font(.title.bold().monospacedDigit()).foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
-                Text(process.metricLabel).font(.caption).foregroundStyle(AnchorPalette.secondaryInk)
-            }
+
             if let progress = process.progress {
-                AnchorProgress(value: progress, tint: AnchorPalette.source(process.sourceTone))
+                HStack(spacing: 8) {
+                    Text(L10n.taskProgress)
+                        .font(.caption2.bold())
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                    AnchorProgress(value: progress, tint: AnchorPalette.source(process.sourceTone))
+                    Text(progress, format: .percent.precision(.fractionLength(0)))
+                        .font(.caption2.bold().monospacedDigit())
+                        .frame(width: 31, alignment: .trailing)
+                }
             }
-            Label(L10n.noAttentionNeeded, systemImage: "checkmark.circle.fill")
-                .font(.caption.bold())
-                .foregroundStyle(AnchorPalette.mintInk)
-                .accessibilityIdentifier("ambient.no-attention")
+
+            if !process.events.isEmpty {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(L10n.activity)
+                        .font(.caption2.bold())
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                    ForEach(Array(process.events.suffix(2))) { event in
+                        Label(event.title, systemImage: eventSymbol(event.kind))
+                            .font(.caption2)
+                            .foregroundStyle(AnchorPalette.secondaryInk)
+                            .lineLimit(1)
+                    }
+                }
+            }
+
+            Spacer(minLength: 0)
+
+            Button(action: onAction) {
+                HStack {
+                    Text(actionTitle)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                }
+            }
+            .buttonStyle(HarborPrimaryButtonStyle())
+            .accessibilityIdentifier("ambient.process.action")
         }
         .padding(14)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(
             LinearGradient(
-                colors: AnchorPalette.sourceSurface(process.sourceTone),
+                colors: AnchorPalette.sourceSurface(process.sourceTone, dark: colorScheme == .dark),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ),
             in: .rect(cornerRadius: 20, style: .continuous)
         )
+    }
+
+    private var inspectorHeader: some View {
+        HStack(spacing: 8) {
+            SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 32)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(process.sourceName)
+                    .font(.caption.bold())
+                Text(L10n.status(process.status))
+                    .font(.caption2)
+                    .foregroundStyle(AnchorPalette.secondaryInk)
+            }
+            Spacer(minLength: 4)
+            Button(action: onClose) {
+                ZStack {
+                    Circle()
+                        .fill(.white.opacity(0.55))
+                        .frame(width: 25, height: 25)
+                    Image(systemName: "xmark")
+                        .font(.caption.bold())
+                }
+                .frame(width: 44, height: 44)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(L10n.close)
+            .accessibilityIdentifier("ambient.process.close")
+        }
+    }
+
+    private var actionTitle: String {
+        switch process.status {
+        case .queued:
+            L10n.runNow
+        case .completed:
+            L10n.viewOutput
+        default:
+            L10n.openCurrentProcess
+        }
     }
 }
 #endif
