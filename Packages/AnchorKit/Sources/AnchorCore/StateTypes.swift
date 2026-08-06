@@ -68,6 +68,15 @@ public enum ProximityState: String, Codable, CaseIterable, Sendable {
     }
 }
 
+public enum DurableSyncState: String, Codable, CaseIterable, Sendable {
+    case notConfigured
+    case idle
+    case syncing
+    case available
+    case offline
+    case failed
+}
+
 public enum DevicePosture: String, Codable, CaseIterable, Sendable {
     case portrait
     case landscape

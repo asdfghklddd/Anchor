@@ -3,7 +3,7 @@ import CryptoKit
 import Foundation
 import Network
 
-public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProviding, LocalLinkControlling {
+public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProviding, LocalLinkControlling, AnchorEventTransport {
     private typealias OperationContinuation = CheckedContinuation<Void, any Error>
 
     private struct PendingDelivery {
@@ -28,13 +28,20 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     private var pairingContinuation: OperationContinuation?
     private var pairingTimeoutWorkItem: DispatchWorkItem?
     private var pendingDeliveries: [UUID: PendingDelivery] = [:]
+    private var eventApplicationTask: Task<Void, Never>?
     private var heartbeatSendWorkItem: DispatchWorkItem?
     private var heartbeatTimeoutWorkItem: DispatchWorkItem?
     private var heartbeatGeneration: UInt64 = 0
     private var reconnectWorkItem: DispatchWorkItem?
+    private var replayWindow = LinkReplayWindow()
     private var connectionState = ConnectionState.unavailable
     private var proximityState = ProximityState.unknown
     private var continuations: [UUID: AsyncStream<PresenceSignals>.Continuation] = [:]
+
+    /// These callbacks are invoked on the client's serial queue. The queue is
+    /// the isolation boundary for all mutable Network.framework state.
+    public var onEvent: (@Sendable (EventEnvelope) async throws -> Void)?
+    public var onConnectionState: (@Sendable (ConnectionState) -> Void)?
 
     public init(identityStore: PairingIdentityStore = PairingIdentityStore()) {
         self.identityStore = identityStore
@@ -46,7 +53,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     }
 
     public func stop() {
-        queue.async { [weak self] in
+        queue.sync { [weak self] in
             guard let self else { return }
             self.browser?.cancel()
             self.browser = nil
@@ -57,6 +64,8 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
             self.reconnectWorkItem?.cancel()
             self.reconnectWorkItem = nil
             self.cancelHeartbeatTimers()
+            self.eventApplicationTask?.cancel()
+            self.eventApplicationTask = nil
             self.finishPairing(with: .failure(CancellationError()))
             self.failAllDeliveries(with: CancellationError())
             self.setConnection(.unavailable)
@@ -143,6 +152,18 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
             self?.proximityState = state
             self?.broadcastSignals()
         }
+    }
+
+    public func setEventHandler(
+        _ handler: (@Sendable (EventEnvelope) async throws -> Void)?
+    ) {
+        queue.async { [weak self] in self?.onEvent = handler }
+    }
+
+    public func setConnectionStateHandler(
+        _ handler: (@Sendable (ConnectionState) -> Void)?
+    ) {
+        queue.async { [weak self] in self?.onConnectionState = handler }
     }
 
     public func send(_ event: EventEnvelope) async throws {
@@ -329,8 +350,40 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         do {
             let payload = try AnchorLinkCodec.open(encrypted, using: key)
             didAuthenticatePeer()
+            guard replayWindow.accepts(payload.messageID) else {
+                if payload.kind == .event,
+                   let event = payload.event,
+                   let peer = self.peer {
+                    sendEncryptedAcknowledgement(for: event.id, using: key, to: peer)
+                }
+                return
+            }
             if payload.kind == .acknowledgement, let eventID = payload.acknowledgedEventID {
                 finishDelivery(eventID, with: .success(()))
+                return
+            }
+            if payload.kind == .event,
+               let event = payload.event,
+               let onEvent {
+                let precedingTask = eventApplicationTask
+                eventApplicationTask = Task { [weak self, weak peer = self.peer] in
+                    await precedingTask?.value
+                    guard !Task.isCancelled else { return }
+                    do {
+                        try await onEvent(event)
+                    } catch {
+                        return
+                    }
+                    guard let self, let peer else { return }
+                    self.queue.async { [weak self, weak peer] in
+                        guard let self,
+                              let peer,
+                              self.peer === peer,
+                              let peerID = self.peerID,
+                              let key = self.identityStore.sharedKey(peerID: peerID) else { return }
+                        self.sendEncryptedAcknowledgement(for: event.id, using: key, to: peer)
+                    }
+                }
             }
         } catch {
             return
@@ -448,7 +501,21 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     private func setConnection(_ state: ConnectionState) {
         guard connectionState != state else { return }
         connectionState = state
+        onConnectionState?(state)
         broadcastSignals()
+    }
+
+    private func sendEncryptedAcknowledgement(
+        for eventID: UUID,
+        using key: Data,
+        to peer: LineConnection
+    ) {
+        let acknowledgement = LinkPayload(
+            kind: .acknowledgement,
+            acknowledgedEventID: eventID
+        )
+        guard let sealed = try? AnchorLinkCodec.seal(acknowledgement, using: key) else { return }
+        peer.send(LinkFrame(kind: .encrypted, senderID: deviceID, encryptedPayload: sealed))
     }
 
     private func signals() -> PresenceSignals {

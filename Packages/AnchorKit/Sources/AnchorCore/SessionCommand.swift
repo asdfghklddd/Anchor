@@ -11,10 +11,13 @@ public enum SessionCommand: Sendable {
     case reorderProcesses([UUID])
     case updateTileSize(processID: UUID, size: ProcessTileSize)
     case recordEvent(ProcessEvent)
+    case observeProcess(ProcessObservation)
     case applyEnvelope(EventEnvelope, event: ProcessEvent)
     case mergeRemoteSession(EventEnvelope, session: AnchorSession)
     case updatePresence(PresenceStatus, at: Date)
     case updateSignals(connection: ConnectionState, proximity: ProximityState, at: Date)
+    case updateSourceHealth([SourceHealth])
+    case updateDurableSyncState(DurableSyncState)
     case acknowledgeReturn
     case completeSession
     case resumeSession
@@ -32,6 +35,9 @@ public enum SessionRepositoryError: LocalizedError, Sendable {
     case processNotFound
     case decisionNotFound
     case invalidDecisionOption
+    case malformedEvent
+    case unsupportedEventSchema
+    case eventSessionMismatch
 
     public var errorDescription: String? {
         switch self {
@@ -57,6 +63,24 @@ public enum SessionRepositoryError: LocalizedError, Sendable {
             String(
                 localized: "error.decision.option.invalid",
                 defaultValue: "The selected option is unavailable.",
+                bundle: .module
+            )
+        case .malformedEvent:
+            String(
+                localized: "error.event.malformed",
+                defaultValue: "The Anchor event could not be decoded.",
+                bundle: .module
+            )
+        case .unsupportedEventSchema:
+            String(
+                localized: "error.event.schema.unsupported",
+                defaultValue: "This Anchor event uses an unsupported schema.",
+                bundle: .module
+            )
+        case .eventSessionMismatch:
+            String(
+                localized: "error.event.session.mismatch",
+                defaultValue: "The Anchor event belongs to another session.",
                 bundle: .module
             )
         }

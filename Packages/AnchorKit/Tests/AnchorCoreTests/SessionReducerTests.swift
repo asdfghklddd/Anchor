@@ -186,6 +186,88 @@ struct SessionReducerTests {
         )
         #expect(decodedLegacy.processStates == [process.id: .running])
     }
+
+    @Test("Return summary is derived from event history and prioritizes the top decision")
+    func returnSummaryUsesRealChanges() throws {
+        let started = Date(timeIntervalSince1970: 10_000)
+        let returned = started.addingTimeInterval(20 * 60)
+        let firstProcess = AnchorProcess(
+            sourceName: "Source A",
+            sourceSymbol: "A",
+            sourceTone: "cyan",
+            title: "Completed work",
+            status: .running,
+            updatedAt: started
+        )
+        let secondProcess = AnchorProcess(
+            sourceName: "Source B",
+            sourceSymbol: "B",
+            sourceTone: "sand",
+            title: "Waiting for a decision",
+            status: .needsDecision,
+            updatedAt: started
+        )
+        let lowPriority = Decision(
+            processID: firstProcess.id,
+            title: "Low priority",
+            prompt: "Choose later",
+            options: [DecisionOption(title: "Later")],
+            requestedAt: started,
+            priority: 1
+        )
+        let highPriority = Decision(
+            processID: secondProcess.id,
+            title: "High priority",
+            prompt: "Choose now",
+            options: [DecisionOption(title: "Now")],
+            requestedAt: started.addingTimeInterval(30),
+            priority: 9
+        )
+        let session = AnchorSession(
+            goal: AnchorGoal(title: "Return to work", completionCriteria: "Resume"),
+            processes: [firstProcess, secondProcess],
+            decisions: [lowPriority, highPriority]
+        )
+        var projection = try SessionReducer.reduce(
+            SessionProjection(session: session),
+            command: .updatePresence(.away, at: started)
+        )
+        projection = try SessionReducer.reduce(
+            projection,
+            command: .recordEvent(
+                ProcessEvent(
+                    processID: firstProcess.id,
+                    occurredAt: started.addingTimeInterval(5 * 60),
+                    kind: .completed,
+                    title: "Completed while away"
+                )
+            )
+        )
+        projection = try SessionReducer.reduce(
+            projection,
+            command: .recordEvent(
+                ProcessEvent(
+                    processID: secondProcess.id,
+                    occurredAt: started.addingTimeInterval(10 * 60),
+                    kind: .decisionRequired,
+                    title: "A decision is waiting"
+                )
+            )
+        )
+        let returning = try SessionReducer.reduce(
+            projection,
+            command: .updatePresence(.returning, at: returned)
+        )
+
+        let summary = try #require(returning.session?.returnSummary)
+        #expect(summary.elapsedSeconds ?? -1 == 1_200)
+        #expect(summary.completedCount == 1)
+        #expect(summary.newDecisionCount == 1)
+        #expect(summary.failedCount == 0)
+        #expect(summary.recommendedProcessID == secondProcess.id)
+        #expect(summary.impactPercent == 40)
+        #expect(summary.changes.map(\.title) == ["A decision is waiting", "Completed while away"])
+    }
 }
 
 private struct LegacyContextSnapshot: Codable {

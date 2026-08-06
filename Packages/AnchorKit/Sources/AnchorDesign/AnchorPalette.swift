@@ -16,6 +16,7 @@ public enum AnchorPalette {
     public static let mintInk = Color(red: 0.08, green: 0.36, blue: 0.28)
     public static let warmYellow = Color(red: 1.00, green: 0.96, blue: 0.71)
     public static let oceanHighlight = Color(red: 0.66, green: 0.93, blue: 0.89)
+    public static let returnCanvas = Color("ReturnCanvas", bundle: .module)
 
     public static func source(_ tone: String) -> Color {
         switch tone {

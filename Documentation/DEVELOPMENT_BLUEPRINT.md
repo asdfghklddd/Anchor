@@ -1,11 +1,13 @@
 # Anchor native development blueprint
 
-Status: native frontends and minimum local-link foundation implemented, version
-0.3, 2026-08-05. The iPhone app, macOS menu bar/detail app, isolated Demo apps,
+Status: native frontends and MVP event foundation implemented, version 0.4,
+2026-08-07. The iPhone app, macOS menu bar/detail app, isolated Demo apps,
 shared reducers, conservative presence state machine, authenticated Bonjour/BLE
-link, bilingual resources, accessibility adaptations, and CI archive boundary
-are in place. SwiftData, CloudKit, offline merge, CLI/Safari adapters, and
-production source integrations remain planned follow-up phases.
+link, local event outbox, deterministic replay, source coordinator, CLI inbox,
+optional CloudKit event store, bilingual resources, accessibility adaptations,
+and CI archive boundary are in place. SwiftData-backed persistence, production
+CloudKit container activation, Safari adapters, and direct source integrations
+remain planned follow-up phases.
 
 This document turns the product baseline into a buildable iOS and macOS system.
 It intentionally starts with one thin, trustworthy end-to-end path and leaves
@@ -264,6 +266,7 @@ protocol ProcessSource: Sendable {
     var descriptor: SourceDescriptor { get }
     func events() -> AsyncThrowingStream<ExternalProcessEvent, Error>
     func perform(_ action: SourceAction) async throws -> SourceActionReceipt
+    func retry(_ event: ExternalProcessEvent) async throws
 }
 ```
 
@@ -318,7 +321,9 @@ Live Activity or widget but cannot force the phone into StandBy.
 - Local-network, speech, notification, launch-at-login, browser-site, and any future
   Accessibility permissions are requested only when their feature is activated.
 - Pairing can be revoked from either device, rotates credentials, and rejects replay.
-- No source action is executed twice after retry; action receipts are idempotent.
+- Source actions are routed through a capability boundary. Adapters that execute
+  external side effects must make their action receipts idempotent before they
+  are enabled for production retry paths.
 
 ## Concurrency and state management
 
@@ -423,14 +428,12 @@ are complete. Continue in this order:
    rotation, haptics, and VoiceOver on a physical iPhone and Mac.
 2. Introduce the SwiftData schema, repository actor, and migration harness behind
    the existing `SessionRepository` protocol.
-3. Make event projection deterministic under duplicate, delayed, reordered, and
-   conflicting events, then add offline restart tests.
-4. Enable the private CloudKit store and surface local/cloud freshness without
-   treating CloudKit as a real-time bus.
-5. Add the signed CLI contract and manual Mac event capture.
-6. Add production source adapters only after their permission and privacy scopes
+3. Deploy the private CloudKit record schema, add matching entitlements, and
+   surface local/cloud freshness without treating CloudKit as a real-time bus.
+4. Add the signed CLI distribution and manual Mac event capture UI.
+5. Add production source adapters only after their permission and privacy scopes
    are documented and tested.
-7. Add widgets, Live Activities, and Safari integration after the persistence and
+6. Add widgets, Live Activities, and Safari integration after the persistence and
    merge contracts are stable.
 
 ## Definition of done for every feature

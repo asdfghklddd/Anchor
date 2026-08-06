@@ -1,6 +1,8 @@
 import Foundation
 import Network
 
+/// All connection state and callbacks are confined to the queue supplied at
+/// initialization; no mutable field is accessed from another executor.
 final class LineConnection: @unchecked Sendable {
     private static let maximumFrameLength = 1_048_576
 

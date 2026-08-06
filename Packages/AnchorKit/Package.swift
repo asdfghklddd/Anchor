@@ -10,6 +10,7 @@ let package = Package(
         .macOS(.v26),
     ],
     products: [
+        .executable(name: "anchor", targets: ["AnchorCLI"]),
         .library(name: "AnchorCore", targets: ["AnchorCore"]),
         .library(name: "AnchorDesign", targets: ["AnchorDesign"]),
         .library(name: "AnchorDemoSupport", targets: ["AnchorDemoSupport"]),
@@ -18,6 +19,10 @@ let package = Package(
         .library(name: "AnchorTransport", targets: ["AnchorTransport"]),
     ],
     targets: [
+        .executableTarget(
+            name: "AnchorCLI",
+            dependencies: ["AnchorCore"]
+        ),
         .target(
             name: "AnchorCore",
             resources: [.process("Resources")]

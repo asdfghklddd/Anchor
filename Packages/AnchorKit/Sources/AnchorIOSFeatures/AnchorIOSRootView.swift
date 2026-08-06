@@ -211,13 +211,24 @@ public struct AnchorIOSRootView: View {
         case .handingOff:
             HandoffView(model: model)
         case .away:
-            AwayView(projection: model.projection, model: model)
-        case .returning:
-            ReturnView(
+            AwayView(
                 projection: model.projection,
                 model: model,
-                onNote: { sheet = .note }
+                onProfile: {
+                    fullScreen = nil
+                    path.append(.profile)
+                },
+                onNotifications: {
+                    fullScreen = nil
+                    sheet = .notifications
+                },
+                onLayout: {
+                    fullScreen = nil
+                    sheet = .layout
+                }
             )
+        case .returning:
+            ReturnView(projection: model.projection, model: model)
         }
     }
 

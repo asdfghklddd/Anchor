@@ -153,11 +153,28 @@ public enum L10n {
     public static let currentAnchor = AnchorStrings.value("away.current.anchor", default: "CURRENT ANCHOR · CURRENT GOAL")
     public static let atDeskCorrection = AnchorStrings.value("presence.at.desk", default: "I’m still at my desk")
     public static let returning = AnchorStrings.value("return.title", default: "Welcome back")
+    public static let returnNavigationTitle = AnchorStrings.value("return.nav", default: "Return")
     public static let returnDetail = AnchorStrings.value("return.detail", default: "Here is what changed while you were away.")
     public static let returnHeadline = AnchorStrings.value("return.headline", default: "Your work was held safely.")
     public static let returnImpact = AnchorStrings.value("return.impact", default: "IMPACT WHILE AWAY")
     public static let returnChanges = AnchorStrings.value("return.changes", default: "Changes while you were away")
+    public static let returnResultsUpdated = AnchorStrings.value("return.results.updated", default: "Results updated")
+    public static let returnStillRunning = AnchorStrings.value("return.still.running", default: "Still running")
+    public static let returnWaitingJudgment = AnchorStrings.value(
+        "return.waiting.judgment",
+        default: "Waiting for judgment"
+    )
+    public static func returnChangesSummary(_ count: Int) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value("return.changes.summary", default: "View %lld specific changes"),
+            count
+        )
+    }
     public static let yourNextStep = AnchorStrings.value("return.next.step", default: "YOUR NEXT STEP")
+    public static let returnContinueHint = AnchorStrings.value(
+        "return.continue.hint",
+        default: "After your choice, Anchor will resume the workflow."
+    )
     public static let continueWorking = AnchorStrings.value("return.continue", default: "Continue working")
     public static let recommendedNext = AnchorStrings.value("return.recommended", default: "Recommended next")
     public static let connectionUnknown = AnchorStrings.value("connection.unknown", default: "Presence is unknown")
