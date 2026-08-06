@@ -14,7 +14,7 @@ struct AnchorIOSApp: App {
         let scanner = AnchorProximityScanner { proximity in
             client.updateProximity(proximity)
         }
-        let localRepository = InMemorySessionRepository()
+        let localRepository = LocalSessionRepository()
         let repository = LinkedSessionRepository(base: localRepository, client: client)
         self.client = client
         proximityScanner = scanner
