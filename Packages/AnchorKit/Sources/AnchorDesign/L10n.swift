@@ -73,6 +73,8 @@ public enum L10n {
     public static let confirmChoice = AnchorStrings.value("decision.confirm", default: "Confirm choice")
     public static let chooseVisualDirection = AnchorStrings.value("decision.visual.direction", default: "Choose a visual direction")
     public static let goChooseDirection = AnchorStrings.value("process.choose.direction", default: "Choose direction")
+    public static let runNow = AnchorStrings.value("process.action.run.now", default: "Run now")
+    public static let viewOutput = AnchorStrings.value("process.action.view.output", default: "View output")
     public static let taskProgress = AnchorStrings.value("task.progress", default: "Task progress")
     public static let currentStatus = AnchorStrings.value("task.current.status", default: "CURRENT STATUS")
     public static let activityLog = AnchorStrings.value("task.activity.log", default: "ACTIVITY LOG")
@@ -94,13 +96,51 @@ public enum L10n {
     public static let remoteSyncing = AnchorStrings.value("connection.remote.syncing", default: "Remote syncing")
     public static let generating = AnchorStrings.value("status.generating", default: "Generating")
     public static let rendering = AnchorStrings.value("status.rendering", default: "Rendering")
+    public static let confirmed = AnchorStrings.value("status.confirmed", default: "Confirmed")
     public static let preparing = AnchorStrings.value("status.preparing", default: "Preparing")
     public static let waitingConfirmation = AnchorStrings.value("status.waiting.confirmation", default: "Waiting for you")
     public static let focusTime = AnchorStrings.value("focus.time", default: "Focus time")
+    public static let focusActive = AnchorStrings.value("focus.active", default: "In focus")
+    public static let confirmDirection = AnchorStrings.value("decision.confirm.direction", default: "Confirm direction")
     public static let ambient = AnchorStrings.value("ambient", default: "Ambient workspace")
     public static let ambientActive = AnchorStrings.value("ambient.active", default: "ANCHOR ACTIVE")
     public static let latestProgress = AnchorStrings.value("ambient.latest.progress", default: "LATEST PROGRESS")
+    public static func latestDecisionProgress(source: String, metric: String, metricLabel: String) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value(
+                "ambient.latest.decision",
+                default: "%1$@ · %2$@ %3$@ awaiting judgment"
+            ),
+            source,
+            metric,
+            metricLabel
+        )
+    }
+    public static func latestCompletedProgress(source: String, title: String) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value(
+                "ambient.latest.completed",
+                default: "%1$@ · Completed %@"
+            ),
+            source,
+            title
+        )
+    }
     public static let allProcessesRunning = AnchorStrings.value("ambient.all.running", default: "All processes keep running")
+    public static let ambientClearHeadline = AnchorStrings.value("ambient.clear.headline", default: "No action needed")
+    public static func ambientClearSummary(running: Int, queued: Int) -> String {
+        if queued > 0 {
+            return String.localizedStringWithFormat(
+                AnchorStrings.value("ambient.clear.summary.queued", default: "%1$lld automatic · %2$lld queued"),
+                running,
+                queued
+            )
+        }
+        return String.localizedStringWithFormat(
+            AnchorStrings.value("ambient.clear.summary", default: "%lld automatic"),
+            running
+        )
+    }
     public static let selectedProcess = AnchorStrings.value("process.selected", default: "Selected process")
     public static let handoff = AnchorStrings.value("handoff", default: "Securing your context…")
     public static let handoffSecured = AnchorStrings.value("handoff.secured", default: "Secured. You can step away.")
@@ -138,6 +178,8 @@ public enum L10n {
     public static let sources = AnchorStrings.value("sources", default: "Sources")
     public static let privacy = AnchorStrings.value("privacy", default: "Privacy")
     public static let accessibility = AnchorStrings.value("accessibility", default: "Accessibility")
+    public static let nearby = AnchorStrings.value("connection.nearby", default: "Nearby")
+    public static let outOfRange = AnchorStrings.value("connection.out.of.range", default: "Out of range")
     public static let notificationsSettings = AnchorStrings.value("notifications.settings", default: "Notifications")
     public static let macConnection = AnchorStrings.value("connection.mac", default: "Mac connection")
     public static let bluetoothProximity = AnchorStrings.value("connection.bluetooth", default: "Bluetooth proximity")
@@ -145,12 +187,33 @@ public enum L10n {
     public static let localOnlyDetail = AnchorStrings.value("privacy.local.detail", default: "Raw work content stays on your devices unless you explicitly connect a source.")
     public static let notificationMeaningful = AnchorStrings.value("notifications.meaningful", default: "Meaningful changes")
     public static let notificationDecisions = AnchorStrings.value("notifications.decisions", default: "Decision requests")
+    public static let notificationPermissionDetail = AnchorStrings.value(
+        "notifications.permission.detail",
+        default: "Allow notifications in System Settings to receive decision requests."
+    )
     public static let displaySupport = AnchorStrings.value("accessibility.display", default: "Display accommodations")
     public static let displaySupportDetail = AnchorStrings.value("accessibility.display.detail", default: "Anchor follows Dynamic Type, VoiceOver, Reduce Motion, Increase Contrast, and Reduce Transparency automatically.")
     public static let sourceHealth = AnchorStrings.value("source.health", default: "Source health")
+    public static let connectedSources = AnchorStrings.value("source.connected", default: "Connected sources")
+    public static let sourceDetails = AnchorStrings.value("source.details", default: "Source details")
+    public static let sourceProgress = AnchorStrings.value("source.progress", default: "Source progress")
+    public static let sourceActivity = AnchorStrings.value("source.activity", default: "Recent source activity")
+    public static let openSourceDetails = AnchorStrings.value("source.open.details", default: "Open source details")
     public static let connected = AnchorStrings.value("connected", default: "Connected")
     public static let unknown = AnchorStrings.value("unknown", default: "Unknown")
     public static let permissionDenied = AnchorStrings.value("permission.denied", default: "Permission denied")
+    public static let permissionDeniedDetail = AnchorStrings.value(
+        "permission.denied.detail",
+        default: "Allow Local Network and Bluetooth access in System Settings, then try again."
+    )
+    public static let disconnectedDetail = AnchorStrings.value(
+        "disconnected.detail",
+        default: "The Mac is offline. Work already synced remains available."
+    )
+    public static let connectionFailedDetail = AnchorStrings.value(
+        "connection.failed.detail",
+        default: "Anchor could not reach the Mac service. Check the local connection and try again."
+    )
     public static let lastUpdated = AnchorStrings.value("last.updated", default: "Last updated")
     public static let noEvents = AnchorStrings.value("events.none", default: "No events yet")
     public static let openDetails = AnchorStrings.value("mac.open.details", default: "Open Anchor")
@@ -159,8 +222,28 @@ public enum L10n {
     public static let timeline = AnchorStrings.value("timeline", default: "Timeline")
     public static let pairDevice = AnchorStrings.value("pair.device", default: "Pair device")
     public static let pairingCode = AnchorStrings.value("pair.code", default: "Pairing code")
+    public static let pairingHint = AnchorStrings.value(
+        "pair.hint",
+        default: "Enter this six-digit code in Anchor on your iPhone."
+    )
+    public static let copyPairingCode = AnchorStrings.value(
+        "pair.copy",
+        default: "Copy pairing code"
+    )
+    public static let pairingCodeCopied = AnchorStrings.value(
+        "pair.copied",
+        default: "Pairing code copied"
+    )
+    public static let pairingUnavailable = AnchorStrings.value(
+        "pair.unavailable",
+        default: "Device pairing is unavailable in this build."
+    )
     public static let startAtLogin = AnchorStrings.value("start.login", default: "Open at login")
     public static let quit = AnchorStrings.value("quit", default: "Quit Anchor")
+    public static let openSystemSettings = AnchorStrings.value(
+        "system.settings.open",
+        default: "Open System Settings"
+    )
     public static let voiceOver = AnchorStrings.value("accessibility.voiceover", default: "VoiceOver")
     public static let dynamicType = AnchorStrings.value("accessibility.dynamic.type", default: "Dynamic Type")
     public static let reduceMotion = AnchorStrings.value("accessibility.reduce.motion", default: "Reduce Motion")

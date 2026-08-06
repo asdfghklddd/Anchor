@@ -23,7 +23,7 @@ public enum DemoFixtureFactory {
 
         switch scenario {
         case .active:
-            resolvePendingDecisions(in: &session, at: now)
+            resolvePendingDecisions(in: &session, at: now, markConfirmation: true)
         case .needsDecision:
             session.processes[1].status = .needsDecision
         case .away18Minutes:
@@ -35,9 +35,12 @@ public enum DemoFixtureFactory {
             proximity = .far
         case .returning:
             session.presence = .returning
+            let awaySince = now.addingTimeInterval(-18 * 60)
+            session.snapshots = [sessionSnapshot(session, at: awaySince)]
+            session.timeline = returnEvents(session: session, now: now)
             let changes = returnChanges(session: session, now: now)
             session.returnSummary = ReturnSummary(
-                awaySince: now.addingTimeInterval(-18 * 60),
+                awaySince: awaySince,
                 generatedAt: now,
                 changes: changes,
                 recommendedProcessID: session.processes[1].id
@@ -212,6 +215,7 @@ public enum DemoFixtureFactory {
                 tileSize: .standard,
                 events: [
                     ProcessEvent(processID: editID, occurredAt: now.addingTimeInterval(-600), kind: .created, title: text("demo.edit.event.created", default: "Created the 60-second timeline")),
+                    ProcessEvent(processID: editID, occurredAt: now.addingTimeInterval(-90), kind: .progress, title: text("demo.edit.event.waiting", default: "Waiting for storyboard approval")),
                 ]
             ),
         ]
@@ -288,7 +292,11 @@ public enum DemoFixtureFactory {
         )
     }
 
-    private static func resolvePendingDecisions(in session: inout AnchorSession, at date: Date) {
+    private static func resolvePendingDecisions(
+        in session: inout AnchorSession,
+        at date: Date,
+        markConfirmation: Bool = false
+    ) {
         for decisionIndex in session.decisions.indices where session.decisions[decisionIndex].status == .open {
             let selectedOptionID = session.decisions[decisionIndex].options.first?.id
             session.decisions[decisionIndex].status = .resolved
@@ -300,7 +308,40 @@ public enum DemoFixtureFactory {
                session.processes[processIndex].status == .needsDecision {
                 session.processes[processIndex].status = .running
                 session.processes[processIndex].updatedAt = date
+                if markConfirmation {
+                    session.processes[processIndex].progress = max(session.processes[processIndex].progress ?? 0, 0.85)
+                    session.processes[processIndex].detail = text(
+                        "demo.storyboard.confirmed.detail",
+                        default: "A direction is confirmed and the shot descriptions are being generated."
+                    )
+                    session.processes[processIndex].estimatedCompletion = text(
+                        "demo.storyboard.confirmed.eta",
+                        default: "About 5 minutes"
+                    )
+                    session.processes[processIndex].events.append(
+                        ProcessEvent(
+                            processID: processID,
+                            occurredAt: date,
+                            kind: .decisionResolved,
+                            title: text(
+                                "demo.storyboard.confirmed.event",
+                                default: "Confirmed direction B"
+                            )
+                        )
+                    )
+                }
             }
+        }
+
+        if markConfirmation {
+            session.timeline.insert(
+                ProcessEvent(
+                    occurredAt: date,
+                    kind: .decisionResolved,
+                    title: text("demo.storyboard.confirmed.event", default: "Confirmed direction B")
+                ),
+                at: 0
+            )
         }
     }
 

@@ -124,6 +124,31 @@ struct SessionReducerTests {
         #expect(result.session?.id == local.id)
     }
 
+    @Test("Connection signals do not make stale work data look fresh")
+    func connectionSignalsPreserveDataAge() throws {
+        let observedAt = Date(timeIntervalSince1970: 1_000)
+        let signalAt = Date(timeIntervalSince1970: 2_000)
+        let initial = SessionProjection(
+            generatedAt: observedAt,
+            dataObservedAt: observedAt
+        )
+
+        let result = try SessionReducer.reduce(
+            initial,
+            command: .updateSignals(
+                connection: .connected,
+                proximity: .near,
+                at: signalAt
+            ),
+            now: signalAt
+        )
+
+        #expect(result.connection == .connected)
+        #expect(result.proximity == .near)
+        #expect(result.dataObservedAt == observedAt)
+        #expect(result.isStale)
+    }
+
     @Test("Context snapshots remain compatible with the v1 wire payload")
     func contextSnapshotWireCompatibility() throws {
         let process = AnchorProcess(

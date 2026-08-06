@@ -16,6 +16,16 @@ public enum AnchorRoute: Hashable {
     case accessibility
 }
 
+enum ProfileDetailKind: Hashable {
+    case focus
+    case contexts
+    case anchors
+    case session
+    case returnMemory
+    case decisionTrace
+    case contextSnapshot
+}
+
 enum AnchorSheet: Hashable, Identifiable {
     case setup
     case note
@@ -24,6 +34,9 @@ enum AnchorSheet: Hashable, Identifiable {
     case decision(UUID)
     case layout
     case finish
+    case account
+    case icloud
+    case profileDetail(ProfileDetailKind)
 
     var id: Self { self }
 }
