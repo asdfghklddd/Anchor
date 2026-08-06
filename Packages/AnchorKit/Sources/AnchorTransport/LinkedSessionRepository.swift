@@ -1,20 +1,33 @@
 import AnchorCore
 import Foundation
 
+public protocol AnchorEventTransport: Sendable {
+    func send(_ event: EventEnvelope) async throws
+}
+
 public actor LinkedSessionRepository: SessionRepository {
     private let base: any SessionRepository
-    private let client: AnchorBonjourClient
-    private let sourceID: UUID
-    private var sequence: UInt64 = 0
+    private let eventBackedBase: (any EventBackedSessionRepository)?
+    private let transport: any AnchorEventTransport
 
+    public init(
+        base: any SessionRepository,
+        transport: any AnchorEventTransport
+    ) {
+        self.base = base
+        eventBackedBase = base as? any EventBackedSessionRepository
+        self.transport = transport
+    }
+
+    /// Compatibility initializer for callers that already own an iOS client.
+    /// The source identity now belongs to the event-backed local repository.
     public init(
         base: any SessionRepository,
         client: AnchorBonjourClient,
         sourceID: UUID = UUID()
     ) {
-        self.base = base
-        self.client = client
-        self.sourceID = sourceID
+        self.init(base: base, transport: client)
+        _ = sourceID
     }
 
     public func currentProjection() async -> SessionProjection {
@@ -27,27 +40,27 @@ public actor LinkedSessionRepository: SessionRepository {
 
     public func send(_ command: SessionCommand) async throws {
         try await base.send(command)
-        switch command {
-        case .updateSignals, .updatePresence, .clearError, .mergeRemoteSession:
-            return
-        default:
-            break
+        await flushPendingEvents()
+    }
+
+    public func applyRemote(_ envelope: EventEnvelope) async throws {
+        guard let eventBackedBase else {
+            throw SessionRepositoryError.malformedEvent
         }
-        guard let session = await base.currentProjection().session else { return }
-        do {
-            sequence &+= 1
-            let payload = try JSONEncoder.anchor.encode(session)
-            let envelope = EventEnvelope(
-                sessionID: session.id,
-                sourceID: sourceID,
-                sequence: sequence,
-                type: "session.projection.v1",
-                payload: payload
-            )
-            try await client.send(envelope)
-        } catch {
-            // The local command is already committed. Connection state tells
-            // the UI that Mac delivery is unavailable until sync gains an outbox.
+        try await eventBackedBase.applyRemote(envelope)
+    }
+
+    /// Sends events in deterministic order. A transport failure leaves the
+    /// remaining events in the durable outbox for the next connection attempt.
+    public func flushPendingEvents() async {
+        guard let eventBackedBase else { return }
+        for event in await eventBackedBase.pendingEvents() {
+            do {
+                try await transport.send(event)
+                try await eventBackedBase.markDelivered(event.id)
+            } catch {
+                return
+            }
         }
     }
 }

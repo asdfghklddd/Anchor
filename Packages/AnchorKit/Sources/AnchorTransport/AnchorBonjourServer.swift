@@ -4,7 +4,16 @@ import Foundation
 import Network
 import Security
 
-public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControlling {
+/// Network.framework callbacks and all mutable fields are serialized on
+/// `queue`; the unchecked conformance is limited to that queue-owned state.
+public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControlling, AnchorEventTransport {
+    private typealias OperationContinuation = CheckedContinuation<Void, any Error>
+
+    private struct PendingDelivery {
+        let continuation: OperationContinuation
+        let timeoutWorkItem: DispatchWorkItem
+    }
+
     public static let serviceType = "_anchor._tcp"
 
     public var onEvent: (@Sendable (EventEnvelope) async throws -> Void)?
@@ -15,8 +24,11 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
     private let deviceID: UUID
     private var listener: NWListener?
     private var peers: [ObjectIdentifier: LineConnection] = [:]
+    private var peerIDs: [ObjectIdentifier: UUID] = [:]
+    private var pendingDeliveries: [UUID: PendingDelivery] = [:]
     private var pairingCodeValue: String
     private var eventApplicationTask: Task<Void, Never>?
+    private var replayWindow = LinkReplayWindow()
 
     public init(identityStore: PairingIdentityStore = PairingIdentityStore()) {
         self.identityStore = identityStore
@@ -55,13 +67,16 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
     }
 
     public func stop() {
-        queue.async { [weak self] in
-            self?.listener?.cancel()
-            self?.listener = nil
-            self?.peers.values.forEach { $0.cancel() }
-            self?.peers.removeAll()
-            self?.eventApplicationTask?.cancel()
-            self?.eventApplicationTask = nil
+        queue.sync { [weak self] in
+            guard let self else { return }
+            listener?.cancel()
+            listener = nil
+            peers.values.forEach { $0.cancel() }
+            peers.removeAll()
+            peerIDs.removeAll()
+            failAllDeliveries(with: CancellationError())
+            eventApplicationTask?.cancel()
+            eventApplicationTask = nil
         }
     }
 
@@ -94,6 +109,59 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
         }
     }
 
+    public func send(_ event: EventEnvelope) async throws {
+        try await withCheckedThrowingContinuation { (continuation: OperationContinuation) in
+            queue.async { [weak self] in
+                guard let self else {
+                    continuation.resume(throwing: CancellationError())
+                    return
+                }
+                guard let (peer, peerID, key) = self.authenticatedPeer() else {
+                    continuation.resume(throwing: AnchorLinkError.notPaired)
+                    return
+                }
+                guard self.pendingDeliveries[event.id] == nil else {
+                    continuation.resume(throwing: AnchorLinkError.operationInProgress)
+                    return
+                }
+                do {
+                    let sealed = try AnchorLinkCodec.seal(
+                        LinkPayload(kind: .event, event: event),
+                        using: key
+                    )
+                    let timeout = DispatchWorkItem { [weak self] in
+                        self?.finishDelivery(
+                            event.id,
+                            with: .failure(AnchorLinkError.acknowledgementTimedOut)
+                        )
+                    }
+                    self.pendingDeliveries[event.id] = PendingDelivery(
+                        continuation: continuation,
+                        timeoutWorkItem: timeout
+                    )
+                    self.queue.asyncAfter(
+                        deadline: .now() + 10,
+                        execute: timeout
+                    )
+                    peer.send(
+                        LinkFrame(
+                            kind: .encrypted,
+                            senderID: self.deviceID,
+                            encryptedPayload: sealed
+                        )
+                    ) { [weak self] result in
+                        if case let .failure(error) = result {
+                            self?.finishDelivery(event.id, with: .failure(error))
+                        }
+                    }
+                    _ = peerID
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
     private func accept(_ connection: NWConnection) {
         let peer = LineConnection(connection: connection, queue: queue)
         let id = ObjectIdentifier(peer)
@@ -107,6 +175,8 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
                 peer.send(LinkFrame(kind: .hello, senderID: self?.deviceID ?? UUID()))
             case .failed, .cancelled:
                 self?.peers[id] = nil
+                self?.peerIDs[id] = nil
+                self?.failAllDeliveries(with: AnchorLinkError.connectionLost)
                 self?.onConnectionState?(.disconnected)
             default: break
             }
@@ -126,6 +196,7 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
 
     private func handlePairRequest(_ frame: LinkFrame, from peer: LineConnection) {
         guard frame.pairingCode == pairingCodeValue, let publicKey = frame.publicKey else { return }
+        peerIDs[ObjectIdentifier(peer)] = frame.senderID
         let privateKey = Curve25519.KeyAgreement.PrivateKey()
         let derived: Data
         do {
@@ -154,10 +225,22 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
     }
 
     private func handleEncrypted(_ frame: LinkFrame, from peer: LineConnection) {
+        peerIDs[ObjectIdentifier(peer)] = frame.senderID
         guard let encrypted = frame.encryptedPayload,
               let key = identityStore.sharedKey(peerID: frame.senderID),
               let payload = try? AnchorLinkCodec.open(encrypted, using: key) else { return }
         onConnectionState?(.connected)
+        guard replayWindow.accepts(payload.messageID) else {
+            if payload.kind == .event,
+               let event = payload.event {
+                sendEncrypted(
+                    LinkPayload(kind: .acknowledgement, acknowledgedEventID: event.id),
+                    using: key,
+                    to: peer
+                )
+            }
+            return
+        }
         switch payload.kind {
         case .heartbeat:
             sendEncrypted(LinkPayload(kind: .heartbeat), using: key, to: peer)
@@ -185,7 +268,30 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
                 }
             }
         case .acknowledgement:
-            break
+            if let eventID = payload.acknowledgedEventID {
+                finishDelivery(eventID, with: .success(()))
+            }
+        }
+    }
+
+    private func authenticatedPeer() -> (LineConnection, UUID, Data)? {
+        for (id, peer) in peers {
+            guard let peerID = peerIDs[id],
+                  let key = identityStore.sharedKey(peerID: peerID) else { continue }
+            return (peer, peerID, key)
+        }
+        return nil
+    }
+
+    private func finishDelivery(_ id: UUID, with result: Result<Void, any Error>) {
+        guard let delivery = pendingDeliveries.removeValue(forKey: id) else { return }
+        delivery.timeoutWorkItem.cancel()
+        delivery.continuation.resume(with: result)
+    }
+
+    private func failAllDeliveries(with error: any Error) {
+        for id in Array(pendingDeliveries.keys) {
+            finishDelivery(id, with: .failure(error))
         }
     }
 

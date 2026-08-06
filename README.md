@@ -19,11 +19,16 @@ human decisions, and the context needed to return after an interruption.
 - `AnchorMacFeatures`: menu bar status plus a native detail window using
   `NavigationSplitView`.
 - `AnchorTransport`: Bonjour discovery, one-time-code key agreement, Keychain
-  trust, authenticated event envelopes and acknowledgements, plus BLE RSSI
-  proximity advertising/scanning.
+  trust, authenticated event envelopes and acknowledgements, BLE RSSI proximity
+  advertising/scanning, and an optional CloudKit private event store.
+- `AnchorCore`: a versioned external source contract, actor-based source
+  ingestion, a durable CLI inbox, deterministic event replay, and a retryable
+  durable-sync coordinator.
 
-SwiftData, CloudKit, offline conflict resolution, CLI/Safari adapters, and real
-AI source adapters intentionally remain later phases.
+SwiftData-backed persistence, production CloudKit container activation, Safari
+adapters, and direct AI source integrations remain later phases. The MVP path
+already has a crash-safe local event store, an authenticated same-network link,
+an optional CloudKit event adapter, and a supported CLI contract.
 
 ## Repository map
 

@@ -10,8 +10,13 @@ public final class AnchorSessionModel {
 
     private let repository: any SessionRepository
     private let presenceProvider: (any PresenceSignalProviding)?
+    private let sourceHealthProvider: (any SourceHealthProviding)?
+    private let sourceActionProvider: (any SourceActionPerforming)?
+    private let durableSyncStatusProvider: (any DurableSyncStatusProviding)?
     private var projectionTask: Task<Void, Never>?
     private var presenceTask: Task<Void, Never>?
+    private var sourceHealthTask: Task<Void, Never>?
+    private var durableSyncStatusTask: Task<Void, Never>?
     private var presenceEvaluationTask: Task<Void, Never>?
     private var presenceReducer: PresenceReducer
     private var currentPosture = DevicePosture.unknown
@@ -21,11 +26,17 @@ public final class AnchorSessionModel {
     public init(
         repository: any SessionRepository,
         presenceProvider: (any PresenceSignalProviding)? = nil,
+        sourceHealthProvider: (any SourceHealthProviding)? = nil,
+        sourceActionProvider: (any SourceActionPerforming)? = nil,
+        durableSyncStatusProvider: (any DurableSyncStatusProviding)? = nil,
         initialProjection: SessionProjection = .empty,
         presencePolicy: PresencePolicy = PresencePolicy()
     ) {
         self.repository = repository
         self.presenceProvider = presenceProvider
+        self.sourceHealthProvider = sourceHealthProvider
+        self.sourceActionProvider = sourceActionProvider
+        self.durableSyncStatusProvider = durableSyncStatusProvider
         projection = initialProjection
         presenceReducer = PresenceReducer(
             status: initialProjection.session?.presence ?? .unknown,
@@ -75,6 +86,26 @@ public final class AnchorSessionModel {
                 }
             }
         }
+
+        if let sourceHealthProvider {
+            sourceHealthTask = Task { [weak self] in
+                let stream = await sourceHealthProvider.healthChanges()
+                for await health in stream {
+                    guard !Task.isCancelled else { break }
+                    _ = await self?.send(.updateSourceHealth(health))
+                }
+            }
+        }
+
+        if let durableSyncStatusProvider {
+            durableSyncStatusTask = Task { [weak self] in
+                let stream = await durableSyncStatusProvider.statusChanges()
+                for await state in stream {
+                    guard !Task.isCancelled else { break }
+                    _ = await self?.send(.updateDurableSyncState(state))
+                }
+            }
+        }
     }
 
     public func stop() {
@@ -82,6 +113,10 @@ public final class AnchorSessionModel {
         projectionTask = nil
         presenceTask?.cancel()
         presenceTask = nil
+        sourceHealthTask?.cancel()
+        sourceHealthTask = nil
+        durableSyncStatusTask?.cancel()
+        durableSyncStatusTask = nil
         presenceEvaluationTask?.cancel()
         presenceEvaluationTask = nil
         isLoading = false
@@ -119,7 +154,26 @@ public final class AnchorSessionModel {
 
     @discardableResult
     public func resolve(decision: Decision, option: DecisionOption) async -> Bool {
-        await send(.resolveDecision(decisionID: decision.id, optionID: option.id))
+        let sourceID = projection.session?.processes.first {
+            $0.id == decision.processID
+        }?.sourceID
+        let succeeded = await send(.resolveDecision(decisionID: decision.id, optionID: option.id))
+        guard succeeded, let sourceID, let sourceActionProvider else {
+            return succeeded
+        }
+
+        do {
+            _ = try await sourceActionProvider.perform(
+                .resolveDecision(decisionID: decision.id, optionID: option.id),
+                on: sourceID
+            )
+        } catch {
+            // The durable Anchor decision remains resolved. The adapter error
+            // is surfaced so the user can retry or open the source manually.
+            lastError = error.localizedDescription
+            return false
+        }
+        return true
     }
 
     @discardableResult

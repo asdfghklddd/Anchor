@@ -125,15 +125,32 @@ struct HandoffView: View {
 struct AwayView: View {
     let projection: SessionProjection
     let model: AnchorSessionModel
+    private let onProfile: () -> Void
+    private let onNotifications: () -> Void
+    private let onLayout: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var selectedProcess: AnchorProcess?
 
+    init(
+        projection: SessionProjection,
+        model: AnchorSessionModel,
+        onProfile: @escaping () -> Void = {},
+        onNotifications: @escaping () -> Void = {},
+        onLayout: @escaping () -> Void = {}
+    ) {
+        self.projection = projection
+        self.model = model
+        self.onProfile = onProfile
+        self.onNotifications = onNotifications
+        self.onLayout = onLayout
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
-                HarborBackground()
-                    .saturation(0.72)
+                AnchorPalette.returnCanvas
+                    .ignoresSafeArea()
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
@@ -161,6 +178,16 @@ struct AwayView: View {
                 }
                 .scrollIndicators(.hidden)
             }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                HarborTopBar(
+                    connection: .pairing,
+                    unreadCount: projection.unreadNotificationsCount,
+                    auxiliaryLabel: nil,
+                    onProfile: onProfile,
+                    onNotifications: onNotifications,
+                    onAuxiliary: nil
+                )
+            }
             .toolbar(.hidden, for: .navigationBar)
         }
         .sheet(item: $selectedProcess) { process in
@@ -179,18 +206,18 @@ struct AwayView: View {
         TimelineView(.periodic(from: .now, by: 60)) { context in
             VStack(alignment: .leading, spacing: 8) {
                 Label(L10n.awayDuration(awayMinutes(at: context.date)), systemImage: "circle.fill")
-                    .font(.caption.bold())
+                    .font(.caption2.bold())
                     .foregroundStyle(AnchorPalette.mintInk)
                     .padding(.horizontal, 10)
                     .frame(minHeight: 30)
                     .background(AnchorPalette.seafoam.opacity(0.22), in: .capsule)
 
                 Text(L10n.away)
-                    .font(.largeTitle.bold())
+                    .font(.title.bold())
                     .foregroundStyle(AnchorPalette.ink)
                     .accessibilityIdentifier("away.screen")
                 Text(L10n.awayDetail)
-                    .font(.body)
+                    .font(.footnote)
                     .foregroundStyle(AnchorPalette.secondaryInk)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("away.detail")
@@ -199,60 +226,57 @@ struct AwayView: View {
     }
 
     private var awaySummary: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(L10n.currentAnchor)
-                .font(.caption.bold())
-                .foregroundStyle(AnchorPalette.oceanHighlight)
-            Text(projection.session?.goal.title ?? "")
-                .font(.title2.bold())
-                .foregroundStyle(.white)
-                .accessibilityIdentifier("goal.title")
-            Text(L10n.routesRunning(runningCount))
-                .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.86))
+        HarborHeroSurface(cornerRadius: 26) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(L10n.currentAnchor)
+                    .font(.caption2.bold())
+                    .foregroundStyle(AnchorPalette.oceanHighlight)
+                Text(projection.session?.goal.title ?? "")
+                    .font(.headline.bold())
+                    .foregroundStyle(.white)
+                    .accessibilityIdentifier("goal.title")
+                Text(L10n.routesRunning(runningCount))
+                    .font(.footnote)
+                    .foregroundStyle(.white.opacity(0.86))
 
-            VStack(spacing: 9) {
-                ForEach(projection.session?.processes ?? []) { process in
-                    HStack(spacing: 9) {
-                        Text(process.sourceSymbol)
-                            .font(.caption.bold())
-                            .foregroundStyle(AnchorPalette.deepSea)
-                            .frame(width: 26, height: 26)
-                            .background(AnchorPalette.sourceMark(process.sourceTone), in: .rect(cornerRadius: 8, style: .continuous))
-                        GeometryReader { proxy in
-                            Capsule()
-                                .fill(.white.opacity(0.11))
-                                .overlay(alignment: .leading) {
-                                    Capsule()
-                                        .fill(AnchorPalette.source(process.sourceTone))
-                                        .frame(width: proxy.size.width * (process.progress ?? 0))
-                                }
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
+                    spacing: 8
+                ) {
+                    ForEach(projection.session?.processes ?? []) { process in
+                        HStack(spacing: 6) {
+                            Text(process.sourceSymbol)
+                                .font(.caption2.bold())
+                                .foregroundStyle(.white)
+                                .frame(width: 20, height: 20)
+                                .background(
+                                    AnchorPalette.source(process.sourceTone),
+                                    in: .rect(cornerRadius: 6, style: .continuous)
+                                )
+
+                            GeometryReader { proxy in
+                                Capsule()
+                                    .fill(.white.opacity(0.11))
+                                    .overlay(alignment: .leading) {
+                                        Capsule()
+                                            .fill(AnchorPalette.cyan)
+                                            .frame(width: proxy.size.width * (process.progress ?? 0))
+                                    }
+                            }
+                            .frame(height: 4)
                         }
-                        .frame(height: 6)
-                        Text(process.progress ?? 0, format: .percent.precision(.fractionLength(0)))
-                            .font(.caption2.bold().monospacedDigit())
-                            .foregroundStyle(.white.opacity(0.95))
-                            .frame(width: 32, alignment: .trailing)
-                            .accessibilityIdentifier("away.summary.progress")
+                        .frame(maxWidth: .infinity, minHeight: 20, alignment: .leading)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("\(process.sourceName), \(L10n.taskProgress)")
+                        .accessibilityValue(
+                            (process.progress ?? 0).formatted(.percent.precision(.fractionLength(0)))
+                        )
+                        .accessibilityIdentifier("away.summary.progress")
                     }
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("\(process.sourceName), \(L10n.taskProgress)")
-                    .accessibilityValue(
-                        (process.progress ?? 0).formatted(.percent.precision(.fractionLength(0)))
-                    )
                 }
             }
+            .padding(14)
         }
-        .padding(18)
-        .background(
-            LinearGradient(
-                colors: [Color(red: 0.10, green: 0.28, blue: 0.37), AnchorPalette.deepSea],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            in: .rect(cornerRadius: 26, style: .continuous)
-        )
-        .shadow(color: AnchorPalette.deepSea.opacity(0.20), radius: 16, y: 10)
         .accessibilityIdentifier("away.summary")
     }
 
@@ -260,23 +284,35 @@ struct AwayView: View {
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(L10n.remoteProcesses)
-                    .font(.caption.bold())
+                    .font(.caption2.bold())
                     .foregroundStyle(AnchorPalette.link)
                 Text(L10n.synchronizedWork)
-                    .font(.title2.bold())
+                    .font(.headline.bold())
                     .foregroundStyle(AnchorPalette.ink)
             }
             Spacer()
-            Text(L10n.processAttentionSummary(
-                processes: projection.session?.processes.count ?? 0,
-                attention: projection.openDecisions.count
-            ))
-                .font(.caption.bold().monospacedDigit())
-                .foregroundStyle(AnchorPalette.ink)
-                .padding(.horizontal, 8)
-                .frame(minHeight: 30)
-                .background(AnchorPalette.paper, in: .capsule)
-                .accessibilityIdentifier("away.process.summary")
+            HStack(spacing: 6) {
+                Text(L10n.processAttentionSummary(
+                    processes: projection.session?.processes.count ?? 0,
+                    attention: projection.openDecisions.count
+                ))
+                    .font(.caption2.bold().monospacedDigit())
+                    .foregroundStyle(AnchorPalette.ink)
+                    .padding(.horizontal, 8)
+                    .frame(minHeight: 30)
+                    .background(AnchorPalette.paper, in: .capsule)
+                    .accessibilityIdentifier("away.process.summary")
+
+                Button(action: onLayout) {
+                    Image(systemName: "square.grid.2x2")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(AnchorPalette.link)
+                        .frame(width: 44, height: 44)
+                        .background(AnchorPalette.cyan.opacity(0.12), in: .rect(cornerRadius: 14, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L10n.layout)
+            }
         }
     }
 
@@ -315,7 +351,6 @@ struct AwayView: View {
 struct ReturnView: View {
     let projection: SessionProjection
     let model: AnchorSessionModel
-    let onNote: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -325,7 +360,9 @@ struct ReturnView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                HarborBackground()
+                AnchorPalette.returnCanvas
+                    .ignoresSafeArea()
+
                 ScrollView {
                     VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
                         returnHero
@@ -351,53 +388,151 @@ struct ReturnView: View {
     }
 
     private var returnNav: some View {
-        HStack {
-            HarborBrandMark(size: 34)
-            Text(L10n.returning).font(.headline.bold()).foregroundStyle(AnchorPalette.ink)
-            Spacer()
-            Label(L10n.connected, systemImage: "circle.fill")
-                .font(.caption.bold())
-                .foregroundStyle(AnchorPalette.mintInk)
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(spacing: 0) {
+                    HStack {
+                        returnCloseButton
+                        Spacer(minLength: 8)
+                        returnConnection
+                    }
+                    Text(L10n.returnNavigationTitle)
+                        .font(.headline.bold())
+                        .foregroundStyle(AnchorPalette.ink)
+                        .frame(maxWidth: .infinity)
+                        .accessibilityIdentifier("return.nav")
+                }
+            } else {
+                ZStack {
+                    HStack {
+                        returnCloseButton
+                        Spacer()
+                        returnConnection
+                    }
+
+                    Text(L10n.returnNavigationTitle)
+                        .font(.headline.bold())
+                        .foregroundStyle(AnchorPalette.ink)
+                        .accessibilityIdentifier("return.nav")
+                }
+            }
         }
         .padding(.horizontal, AnchorSpacing.medium)
-        .frame(minHeight: 52)
-        .background(AnchorPalette.paper.opacity(0.96))
-        .accessibilityIdentifier("return.nav")
+        .frame(minHeight: 50)
+        .background(AnchorPalette.returnCanvas.opacity(0.96))
+    }
+
+    private var returnCloseButton: some View {
+        Button {
+            Task { await model.continueWorking() }
+        } label: {
+            ZStack {
+                Color.clear
+                Image(systemName: "xmark")
+                    .font(.body.weight(.semibold))
+            }
+            .frame(width: 44, height: 44)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .frame(minWidth: 44, minHeight: 44)
+        .accessibilityLabel(L10n.close)
+        .accessibilityHint(L10n.continueWorking)
+        .accessibilityIdentifier("return.nav.close")
+    }
+
+    private var returnConnection: some View {
+        Label(L10n.connected, systemImage: "circle.fill")
+            .font(.caption.bold())
+            .foregroundStyle(AnchorPalette.mintInk)
+            .accessibilityIdentifier("return.nav.connection")
     }
 
     private var returnHero: some View {
-        HStack(alignment: .center, spacing: 18) {
-            ZStack {
-                ForEach([82.0, 106.0, 132.0], id: \.self) { diameter in
-                    Circle()
-                        .stroke(AnchorPalette.cyan.opacity(0.18), lineWidth: 2)
-                        .frame(width: diameter, height: diameter)
+        HarborHeroSurface(cornerRadius: 26) {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .center, spacing: 14) {
+                    returnVisual
+                    returnHeroCopy
                 }
-                HarborBrandMark(size: 58)
-            }
-            .frame(width: 138, height: 138)
-            .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text(L10n.awayDuration(awayMinutes))
-                    .font(.caption.bold())
-                    .foregroundStyle(AnchorPalette.link)
-                Text(L10n.returning)
-                    .font(.title.bold())
-                    .foregroundStyle(AnchorPalette.ink)
-                    .accessibilityIdentifier("return.screen")
-                Text(L10n.returnHeadline)
-                    .font(.title2.bold())
-                    .foregroundStyle(AnchorPalette.ink)
-                Text(projection.session?.goal.title ?? "")
-                    .font(.subheadline)
-                    .foregroundStyle(AnchorPalette.secondaryInk)
-                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityIdentifier("return.goal.title")
+                VStack(alignment: .leading, spacing: 14) {
+                    returnVisual
+                    returnHeroCopy
+                }
             }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.top, 8)
+        .accessibilityElement(children: .contain)
+    }
+
+    private var returnVisual: some View {
+        ZStack {
+            Circle()
+                .stroke(AnchorPalette.cyan.opacity(0.28), lineWidth: 1)
+                .frame(width: 82, height: 82)
+
+            Circle()
+                .stroke(.white.opacity(0.16), lineWidth: 1)
+                .frame(width: 58, height: 58)
+
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [AnchorPalette.oceanHighlight, AnchorPalette.seafoam],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 42, height: 42)
+                .overlay {
+                    HarborAnchorGlyph(color: AnchorPalette.deepSea, lineWidth: 2.1)
+                        .frame(width: 24, height: 24)
+                }
+                .shadow(color: AnchorPalette.deepSea.opacity(0.25), radius: 8, y: 5)
+
+            Circle()
+                .fill(AnchorPalette.sand)
+                .frame(width: 6, height: 6)
+                .offset(y: -35)
+            Circle()
+                .fill(AnchorPalette.seafoam)
+                .frame(width: 6, height: 6)
+                .offset(x: 33, y: 17)
+            Circle()
+                .fill(AnchorPalette.coral)
+                .frame(width: 6, height: 6)
+                .offset(x: -28, y: 25)
+        }
+        .frame(width: 86, height: 86)
+        .accessibilityHidden(true)
+    }
+
+    private var returnHeroCopy: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("\(L10n.returning) · \(L10n.awayDuration(awayMinutes))")
+                .font(.caption2.bold())
+                .foregroundStyle(AnchorPalette.oceanHighlight)
+                .accessibilityIdentifier("return.hero.eyebrow")
+
+            Text("\(L10n.returning),")
+                .font(.title2.bold())
+                .foregroundStyle(.white)
+                .accessibilityIdentifier("return.screen")
+
+            Text(L10n.returnHeadline)
+                .font(.title2.bold())
+                .foregroundStyle(.white)
+                .accessibilityIdentifier("return.hero.headline")
+
+            Text(projection.session?.goal.title ?? "")
+                .font(.caption)
+                .foregroundStyle(.white.opacity(0.78))
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("return.goal.title")
+        }
     }
 
     private var impactCard: some View {
@@ -408,11 +543,14 @@ struct ReturnView: View {
                     .foregroundStyle(AnchorPalette.mintInk)
                 Spacer()
                 Text("+\(impactPercent)%")
-                    .font(.title2.bold().monospacedDigit())
-                    .foregroundStyle(AnchorPalette.mintInk)
+                    .font(.caption.bold().monospacedDigit())
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(AnchorPalette.mintInk, in: .capsule)
             }
             Text(L10n.returnProgress(impactPercent))
-                .font(.title2.bold())
+                .font(.headline.bold())
                 .foregroundStyle(AnchorPalette.ink)
             Text(recommendedProcess?.detail ?? L10n.returnDetail)
                 .font(.body)
@@ -422,32 +560,29 @@ struct ReturnView: View {
             Group {
                 if dynamicTypeSize.isAccessibilitySize {
                     VStack(spacing: 10) {
-                        impactMetric("\(changes.count)", label: L10n.returnChanges)
-                        impactMetric("\(runningCount)", label: L10n.live)
-                        impactMetric("\(projection.openDecisions.count)", label: L10n.decisions)
+                        impactMetric("\(changes.count)", label: L10n.returnResultsUpdated)
+                        impactMetric("\(runningCount)", label: L10n.returnStillRunning)
+                        impactMetric("\(projection.openDecisions.count)", label: L10n.returnWaitingJudgment)
                     }
                 } else {
                     HStack(spacing: 0) {
-                        impactMetric("\(changes.count)", label: L10n.returnChanges)
+                        impactMetric("\(changes.count)", label: L10n.returnResultsUpdated)
                         Divider().padding(.vertical, 7)
-                        impactMetric("\(runningCount)", label: L10n.live)
+                        impactMetric("\(runningCount)", label: L10n.returnStillRunning)
                         Divider().padding(.vertical, 7)
-                        impactMetric("\(projection.openDecisions.count)", label: L10n.decisions)
+                        impactMetric("\(projection.openDecisions.count)", label: L10n.returnWaitingJudgment)
                     }
                 }
             }
         }
         .padding(16)
         .background(AnchorPalette.seafoam.opacity(0.23), in: .rect(cornerRadius: 24, style: .continuous))
-        .overlay(alignment: .top) {
-            Capsule().fill(.white.opacity(0.72)).frame(height: 2).padding(.horizontal, 28)
-        }
         .shadow(color: AnchorPalette.mintInk.opacity(0.12), radius: 14, y: 8)
     }
 
     private func impactMetric(_ value: String, label: String) -> some View {
         VStack(spacing: 2) {
-            Text(value).font(.title3.bold().monospacedDigit()).foregroundStyle(AnchorPalette.ink)
+            Text(value).font(.headline.bold().monospacedDigit()).foregroundStyle(AnchorPalette.ink)
             Text(label).font(.caption2).foregroundStyle(AnchorPalette.secondaryInk)
                 .accessibilityIdentifier("return.impact.metric")
         }
@@ -461,10 +596,9 @@ struct ReturnView: View {
                 withAnimation(reduceMotion ? nil : .spring(duration: 0.36)) { showChanges.toggle() }
             } label: {
                 HStack {
-                    Label(L10n.returnChanges, systemImage: "clock.arrow.circlepath")
+                    Label(L10n.returnChangesSummary(changes.count), systemImage: "clock.arrow.circlepath")
                         .font(.subheadline.bold())
                     Spacer()
-                    Text("\(changes.count)").font(.caption.bold().monospacedDigit())
                     Image(systemName: "chevron.down")
                         .font(.caption.bold())
                         .rotationEffect(.degrees(showChanges ? 180 : 0))
@@ -509,22 +643,30 @@ struct ReturnView: View {
             selectedDecision = projection.openDecisions.first { $0.processID == process.id }
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: "exclamationmark.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(Color(red: 0.48, green: 0.33, blue: 0))
+                Image(systemName: "exclamationmark")
+                    .font(.body.bold())
+                    .foregroundStyle(AnchorPalette.sourceInk("sand"))
+                    .frame(width: 36, height: 36)
+                    .background(AnchorPalette.sand.opacity(0.24), in: .circle)
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(L10n.yourNextStep)
                         .font(.caption2.bold())
                         .foregroundStyle(AnchorPalette.ink)
                         .accessibilityIdentifier("return.next.content")
                     Text(process.title)
-                        .font(.headline)
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(AnchorPalette.ink)
                         .accessibilityIdentifier("return.next.content")
                     Text(process.detail)
                         .font(.caption)
                         .foregroundStyle(AnchorPalette.secondaryInk)
                         .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("return.next.content")
+                    Text(L10n.returnContinueHint)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(AnchorPalette.link)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("return.next.content")
                 }
@@ -537,39 +679,27 @@ struct ReturnView: View {
         }
         .buttonStyle(.plain)
         .disabled(projection.openDecisions.first { $0.processID == process.id } == nil)
+        .accessibilityElement(children: .combine)
         .accessibilityIdentifier("return.next.step")
     }
 
     private var returnFooter: some View {
-        VStack(spacing: 8) {
-            Button {
-                if let decision = projection.openDecisions.first {
-                    selectedDecision = decision
-                } else {
-                    Task { await model.continueWorking() }
-                }
-            } label: {
-                Label(L10n.continueWorking, systemImage: "play.fill")
-                    .accessibilityIdentifier("return.continue.label")
+        Button {
+            if let decision = projection.openDecisions.first {
+                selectedDecision = decision
+            } else {
+                Task { await model.continueWorking() }
             }
-            .buttonStyle(HarborPrimaryButtonStyle())
-            .accessibilityIdentifier("return.continue.button")
-
-            Button(action: onNote) {
-                Label(L10n.anchorNote, systemImage: "scope")
-                    .font(.caption.bold())
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                    .contentShape(.rect)
-                    .accessibilityIdentifier("return.note.label")
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(AnchorPalette.link)
-            .accessibilityIdentifier("return.note.button")
+        } label: {
+            Label(L10n.continueWorking, systemImage: "play.fill")
+                .accessibilityIdentifier("return.continue.label")
         }
+        .buttonStyle(HarborPrimaryButtonStyle())
+        .accessibilityIdentifier("return.continue.button")
         .padding(.horizontal, AnchorSpacing.medium)
         .padding(.top, 10)
         .padding(.bottom, 5)
-        .background(AnchorPalette.paper.opacity(0.97))
+        .background(AnchorPalette.returnCanvas.opacity(0.97))
     }
 
     private var changes: [ReturnChange] {
@@ -577,7 +707,7 @@ struct ReturnView: View {
     }
 
     private var impactPercent: Int {
-        changes.isEmpty ? 0 : 20
+        projection.session?.returnSummary?.impactPercent ?? 0
     }
 
     private var runningCount: Int {

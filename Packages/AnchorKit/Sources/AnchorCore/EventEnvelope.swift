@@ -1,6 +1,8 @@
 import Foundation
 
 public struct EventEnvelope: Identifiable, Codable, Hashable, Sendable {
+    public static let operationType = "anchor.operation.v1"
+
     public let id: UUID
     public let sessionID: UUID
     public let sourceID: UUID
@@ -8,6 +10,8 @@ public struct EventEnvelope: Identifiable, Codable, Hashable, Sendable {
     public let timestamp: Date
     public let type: String
     public let payload: Data
+    public let schemaVersion: Int
+    public let deduplicationKey: String?
 
     public init(
         id: UUID = UUID(),
@@ -16,7 +20,9 @@ public struct EventEnvelope: Identifiable, Codable, Hashable, Sendable {
         sequence: UInt64,
         timestamp: Date = .now,
         type: String,
-        payload: Data
+        payload: Data,
+        schemaVersion: Int = 1,
+        deduplicationKey: String? = nil
     ) {
         self.id = id
         self.sessionID = sessionID
@@ -25,5 +31,7 @@ public struct EventEnvelope: Identifiable, Codable, Hashable, Sendable {
         self.timestamp = timestamp
         self.type = type
         self.payload = payload
+        self.schemaVersion = schemaVersion
+        self.deduplicationKey = deduplicationKey
     }
 }

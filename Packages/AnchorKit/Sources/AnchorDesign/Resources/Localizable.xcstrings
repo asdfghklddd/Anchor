@@ -3734,6 +3734,22 @@
         }
       }
     },
+    "return.changes.summary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View %lld specific changes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看 %lld 条具体变化"
+          }
+        }
+      }
+    },
     "return.continue" : {
       "localizations" : {
         "en" : {
@@ -3746,6 +3762,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "继续工作"
+          }
+        }
+      }
+    },
+    "return.continue.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After your choice, Anchor will resume the workflow."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成选择后，Anchor 会自动接回工作流。"
           }
         }
       }
@@ -3814,6 +3846,22 @@
         }
       }
     },
+    "return.nav" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Return"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返航"
+          }
+        }
+      }
+    },
     "return.progress" : {
       "localizations" : {
         "en" : {
@@ -3826,6 +3874,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "工作向前推进了 %lld%%"
+          }
+        }
+      }
+    },
+    "return.results.updated" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Results updated"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "项结果更新"
           }
         }
       }
@@ -3846,6 +3910,22 @@
         }
       }
     },
+    "return.still.running" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still running"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "个持续运行"
+          }
+        }
+      }
+    },
     "return.title" : {
       "localizations" : {
         "en" : {
@@ -3858,6 +3938,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "欢迎回来"
+          }
+        }
+      }
+    },
+    "return.waiting.judgment" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for judgment"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "个等待判断"
           }
         }
       }

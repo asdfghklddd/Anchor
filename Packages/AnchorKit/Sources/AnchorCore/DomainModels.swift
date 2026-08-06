@@ -24,31 +24,62 @@ public struct AnchorGoal: Identifiable, Codable, Hashable, Sendable {
 
 public struct ProcessEvent: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
+    public let sessionID: UUID?
     public let processID: UUID?
+    public let sourceID: UUID?
+    public let externalID: String?
+    public let deduplicationKey: String?
     public let occurredAt: Date
+    public let receivedAt: Date?
     public let kind: ProcessEventKind
     public let title: String
     public let detail: String
+    public let progress: Double?
+    public let metric: String?
+    public let metricLabel: String?
+    public let deepLink: URL?
 
     public init(
         id: UUID = UUID(),
+        sessionID: UUID? = nil,
         processID: UUID? = nil,
+        sourceID: UUID? = nil,
+        externalID: String? = nil,
+        deduplicationKey: String? = nil,
         occurredAt: Date = .now,
+        receivedAt: Date? = nil,
         kind: ProcessEventKind,
         title: String,
-        detail: String = ""
+        detail: String = "",
+        progress: Double? = nil,
+        metric: String? = nil,
+        metricLabel: String? = nil,
+        deepLink: URL? = nil
     ) {
         self.id = id
+        self.sessionID = sessionID
         self.processID = processID
+        self.sourceID = sourceID
+        self.externalID = externalID
+        self.deduplicationKey = deduplicationKey
         self.occurredAt = occurredAt
+        self.receivedAt = receivedAt
         self.kind = kind
         self.title = title
         self.detail = detail
+        self.progress = progress
+        self.metric = metric
+        self.metricLabel = metricLabel
+        self.deepLink = deepLink
     }
 }
 
 public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
+    public var sessionID: UUID?
+    public var sourceID: UUID?
+    public var externalID: String?
+    public var deepLink: URL?
     public var sourceName: String
     public var sourceSymbol: String
     public var sourceTone: String
@@ -65,6 +96,10 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
 
     public init(
         id: UUID = UUID(),
+        sessionID: UUID? = nil,
+        sourceID: UUID? = nil,
+        externalID: String? = nil,
+        deepLink: URL? = nil,
         sourceName: String,
         sourceSymbol: String,
         sourceTone: String,
@@ -80,6 +115,10 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
         events: [ProcessEvent] = []
     ) {
         self.id = id
+        self.sessionID = sessionID
+        self.sourceID = sourceID
+        self.externalID = externalID
+        self.deepLink = deepLink
         self.sourceName = sourceName
         self.sourceSymbol = sourceSymbol
         self.sourceTone = sourceTone
@@ -118,6 +157,8 @@ public struct Decision: Identifiable, Codable, Hashable, Sendable {
     public var selectedOptionID: UUID?
     public var requestedAt: Date
     public var resolvedAt: Date?
+    /// Optional keeps the payload readable by the first v1 native builds.
+    public var priority: Int?
 
     public init(
         id: UUID = UUID(),
@@ -128,7 +169,8 @@ public struct Decision: Identifiable, Codable, Hashable, Sendable {
         status: DecisionStatus = .open,
         selectedOptionID: UUID? = nil,
         requestedAt: Date = .now,
-        resolvedAt: Date? = nil
+        resolvedAt: Date? = nil,
+        priority: Int? = nil
     ) {
         self.id = id
         self.processID = processID
@@ -139,16 +181,33 @@ public struct Decision: Identifiable, Codable, Hashable, Sendable {
         self.selectedOptionID = selectedOptionID
         self.requestedAt = requestedAt
         self.resolvedAt = resolvedAt
+        self.priority = priority
     }
 }
 
 public struct AnchorNote: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
+    public let sessionID: UUID?
+    public let processID: UUID?
+    public let decisionID: UUID?
+    public let origin: String?
     public let text: String
     public let createdAt: Date
 
-    public init(id: UUID = UUID(), text: String, createdAt: Date = .now) {
+    public init(
+        id: UUID = UUID(),
+        sessionID: UUID? = nil,
+        processID: UUID? = nil,
+        decisionID: UUID? = nil,
+        origin: String? = nil,
+        text: String,
+        createdAt: Date = .now
+    ) {
         self.id = id
+        self.sessionID = sessionID
+        self.processID = processID
+        self.decisionID = decisionID
+        self.origin = origin
         self.text = text
         self.createdAt = createdAt
     }
@@ -245,17 +304,38 @@ public struct ReturnSummary: Codable, Hashable, Sendable {
     public var generatedAt: Date
     public var changes: [ReturnChange]
     public var recommendedProcessID: UUID?
+    /// These metrics are optional for compatibility with pre-MVP snapshots.
+    public var elapsedSeconds: TimeInterval?
+    public var completedCount: Int?
+    public var failedCount: Int?
+    public var newDecisionCount: Int?
+    public var netChangeScore: Int?
 
     public init(
         awaySince: Date,
         generatedAt: Date = .now,
         changes: [ReturnChange],
-        recommendedProcessID: UUID? = nil
+        recommendedProcessID: UUID? = nil,
+        elapsedSeconds: TimeInterval? = nil,
+        completedCount: Int? = nil,
+        failedCount: Int? = nil,
+        newDecisionCount: Int? = nil,
+        netChangeScore: Int? = nil
     ) {
         self.awaySince = awaySince
         self.generatedAt = generatedAt
         self.changes = changes
         self.recommendedProcessID = recommendedProcessID
+        self.elapsedSeconds = elapsedSeconds
+        self.completedCount = completedCount
+        self.failedCount = failedCount
+        self.newDecisionCount = newDecisionCount
+        self.netChangeScore = netChangeScore
+    }
+
+    public var impactPercent: Int {
+        if let netChangeScore { return max(0, min(100, netChangeScore)) }
+        return changes.isEmpty ? 0 : min(100, changes.count * 10)
     }
 }
 

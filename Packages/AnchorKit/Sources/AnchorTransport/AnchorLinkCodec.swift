@@ -111,6 +111,8 @@ enum LinkPayloadKind: String, Codable, Sendable {
 }
 
 struct LinkPayload: Codable, Sendable {
+    let messageID: UUID
+    let sequence: UInt64
     let kind: LinkPayloadKind
     let sentAt: Date
     let event: EventEnvelope?
@@ -120,12 +122,59 @@ struct LinkPayload: Codable, Sendable {
         kind: LinkPayloadKind,
         sentAt: Date = .now,
         event: EventEnvelope? = nil,
-        acknowledgedEventID: UUID? = nil
+        acknowledgedEventID: UUID? = nil,
+        messageID: UUID = UUID(),
+        sequence: UInt64 = 0
     ) {
+        self.messageID = messageID
+        self.sequence = sequence
         self.kind = kind
         self.sentAt = sentAt
         self.event = event
         self.acknowledgedEventID = acknowledgedEventID
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case messageID
+        case sequence
+        case kind
+        case sentAt
+        case event
+        case acknowledgedEventID
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        messageID = try container.decodeIfPresent(UUID.self, forKey: .messageID) ?? UUID()
+        sequence = try container.decodeIfPresent(UInt64.self, forKey: .sequence) ?? 0
+        kind = try container.decode(LinkPayloadKind.self, forKey: .kind)
+        sentAt = try container.decode(Date.self, forKey: .sentAt)
+        event = try container.decodeIfPresent(EventEnvelope.self, forKey: .event)
+        acknowledgedEventID = try container.decodeIfPresent(UUID.self, forKey: .acknowledgedEventID)
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(messageID, forKey: .messageID)
+        try container.encode(sequence, forKey: .sequence)
+        try container.encode(kind, forKey: .kind)
+        try container.encode(sentAt, forKey: .sentAt)
+        try container.encodeIfPresent(event, forKey: .event)
+        try container.encodeIfPresent(acknowledgedEventID, forKey: .acknowledgedEventID)
+    }
+}
+
+struct LinkReplayWindow: Sendable {
+    private static let maximumEntries = 2_048
+    private var seenMessageIDs: Set<UUID> = []
+
+    mutating func accepts(_ messageID: UUID) -> Bool {
+        guard seenMessageIDs.insert(messageID).inserted else { return false }
+        if seenMessageIDs.count > Self.maximumEntries,
+           let oldest = seenMessageIDs.first {
+            seenMessageIDs.remove(oldest)
+        }
+        return true
     }
 }
 
@@ -169,32 +218,5 @@ enum AnchorLinkCodec {
             outputByteCount: 32
         )
         return key.withUnsafeBytes { Data($0) }
-    }
-}
-
-extension JSONEncoder {
-    static var anchor: JSONEncoder {
-        let encoder = JSONEncoder()
-        // Preserve Date's exact representation across an encrypted round trip.
-        // Floating-point seconds can be rounded by JSONSerialization, which is
-        // enough to make otherwise identical event envelopes compare unequal.
-        encoder.dateEncodingStrategy = .custom { date, encoder in
-            var container = encoder.singleValueContainer()
-            try container.encode(date.timeIntervalSinceReferenceDate.bitPattern)
-        }
-        encoder.outputFormatting = [.sortedKeys]
-        return encoder
-    }
-}
-
-extension JSONDecoder {
-    static var anchor: JSONDecoder {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .custom { decoder in
-            let container = try decoder.singleValueContainer()
-            let bitPattern = try container.decode(UInt64.self)
-            return Date(timeIntervalSinceReferenceDate: Double(bitPattern: bitPattern))
-        }
-        return decoder
     }
 }
