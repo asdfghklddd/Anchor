@@ -1,93 +1,82 @@
 // !$*UTF8*$!
 {
 	archiveVersion = 1;
-	classes = {
-	};
+	classes = {};
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		AA1000000000000000000001 /* AnchorCore in Frameworks */ = {isa = PBXBuildFile; productRef = AA2000000000000000000001 /* AnchorCore */; };
+		AA1000000000000000000002 /* AnchorIOSFeatures in Frameworks */ = {isa = PBXBuildFile; productRef = AA2000000000000000000002 /* AnchorIOSFeatures */; };
+		AA1000000000000000000003 /* AnchorCore in Frameworks */ = {isa = PBXBuildFile; productRef = AA2000000000000000000003 /* AnchorCore */; };
+		AA1000000000000000000004 /* AnchorIOSFeatures in Frameworks */ = {isa = PBXBuildFile; productRef = AA2000000000000000000004 /* AnchorIOSFeatures */; };
+		AA1000000000000000000005 /* AnchorDemoSupport in Frameworks */ = {isa = PBXBuildFile; productRef = AA2000000000000000000005 /* AnchorDemoSupport */; };
+		AA1000000000000000000006 /* AnchorCore in Frameworks */ = {isa = PBXBuildFile; productRef = AA2000000000000000000006 /* AnchorCore */; };
+		AA1000000000000000000007 /* AnchorMacFeatures in Frameworks */ = {isa = PBXBuildFile; productRef = AA2000000000000000000007 /* AnchorMacFeatures */; };
+		AA1000000000000000000008 /* AnchorTransport in Frameworks */ = {isa = PBXBuildFile; productRef = AA2000000000000000000008 /* AnchorTransport */; };
+		AA1000000000000000000009 /* AnchorCore in Frameworks */ = {isa = PBXBuildFile; productRef = AA2000000000000000000009 /* AnchorCore */; };
+		AA100000000000000000000A /* AnchorMacFeatures in Frameworks */ = {isa = PBXBuildFile; productRef = AA200000000000000000000A /* AnchorMacFeatures */; };
+		AA100000000000000000000B /* AnchorDemoSupport in Frameworks */ = {isa = PBXBuildFile; productRef = AA200000000000000000000B /* AnchorDemoSupport */; };
+		AA100000000000000000000C /* AnchorTransport in Frameworks */ = {isa = PBXBuildFile; productRef = AA200000000000000000000C /* AnchorTransport */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
-		B34BFAFE30178AFA00CC178B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B34BFAE830178AF900CC178B /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = B34BFAEF30178AF900CC178B;
-			remoteInfo = Anchor;
-		};
-		B34BFB0830178AFA00CC178B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B34BFAE830178AF900CC178B /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = B34BFAEF30178AF900CC178B;
-			remoteInfo = Anchor;
-		};
+		AA3000000000000000000001 = {isa = PBXContainerItemProxy; containerPortal = AA0000000000000000000001 /* Project object */; proxyType = 1; remoteGlobalIDString = AA5000000000000000000002; remoteInfo = "Anchor iOS Demo"; };
+		AA3000000000000000000002 = {isa = PBXContainerItemProxy; containerPortal = AA0000000000000000000001 /* Project object */; proxyType = 1; remoteGlobalIDString = AA5000000000000000000004; remoteInfo = "Anchor macOS Demo"; };
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		B34BFAF030178AF900CC178B /* Anchor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Anchor.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B34BFAFD30178AFA00CC178B /* AnchorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnchorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		B34BFB0730178AFA00CC178B /* AnchorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnchorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA4000000000000000000001 /* Anchor iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anchor iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA4000000000000000000002 /* Anchor iOS Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anchor iOS Demo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA4000000000000000000003 /* Anchor macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anchor macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA4000000000000000000004 /* Anchor macOS Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anchor macOS Demo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA4000000000000000000005 /* AnchorIOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnchorIOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA4000000000000000000006 /* AnchorMacUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnchorMacUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		B34BFAF230178AF900CC178B /* Anchor */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Anchor;
-			sourceTree = "<group>";
-		};
-		B34BFB0030178AFA00CC178B /* AnchorTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = AnchorTests;
-			sourceTree = "<group>";
-		};
-		B34BFB0A30178AFA00CC178B /* AnchorUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = AnchorUITests;
-			sourceTree = "<group>";
-		};
+		AA4100000000000000000001 /* AnchorIOS */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Apps/AnchorIOS; sourceTree = "<group>"; };
+		AA4100000000000000000002 /* AnchorIOSDemo */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Apps/AnchorIOSDemo; sourceTree = "<group>"; };
+		AA4100000000000000000003 /* AnchorMac */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Apps/AnchorMac; sourceTree = "<group>"; };
+		AA4100000000000000000004 /* AnchorMacDemo */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Apps/AnchorMacDemo; sourceTree = "<group>"; };
+		AA4100000000000000000005 /* AnchorIOSUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Apps/AnchorIOSUITests; sourceTree = "<group>"; };
+		AA4100000000000000000006 /* AnchorMacUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Apps/AnchorMacUITests; sourceTree = "<group>"; };
+		AA4100000000000000000007 /* Shared */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Apps/Shared; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		B34BFAED30178AF900CC178B /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B34BFAFA30178AFA00CC178B /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B34BFB0430178AFA00CC178B /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
+		AA4200000000000000000001 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (AA1000000000000000000001, AA1000000000000000000002, AA100000000000000000000C, ); runOnlyForDeploymentPostprocessing = 0; };
+		AA4200000000000000000002 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (AA1000000000000000000003, AA1000000000000000000004, AA1000000000000000000005, ); runOnlyForDeploymentPostprocessing = 0; };
+		AA4200000000000000000003 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (AA1000000000000000000006, AA1000000000000000000007, AA1000000000000000000008, ); runOnlyForDeploymentPostprocessing = 0; };
+		AA4200000000000000000004 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (AA1000000000000000000009, AA100000000000000000000A, AA100000000000000000000B, ); runOnlyForDeploymentPostprocessing = 0; };
+		AA4200000000000000000005 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AA4200000000000000000006 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		B34BFAE730178AF900CC178B = {
+		AA0000000000000000000002 = {
 			isa = PBXGroup;
 			children = (
-				B34BFAF230178AF900CC178B /* Anchor */,
-				B34BFB0030178AFA00CC178B /* AnchorTests */,
-				B34BFB0A30178AFA00CC178B /* AnchorUITests */,
-				B34BFAF130178AF900CC178B /* Products */,
+				AA4100000000000000000001 /* AnchorIOS */,
+				AA4100000000000000000002 /* AnchorIOSDemo */,
+				AA4100000000000000000003 /* AnchorMac */,
+				AA4100000000000000000004 /* AnchorMacDemo */,
+				AA4100000000000000000005 /* AnchorIOSUITests */,
+				AA4100000000000000000006 /* AnchorMacUITests */,
+				AA4100000000000000000007 /* Shared */,
+				AA0000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		B34BFAF130178AF900CC178B /* Products */ = {
+		AA0000000000000000000003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				B34BFAF030178AF900CC178B /* Anchor.app */,
-				B34BFAFD30178AFA00CC178B /* AnchorTests.xctest */,
-				B34BFB0730178AFA00CC178B /* AnchorUITests.xctest */,
+				AA4000000000000000000001 /* Anchor iOS.app */,
+				AA4000000000000000000002 /* Anchor iOS Demo.app */,
+				AA4000000000000000000003 /* Anchor macOS.app */,
+				AA4000000000000000000004 /* Anchor macOS Demo.app */,
+				AA4000000000000000000005 /* AnchorIOSUITests.xctest */,
+				AA4000000000000000000006 /* AnchorMacUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,533 +84,192 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		B34BFAEF30178AF900CC178B /* Anchor */ = {
+		AA5000000000000000000001 /* Anchor iOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B34BFB1130178AFA00CC178B /* Build configuration list for PBXNativeTarget "Anchor" */;
-			buildPhases = (
-				B34BFAEC30178AF900CC178B /* Sources */,
-				B34BFAED30178AF900CC178B /* Frameworks */,
-				B34BFAEE30178AF900CC178B /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				B34BFAF230178AF900CC178B /* Anchor */,
-			);
-			name = Anchor;
-			packageProductDependencies = (
-			);
-			productName = Anchor;
-			productReference = B34BFAF030178AF900CC178B /* Anchor.app */;
+			buildConfigurationList = AA6000000000000000000001;
+			buildPhases = (AA7000000000000000000001, AA4200000000000000000001, AA7100000000000000000001, );
+			buildRules = ();
+			dependencies = ();
+			fileSystemSynchronizedGroups = (AA4100000000000000000001, AA4100000000000000000007, );
+			name = "Anchor iOS";
+			packageProductDependencies = (AA2000000000000000000001, AA2000000000000000000002, AA200000000000000000000C, );
+			productName = "Anchor iOS";
+			productReference = AA4000000000000000000001;
 			productType = "com.apple.product-type.application";
 		};
-		B34BFAFC30178AFA00CC178B /* AnchorTests */ = {
+		AA5000000000000000000002 /* Anchor iOS Demo */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B34BFB1430178AFA00CC178B /* Build configuration list for PBXNativeTarget "AnchorTests" */;
-			buildPhases = (
-				B34BFAF930178AFA00CC178B /* Sources */,
-				B34BFAFA30178AFA00CC178B /* Frameworks */,
-				B34BFAFB30178AFA00CC178B /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				B34BFAFF30178AFA00CC178B /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				B34BFB0030178AFA00CC178B /* AnchorTests */,
-			);
-			name = AnchorTests;
-			packageProductDependencies = (
-			);
-			productName = AnchorTests;
-			productReference = B34BFAFD30178AFA00CC178B /* AnchorTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
+			buildConfigurationList = AA6000000000000000000002;
+			buildPhases = (AA7000000000000000000002, AA4200000000000000000002, AA7100000000000000000002, );
+			buildRules = ();
+			dependencies = ();
+			fileSystemSynchronizedGroups = (AA4100000000000000000002, AA4100000000000000000007, );
+			name = "Anchor iOS Demo";
+			packageProductDependencies = (AA2000000000000000000003, AA2000000000000000000004, AA2000000000000000000005, );
+			productName = "Anchor iOS Demo";
+			productReference = AA4000000000000000000002;
+			productType = "com.apple.product-type.application";
 		};
-		B34BFB0630178AFA00CC178B /* AnchorUITests */ = {
+		AA5000000000000000000003 /* Anchor macOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B34BFB1730178AFA00CC178B /* Build configuration list for PBXNativeTarget "AnchorUITests" */;
-			buildPhases = (
-				B34BFB0330178AFA00CC178B /* Sources */,
-				B34BFB0430178AFA00CC178B /* Frameworks */,
-				B34BFB0530178AFA00CC178B /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				B34BFB0930178AFA00CC178B /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				B34BFB0A30178AFA00CC178B /* AnchorUITests */,
-			);
-			name = AnchorUITests;
-			packageProductDependencies = (
-			);
-			productName = AnchorUITests;
-			productReference = B34BFB0730178AFA00CC178B /* AnchorUITests.xctest */;
+			buildConfigurationList = AA6000000000000000000003;
+			buildPhases = (AA7000000000000000000003, AA4200000000000000000003, AA7100000000000000000003, );
+			buildRules = ();
+			dependencies = ();
+			fileSystemSynchronizedGroups = (AA4100000000000000000003, AA4100000000000000000007, );
+			name = "Anchor macOS";
+			packageProductDependencies = (AA2000000000000000000006, AA2000000000000000000007, AA2000000000000000000008, );
+			productName = "Anchor macOS";
+			productReference = AA4000000000000000000003;
+			productType = "com.apple.product-type.application";
+		};
+		AA5000000000000000000004 /* Anchor macOS Demo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA6000000000000000000004;
+			buildPhases = (AA7000000000000000000004, AA4200000000000000000004, AA7100000000000000000004, );
+			buildRules = ();
+			dependencies = ();
+			fileSystemSynchronizedGroups = (AA4100000000000000000004, AA4100000000000000000007, );
+			name = "Anchor macOS Demo";
+			packageProductDependencies = (AA2000000000000000000009, AA200000000000000000000A, AA200000000000000000000B, );
+			productName = "Anchor macOS Demo";
+			productReference = AA4000000000000000000004;
+			productType = "com.apple.product-type.application";
+		};
+		AA5000000000000000000005 /* AnchorIOSUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA6000000000000000000005;
+			buildPhases = (AA7000000000000000000005, AA4200000000000000000005, AA7100000000000000000005, );
+			buildRules = ();
+			dependencies = (AA7200000000000000000001, );
+			fileSystemSynchronizedGroups = (AA4100000000000000000005, );
+			name = AnchorIOSUITests;
+			packageProductDependencies = ();
+			productName = AnchorIOSUITests;
+			productReference = AA4000000000000000000005;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		AA5000000000000000000006 /* AnchorMacUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA6000000000000000000006;
+			buildPhases = (AA7000000000000000000006, AA4200000000000000000006, AA7100000000000000000006, );
+			buildRules = ();
+			dependencies = (AA7200000000000000000002, );
+			fileSystemSynchronizedGroups = (AA4100000000000000000006, );
+			name = AnchorMacUITests;
+			packageProductDependencies = ();
+			productName = AnchorMacUITests;
+			productReference = AA4000000000000000000006;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		B34BFAE830178AF900CC178B /* Project object */ = {
+		AA0000000000000000000001 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
-					B34BFAEF30178AF900CC178B = {
-						CreatedOnToolsVersion = 26.2;
-					};
-					B34BFAFC30178AFA00CC178B = {
-						CreatedOnToolsVersion = 26.2;
-						TestTargetID = B34BFAEF30178AF900CC178B;
-					};
-					B34BFB0630178AFA00CC178B = {
-						CreatedOnToolsVersion = 26.2;
-						TestTargetID = B34BFAEF30178AF900CC178B;
-					};
+					AA5000000000000000000001 = {CreatedOnToolsVersion = 26.2; };
+					AA5000000000000000000002 = {CreatedOnToolsVersion = 26.2; };
+					AA5000000000000000000003 = {CreatedOnToolsVersion = 26.2; };
+					AA5000000000000000000004 = {CreatedOnToolsVersion = 26.2; };
+					AA5000000000000000000005 = {CreatedOnToolsVersion = 26.2; TestTargetID = AA5000000000000000000002; };
+					AA5000000000000000000006 = {CreatedOnToolsVersion = 26.2; TestTargetID = AA5000000000000000000004; };
 				};
 			};
-			buildConfigurationList = B34BFAEB30178AF900CC178B /* Build configuration list for PBXProject "Anchor" */;
+			buildConfigurationList = AA6000000000000000000000;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
-			knownRegions = (
-				en,
-				Base,
-			);
-			mainGroup = B34BFAE730178AF900CC178B;
+			knownRegions = (en, "zh-Hans", Base, );
+			mainGroup = AA0000000000000000000002;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (AA8000000000000000000001 /* XCLocalSwiftPackageReference "Packages/AnchorKit" */, );
 			preferredProjectObjectVersion = 77;
-			productRefGroup = B34BFAF130178AF900CC178B /* Products */;
+			productRefGroup = AA0000000000000000000003;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				B34BFAEF30178AF900CC178B /* Anchor */,
-				B34BFAFC30178AFA00CC178B /* AnchorTests */,
-				B34BFB0630178AFA00CC178B /* AnchorUITests */,
+				AA5000000000000000000001,
+				AA5000000000000000000002,
+				AA5000000000000000000003,
+				AA5000000000000000000004,
+				AA5000000000000000000005,
+				AA5000000000000000000006,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		B34BFAEE30178AF900CC178B /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B34BFAFB30178AFA00CC178B /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B34BFB0530178AFA00CC178B /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
+		AA7100000000000000000001 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AA7100000000000000000002 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AA7100000000000000000003 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AA7100000000000000000004 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AA7100000000000000000005 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AA7100000000000000000006 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		B34BFAEC30178AF900CC178B /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B34BFAF930178AFA00CC178B /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B34BFB0330178AFA00CC178B /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
+		AA7000000000000000000001 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AA7000000000000000000002 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AA7000000000000000000003 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AA7000000000000000000004 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AA7000000000000000000005 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AA7000000000000000000006 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		B34BFAFF30178AFA00CC178B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = B34BFAEF30178AF900CC178B /* Anchor */;
-			targetProxy = B34BFAFE30178AFA00CC178B /* PBXContainerItemProxy */;
-		};
-		B34BFB0930178AFA00CC178B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = B34BFAEF30178AF900CC178B /* Anchor */;
-			targetProxy = B34BFB0830178AFA00CC178B /* PBXContainerItemProxy */;
-		};
+		AA7200000000000000000001 = {isa = PBXTargetDependency; target = AA5000000000000000000002; targetProxy = AA3000000000000000000001; };
+		AA7200000000000000000002 = {isa = PBXTargetDependency; target = AA5000000000000000000004; targetProxy = AA3000000000000000000002; };
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		B34BFB0F30178AFA00CC178B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-			};
-			name = Debug;
-		};
-		B34BFB1030178AFA00CC178B /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				MTL_FAST_MATH = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_COMPILATION_MODE = wholemodule;
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-		B34BFB1230178AFA00CC178B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = G7J74KRQ8D;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Anchor;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor;
-				PRODUCT_NAME = Anchor;
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Debug;
-		};
-		B34BFB1330178AFA00CC178B /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = G7J74KRQ8D;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Anchor;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor;
-				PRODUCT_NAME = Anchor;
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Release;
-		};
-		B34BFB1530178AFA00CC178B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = G7J74KRQ8D;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.tests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Anchor.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Anchor";
-			};
-			name = Debug;
-		};
-		B34BFB1630178AFA00CC178B /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = G7J74KRQ8D;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.tests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Anchor.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Anchor";
-			};
-			name = Release;
-		};
-		B34BFB1830178AFA00CC178B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = G7J74KRQ8D;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.ui-tests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-				TEST_TARGET_NAME = Anchor;
-			};
-			name = Debug;
-		};
-		B34BFB1930178AFA00CC178B /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = G7J74KRQ8D;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.ui-tests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-				TEST_TARGET_NAME = Anchor;
-			};
-			name = Release;
-		};
+		AA9000000000000000000001 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; CLANG_WARN_DOCUMENTATION_COMMENTS = YES; CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_STRICT_OBJC_MSGSEND = YES; ENABLE_TESTABILITY = YES; ENABLE_USER_SCRIPT_SANDBOXING = YES; GCC_C_LANGUAGE_STANDARD = gnu17; GCC_NO_COMMON_BLOCKS = YES; GCC_OPTIMIZATION_LEVEL = 0; GCC_PREPROCESSOR_DEFINITIONS = ("DEBUG=1", "$(inherited)", ); GCC_WARN_64_TO_32_BIT_CONVERSION = YES; GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR; GCC_WARN_UNDECLARED_SELECTOR = YES; GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE; GCC_WARN_UNUSED_FUNCTION = YES; GCC_WARN_UNUSED_VARIABLE = YES; LOCALIZATION_PREFERS_STRING_CATALOGS = YES; MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE; ONLY_ACTIVE_ARCH = YES; SDKROOT = auto; SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)"; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; }; name = Debug; };
+		AA9000000000000000000002 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; CLANG_WARN_DOCUMENTATION_COMMENTS = YES; CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; ENABLE_NS_ASSERTIONS = NO; ENABLE_STRICT_OBJC_MSGSEND = YES; ENABLE_USER_SCRIPT_SANDBOXING = YES; GCC_C_LANGUAGE_STANDARD = gnu17; GCC_NO_COMMON_BLOCKS = YES; GCC_WARN_64_TO_32_BIT_CONVERSION = YES; GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR; GCC_WARN_UNDECLARED_SELECTOR = YES; GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE; GCC_WARN_UNUSED_FUNCTION = YES; GCC_WARN_UNUSED_VARIABLE = YES; LOCALIZATION_PREFERS_STRING_CATALOGS = YES; MTL_ENABLE_DEBUG_INFO = NO; SDKROOT = auto; SWIFT_COMPILATION_MODE = wholemodule; VALIDATE_PRODUCT = YES; }; name = Release; };
+		AA9000000000000000000011 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = G7J74KRQ8D; ENABLE_PREVIEWS = YES; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Configuration/AnchorIOS-Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 26.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = NO; SWIFT_APPROACHABLE_CONCURRENCY = YES; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; }; name = Debug; };
+		AA9000000000000000000012 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = G7J74KRQ8D; ENABLE_PREVIEWS = YES; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Configuration/AnchorIOS-Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 26.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = NO; SWIFT_APPROACHABLE_CONCURRENCY = YES; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; VALIDATE_PRODUCT = YES; }; name = Release; };
+		AA9000000000000000000021 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = G7J74KRQ8D; ENABLE_PREVIEWS = YES; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Configuration/AnchorIOSDemo-Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 26.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.demo; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = NO; SWIFT_APPROACHABLE_CONCURRENCY = YES; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; }; name = Debug; };
+		AA9000000000000000000022 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = G7J74KRQ8D; ENABLE_PREVIEWS = YES; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Configuration/AnchorIOSDemo-Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 26.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.demo; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = NO; SWIFT_APPROACHABLE_CONCURRENCY = YES; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; VALIDATE_PRODUCT = YES; }; name = Release; };
+		AA9000000000000000000031 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_ENTITLEMENTS = Apps/AnchorMac/AnchorMac.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = G7J74KRQ8D; ENABLE_APP_SANDBOX = YES; ENABLE_HARDENED_RUNTIME = YES; ENABLE_PREVIEWS = YES; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = Anchor; INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity"; INFOPLIST_KEY_LSUIElement = YES; INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Anchor advertises a private service identifier so your paired iPhone can estimate proximity."; MACOSX_DEPLOYMENT_TARGET = 26.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_APPROACHABLE_CONCURRENCY = YES; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 6.0; }; name = Debug; };
+		AA9000000000000000000032 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_ENTITLEMENTS = Apps/AnchorMac/AnchorMac.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = G7J74KRQ8D; ENABLE_APP_SANDBOX = YES; ENABLE_HARDENED_RUNTIME = YES; ENABLE_PREVIEWS = YES; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = Anchor; INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity"; INFOPLIST_KEY_LSUIElement = YES; INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Anchor advertises a private service identifier so your paired iPhone can estimate proximity."; MACOSX_DEPLOYMENT_TARGET = 26.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_APPROACHABLE_CONCURRENCY = YES; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 6.0; VALIDATE_PRODUCT = YES; }; name = Release; };
+		AA9000000000000000000041 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = G7J74KRQ8D; ENABLE_HARDENED_RUNTIME = YES; ENABLE_PREVIEWS = YES; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "Anchor Demo"; INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity"; INFOPLIST_KEY_LSUIElement = YES; MACOSX_DEPLOYMENT_TARGET = 26.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.demo; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_APPROACHABLE_CONCURRENCY = YES; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 6.0; }; name = Debug; };
+		AA9000000000000000000042 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = G7J74KRQ8D; ENABLE_HARDENED_RUNTIME = YES; ENABLE_PREVIEWS = YES; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "Anchor Demo"; INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity"; INFOPLIST_KEY_LSUIElement = YES; MACOSX_DEPLOYMENT_TARGET = 26.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.demo; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_APPROACHABLE_CONCURRENCY = YES; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 6.0; VALIDATE_PRODUCT = YES; }; name = Release; };
+		AA9000000000000000000051 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = G7J74KRQ8D; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 26.0; PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.demo.uitests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; TEST_TARGET_NAME = "Anchor iOS Demo"; }; name = Debug; };
+		AA9000000000000000000052 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = G7J74KRQ8D; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 26.0; PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.demo.uitests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; TEST_TARGET_NAME = "Anchor iOS Demo"; }; name = Release; };
+		AA9000000000000000000061 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = G7J74KRQ8D; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 26.0; PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.demo.macuitests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_VERSION = 6.0; TEST_TARGET_NAME = "Anchor macOS Demo"; }; name = Debug; };
+		AA9000000000000000000062 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = G7J74KRQ8D; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 26.0; PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.demo.macuitests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SWIFT_VERSION = 6.0; TEST_TARGET_NAME = "Anchor macOS Demo"; }; name = Release; };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		B34BFAEB30178AF900CC178B /* Build configuration list for PBXProject "Anchor" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B34BFB0F30178AFA00CC178B /* Debug */,
-				B34BFB1030178AFA00CC178B /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		B34BFB1130178AFA00CC178B /* Build configuration list for PBXNativeTarget "Anchor" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B34BFB1230178AFA00CC178B /* Debug */,
-				B34BFB1330178AFA00CC178B /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		B34BFB1430178AFA00CC178B /* Build configuration list for PBXNativeTarget "AnchorTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B34BFB1530178AFA00CC178B /* Debug */,
-				B34BFB1630178AFA00CC178B /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		B34BFB1730178AFA00CC178B /* Build configuration list for PBXNativeTarget "AnchorUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B34BFB1830178AFA00CC178B /* Debug */,
-				B34BFB1930178AFA00CC178B /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
+		AA6000000000000000000000 = {isa = XCConfigurationList; buildConfigurations = (AA9000000000000000000001, AA9000000000000000000002, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		AA6000000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (AA9000000000000000000011, AA9000000000000000000012, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		AA6000000000000000000002 = {isa = XCConfigurationList; buildConfigurations = (AA9000000000000000000021, AA9000000000000000000022, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		AA6000000000000000000003 = {isa = XCConfigurationList; buildConfigurations = (AA9000000000000000000031, AA9000000000000000000032, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		AA6000000000000000000004 = {isa = XCConfigurationList; buildConfigurations = (AA9000000000000000000041, AA9000000000000000000042, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		AA6000000000000000000005 = {isa = XCConfigurationList; buildConfigurations = (AA9000000000000000000051, AA9000000000000000000052, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		AA6000000000000000000006 = {isa = XCConfigurationList; buildConfigurations = (AA9000000000000000000061, AA9000000000000000000062, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		AA8000000000000000000001 /* XCLocalSwiftPackageReference "Packages/AnchorKit" */ = {isa = XCLocalSwiftPackageReference; relativePath = Packages/AnchorKit; };
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AA2000000000000000000001 /* AnchorCore */ = {isa = XCSwiftPackageProductDependency; package = AA8000000000000000000001; productName = AnchorCore; };
+		AA2000000000000000000002 /* AnchorIOSFeatures */ = {isa = XCSwiftPackageProductDependency; package = AA8000000000000000000001; productName = AnchorIOSFeatures; };
+		AA2000000000000000000003 /* AnchorCore */ = {isa = XCSwiftPackageProductDependency; package = AA8000000000000000000001; productName = AnchorCore; };
+		AA2000000000000000000004 /* AnchorIOSFeatures */ = {isa = XCSwiftPackageProductDependency; package = AA8000000000000000000001; productName = AnchorIOSFeatures; };
+		AA2000000000000000000005 /* AnchorDemoSupport */ = {isa = XCSwiftPackageProductDependency; package = AA8000000000000000000001; productName = AnchorDemoSupport; };
+		AA2000000000000000000006 /* AnchorCore */ = {isa = XCSwiftPackageProductDependency; package = AA8000000000000000000001; productName = AnchorCore; };
+		AA2000000000000000000007 /* AnchorMacFeatures */ = {isa = XCSwiftPackageProductDependency; package = AA8000000000000000000001; productName = AnchorMacFeatures; };
+		AA2000000000000000000008 /* AnchorTransport */ = {isa = XCSwiftPackageProductDependency; package = AA8000000000000000000001; productName = AnchorTransport; };
+		AA2000000000000000000009 /* AnchorCore */ = {isa = XCSwiftPackageProductDependency; package = AA8000000000000000000001; productName = AnchorCore; };
+		AA200000000000000000000A /* AnchorMacFeatures */ = {isa = XCSwiftPackageProductDependency; package = AA8000000000000000000001; productName = AnchorMacFeatures; };
+		AA200000000000000000000B /* AnchorDemoSupport */ = {isa = XCSwiftPackageProductDependency; package = AA8000000000000000000001; productName = AnchorDemoSupport; };
+		AA200000000000000000000C /* AnchorTransport */ = {isa = XCSwiftPackageProductDependency; package = AA8000000000000000000001; productName = AnchorTransport; };
+/* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = B34BFAE830178AF900CC178B /* Project object */;
+	rootObject = AA0000000000000000000001 /* Project object */;
 }

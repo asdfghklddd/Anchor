@@ -1,0 +1,38 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSLocalNetworkUsageDescription": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anchor uses the local network to connect your paired iPhone and Mac."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anchor 使用本地网络连接已配对的 iPhone 与 Mac。"
+          }
+        }
+      }
+    },
+    "NSBluetoothAlwaysUsageDescription": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anchor uses a private service identifier and signal strength to estimate proximity between your paired devices."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anchor 使用不含用户数据的服务标识和信号强度来估算已配对设备之间的近场状态。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
