@@ -8,7 +8,9 @@ public struct AnchorMacRootView: View {
     private let linkController: (any LocalLinkControlling)?
     private let auxiliaryToolbarLabel: String?
     private let auxiliaryToolbarAction: (() -> Void)?
-    @State private var selection = MacSection.current
+    @AppStorage("anchor.mac.selected-section") private var selection = MacSection.current
+    @AppStorage("anchor.mac.notifications.decisions") private var decisionAlerts = false
+    @State private var notificationService = MacDecisionNotificationService()
 
     public init(
         model: AnchorSessionModel,
@@ -24,82 +26,83 @@ public struct AnchorMacRootView: View {
 
     public var body: some View {
         NavigationSplitView {
-            List(MacSection.allCases, selection: $selection) { section in
-                Label(section.title, systemImage: section.symbol)
-                    .tag(section)
-                    .frame(minHeight: 28)
-            }
-            .navigationTitle(L10n.appName)
-            .navigationSplitViewColumnWidth(min: 190, ideal: 220)
+            MacSidebar(selection: $selection, projection: model.projection)
         } detail: {
             detail
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(AnchorPalette.paper)
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    VStack(spacing: 0) {
+                        if let errorMessage {
+                            MacErrorBanner(
+                                message: errorMessage,
+                                onRetry: linkController.map { controller in
+                                    { Task { await controller.retryConnection() } }
+                                },
+                                onDismiss: { Task { await model.clearError() } }
+                            )
+                        }
+                        if model.projection.isStale {
+                            MacFreshnessBanner(
+                                observedAt: model.projection.dataObservedAt,
+                                onRetry: linkController.map { controller in
+                                    { Task { await controller.retryConnection() } }
+                                }
+                            )
+                        }
+                    }
+                }
         }
+        .navigationSplitViewStyle(.balanced)
         .frame(minWidth: 900, minHeight: 620)
         .toolbar {
-            ToolbarItemGroup {
-                connectionStatus
-                if let auxiliaryToolbarLabel, let auxiliaryToolbarAction {
+            if let auxiliaryToolbarLabel, let auxiliaryToolbarAction {
+                ToolbarItem(placement: .primaryAction) {
                     Button(action: auxiliaryToolbarAction) {
                         Label(auxiliaryToolbarLabel, systemImage: "slider.horizontal.3")
                     }
                 }
             }
         }
-        .task { model.start() }
+        .task {
+            model.start()
+            notificationService.observe(model.projection, enabled: decisionAlerts)
+        }
+        .onChange(of: model.projection) { _, projection in
+            notificationService.observe(projection, enabled: decisionAlerts)
+        }
+    }
+
+    private var errorMessage: String? {
+        model.lastError ?? model.projection.errorMessage
     }
 
     @ViewBuilder
     private var detail: some View {
         switch selection {
         case .current:
-            MacCurrentWorkView(model: model)
+            MacFocusDashboard(
+                model: model,
+                onOpenTimeline: { selection = .timeline },
+                onOpenSettings: { selection = .settings }
+            )
         case .timeline:
-            MacTimelineView(projection: model.projection)
+            MacTimelineView(
+                projection: model.projection,
+                onOpenSettings: { selection = .settings }
+            )
         case .history:
-            MacHistoryView(projection: model.projection)
+            MacHistoryView(
+                projection: model.projection,
+                onOpenCurrentWork: { selection = .current }
+            )
         case .sources:
-            MacSourcesView(projection: model.projection)
+            MacSourcesView(
+                projection: model.projection,
+                onOpenSettings: { selection = .settings }
+            )
         case .settings:
             MacSettingsView(projection: model.projection, controller: linkController)
-        }
-    }
-
-    private var connectionStatus: some View {
-        Label(
-            model.projection.connection == .connected ? L10n.connected : L10n.disconnected,
-            systemImage: model.projection.connection == .connected ? "checkmark.circle.fill" : "wifi.slash"
-        )
-        .foregroundStyle(model.projection.connection == .connected ? AnchorPalette.ink : AnchorPalette.coral)
-        .accessibilityElement(children: .combine)
-    }
-}
-
-private enum MacSection: String, CaseIterable, Identifiable {
-    case current
-    case timeline
-    case history
-    case sources
-    case settings
-
-    var id: String { rawValue }
-    var title: String {
-        switch self {
-        case .current: L10n.currentWork
-        case .timeline: L10n.timeline
-        case .history: L10n.history
-        case .sources: L10n.sources
-        case .settings: L10n.settings
-        }
-    }
-    var symbol: String {
-        switch self {
-        case .current: "scope"
-        case .timeline: "waveform.path.ecg"
-        case .history: "clock.arrow.circlepath"
-        case .sources: "point.3.filled.connected.trianglepath.dotted"
-        case .settings: "gearshape"
         }
     }
 }

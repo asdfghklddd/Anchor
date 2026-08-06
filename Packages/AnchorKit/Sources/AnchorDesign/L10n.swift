@@ -11,6 +11,7 @@ public enum L10n {
     public static let currentGoal = AnchorStrings.value("current.goal", default: "CURRENT GOAL")
     public static let processes = AnchorStrings.value("processes", default: "Processes")
     public static let recentEvent = AnchorStrings.value("recent.event", default: "Latest event")
+    public static let recentActivity = AnchorStrings.value("activity.recent", default: "Recent activity")
     public static let notifications = AnchorStrings.value("notifications", default: "Notifications")
     public static let profile = AnchorStrings.value("profile", default: "My Anchor")
     public static let personalAnchor = AnchorStrings.value("profile.personal", default: "PERSONAL ANCHOR")
@@ -167,12 +168,23 @@ public enum L10n {
     public static let emptyDetail = AnchorStrings.value("empty.detail", default: "Start with one clear outcome and the processes supporting it.")
     public static let sessionSummary = AnchorStrings.value("summary", default: "Session summary")
     public static let completeSession = AnchorStrings.value("complete.session", default: "Complete and preserve")
+    public static let finishConfirmTitle = AnchorStrings.value(
+        "finish.confirm.title",
+        default: "Finish and preserve this session?"
+    )
+    public static let finishConfirmDetail = AnchorStrings.value(
+        "finish.confirm.detail",
+        default: "Anchor will save the goal, processes, decisions, and notes. You can resume this session later."
+    )
     public static let completed = AnchorStrings.value("completed", default: "Session complete")
     public static let resume = AnchorStrings.value("resume", default: "Resume session")
     public static let notes = AnchorStrings.value("notes", default: "Anchor notes")
     public static let decisions = AnchorStrings.value("decisions", default: "Decisions")
     public static let completedWork = AnchorStrings.value("work.completed", default: "Completed work")
     public static let taskManagement = AnchorStrings.value("task.management", default: "Manage processes")
+    public static let reorderProcesses = AnchorStrings.value("task.reorder", default: "Reorder")
+    public static let moveUp = AnchorStrings.value("task.move.up", default: "Move up")
+    public static let moveDown = AnchorStrings.value("task.move.down", default: "Move down")
     public static let moveHint = AnchorStrings.value("task.move.hint", default: "Reorder the processes or change their dashboard footprint.")
     public static let connections = AnchorStrings.value("connections", default: "Connections")
     public static let sources = AnchorStrings.value("sources", default: "Sources")
@@ -220,6 +232,22 @@ public enum L10n {
     public static let openCurrentProcess = AnchorStrings.value("mac.open.current", default: "Open current process")
     public static let currentWork = AnchorStrings.value("mac.current.work", default: "Current work")
     public static let timeline = AnchorStrings.value("timeline", default: "Timeline")
+    public static let historyNoSnapshots = AnchorStrings.value(
+        "history.no.snapshots",
+        default: "No saved snapshots yet"
+    )
+    public static let historyNoSnapshotsDetail = AnchorStrings.value(
+        "history.no.snapshots.detail",
+        default: "Anchor will save a context snapshot when you step away, return, or preserve this session."
+    )
+    public static let historyEmptyDetail = AnchorStrings.value(
+        "history.empty.detail",
+        default: "Start a session to build a clear record of your work and decisions."
+    )
+    public static let timelineEmptyDetail = AnchorStrings.value(
+        "timeline.empty.detail",
+        default: "When work moves, Anchor will keep the decision trail here."
+    )
     public static let pairDevice = AnchorStrings.value("pair.device", default: "Pair device")
     public static let pairingCode = AnchorStrings.value("pair.code", default: "Pairing code")
     public static let pairingHint = AnchorStrings.value(

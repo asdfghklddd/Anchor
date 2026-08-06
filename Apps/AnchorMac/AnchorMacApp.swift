@@ -10,7 +10,7 @@ struct AnchorMacApp: App {
     private let proximityAdvertiser: AnchorProximityAdvertiser
 
     init() {
-        let repository = InMemorySessionRepository()
+        let repository = LocalSessionRepository()
         let server = AnchorBonjourServer()
         let advertiser = AnchorProximityAdvertiser()
         server.onEvent = { envelope in
@@ -42,32 +42,54 @@ struct AnchorMacApp: App {
     }
 
     var body: some Scene {
+        Window("Anchor", id: "anchor-details") {
+            AnchorMacRootView(model: model, linkController: server)
+        }
+        .defaultSize(width: 1080, height: 720)
+
         MenuBarExtra {
             MacMenuHost(model: model)
         } label: {
             Label("Anchor", systemImage: "scope")
         }
         .menuBarExtraStyle(.window)
-
-        WindowGroup(id: "anchor-details") {
-            AnchorMacRootView(model: model, linkController: server)
-        }
-        .defaultSize(width: 1080, height: 720)
     }
 }
 
 private struct MacMenuHost: View {
     let model: AnchorSessionModel
+    @Environment(\.dismiss) private var dismissMenu
     @Environment(\.openWindow) private var openWindow
+    @AppStorage("anchor.mac.selected-section") private var selectedSection = "current"
 
     var body: some View {
         AnchorMacMenuView(
             model: model,
-            onOpenDetails: {
-                NSApp.activate(ignoringOtherApps: true)
-                openWindow(id: "anchor-details")
-            },
+            onOpenDetails: { open(.current) },
+            onOpenTimeline: { open(.timeline) },
+            onOpenSources: { open(.sources) },
+            onOpenSettings: { open(.settings) },
+            onContinueWorking: continueWorking,
             onQuit: { NSApp.terminate(nil) }
         )
+    }
+
+    private func continueWorking() {
+        open(.current)
+        Task { _ = await model.continueWorking() }
+    }
+
+    private func open(_ destination: MenuDestination) {
+        selectedSection = destination.rawValue
+        dismissMenu()
+        NSApp.activate(ignoringOtherApps: true)
+        openWindow(id: "anchor-details")
+    }
+
+    private enum MenuDestination: String {
+        case current
+        case timeline
+        case sources
+        case settings
     }
 }

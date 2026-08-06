@@ -1,128 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "settings.icloud" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "iCloud Sync" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "iCloud 同步" } }
-      }
-    },
-    "profile.account.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Account settings" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "账户设置" } }
-      }
-    },
-    "profile.account.copy" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anchor uses this iPhone as your local identity. No sign-in is required." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anchor 使用这台 iPhone 作为本机身份，不需要登录。" } }
-      }
-    },
-    "profile.account.device" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Device" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设备" } }
-      }
-    },
-    "profile.account.device.value" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "This iPhone" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这台 iPhone" } }
-      }
-    },
-    "profile.account.workspace" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Workspace" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "工作区" } }
-      }
-    },
-    "profile.account.workspace.value" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Personal" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "个人空间" } }
-      }
-    },
-    "profile.account.identity" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sync identity" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "同步身份" } }
-      }
-    },
-    "profile.account.identity.value" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "iCloud account on this device" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "本机 iCloud 账户" } }
-      }
-    },
-    "profile.icloud.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "iCloud sync" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "iCloud 同步" } }
-      }
-    },
-    "profile.icloud.copy" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Goals, process states, and return notes stay consistent across your Apple devices." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "目标、进程状态与返航记录会在你的 Apple 设备间保持一致。" } }
-      }
-    },
-    "profile.icloud.status" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Current status" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前状态" } }
-      }
-    },
-    "profile.icloud.last.sync" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last sync" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近同步" } }
-      }
-    },
-    "profile.icloud.just.now" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Just now" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "刚刚" } }
-      }
-    },
-    "profile.icloud.scope" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sync scope" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "同步范围" } }
-      }
-    },
-    "profile.icloud.scope.value" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Goals and process states" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "目标与任务状态" } }
-      }
-    },
-    "profile.detail.focus.kicker" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "FOCUS ARCHIVE · LAST 30 DAYS" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "FOCUS ARCHIVE · 近 30 天" } } } },
-    "profile.detail.contexts.kicker" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "CONTEXT VAULT · ALL MEMORY" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CONTEXT VAULT · 全部记忆" } } } },
-    "profile.detail.anchors.kicker" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "ANCHOR LOG · FOUR WEEKS" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "ANCHOR LOG · 连续 4 周" } } } },
-    "profile.detail.session.kicker" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "CURRENT ANCHOR" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CURRENT ANCHOR" } } } },
-    "profile.detail.return.kicker" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "RETURN MEMORY · TODAY" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "RETURN MEMORY · 今天" } } } },
-    "profile.detail.decision.kicker" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "DECISION TRACE · TODAY" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "DECISION TRACE · 今天" } } } },
-    "profile.detail.snapshot.kicker" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "CONTEXT SNAPSHOT · TODAY" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CONTEXT SNAPSHOT · 今天" } } } },
-    "profile.detail.focus.headline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Focus is not just time. It is continuity." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "专注不是时长，是连续做对判断。" } } } },
-    "profile.detail.contexts.headline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Every departure keeps a world to return to." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每一次离开，都有完整世界可返回。" } } } },
-    "profile.detail.anchors.headline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Completion preserves the thread of the work." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "完成不是清空，而是把脉络收好。" } } } },
-    "profile.detail.session.headline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The full shape of this work, held in one place." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这段工作的完整脉络，都在这里。" } } } },
-    "profile.detail.return.headline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The work stayed in the right place while you were away." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "离开 18 分钟后，工作仍停在正确的位置。" } } } },
-    "profile.detail.decision.headline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "A clear judgment keeps the next steps moving." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清晰的判断，让下一步继续推进。" } } } },
-    "profile.detail.snapshot.headline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Goal, processes, decisions, and position in one memory." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "目标、进程、判断与位置，都在同一张记忆里。" } } } },
-    "profile.detail.focus.subline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This week, 2h 18m more focus was protected." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "本周较上周多守住 2h 18m" } } } },
-    "profile.detail.contexts.subline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Average context completeness is 96%." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "平均上下文完整度 96%" } } } },
-    "profile.detail.anchors.subline" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Completion rate this month is 86%." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "本月完成率 86%" } } } },
-    "profile.detail.decision.resolved" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The current decision has been resolved." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前判断已经完成。" } } } },
-    "profile.detail.decision.waiting" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "A decision is waiting for your judgment." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "还有一个判断等待你的决定。" } } } },
-    "profile.detail.process.pulse" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "PROCESS PULSE" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "PROCESS PULSE" } } } },
-    "profile.detail.memory.trace" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "MEMORY TRACE" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "MEMORY TRACE" } } } },
-    "profile.detail.key.memory" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Key memories" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这段工作的关键记忆" } } } },
-    "profile.detail.trend" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "TREND" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "趋势" } } } },
-    "profile.detail.recent.records" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent records" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近 12 次记录" } } } },
-    "profile.detail.steady" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Stable" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "稳定向上" } } } },
-    "profile.detail.chart" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent twelve records trend" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近十二次记录趋势" } } } },
     "%1$@ · %2$@ %3$@ awaiting judgment" : {
 
     },
@@ -340,6 +218,22 @@
     "ACTIVITY LOG" : {
 
     },
+    "activity.recent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent activity"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近活动"
+          }
+        }
+      }
+    },
     "add" : {
       "localizations" : {
         "en" : {
@@ -366,6 +260,12 @@
 
     },
     "All processes keep running" : {
+
+    },
+    "Allow Local Network and Bluetooth access in System Settings, then try again." : {
+
+    },
+    "Allow notifications in System Settings to receive decision requests." : {
 
     },
     "ambient" : {
@@ -527,6 +427,9 @@
     "Anchor cannot confirm that you left. Check Mac, local network, and Bluetooth access." : {
 
     },
+    "Anchor could not reach the Mac service. Check the local connection and try again." : {
+
+    },
     "Anchor follows Dynamic Type, VoiceOver, Reduce Motion, Increase Contrast, and Reduce Transparency automatically." : {
 
     },
@@ -543,6 +446,12 @@
 
     },
     "Anchor saved" : {
+
+    },
+    "Anchor will save a context snapshot when you step away, return, or preserve this session." : {
+
+    },
+    "Anchor will save the goal, processes, decisions, and notes. You can resume this session later." : {
 
     },
     "app.name" : {
@@ -832,6 +741,9 @@
     "Connected" : {
 
     },
+    "Connected sources" : {
+
+    },
     "connection.bluetooth" : {
       "localizations" : {
         "en" : {
@@ -844,6 +756,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "蓝牙近场"
+          }
+        }
+      }
+    },
+    "connection.failed.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor could not reach the Mac service. Check the local connection and try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor 无法连接到 Mac 服务，请检查本地连接后重试。"
           }
         }
       }
@@ -876,6 +804,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已连接 Mac"
+          }
+        }
+      }
+    },
+    "connection.nearby" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearby"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "就在附近"
+          }
+        }
+      }
+    },
+    "connection.out.of.range" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Out of range"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不在附近"
           }
         }
       }
@@ -973,6 +933,9 @@
 
     },
     "Continue working" : {
+
+    },
+    "Copy pairing code" : {
 
     },
     "CURRENT ANCHOR · CURRENT GOAL" : {
@@ -1134,6 +1097,9 @@
     "Delete" : {
 
     },
+    "Device pairing is unavailable in this build." : {
+
+    },
     "disconnected" : {
       "localizations" : {
         "en" : {
@@ -1152,6 +1118,22 @@
     },
     "Disconnected" : {
 
+    },
+    "disconnected.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Mac is offline. Work already synced remains available."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 当前离线，已经同步的工作仍可查看。"
+          }
+        }
+      }
     },
     "Display accommodations" : {
 
@@ -1219,6 +1201,9 @@
         }
       }
     },
+    "Enter this six-digit code in Anchor on your iPhone." : {
+
+    },
     "Establish an anchor" : {
 
     },
@@ -1276,8 +1261,43 @@
         }
       }
     },
+    "Finish and preserve this session?" : {
+
+    },
     "Finish session" : {
 
+    },
+    "finish.confirm.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor will save the goal, processes, decisions, and notes. You can resume this session later."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor 会保存目标、进程、判断和笔记，之后仍可以恢复这个会话。"
+          }
+        }
+      }
+    },
+    "finish.confirm.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish and preserve this session?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要完成并保存这个会话吗？"
+          }
+        }
+      }
     },
     "Focus protected" : {
 
@@ -1611,6 +1631,54 @@
     "History" : {
 
     },
+    "history.empty.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start a session to build a clear record of your work and decisions."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始一个工作会话，逐步留下清晰的工作与决策记录。"
+          }
+        }
+      }
+    },
+    "history.no.snapshots" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No saved snapshots yet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有保存的快照"
+          }
+        }
+      }
+    },
+    "history.no.snapshots.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor will save a context snapshot when you step away, return, or preserve this session."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开、返航或保留这个会话时，Anchor 会自动保存上下文快照。"
+          }
+        }
+      }
+    },
     "I’m still at my desk" : {
 
     },
@@ -1783,10 +1851,19 @@
     "Most recent anchor" : {
 
     },
+    "Move down" : {
+
+    },
+    "Move up" : {
+
+    },
     "My Anchor" : {
 
     },
     "Name the outcome, then add the work already in motion." : {
+
+    },
+    "Nearby" : {
 
     },
     "Needs decision" : {
@@ -1805,6 +1882,9 @@
 
     },
     "No events yet" : {
+
+    },
+    "No saved snapshots yet" : {
 
     },
     "note.anchor" : {
@@ -2081,6 +2161,15 @@
     "Open current process" : {
 
     },
+    "Open source details" : {
+
+    },
+    "Open System Settings" : {
+
+    },
+    "Out of range" : {
+
+    },
     "Overall progress" : {
 
     },
@@ -2099,6 +2188,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "配对码"
+          }
+        }
+      }
+    },
+    "pair.copied" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing code copied"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对码已复制"
+          }
+        }
+      }
+    },
+    "pair.copy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy pairing code"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制配对码"
           }
         }
       }
@@ -2135,38 +2256,6 @@
         }
       }
     },
-    "pair.copy" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copy pairing code"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "复制配对码"
-          }
-        }
-      }
-    },
-    "pair.copied" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pairing code copied"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "配对码已复制"
-          }
-        }
-      }
-    },
     "pair.unavailable" : {
       "localizations" : {
         "en" : {
@@ -2184,6 +2273,9 @@
       }
     },
     "Pairing code" : {
+
+    },
+    "Pairing code copied" : {
 
     },
     "Parallel efficiency 2.4×" : {
@@ -2223,22 +2315,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "请在系统设置中允许本地网络和蓝牙访问，然后重试。"
-          }
-        }
-      }
-    },
-    "connection.failed.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anchor could not reach the Mac service. Check the local connection and try again."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anchor 无法连接到 Mac 服务，请检查本地连接后重试。"
           }
         }
       }
@@ -2619,6 +2695,142 @@
         }
       }
     },
+    "profile.account.copy" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor uses this iPhone as your local identity. No sign-in is required."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor 使用这台 iPhone 作为本机身份，不需要登录。"
+          }
+        }
+      }
+    },
+    "profile.account.device" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设备"
+          }
+        }
+      }
+    },
+    "profile.account.device.value" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This iPhone"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这台 iPhone"
+          }
+        }
+      }
+    },
+    "profile.account.identity" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync identity"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步身份"
+          }
+        }
+      }
+    },
+    "profile.account.identity.value" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud account on this device"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本机 iCloud 账户"
+          }
+        }
+      }
+    },
+    "profile.account.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account settings"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "账户设置"
+          }
+        }
+      }
+    },
+    "profile.account.workspace" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workspace"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作区"
+          }
+        }
+      }
+    },
+    "profile.account.workspace.value" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personal"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "个人空间"
+          }
+        }
+      }
+    },
     "profile.anchors.completed" : {
       "localizations" : {
         "en" : {
@@ -2651,6 +2863,448 @@
         }
       }
     },
+    "profile.detail.anchors.headline" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completion preserves the thread of the work."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成不是清空，而是把脉络收好。"
+          }
+        }
+      }
+    },
+    "profile.detail.anchors.kicker" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ANCHOR LOG · FOUR WEEKS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ANCHOR LOG · 连续 4 周"
+          }
+        }
+      }
+    },
+    "profile.detail.anchors.subline" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completion rate this month is 86%."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本月完成率 86%"
+          }
+        }
+      }
+    },
+    "profile.detail.chart" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent twelve records trend"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近十二次记录趋势"
+          }
+        }
+      }
+    },
+    "profile.detail.contexts.headline" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every departure keeps a world to return to."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每一次离开，都有完整世界可返回。"
+          }
+        }
+      }
+    },
+    "profile.detail.contexts.kicker" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CONTEXT VAULT · ALL MEMORY"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CONTEXT VAULT · 全部记忆"
+          }
+        }
+      }
+    },
+    "profile.detail.contexts.subline" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Average context completeness is 96%."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "平均上下文完整度 96%"
+          }
+        }
+      }
+    },
+    "profile.detail.decision.headline" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A clear judgment keeps the next steps moving."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清晰的判断，让下一步继续推进。"
+          }
+        }
+      }
+    },
+    "profile.detail.decision.kicker" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DECISION TRACE · TODAY"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DECISION TRACE · 今天"
+          }
+        }
+      }
+    },
+    "profile.detail.decision.resolved" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The current decision has been resolved."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前判断已经完成。"
+          }
+        }
+      }
+    },
+    "profile.detail.decision.waiting" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A decision is waiting for your judgment."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还有一个判断等待你的决定。"
+          }
+        }
+      }
+    },
+    "profile.detail.focus.headline" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus is not just time. It is continuity."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "专注不是时长，是连续做对判断。"
+          }
+        }
+      }
+    },
+    "profile.detail.focus.kicker" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FOCUS ARCHIVE · LAST 30 DAYS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FOCUS ARCHIVE · 近 30 天"
+          }
+        }
+      }
+    },
+    "profile.detail.focus.subline" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This week, 2h 18m more focus was protected."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本周较上周多守住 2h 18m"
+          }
+        }
+      }
+    },
+    "profile.detail.key.memory" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key memories"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这段工作的关键记忆"
+          }
+        }
+      }
+    },
+    "profile.detail.memory.trace" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MEMORY TRACE"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MEMORY TRACE"
+          }
+        }
+      }
+    },
+    "profile.detail.process.pulse" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PROCESS PULSE"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PROCESS PULSE"
+          }
+        }
+      }
+    },
+    "profile.detail.recent.records" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent records"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近 12 次记录"
+          }
+        }
+      }
+    },
+    "profile.detail.return.headline" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The work stayed in the right place while you were away."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开 18 分钟后，工作仍停在正确的位置。"
+          }
+        }
+      }
+    },
+    "profile.detail.return.kicker" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RETURN MEMORY · TODAY"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RETURN MEMORY · 今天"
+          }
+        }
+      }
+    },
+    "profile.detail.session.headline" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The full shape of this work, held in one place."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这段工作的完整脉络，都在这里。"
+          }
+        }
+      }
+    },
+    "profile.detail.session.kicker" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CURRENT ANCHOR"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CURRENT ANCHOR"
+          }
+        }
+      }
+    },
+    "profile.detail.snapshot.headline" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Goal, processes, decisions, and position in one memory."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标、进程、判断与位置，都在同一张记忆里。"
+          }
+        }
+      }
+    },
+    "profile.detail.snapshot.kicker" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CONTEXT SNAPSHOT · TODAY"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CONTEXT SNAPSHOT · 今天"
+          }
+        }
+      }
+    },
+    "profile.detail.steady" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stable"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "稳定向上"
+          }
+        }
+      }
+    },
+    "profile.detail.trend" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TREND"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "趋势"
+          }
+        }
+      }
+    },
     "profile.focus.guarded" : {
       "localizations" : {
         "en" : {
@@ -2663,6 +3317,125 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已守住的专注"
+          }
+        }
+      }
+    },
+    "profile.icloud.copy" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Goals, process states, and return notes stay consistent across your Apple devices."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标、进程状态与返航记录会在你的 Apple 设备间保持一致。"
+          }
+        }
+      }
+    },
+    "profile.icloud.just.now" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Just now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刚刚"
+          }
+        }
+      }
+    },
+    "profile.icloud.last.sync" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last sync"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近同步"
+          }
+        }
+      }
+    },
+    "profile.icloud.scope" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync scope"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步范围"
+          }
+        }
+      }
+    },
+    "profile.icloud.scope.value" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Goals and process states"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标与任务状态"
+          }
+        }
+      }
+    },
+    "profile.icloud.status" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current status"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前状态"
+          }
+        }
+      }
+    },
+    "profile.icloud.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud sync"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud 同步"
           }
         }
       }
@@ -2852,23 +3625,13 @@
     "Quit Anchor" : {
 
     },
-    "system.settings.open" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open System Settings"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开系统设置"
-          }
-        }
-      }
-    },
     "Raw work content stays on your devices unless you explicitly connect a source." : {
+
+    },
+    "Recent activity" : {
+
+    },
+    "Recent source activity" : {
 
     },
     "recent.event" : {
@@ -2912,6 +3675,9 @@
 
     },
     "Rendering" : {
+
+    },
+    "Reorder" : {
 
     },
     "Reorder the processes or change their dashboard footprint." : {
@@ -3174,6 +3940,23 @@
     "Settings" : {
 
     },
+    "settings.icloud" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud Sync"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud 同步"
+          }
+        }
+      }
+    },
     "setup.begin" : {
       "localizations" : {
         "en" : {
@@ -3366,21 +4149,27 @@
         }
       }
     },
+    "Source details" : {
+
+    },
     "Source health" : {
 
     },
-    "source.health" : {
+    "Source progress" : {
+
+    },
+    "source.activity" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Source health"
+            "value" : "Recent source activity"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "来源健康"
+            "value" : "来源最近动态"
           }
         }
       }
@@ -3417,34 +4206,18 @@
         }
       }
     },
-    "source.progress" : {
+    "source.health" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Source progress"
+            "value" : "Source health"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "来源进度"
-          }
-        }
-      }
-    },
-    "source.activity" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recent source activity"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "来源最近动态"
+            "value" : "来源健康"
           }
         }
       }
@@ -3465,50 +4238,18 @@
         }
       }
     },
-    "connection.nearby" : {
+    "source.progress" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nearby"
+            "value" : "Source progress"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "就在附近"
-          }
-        }
-      }
-    },
-    "connection.out.of.range" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Out of range"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "不在附近"
-          }
-        }
-      }
-    },
-    "disconnected.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Mac is offline. Work already synced remains available."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mac 当前离线，已经同步的工作仍可查看。"
+            "value" : "来源进度"
           }
         }
       }
@@ -3549,6 +4290,9 @@
       }
     },
     "Standard" : {
+
+    },
+    "Start a session to build a clear record of your work and decisions." : {
 
     },
     "Start anchoring" : {
@@ -3912,6 +4656,22 @@
         }
       }
     },
+    "system.settings.open" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open System Settings"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开系统设置"
+          }
+        }
+      }
+    },
     "Task layout" : {
 
     },
@@ -3966,6 +4726,22 @@
         }
       }
     },
+    "task.move.down" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move down"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下移"
+          }
+        }
+      }
+    },
     "task.move.hint" : {
       "localizations" : {
         "en" : {
@@ -3978,6 +4754,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "调整进程顺序或它们在工作台中的尺寸。"
+          }
+        }
+      }
+    },
+    "task.move.up" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move up"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上移"
           }
         }
       }
@@ -3997,6 +4789,25 @@
           }
         }
       }
+    },
+    "task.reorder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reorder"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调整顺序"
+          }
+        }
+      }
+    },
+    "The Mac is offline. Work already synced remains available." : {
+
     },
     "The work moved forward %lld%%" : {
 
@@ -4087,6 +4898,22 @@
     "Timeline" : {
 
     },
+    "timeline.empty.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When work moves, Anchor will keep the decision trail here."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作发生变化后，Anchor 会在这里留下决策轨迹。"
+          }
+        }
+      }
+    },
     "Try again" : {
 
     },
@@ -4143,6 +4970,9 @@
 
     },
     "What should completion look like?" : {
+
+    },
+    "When work moves, Anchor will keep the decision trail here." : {
 
     },
     "Wide" : {

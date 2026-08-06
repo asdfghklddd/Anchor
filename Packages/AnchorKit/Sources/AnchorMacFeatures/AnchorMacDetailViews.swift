@@ -1,274 +1,598 @@
 #if os(macOS)
 import AnchorCore
 import AnchorDesign
+import AppKit
 import SwiftUI
-
-struct MacCurrentWorkView: View {
-    let model: AnchorSessionModel
-    @State private var selectedProcessID: UUID?
-    @State private var selectedOptionID: UUID?
-
-    var body: some View {
-        if let session = model.projection.session {
-            ScrollView {
-                VStack(alignment: .leading, spacing: AnchorSpacing.large) {
-                    AnchorCard(tint: AnchorPalette.seafoam) {
-                        HStack(alignment: .top, spacing: AnchorSpacing.large) {
-                            VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-                                Text(L10n.currentGoal).font(.caption.bold())
-                                Text(session.goal.title)
-                                    .font(.largeTitle.bold())
-                                    .accessibilityIdentifier("mac.current.goal")
-                                Text(session.goal.completionCriteria)
-                                    .font(.title3)
-                                    .foregroundStyle(AnchorPalette.secondaryInk)
-                            }
-                            Spacer(minLength: AnchorSpacing.large)
-                            if let progress = model.projection.overallProgress {
-                                VStack(alignment: .trailing) {
-                                    Text(progress, format: .percent.precision(.fractionLength(0)))
-                                        .font(.largeTitle.bold().monospacedDigit())
-                                    Text(L10n.overallProgress).font(.caption)
-                                }
-                            }
-                        }
-                    }
-
-                    HStack(alignment: .top, spacing: AnchorSpacing.large) {
-                        VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-                            Text(L10n.processes).font(.title2.bold())
-                            ForEach(session.processes) { process in
-                                Button {
-                                    selectedProcessID = process.id
-                                    selectedOptionID = nil
-                                } label: {
-                                    MacProcessRow(process: process, isSelected: selectedProcessID == process.id)
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityAddTraits(selectedProcessID == process.id ? .isSelected : [])
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-
-                        processInspector(session)
-                            .frame(minWidth: 300, idealWidth: 340, maxWidth: 420)
-                    }
-                }
-                .padding(AnchorSpacing.large)
-            }
-            .navigationTitle(L10n.currentWork)
-            .accessibilityIdentifier("mac.current.screen")
-            .onAppear {
-                selectedProcessID = session.decisions.first(where: { $0.status == .open })?.processID
-                    ?? session.processes.first?.id
-            }
-        } else {
-            ContentUnavailableView(L10n.emptyTitle, systemImage: "scope", description: Text(L10n.emptyDetail))
-        }
-    }
-
-    @ViewBuilder
-    private func processInspector(_ session: AnchorSession) -> some View {
-        if let process = session.processes.first(where: { $0.id == selectedProcessID }) {
-            AnchorCard(tint: AnchorPalette.source(process.sourceTone)) {
-                VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
-                    HStack {
-                        Text(process.sourceName).font(.headline)
-                        Spacer()
-                        StatusBadge(status: process.status, text: L10n.status(process.status))
-                    }
-                    Text(process.title).font(.title.bold())
-                    Text(process.detail).foregroundStyle(AnchorPalette.secondaryInk)
-                    if let progress = process.progress {
-                        AnchorProgress(value: progress, tint: AnchorPalette.source(process.sourceTone))
-                    }
-                    if let decision = session.decisions.first(where: {
-                        $0.processID == process.id && $0.status == .open
-                    }) {
-                        Divider()
-                        Text(decision.prompt).font(.headline)
-                        ForEach(decision.options) { option in
-                            Button {
-                                selectedOptionID = option.id
-                            } label: {
-                                HStack {
-                                    Image(systemName: selectedOptionID == option.id ? "checkmark.circle.fill" : "circle")
-                                        .accessibilityHidden(true)
-                                    Text(option.title)
-                                    Spacer()
-                                }
-                                .contentShape(.rect)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityAddTraits(selectedOptionID == option.id ? .isSelected : [])
-                        }
-                        Button(L10n.confirmChoice) {
-                            guard let selectedOptionID,
-                                  let option = decision.options.first(where: { $0.id == selectedOptionID }) else { return }
-                            Task { await model.resolve(decision: decision, option: option) }
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(selectedOptionID == nil)
-                        .keyboardShortcut(.defaultAction)
-                    }
-                }
-            }
-        } else {
-            ContentUnavailableView(L10n.emptyTitle, systemImage: "square.dashed")
-        }
-    }
-}
-
-private struct MacProcessRow: View {
-    let process: AnchorProcess
-    let isSelected: Bool
-
-    var body: some View {
-        HStack(spacing: AnchorSpacing.medium) {
-            Text(process.sourceSymbol)
-                .font(.headline.bold())
-                .frame(width: 40, height: 40)
-                .background(AnchorPalette.source(process.sourceTone).opacity(0.55), in: .rect(cornerRadius: 12))
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(process.title).font(.headline)
-                Text(process.detail)
-                    .font(.caption)
-                    .foregroundStyle(AnchorPalette.secondaryInk)
-                    .lineLimit(1)
-            }
-            Spacer()
-            StatusBadge(status: process.status, text: L10n.status(process.status))
-        }
-        .padding(AnchorSpacing.small)
-        .background(
-            isSelected ? AnchorPalette.source(process.sourceTone).opacity(0.22) : AnchorPalette.surface,
-            in: .rect(cornerRadius: 16)
-        )
-        .overlay {
-            if isSelected {
-                RoundedRectangle(cornerRadius: 16).stroke(AnchorPalette.source(process.sourceTone), lineWidth: 2)
-            }
-        }
-        .contentShape(.rect)
-        .accessibilityElement(children: .combine)
-    }
-}
+import UserNotifications
 
 struct MacTimelineView: View {
     let projection: SessionProjection
+    let onOpenSettings: () -> Void
+
+    private var processesByID: [UUID: AnchorProcess] {
+        Dictionary(
+            uniqueKeysWithValues: (projection.session?.processes ?? []).map { ($0.id, $0) }
+        )
+    }
+
     var body: some View {
-        List(projection.session?.timeline ?? []) { event in
-            HStack(alignment: .top, spacing: AnchorSpacing.medium) {
-                Image(systemName: macEventSymbol(event.kind))
-                    .frame(width: 32, height: 32)
-                    .background(AnchorPalette.cyan.opacity(0.22), in: .circle)
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading) {
-                    Text(event.title).font(.headline)
-                    Text(event.detail).foregroundStyle(.secondary)
-                    Text(event.occurredAt, format: .dateTime.hour().minute())
-                        .font(.caption.monospacedDigit())
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: AnchorSpacing.small) {
+                if let events = projection.session?.timeline, !events.isEmpty {
+                    ForEach(events) { event in
+                        let process = process(for: event)
+                        timelineRow(event, process: process)
+                        .padding(AnchorSpacing.medium)
+                        .background(AnchorPalette.surface, in: .rect(cornerRadius: 16, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(AnchorPalette.ink.opacity(0.08), lineWidth: 1)
+                        }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(eventAccessibilityLabel(event, process: process))
+                    }
+                } else {
+                    timelineEmptyState
                 }
             }
-            .padding(.vertical, 5)
-            .accessibilityElement(children: .combine)
+            .frame(maxWidth: 980, alignment: .leading)
+            .padding(AnchorSpacing.xLarge)
         }
-        .overlay {
-            if projection.session?.timeline.isEmpty != false {
-                ContentUnavailableView(L10n.noEvents, systemImage: "waveform.path.ecg")
+        .background(HarborBackground())
+        .navigationTitle(L10n.timeline)
+        .accessibilityIdentifier("mac.timeline.screen")
+    }
+
+    private func timelineRow(_ event: ProcessEvent, process: AnchorProcess?) -> some View {
+        HStack(alignment: .top, spacing: AnchorSpacing.medium) {
+            Image(systemName: macEventSymbol(event.kind))
+                .font(.body.weight(.semibold))
+                .foregroundStyle(process.map { AnchorPalette.sourceInk($0.sourceTone) } ?? AnchorPalette.deepSea)
+                .frame(width: 36, height: 36)
+                .background(
+                    (process.map { AnchorPalette.source($0.sourceTone) } ?? AnchorPalette.cyan).opacity(0.20),
+                    in: .circle
+                )
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
+                if let process {
+                    HStack(spacing: AnchorSpacing.xSmall) {
+                        SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 22)
+                        Text(process.sourceName)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
+                    }
+                } else {
+                    Text(L10n.appName)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(AnchorPalette.deepSea)
+                }
+
+                Text(event.title)
+                    .font(.headline)
+                if !event.detail.isEmpty {
+                    Text(event.detail)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                Text(event.occurredAt, format: .dateTime.hour().minute())
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(AnchorPalette.secondaryInk)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func process(for event: ProcessEvent) -> AnchorProcess? {
+        guard let processID = event.processID else { return nil }
+        return processesByID[processID]
+    }
+
+    private func eventAccessibilityLabel(_ event: ProcessEvent, process: AnchorProcess?) -> String {
+        let sourceName = process?.sourceName ?? L10n.appName
+        let time = event.occurredAt.formatted(date: .omitted, time: .shortened)
+        let parts = [sourceName, event.title, event.detail, time]
+            .filter { !$0.isEmpty }
+        return parts.joined(separator: ", ")
+    }
+
+    private var timelineEmptyState: some View {
+        VStack(spacing: AnchorSpacing.medium) {
+            ContentUnavailableView(
+                projection.session == nil ? L10n.emptyTitle : L10n.noEvents,
+                systemImage: "waveform.path.ecg",
+                description: Text(
+                    projection.session == nil
+                        ? L10n.emptyDetail
+                        : L10n.timelineEmptyDetail
+                )
+            )
+
+            if projection.session == nil {
+                Button(L10n.pairDevice, systemImage: "link", action: onOpenSettings)
+                    .buttonStyle(.borderedProminent)
+                    .tint(AnchorPalette.deepSea)
+                    .controlSize(.large)
+                    .accessibilityIdentifier("mac.timeline.pair.button")
             }
         }
-        .navigationTitle(L10n.timeline)
+        .frame(maxWidth: .infinity, minHeight: 360)
+        .padding(.horizontal, AnchorSpacing.large)
+        .background(AnchorPalette.surface.opacity(0.72), in: .rect(cornerRadius: 20, style: .continuous))
+        .accessibilityIdentifier("mac.timeline.empty")
     }
 }
 
 struct MacHistoryView: View {
     let projection: SessionProjection
+    let onOpenCurrentWork: () -> Void
+
+    @State private var selectedSnapshot: ContextSnapshot?
+
     var body: some View {
-        List {
-            if let session = projection.session {
-                Section(L10n.currentWork) {
-                    LabeledContent(session.goal.title) {
-                        Text(session.startedAt, format: .dateTime.month().day().hour().minute())
-                    }
-                }
-                Section(L10n.history) {
-                    ForEach(session.snapshots) { snapshot in
-                        LabeledContent(snapshot.goalTitle) {
-                            Text(snapshot.createdAt, format: .dateTime.month().day().hour().minute())
+        ScrollView {
+            VStack(alignment: .leading, spacing: AnchorSpacing.large) {
+                if let session = projection.session {
+                    AnchorCard(tint: AnchorPalette.seafoam) {
+                        VStack(alignment: .leading, spacing: AnchorSpacing.small) {
+                            Text(L10n.currentWork)
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(AnchorPalette.deepSea)
+                                .textCase(.uppercase)
+                            Text(session.goal.title)
+                                .font(.title2.bold())
+                            LabeledContent(
+                                L10n.startedAt(
+                                    session.startedAt.formatted(date: .abbreviated, time: .shortened)
+                                )
+                            ) {
+                                Text(L10n.processCount(session.processes.count))
+                            }
+                            .foregroundStyle(AnchorPalette.secondaryInk)
                         }
                     }
+
+                    VStack(alignment: .leading, spacing: AnchorSpacing.small) {
+                        Text(L10n.history)
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(AnchorPalette.deepSea)
+                            .textCase(.uppercase)
+                        if session.snapshots.isEmpty {
+                            historyEmptyState
+                        } else {
+                            ForEach(session.snapshots) { snapshot in
+                                Button {
+                                    selectedSnapshot = snapshot
+                                } label: {
+                                    AnchorCard {
+                                        HStack(alignment: .top, spacing: AnchorSpacing.medium) {
+                                            Image(systemName: "arrow.counterclockwise")
+                                                .foregroundStyle(AnchorPalette.cyan)
+                                                .frame(width: 32, height: 32)
+                                                .background(AnchorPalette.cyan.opacity(0.14), in: .circle)
+                                                .accessibilityHidden(true)
+                                            VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
+                                                Text(snapshot.goalTitle)
+                                                    .font(.headline)
+                                                    .foregroundStyle(AnchorPalette.ink)
+                                                Text(snapshot.createdAt, format: .dateTime.month().day().hour().minute())
+                                                    .font(.caption.monospacedDigit())
+                                                    .foregroundStyle(.secondary)
+                                                if let latestNote = snapshot.latestNote, !latestNote.isEmpty {
+                                                    Text(latestNote)
+                                                        .font(.callout)
+                                                        .foregroundStyle(AnchorPalette.secondaryInk)
+                                                        .lineLimit(2)
+                                                }
+                                                Label(
+                                                    L10n.processAttentionSummary(
+                                                        processes: snapshot.processes.count,
+                                                        attention: snapshot.openDecisionIDs.count
+                                                    ),
+                                                    systemImage: "arrow.up.right"
+                                                )
+                                                .font(.caption.weight(.semibold))
+                                                .foregroundStyle(AnchorPalette.deepSea)
+                                            }
+                                            Spacer(minLength: 0)
+                                            Image(systemName: "chevron.right")
+                                                .font(.callout.weight(.bold))
+                                                .foregroundStyle(AnchorPalette.secondaryInk)
+                                                .accessibilityHidden(true)
+                                        }
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityHint(L10n.openDetails)
+                                .accessibilityIdentifier("mac.history.snapshot")
+                            }
+                        }
+                    }
+                } else {
+                    VStack(spacing: AnchorSpacing.medium) {
+                        ContentUnavailableView(
+                            L10n.emptyTitle,
+                            systemImage: "clock.arrow.circlepath",
+                            description: Text(L10n.historyEmptyDetail)
+                        )
+                        .accessibilityIdentifier("mac.history.empty.content")
+                        Button(L10n.currentWork, systemImage: "arrow.left", action: onOpenCurrentWork)
+                            .buttonStyle(.bordered)
+                            .accessibilityIdentifier("mac.history.current.button")
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 260)
+                    .background(AnchorPalette.surface.opacity(0.72), in: .rect(cornerRadius: 18))
                 }
             }
+            .frame(maxWidth: 980, alignment: .leading)
+            .padding(AnchorSpacing.xLarge)
         }
+        .background(HarborBackground())
         .navigationTitle(L10n.history)
+        .accessibilityIdentifier("mac.history.screen")
+        .sheet(item: $selectedSnapshot) { snapshot in
+            MacSnapshotDetailView(snapshot: snapshot)
+        }
+    }
+
+    private var historyEmptyState: some View {
+        VStack(spacing: AnchorSpacing.medium) {
+            ContentUnavailableView(
+                L10n.historyNoSnapshots,
+                systemImage: "clock.arrow.circlepath",
+                description: Text(L10n.historyNoSnapshotsDetail)
+            )
+            .accessibilityIdentifier("mac.history.no-snapshots.content")
+            Button(L10n.currentWork, systemImage: "arrow.left", action: onOpenCurrentWork)
+                .buttonStyle(.bordered)
+                .accessibilityIdentifier("mac.history.current.button")
+        }
+        .frame(maxWidth: .infinity, minHeight: 210)
+        .background(AnchorPalette.surface.opacity(0.72), in: .rect(cornerRadius: 18))
     }
 }
 
 struct MacSourcesView: View {
     let projection: SessionProjection
+    let onOpenSettings: () -> Void
+
+    @State private var selectedSource: MacSourceGroup?
+
+    private var sourceGroups: [MacSourceGroup] {
+        MacSourceGroup.groups(from: projection.session?.processes ?? [])
+    }
+
     var body: some View {
-        List(projection.session?.processes ?? []) { process in
-            HStack {
-                Text(process.sourceSymbol)
-                    .font(.headline.bold())
-                    .frame(width: 38, height: 38)
-                    .background(AnchorPalette.source(process.sourceTone).opacity(0.5), in: .rect(cornerRadius: 11))
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading) {
-                    Text(process.sourceName).font(.headline)
-                    Text(process.updatedAt, style: .relative).font(.caption)
+        ScrollView {
+            VStack(alignment: .leading, spacing: AnchorSpacing.large) {
+                MacSourceHealthSummary(projection: projection)
+
+                Text(L10n.connectedSources)
+                    .font(.title2.bold())
+                    .foregroundStyle(AnchorPalette.ink)
+
+                if sourceGroups.isEmpty {
+                    VStack(spacing: AnchorSpacing.medium) {
+                        ContentUnavailableView(
+                            projection.session == nil ? L10n.emptyTitle : L10n.connectedSources,
+                            systemImage: "point.3.filled.connected.trianglepath.dotted",
+                            description: Text(
+                                projection.session == nil
+                                    ? L10n.emptyDetail
+                                    : L10n.noEvents
+                            )
+                        )
+                        if projection.session == nil {
+                            Button(L10n.pairDevice, systemImage: "link", action: onOpenSettings)
+                                .buttonStyle(.borderedProminent)
+                                .tint(AnchorPalette.deepSea)
+                                .controlSize(.large)
+                                .accessibilityIdentifier("mac.sources.pair.button")
+                        }
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 300)
+                    .background(AnchorPalette.surface.opacity(0.72), in: .rect(cornerRadius: 20, style: .continuous))
+                    .accessibilityIdentifier("mac.sources.empty")
+                } else {
+                    LazyVGrid(
+                        columns: [GridItem(.adaptive(minimum: 290), spacing: AnchorSpacing.medium)],
+                        alignment: .leading,
+                        spacing: AnchorSpacing.medium
+                    ) {
+                        ForEach(sourceGroups) { source in
+                            MacSourceCard(source: source) {
+                                selectedSource = source
+                            }
+                        }
+                    }
                 }
-                Spacer()
-                StatusBadge(status: process.status, text: L10n.status(process.status))
             }
-            .padding(.vertical, 5)
+            .frame(maxWidth: 980, alignment: .leading)
+            .padding(AnchorSpacing.xLarge)
         }
+        .background(HarborBackground())
         .navigationTitle(L10n.sourceHealth)
+        .accessibilityIdentifier("mac.sources.screen")
+        .sheet(item: $selectedSource) { source in
+            MacSourceDetailView(
+                source: source,
+                connection: projection.connection,
+                dataObservedAt: projection.dataObservedAt,
+                openDecisions: openDecisions(for: source)
+            )
+        }
+    }
+
+    private func openDecisions(for source: MacSourceGroup) -> [Decision] {
+        let processIDs = Set(source.processes.map(\.id))
+        return projection.openDecisions.filter { processIDs.contains($0.processID) }
     }
 }
 
 struct MacSettingsView: View {
     let projection: SessionProjection
     let controller: (any LocalLinkControlling)?
-    @State private var launchAtLogin = false
-    @State private var decisionAlerts = true
+    @State private var launchAtLogin = MacLaunchAtLogin.isEnabled
+    @AppStorage("anchor.mac.notifications.decisions") private var decisionAlerts = false
     @State private var pairingCode: String?
+    @State private var pairingCodeCopied = false
+    @State private var notificationAuthorization: UNAuthorizationStatus = .notDetermined
+    @State private var settingsMessage: String?
+    @State private var isLoadingSettings = true
+    @State private var isApplyingSettings = false
 
     var body: some View {
         Form {
             Section(L10n.connections) {
                 LabeledContent(L10n.macConnection) {
                     Label(
-                        projection.connection == .connected ? L10n.connected : L10n.disconnected,
-                        systemImage: projection.connection == .connected ? "checkmark.circle.fill" : "wifi.slash"
+                        connectionLabel,
+                        systemImage: connectionSymbol
                     )
+                    .foregroundStyle(connectionTint)
                 }
-                Button(L10n.pairDevice) {
+                LabeledContent(L10n.bluetoothProximity) {
+                    Label(
+                        proximityLabel,
+                        systemImage: proximitySymbol
+                    )
+                    .foregroundStyle(proximityTint)
+                }
+                if let dataObservedAt = projection.dataObservedAt {
+                    LabeledContent(L10n.lastUpdated) {
+                        Text(dataObservedAt, style: .relative)
+                            .font(.callout.monospacedDigit())
+                            .foregroundStyle(AnchorPalette.secondaryInk)
+                    }
+                }
+                if let connectionDetail {
+                    VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
+                        Text(connectionDetail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if let controller {
+                            Button(L10n.retry, systemImage: "arrow.clockwise") {
+                                Task { await controller.retryConnection() }
+                            }
+                            .controlSize(.small)
+                        }
+                    }
+                }
+                Button(L10n.pairDevice, systemImage: "link") {
                     Task { pairingCode = await controller?.currentPairingCode() }
                 }
+                .disabled(controller == nil)
+                .accessibilityIdentifier("mac.settings.pair")
+                if controller == nil {
+                    Text(L10n.pairingUnavailable)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 if let pairingCode {
-                    LabeledContent(L10n.pairingCode) {
-                        Text(pairingCode)
-                            .font(.title2.bold().monospacedDigit())
-                            .textSelection(.enabled)
+                    VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
+                        HStack(alignment: .center, spacing: AnchorSpacing.small) {
+                            Label(L10n.pairingCode, systemImage: "number")
+                                .font(.callout.weight(.semibold))
+                            Spacer(minLength: AnchorSpacing.small)
+                            Text(pairingCode)
+                                .font(.title2.bold().monospacedDigit())
+                                .textSelection(.enabled)
+                                .accessibilityLabel(L10n.pairingCode)
+                                .accessibilityValue(Text(pairingCode))
+                            Button(L10n.copyPairingCode, systemImage: "doc.on.doc") {
+                                copyPairingCode(pairingCode)
+                            }
+                            .controlSize(.small)
+                            .accessibilityIdentifier("mac.pairing.copy")
+                        }
+                        .accessibilityElement(children: .contain)
+                        Text(L10n.pairingHint)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        if pairingCodeCopied {
+                            Label(L10n.pairingCodeCopied, systemImage: "checkmark.circle.fill")
+                                .font(.caption)
+                                .foregroundStyle(AnchorPalette.mintInk)
+                                .accessibilityIdentifier("mac.pairing.copied")
+                        }
                     }
                 }
             }
             Section(L10n.settings) {
                 Toggle(L10n.startAtLogin, isOn: $launchAtLogin)
+                    .disabled(isLoadingSettings || isApplyingSettings)
+                    .onChange(of: launchAtLogin) { _, enabled in
+                        guard !isLoadingSettings else { return }
+                        applyLaunchAtLogin(enabled)
+                    }
                 Toggle(L10n.notificationDecisions, isOn: $decisionAlerts)
+                    .disabled(isLoadingSettings || isApplyingSettings)
+                    .onChange(of: decisionAlerts) { _, enabled in
+                        guard !isLoadingSettings else { return }
+                        Task { await applyDecisionAlerts(enabled) }
+                    }
+                if notificationAuthorization == .denied {
+                    VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
+                        Label(
+                            L10n.notificationPermissionDetail,
+                            systemImage: "bell.slash"
+                        )
+                        .font(.caption)
+                        .foregroundStyle(AnchorPalette.coral)
+                        Button(L10n.openSystemSettings, systemImage: "gearshape") {
+                            MacDecisionNotificationService.openSystemSettings()
+                        }
+                        .controlSize(.small)
+                    }
+                }
+                if let settingsMessage {
+                    Text(settingsMessage)
+                        .font(.caption)
+                        .foregroundStyle(AnchorPalette.coral)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             Section(L10n.privacy) {
                 Label(L10n.localOnly, systemImage: "lock.shield.fill")
                 Text(L10n.localOnlyDetail).foregroundStyle(.secondary)
             }
+            Section(L10n.accessibility) {
+                VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
+                    Label(L10n.displaySupport, systemImage: "accessibility")
+                        .font(.headline)
+                    Text(L10n.displaySupportDetail)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Label(L10n.voiceOver, systemImage: "speaker.wave.3")
+                Label(L10n.dynamicType, systemImage: "textformat.size")
+                Label(L10n.reduceMotion, systemImage: "figure.walk.motion")
+                Label(L10n.increaseContrast, systemImage: "circle.lefthalf.filled")
+                Label(L10n.reduceTransparency, systemImage: "square.on.square")
+            }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .background(HarborBackground())
         .padding(AnchorSpacing.large)
         .navigationTitle(L10n.settings)
-        .task { pairingCode = await controller?.currentPairingCode() }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("mac.settings.screen")
+        .task {
+            pairingCode = await controller?.currentPairingCode()
+            notificationAuthorization = await MacDecisionNotificationService.authorizationStatus()
+            launchAtLogin = MacLaunchAtLogin.isEnabled
+            isLoadingSettings = false
+        }
+    }
+
+    private func applyLaunchAtLogin(_ enabled: Bool) {
+        isApplyingSettings = true
+        defer { isApplyingSettings = false }
+
+        do {
+            try MacLaunchAtLogin.setEnabled(enabled)
+            settingsMessage = nil
+        } catch {
+            launchAtLogin = MacLaunchAtLogin.isEnabled
+            settingsMessage = error.localizedDescription
+        }
+    }
+
+    private func copyPairingCode(_ code: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(code, forType: .string)
+        pairingCodeCopied = true
+    }
+
+    private func applyDecisionAlerts(_ enabled: Bool) async {
+        isApplyingSettings = true
+        defer { isApplyingSettings = false }
+
+        if enabled {
+            let granted = await MacDecisionNotificationService.requestAuthorization()
+            notificationAuthorization = await MacDecisionNotificationService.authorizationStatus()
+            guard granted else {
+                decisionAlerts = false
+                settingsMessage = L10n.notificationPermissionDetail
+                return
+            }
+            settingsMessage = nil
+        } else {
+            await MacDecisionNotificationService.removePendingDecisionNotifications()
+            settingsMessage = nil
+        }
+    }
+
+    private var connectionLabel: String {
+        switch projection.connection {
+        case .connected: L10n.connected
+        case .pairing: L10n.pairDevice
+        case .disconnected: L10n.disconnected
+        case .unavailable: L10n.unknown
+        case .permissionDenied: L10n.permissionDenied
+        case .failed: L10n.actionFailed
+        }
+    }
+
+    private var connectionSymbol: String {
+        switch projection.connection {
+        case .connected: "checkmark.circle.fill"
+        case .pairing: "arrow.triangle.2.circlepath"
+        case .disconnected: "wifi.slash"
+        case .unavailable: "questionmark.circle"
+        case .permissionDenied: "lock.slash"
+        case .failed: "exclamationmark.triangle.fill"
+        }
+    }
+
+    private var connectionTint: Color {
+        switch projection.connection {
+        case .connected: AnchorPalette.mintInk
+        case .pairing: AnchorPalette.sourceInk("sand")
+        case .disconnected, .permissionDenied, .failed: AnchorPalette.coral
+        case .unavailable: AnchorPalette.secondaryInk
+        }
+    }
+
+    private var connectionDetail: String? {
+        switch projection.connection {
+        case .permissionDenied: L10n.permissionDeniedDetail
+        case .failed: L10n.connectionFailedDetail
+        case .disconnected: L10n.disconnectedDetail
+        default: nil
+        }
+    }
+
+    private var proximityLabel: String {
+        switch projection.proximity {
+        case .near: L10n.nearby
+        case .far: L10n.outOfRange
+        case .unknown, .unavailable: L10n.unknown
+        case .permissionDenied: L10n.permissionDenied
+        }
+    }
+
+    private var proximitySymbol: String {
+        switch projection.proximity {
+        case .near: "dot.radiowaves.left.and.right"
+        case .far: "wifi.slash"
+        case .unknown, .unavailable: "questionmark.circle"
+        case .permissionDenied: "lock.slash"
+        }
+    }
+
+    private var proximityTint: Color {
+        switch projection.proximity {
+        case .near: AnchorPalette.mintInk
+        case .far: AnchorPalette.sourceInk("sand")
+        case .unknown, .unavailable: AnchorPalette.secondaryInk
+        case .permissionDenied: AnchorPalette.sourceInk("coral")
+        }
     }
 }
 

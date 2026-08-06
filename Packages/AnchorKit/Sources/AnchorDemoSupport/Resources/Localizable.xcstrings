@@ -1,6 +1,12 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "A direction is confirmed and the shot descriptions are being generated." : {
+
+    },
+    "About 5 minutes" : {
+
+    },
     "About 7 minutes" : {
 
     },
@@ -41,6 +47,9 @@
 
     },
     "Confirm the storyboard" : {
+
+    },
+    "Confirmed direction B" : {
 
     },
     "Created 12 candidate frames" : {
@@ -679,22 +688,6 @@
         }
       }
     },
-    "demo.storyboard.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "12 candidate frames are ready; choose a visual direction."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "12 张候选分镜已生成，需要选择视觉方向"
-          }
-        }
-      }
-    },
     "demo.storyboard.confirmed.detail" : {
       "localizations" : {
         "en" : {
@@ -723,6 +716,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "约 5 分钟"
+          }
+        }
+      }
+    },
+    "demo.storyboard.confirmed.event" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmed direction B"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你确认了方向 B"
+          }
+        }
+      }
+    },
+    "demo.storyboard.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "12 candidate frames are ready; choose a visual direction."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "12 张候选分镜已生成，需要选择视觉方向"
           }
         }
       }
@@ -771,22 +796,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "完成 12 张候选分镜"
-          }
-        }
-      }
-    },
-    "demo.storyboard.confirmed.event" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confirmed direction B"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "你确认了方向 B"
           }
         }
       }
@@ -1080,6 +1089,9 @@
 
     },
     "Three visual directions are ready for your judgment." : {
+
+    },
+    "Waiting for storyboard approval" : {
 
     },
     "Waiting on prerequisite" : {
