@@ -118,6 +118,28 @@ final class AnchorIOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testEmptyLandscapeWorkspaceOpensAnchorSetup() throws {
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo-scenario", "empty"]
+        app.launch()
+
+        XCTAssertTrue(app.descendants(matching: .any)["ambient.screen"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.descendants(matching: .any)["workspace.screen"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["ambient.empty.processes"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["ambient.empty.workspace"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["ambient.ticker"].exists)
+        try audit(app)
+
+        let anchorButton = app.buttons["ambient.anchor.button"]
+        XCTAssertTrue(reveal(anchorButton, in: app))
+        anchorButton.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["setup.screen"].waitForExistence(timeout: 3))
+    }
+
+    @MainActor
     private func audit(_ app: XCUIApplication) throws {
         try app.performAccessibilityAudit { issue in
             print("ANCHOR ACCESSIBILITY AUDIT [\(issue.auditType.rawValue)] \(issue.compactDescription)")
@@ -167,6 +189,8 @@ final class AnchorIOSUITests: XCTestCase {
                 "return.note.label",
                 "decision.confirm.label",
                 "ambient.decision.confirm.label",
+                "ambient.ticker.label",
+                "ambient.ticker.text",
                 "mission.flow.efficiency",
                 "processes.kicker",
                 "goal.note",

@@ -30,12 +30,15 @@ public struct AnchorIOSRootView: View {
         AnchorLaunchGate {
             NavigationStack(path: $path) {
                 Group {
-                    if let session = model.projection.session,
-                       posture == .landscape,
-                       session.presence != .away,
-                       session.presence != .returning {
+                    if shouldShowLandscapeDashboard {
                         LandscapeAmbientDashboard(
                             projection: model.projection,
+                            onGoal: {
+                                sheet = model.projection.session == nil ? .setup : .goal
+                            },
+                            onAnchor: {
+                                sheet = model.projection.session == nil ? .setup : .note
+                            },
                             onResolve: resolve
                         )
                     } else {
@@ -182,6 +185,16 @@ public struct AnchorIOSRootView: View {
 
     private func resolve(decision: Decision, option: DecisionOption) {
         Task { await model.resolve(decision: decision, option: option) }
+    }
+
+    private var shouldShowLandscapeDashboard: Bool {
+        guard posture == .landscape else { return false }
+        switch model.projection.session?.presence {
+        case .away, .returning:
+            return false
+        case .atDesk, .handingOff, .unknown, nil:
+            return true
+        }
     }
 
     private func synchronizeCover(with presence: PresenceStatus?) {
