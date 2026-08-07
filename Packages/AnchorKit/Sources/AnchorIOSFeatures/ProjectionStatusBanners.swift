@@ -14,12 +14,6 @@ struct ProjectionStatusBanners: View {
                     symbol: "wifi.exclamationmark",
                     tint: AnchorPalette.coral
                 )
-            } else if projection.isStale {
-                statusBanner(
-                    title: L10n.stale,
-                    symbol: "clock.badge.exclamationmark",
-                    tint: AnchorPalette.sand
-                )
             }
 
             if projection.session?.presence == .unknown {

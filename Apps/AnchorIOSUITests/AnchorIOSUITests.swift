@@ -205,6 +205,39 @@ final class AnchorIOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testCaptureFinishSessionScreen() throws {
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo-scenario", "active"]
+        app.launch()
+
+        let profileButton = app.buttons["我的 Anchor"]
+        XCTAssertTrue(profileButton.waitForExistence(timeout: 5))
+        profileButton.tap()
+
+        let sessionButton = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS %@", "本次工作数据")
+        ).firstMatch
+        XCTAssertTrue(sessionButton.waitForExistence(timeout: 5))
+        sessionButton.tap()
+
+        let sessionDetail = app.descendants(matching: .any)["profile.detail.session"]
+        XCTAssertTrue(sessionDetail.waitForExistence(timeout: 5))
+
+        let finishButton = app.buttons["结束工作"]
+        XCTAssertTrue(finishButton.waitForExistence(timeout: 5))
+        finishButton.tap()
+
+        let completeButton = app.buttons["完成并保存"]
+        XCTAssertTrue(completeButton.waitForExistence(timeout: 5))
+
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = "demo-finish-session"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+    }
+
+    @MainActor
     private func audit(_ app: XCUIApplication) throws {
         try app.performAccessibilityAudit { issue in
             print("ANCHOR ACCESSIBILITY AUDIT [\(issue.auditType.rawValue)] \(issue.compactDescription)")

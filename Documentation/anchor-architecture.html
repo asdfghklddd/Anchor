@@ -1,0 +1,1444 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>ANCHOR · 思维导图</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --paper: #fff8ed;
+      --paper-strong: #fffdf8;
+      --paper-deep: #f2e6d1;
+      --ink: #123b53;
+      --ink-soft: #607785;
+      --line: #c9b99e;
+      --seafoam: #91ddc4;
+      --seafoam-ink: #23685e;
+      --coral: #ff7b62;
+      --coral-ink: #a34336;
+      --sand: #f7bd3c;
+      --sand-ink: #805719;
+      --cyan: #59cbd0;
+      --cyan-ink: #17656b;
+      --periwinkle: #8b84f7;
+      --mono: "DM Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+      --display: "Iowan Old Style", "Baskerville", "Songti SC", "STSong", Georgia, serif;
+      --body: "Avenir Next", "PingFang SC", "Helvetica Neue", sans-serif;
+      --shadow: 0 16px 32px rgba(18, 59, 83, 0.12);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #122a35;
+        --paper-strong: #173541;
+        --paper-deep: #0e2029;
+        --ink: #fff8ed;
+        --ink-soft: #b9c8ca;
+        --line: #4c6870;
+        --seafoam-ink: #a8f0d9;
+        --coral-ink: #ffb4a4;
+        --sand-ink: #ffd571;
+        --cyan-ink: #a0eef0;
+        --shadow: 0 16px 32px rgba(0, 0, 0, 0.24);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      min-width: 320px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 88% 6%, rgba(89, 203, 208, 0.17), transparent 23rem),
+        radial-gradient(circle at 7% 90%, rgba(247, 189, 60, 0.14), transparent 20rem),
+        var(--paper);
+      font-family: var(--body);
+      line-height: 1.45;
+      overflow-x: hidden;
+    }
+
+    button {
+      min-width: 44px;
+      min-height: 44px;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible,
+    a:focus-visible {
+      outline: 3px solid var(--sand);
+      outline-offset: 3px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .skip-link {
+      position: absolute;
+      inset-inline-start: 1rem;
+      inset-block-start: -4rem;
+      z-index: 20;
+      padding: 0.7rem 1rem;
+      color: var(--paper-strong);
+      background: var(--ink);
+      border-radius: 0.7rem;
+      text-decoration: none;
+    }
+
+    .skip-link:focus { inset-block-start: 1rem; }
+
+    .shell {
+      width: min(100% - 2rem, 1480px);
+      margin-inline: auto;
+      padding-block: clamp(1rem, 2.5vw, 2.5rem) 1.5rem;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem 2rem;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding-block-end: 1rem;
+      border-block-end: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+    }
+
+    .brand-mark {
+      position: relative;
+      flex: 0 0 auto;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 1rem;
+      background: var(--ink);
+      box-shadow: var(--shadow);
+    }
+
+    .brand-mark::before {
+      content: "";
+      position: absolute;
+      inset: 0.62rem;
+      border: 2px solid var(--seafoam);
+      border-radius: 50%;
+    }
+
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      inset: 0.35rem 0.52rem auto auto;
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 50%;
+      background: var(--sand);
+    }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--coral-ink);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0.15rem 0 0;
+      font-family: var(--display);
+      font-size: clamp(2rem, 4.3vw, 4.25rem);
+      font-weight: 600;
+      letter-spacing: -0.055em;
+      line-height: 0.95;
+    }
+
+    .topbar-note {
+      margin: 0;
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      text-align: end;
+    }
+
+    .view-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+      justify-content: space-between;
+      padding-block: 0.9rem;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .tab {
+      padding: 0.65rem 1rem;
+      color: var(--ink-soft);
+      background: color-mix(in srgb, var(--paper-strong) 74%, transparent);
+      border: 1px solid var(--line);
+      border-radius: 0.8rem;
+      font-size: 0.9rem;
+      font-weight: 800;
+      transition: transform 160ms ease, color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+    }
+
+    .tab:hover,
+    .tab:focus-visible {
+      color: var(--ink);
+      border-color: var(--ink);
+      transform: translateY(-1px);
+    }
+
+    .tab[aria-selected="true"] {
+      color: var(--paper-strong);
+      background: var(--ink);
+      border-color: var(--ink);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      color: var(--ink-soft);
+      font-size: 0.72rem;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      gap: 0.35rem;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .legend-dot {
+      width: 0.65rem;
+      height: 0.65rem;
+      border-radius: 50%;
+      background: var(--seafoam);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--seafoam) 22%, transparent);
+    }
+
+    .legend-dot.optional { background: var(--cyan); }
+    .legend-dot.planned { background: var(--sand); }
+
+    .map-heading {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 0.1rem 0 0.8rem;
+    }
+
+    .map-heading h2 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(1.7rem, 3vw, 2.8rem);
+      font-weight: 600;
+      letter-spacing: -0.045em;
+      line-height: 1;
+    }
+
+    .map-heading p {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 0.78rem;
+    }
+
+    .map-stage {
+      position: relative;
+      min-height: 760px;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(18, 59, 83, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(18, 59, 83, 0.045) 1px, transparent 1px),
+        var(--paper-deep);
+      background-size: 28px 28px;
+      border: 1px solid var(--line);
+      border-radius: 1.3rem;
+      box-shadow: var(--shadow);
+      isolation: isolate;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .map-stage {
+        background:
+          linear-gradient(rgba(255, 248, 237, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 248, 237, 0.045) 1px, transparent 1px),
+          var(--paper-deep);
+      }
+    }
+
+    .map-lines {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .map-line {
+      fill: none;
+      stroke: var(--ink-soft);
+      stroke-width: 2.3;
+      stroke-linecap: round;
+      opacity: 0.55;
+      transition: stroke 180ms ease, stroke-width 180ms ease, opacity 180ms ease;
+    }
+
+    .map-line.active {
+      stroke: var(--ink);
+      stroke-width: 4.4;
+      opacity: 1;
+    }
+
+    .map-line.dim { opacity: 0.12; }
+
+    .mind-center,
+    .branch {
+      position: absolute;
+      z-index: 2;
+    }
+
+    .mind-center {
+      inset: 50% auto auto 50%;
+      display: grid;
+      place-items: center;
+      width: clamp(13rem, 21vw, 17rem);
+      min-height: 9.2rem;
+      padding: 1rem;
+      color: var(--paper-strong);
+      text-align: center;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(145, 221, 196, 0.32), transparent 42%),
+        var(--ink);
+      border: 4px solid var(--seafoam);
+      border-radius: 2rem;
+      box-shadow: 0 20px 36px rgba(18, 59, 83, 0.23);
+      transform: translate(-50%, -50%);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .mind-center:hover,
+    .mind-center:focus-visible,
+    .mind-center.active {
+      box-shadow: 0 0 0 9px rgba(145, 221, 196, 0.25), 0 24px 44px rgba(18, 59, 83, 0.26);
+      transform: translate(-50%, -50%) scale(1.03);
+    }
+
+    .center-kicker {
+      color: var(--seafoam);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .center-title {
+      margin-top: 0.25rem;
+      font-family: var(--display);
+      font-size: clamp(2.25rem, 5vw, 4.5rem);
+      font-weight: 600;
+      letter-spacing: -0.065em;
+      line-height: 0.9;
+    }
+
+    .center-meta {
+      margin-top: 0.65rem;
+      color: rgba(255, 253, 248, 0.74);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+    }
+
+    .branch {
+      width: min(30%, 23rem);
+      padding: 0.85rem;
+      border: 1px solid color-mix(in srgb, var(--branch-color) 58%, var(--line));
+      border-radius: 1rem;
+      background: color-mix(in srgb, var(--paper-strong) 82%, transparent);
+      box-shadow: 0 10px 24px rgba(18, 59, 83, 0.09);
+      transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .branch-ios { inset: 7% auto auto 3%; --branch-color: var(--coral); }
+    .branch-mac { inset: 7% 3% auto auto; --branch-color: var(--cyan); }
+    .branch-core { inset: auto auto 7% 3%; --branch-color: var(--seafoam); }
+    .branch-runtime { inset: auto 3% 7% auto; --branch-color: var(--sand); }
+
+    .branch.is-dim { opacity: 0.28; }
+
+    .branch.is-active {
+      border-color: var(--branch-color);
+      box-shadow: 0 14px 30px color-mix(in srgb, var(--branch-color) 18%, transparent);
+      transform: translateY(-3px);
+    }
+
+    .branch-head {
+      display: flex;
+      gap: 0.7rem;
+      align-items: center;
+      min-height: 3rem;
+      padding: 0.15rem 0.2rem 0.75rem;
+      border-block-end: 2px solid color-mix(in srgb, var(--branch-color) 52%, transparent);
+    }
+
+    .branch-index {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 2rem;
+      height: 2rem;
+      color: var(--paper-strong);
+      background: var(--branch-color);
+      border-radius: 0.65rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .branch-head h3 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(1.35rem, 2.3vw, 2rem);
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .branch-head p {
+      margin: 0.2rem 0 0;
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+    }
+
+    .branch-nodes {
+      position: relative;
+      display: grid;
+      gap: 0.55rem;
+      padding: 0.75rem 0 0 1.3rem;
+    }
+
+    .branch-nodes::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 0.35rem;
+      inset-block: 0.75rem 0.75rem;
+      border-inline-start: 2px solid color-mix(in srgb, var(--branch-color) 55%, transparent);
+    }
+
+    .mind-node {
+      position: relative;
+      display: grid;
+      gap: 0.18rem;
+      min-height: 3.2rem;
+      padding: 0.55rem 0.7rem;
+      color: var(--ink);
+      text-align: start;
+      background: color-mix(in srgb, var(--paper-strong) 88%, transparent);
+      border: 1px solid color-mix(in srgb, var(--branch-color) 42%, var(--line));
+      border-radius: 0.65rem;
+      transition: transform 160ms ease, opacity 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .mind-node::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: -1.25rem;
+      inset-block-start: 50%;
+      width: 1.2rem;
+      border-block-start: 2px solid color-mix(in srgb, var(--branch-color) 55%, transparent);
+    }
+
+    .mind-node:hover,
+    .mind-node:focus-visible,
+    .mind-node.active {
+      border-color: var(--branch-color);
+      box-shadow: 0 7px 17px color-mix(in srgb, var(--branch-color) 15%, transparent);
+      transform: translateX(4px);
+    }
+
+    .mind-node.dim { opacity: 0.28; }
+
+    .node-label {
+      font-size: clamp(0.95rem, 1.35vw, 1.18rem);
+      font-weight: 850;
+      letter-spacing: -0.02em;
+      line-height: 1.12;
+    }
+
+    .node-meta {
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      line-height: 1.2;
+    }
+
+    .node-optional {
+      border-style: dashed;
+    }
+
+    .node-planned {
+      border-color: color-mix(in srgb, var(--sand) 60%, var(--line));
+      border-style: dashed;
+    }
+
+    .reference-strip {
+      position: absolute;
+      inset: auto 50% 1.1rem auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      justify-content: center;
+      width: min(34%, 25rem);
+      transform: translateX(50%);
+    }
+
+    .reference-label {
+      width: 100%;
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .reference-chip {
+      padding: 0.35rem 0.6rem;
+      color: var(--ink-soft);
+      background: color-mix(in srgb, var(--periwinkle) 12%, var(--paper-strong));
+      border: 1px dashed color-mix(in srgb, var(--periwinkle) 55%, var(--line));
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+    }
+
+    .selection-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem 1rem;
+      align-items: baseline;
+      min-height: 3.6rem;
+      padding: 0.8rem 1rem;
+      color: var(--paper-strong);
+      background: var(--ink);
+      border-radius: 0 0 1.3rem 1.3rem;
+    }
+
+    .selection-label {
+      font-family: var(--display);
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .selection-meta {
+      color: rgba(255, 253, 248, 0.68);
+      font-family: var(--mono);
+      font-size: 0.66rem;
+    }
+
+    .hint {
+      margin: 0.8rem 0 0;
+      color: var(--ink-soft);
+      font-size: 0.75rem;
+      text-align: center;
+    }
+
+    .screenshot-dialog {
+      width: min(94vw, 1080px);
+      max-width: none;
+      max-height: min(92vh, 900px);
+      padding: 0;
+      color: var(--ink);
+      background: var(--paper-strong);
+      border: 1px solid var(--line);
+      border-radius: 1.4rem;
+      box-shadow: 0 32px 90px rgba(18, 59, 83, 0.28);
+      overflow: hidden;
+    }
+
+    .screenshot-dialog::backdrop {
+      background: rgba(18, 59, 83, 0.52);
+      backdrop-filter: blur(8px);
+    }
+
+    .screenshot-dialog-panel {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: min(78vh, 760px);
+      max-height: min(92vh, 900px);
+    }
+
+    .screenshot-dialog-header {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: clamp(1rem, 2.4vw, 1.6rem) clamp(1rem, 3vw, 2rem) 1rem;
+      border-block-end: 1px solid var(--line);
+    }
+
+    .screenshot-dialog-title {
+      margin: 0.18rem 0 0;
+      font-family: var(--display);
+      font-size: clamp(1.7rem, 3.2vw, 2.7rem);
+      font-weight: 600;
+      letter-spacing: -0.045em;
+      line-height: 1;
+    }
+
+    .screenshot-dialog-meta {
+      margin: 0.45rem 0 0;
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+    }
+
+    .dialog-close {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 2.75rem;
+      height: 2.75rem;
+      padding: 0;
+      color: var(--ink);
+      background: color-mix(in srgb, var(--paper-deep) 72%, transparent);
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      font-size: 1.7rem;
+      line-height: 1;
+      transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
+    }
+
+    .dialog-close:hover,
+    .dialog-close:focus-visible {
+      background: var(--paper-deep);
+      border-color: var(--ink);
+      transform: rotate(6deg) scale(1.04);
+    }
+
+    .screenshot-figure {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      gap: 0.85rem;
+      margin: 0;
+      padding: clamp(1rem, 3vw, 2.2rem);
+      overflow: auto;
+      background:
+        linear-gradient(rgba(18, 59, 83, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(18, 59, 83, 0.04) 1px, transparent 1px),
+        var(--paper-deep);
+      background-size: 24px 24px;
+    }
+
+    .screenshot-image {
+      display: block;
+      width: auto;
+      max-width: min(100%, 860px);
+      height: auto;
+      max-height: calc(min(92vh, 900px) - 155px);
+      object-fit: contain;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 1rem;
+      box-shadow: 0 18px 34px rgba(18, 59, 83, 0.17);
+    }
+
+    .screenshot-caption {
+      max-width: 75ch;
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      line-height: 1.35;
+      text-align: center;
+    }
+
+    .screenshot-empty {
+      display: grid;
+      justify-items: center;
+      gap: 0.7rem;
+      width: min(100%, 34rem);
+      padding: clamp(2rem, 7vw, 5rem) 1.5rem;
+      color: var(--ink);
+      text-align: center;
+      background: color-mix(in srgb, var(--paper-strong) 78%, transparent);
+      border: 1px dashed var(--line);
+      border-radius: 1.1rem;
+    }
+
+    .screenshot-empty[hidden] { display: none; }
+
+    .screenshot-empty-icon {
+      display: grid;
+      place-items: center;
+      width: 3.5rem;
+      height: 3.5rem;
+      color: var(--paper-strong);
+      background: var(--ink-soft);
+      border-radius: 1rem;
+      font-family: var(--mono);
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    .screenshot-empty strong {
+      font-family: var(--display);
+      font-size: 1.6rem;
+      line-height: 1.1;
+    }
+
+    .screenshot-empty p {
+      max-width: 36ch;
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 640px) {
+      .screenshot-dialog {
+        width: calc(100% - 1rem);
+        max-height: calc(100vh - 1rem);
+        border-radius: 1rem;
+      }
+
+      .screenshot-dialog-panel {
+        min-height: calc(100vh - 1rem);
+        max-height: calc(100vh - 1rem);
+      }
+
+      .screenshot-image {
+        max-height: calc(100vh - 150px);
+        border-radius: 0.75rem;
+      }
+    }
+
+    footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      justify-content: space-between;
+      padding-block-start: 1rem;
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+    }
+
+    @media (max-width: 1050px) {
+      .map-stage { min-height: 700px; }
+      .branch { width: min(32%, 21rem); }
+    }
+
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 1rem, 1480px); }
+      .topbar-note { width: 100%; text-align: start; }
+      .view-nav { align-items: flex-start; }
+      .tabs { width: 100%; }
+      .tab { flex: 1 1 calc(33.333% - 0.5rem); padding-inline: 0.55rem; }
+      .legend { width: 100%; }
+      .map-stage {
+        display: grid;
+        gap: 1rem;
+        min-height: 0;
+        padding: 1rem;
+        overflow: visible;
+      }
+      .map-lines { display: none; }
+      .mind-center,
+      .branch,
+      .reference-strip {
+        position: relative;
+        inset: auto;
+        width: 100%;
+        transform: none;
+      }
+      .mind-center {
+        min-height: 8.5rem;
+        margin-inline: auto;
+        border-radius: 1.5rem;
+      }
+      .mind-center:hover,
+      .mind-center:focus-visible,
+      .mind-center.active { transform: scale(1.01); }
+      .branch {
+        padding: 0.75rem;
+      }
+      .branch-head h3 { font-size: 1.65rem; }
+      .reference-strip {
+        padding-block-start: 0.2rem;
+      }
+      .selection-bar { border-radius: 0 0 1.3rem 1.3rem; }
+    }
+
+    @media (max-width: 430px) {
+      h1 { font-size: 2.55rem; }
+      .tab { flex-basis: 100%; }
+      .map-heading { display: block; }
+      .map-heading p { margin-top: 0.35rem; }
+      .node-label { font-size: 1.08rem; }
+      .node-meta { font-size: 0.64rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (prefers-contrast: more) {
+      :root { --line: var(--ink); --ink-soft: var(--ink); }
+      button { border-width: 2px; }
+      .mind-node, .branch, .tab { border-width: 2px; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#mindmap-main">跳到思维导图</a>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div>
+          <p class="eyebrow">ANCHOR / ARCHITECTURE</p>
+          <h1>统一思维导图</h1>
+        </div>
+      </div>
+      <p class="topbar-note">iPhone × Mac × Shared Core<br>点击节点查看页面截图。</p>
+    </header>
+
+    <main id="mindmap-main">
+      <nav class="view-nav" aria-label="选择思维导图">
+        <div class="tabs" role="tablist" aria-label="ANCHOR 架构视图">
+          <button class="tab" type="button" role="tab" aria-selected="true" aria-controls="map-panel" data-view="unified">统一 ANCHOR</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="map-panel" data-view="ios">iOS App</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="map-panel" data-view="macos">macOS App</button>
+        </div>
+        <div class="legend" aria-label="节点状态">
+          <span class="legend-item"><i class="legend-dot" aria-hidden="true"></i>当前实现</span>
+          <span class="legend-item"><i class="legend-dot optional" aria-hidden="true"></i>可选</span>
+          <span class="legend-item"><i class="legend-dot planned" aria-hidden="true"></i>规划</span>
+        </div>
+      </nav>
+
+      <section id="map-panel" class="map-panel" role="tabpanel" aria-labelledby="map-title">
+        <div class="map-heading">
+          <h2 id="map-title">ANCHOR</h2>
+          <p id="map-subtitle">中心是共享事实，四周是产品表面、领域内核与运行时。</p>
+        </div>
+        <div id="mindmap-stage" class="map-stage" aria-label="ANCHOR 统一架构思维导图">
+          <svg id="map-lines" class="map-lines" aria-hidden="true">
+            <title>模块关系连接线</title>
+          </svg>
+          <button id="mind-center" class="mind-center" type="button" aria-label="ANCHOR 中心模块">
+            <span class="center-kicker">center of gravity</span>
+            <span id="center-title" class="center-title">ANCHOR</span>
+            <span id="center-meta" class="center-meta">Session · Events · Projection</span>
+          </button>
+          <div id="branches"></div>
+          <div id="reference-strip" class="reference-strip" hidden></div>
+        </div>
+        <div id="selection-bar" class="selection-bar" aria-live="polite" aria-atomic="true">
+          <span id="selection-label" class="selection-label">ANCHOR</span>
+          <span id="selection-meta" class="selection-meta">点击任一节点，高亮它所在的分支</span>
+        </div>
+        <p class="hint">大字号阅读 · 点击节点聚焦并查看截图 · 方向键切换上方视图</p>
+      </section>
+    </main>
+
+    <dialog id="screenshot-dialog" class="screenshot-dialog" aria-labelledby="screenshot-title">
+      <div class="screenshot-dialog-panel">
+        <header class="screenshot-dialog-header">
+          <div>
+            <p class="eyebrow">PAGE SCREENSHOT</p>
+            <h2 id="screenshot-title" class="screenshot-dialog-title">页面截图</h2>
+            <p id="screenshot-meta" class="screenshot-dialog-meta">点击节点打开对应页面</p>
+          </div>
+          <button id="screenshot-close" class="dialog-close" type="button" aria-label="关闭页面截图预览">×</button>
+        </header>
+        <figure class="screenshot-figure">
+          <img id="screenshot-image" class="screenshot-image" alt="" width="1206" height="2622" loading="eager" decoding="async" hidden>
+          <div id="screenshot-empty" class="screenshot-empty" hidden>
+            <span class="screenshot-empty-icon" aria-hidden="true">—</span>
+            <strong id="screenshot-empty-title">暂无独立页面截图</strong>
+            <p id="screenshot-empty-meta">该模块当前没有对应的页面 PNG。</p>
+          </div>
+          <figcaption id="screenshot-caption" class="screenshot-caption"></figcaption>
+        </figure>
+      </div>
+    </dialog>
+
+    <footer>
+      <span>实线：当前模块 · 虚线：可选 / 规划</span>
+      <span>基于本地仓库当前实现</span>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var root = document.getElementById("mindmap-main");
+      var stage = document.getElementById("mindmap-stage");
+      var svg = document.getElementById("map-lines");
+      var center = document.getElementById("mind-center");
+      var branchesElement = document.getElementById("branches");
+      var referenceStrip = document.getElementById("reference-strip");
+      var screenshotDialog = document.getElementById("screenshot-dialog");
+      var screenshotClose = document.getElementById("screenshot-close");
+      var screenshotImage = document.getElementById("screenshot-image");
+      var screenshotEmpty = document.getElementById("screenshot-empty");
+      var screenshotTitle = document.getElementById("screenshot-title");
+      var screenshotMeta = document.getElementById("screenshot-meta");
+      var screenshotCaption = document.getElementById("screenshot-caption");
+      var screenshotEmptyTitle = document.getElementById("screenshot-empty-title");
+      var screenshotEmptyMeta = document.getElementById("screenshot-empty-meta");
+      var selectedId = null;
+      var selectedBranch = null;
+      var currentView = "unified";
+      var drawFrame = 0;
+      var lastFocusedElement = null;
+
+      var screenshots = {
+        "ios-workspace": { src: "anchor-demo-screenshots/ios-demo-workspace.png", title: "工作区", meta: "Anchor iOS Demo · Simulator · Portrait", alt: "Anchor iOS Demo 模拟器工作区截图", caption: "Goal · Processes · Real Simulator Capture" },
+        "ios-anchor": { src: "anchor-demo-screenshots/ios-demo-setup.png", title: "建立 Anchor", meta: "Anchor iOS Demo · Simulator · Setup", alt: "Anchor iOS Demo 模拟器建立 Anchor 截图", caption: "Goal · Processes · Criteria" },
+        "ios-decision": { src: "anchor-demo-screenshots/ios-demo-decision.png", title: "决策", meta: "Anchor iOS Demo · Simulator · Decision Sheet", alt: "Anchor iOS Demo 模拟器决策截图", caption: "Choose Direction" },
+        "ios-presence": { src: "anchor-demo-screenshots/ios-demo-return.png", title: "离开 / 返回", meta: "Anchor iOS Demo · Simulator · Return", alt: "Anchor iOS Demo 模拟器离开和返回截图", caption: "Handoff · Away · Return" },
+        "ios-profile": { src: "anchor-demo-screenshots/ios-demo-profile.png", title: "Profile / 设置", meta: "Anchor iOS Demo · Simulator · Profile", alt: "Anchor iOS Demo 模拟器 Profile 截图", caption: "Memory · Privacy" },
+        "runtime-cloud": { src: "anchor-demo-screenshots/ios-demo-icloud.png", title: "CloudKit", meta: "Anchor iOS Demo · Simulator · iCloud Sync", alt: "Anchor iOS Demo 模拟器 iCloud 同步截图", caption: "Durable Path · Optional" },
+        "ios-main": { src: "anchor-demo-screenshots/ios-demo-workspace.png", title: "Portrait Dashboard", meta: "Anchor iOS Demo · Simulator · Workspace", alt: "Anchor iOS Demo 模拟器 Portrait Dashboard 截图", caption: "Goal · Processes" },
+        "ios-ambient": { src: "anchor-demo-screenshots/ios-demo-ambient.png", title: "Landscape Ambient", meta: "Anchor iOS Demo · Simulator · Landscape", alt: "Anchor iOS Demo 模拟器横屏 Ambient 截图", caption: "Inline Inspector · Real Simulator Capture", width: 2622, height: 1206 },
+        "ios-notifications": { src: "anchor-demo-screenshots/ios-demo-notifications.png", title: "Notifications", meta: "Anchor iOS Demo · Simulator · Timeline Sheet", alt: "Anchor iOS Demo 模拟器通知截图", caption: "Timeline Sheet" },
+        "ios-setup": { src: "anchor-demo-screenshots/ios-demo-setup.png", title: "New Anchor", meta: "Anchor iOS Demo · Simulator · Setup", alt: "Anchor iOS Demo 模拟器新建 Anchor 截图", caption: "Goal · Criteria" },
+        "ios-process": { src: "anchor-demo-screenshots/ios-demo-process.png", title: "Process Detail", meta: "Anchor iOS Demo · Simulator · Focus Loop", alt: "Anchor iOS Demo 模拟器进程详情截图", caption: "Status · Activity" },
+        "ios-note": { src: "anchor-demo-screenshots/ios-demo-note.png", title: "Anchor Note", meta: "Anchor iOS Demo · Simulator · Context Capture", alt: "Anchor iOS Demo 模拟器 Anchor 笔记截图", caption: "Context Capture" },
+        "ios-handoff": { src: "anchor-demo-screenshots/ios-demo-handoff.png", title: "Handoff", meta: "Anchor iOS Demo · Simulator · Secure Context", alt: "Anchor iOS Demo 模拟器交接截图", caption: "Secure Context" },
+        "ios-away": { src: "anchor-demo-screenshots/ios-demo-away.png", title: "Away", meta: "Anchor iOS Demo · Simulator · Presence", alt: "Anchor iOS Demo 模拟器离开状态截图", caption: "Remote Monitoring" },
+        "ios-return": { src: "anchor-demo-screenshots/ios-demo-return.png", title: "Return Summary", meta: "Anchor iOS Demo · Simulator · Presence", alt: "Anchor iOS Demo 模拟器返回总结截图", caption: "Delta · Next Step" },
+        "ios-history": { src: "anchor-demo-screenshots/ios-demo-history.png", title: "History", meta: "Anchor iOS Demo · Simulator · Memory", alt: "Anchor iOS Demo 模拟器历史截图", caption: "Snapshots" },
+        "ios-management": { src: "anchor-demo-screenshots/ios-demo-management.png", title: "Task Management", meta: "Anchor iOS Demo · Simulator · Memory & Control", alt: "Anchor iOS Demo 模拟器任务管理截图", caption: "Order · Tile Size" },
+        "ios-settings": { src: "anchor-demo-screenshots/ios-demo-connections.png", title: "Settings", meta: "Anchor iOS Demo · Simulator · Connection", alt: "Anchor iOS Demo 模拟器设置截图", caption: "Connection · Privacy" },
+        "ios-finish": { src: "anchor-demo-screenshots/ios-demo-finish.png", title: "Finish / Resume", meta: "Anchor iOS Demo · Simulator · Session Summary", alt: "Anchor iOS Demo 模拟器完成和恢复截图", caption: "Session Summary" }
+      };
+
+      var views = {
+        unified: {
+          title: "ANCHOR",
+          subtitle: "中心是共享事实，四周是产品表面、领域内核与运行时。",
+          centerMeta: "Session · Events · Projection",
+          branches: [
+            {
+              id: "ios",
+              className: "branch-ios",
+              index: "01",
+              title: "iOS App",
+              meta: "iPhone / 操作与回忆",
+              nodes: [
+                ["ios-workspace", "工作区", "Portrait · Ambient"],
+                ["ios-anchor", "建立 Anchor", "Goal · Processes"],
+                ["ios-decision", "决策", "Decision Sheet"],
+                ["ios-presence", "离开 / 返回", "Handoff · Return"],
+                ["ios-profile", "Profile / 设置", "Memory · Privacy"]
+              ]
+            },
+            {
+              id: "macos",
+              className: "branch-mac",
+              index: "02",
+              title: "macOS App",
+              meta: "Mac / 桌面与来源中枢",
+              nodes: [
+                ["mac-menu", "菜单栏", "Quick Status"],
+                ["mac-current", "Current Work", "Focus Dashboard"],
+                ["mac-timeline", "Timeline / History", "Events · Snapshots"],
+                ["mac-sources", "Sources", "Health · Detail"],
+                ["mac-settings", "Settings", "Pairing · Login"]
+              ]
+            },
+            {
+              id: "core",
+              className: "branch-core",
+              index: "03",
+              title: "Shared Core",
+              meta: "AnchorKit / 唯一事实模型",
+              nodes: [
+                ["core-session", "AnchorSession", "Goal · Process · Decision"],
+                ["core-reducer", "Reducer / Projection", "Deterministic Replay"],
+                ["core-repository", "Repository", "Local-first"],
+                ["core-store", "Event Log / Outbox", "Atomic JSON · ACK"]
+              ]
+            },
+            {
+              id: "runtime",
+              className: "branch-runtime",
+              index: "04",
+              title: "Runtime & Sources",
+              meta: "同步、presence、外部来源",
+              nodes: [
+                ["runtime-bonjour", "Bonjour / ACK", "Encrypted Local Link"],
+                ["runtime-presence", "BLE Presence", "Near · Far · Posture"],
+                ["runtime-cloud", "CloudKit", "可选 Durable Path", "optional"],
+                ["runtime-cli", "CLI / Sources", "File · Simulated · Adapters"]
+              ]
+            }
+          ],
+          references: ["Demo Apps", "Prototype / Video"]
+        },
+        ios: {
+          title: "iOS App",
+          subtitle: "RootView 之下，是工作区、Focus loop、Presence 和个人记忆。",
+          centerMeta: "AnchorIOSRootView · SessionProjection",
+          branches: [
+            {
+              id: "workspace",
+              className: "branch-ios",
+              index: "01",
+              title: "Workspace",
+              meta: "在桌 / 主工作区",
+              nodes: [
+                ["ios-main", "Portrait Dashboard", "Goal · Processes"],
+                ["ios-ambient", "Landscape Ambient", "Inline Inspector"],
+                ["ios-notifications", "Notifications", "Timeline Sheet"],
+                ["ios-profile", "Profile", "Personal Anchor"]
+              ]
+            },
+            {
+              id: "focus",
+              className: "branch-mac",
+              index: "02",
+              title: "Focus Loop",
+              meta: "从目标到判断",
+              nodes: [
+                ["ios-setup", "New Anchor", "Goal · Criteria"],
+                ["ios-process", "Process Detail", "Status · Activity"],
+                ["ios-decision", "Decision Sheet", "Choose Direction"],
+                ["ios-note", "Anchor Note", "Context Capture"]
+              ]
+            },
+            {
+              id: "presence",
+              className: "branch-core",
+              index: "03",
+              title: "Presence",
+              meta: "离开不是结束",
+              nodes: [
+                ["ios-handoff", "Handoff", "Secure Context"],
+                ["ios-away", "Away", "Remote Monitoring"],
+                ["ios-return", "Return Summary", "Delta · Next Step"]
+              ]
+            },
+            {
+              id: "memory",
+              className: "branch-runtime",
+              index: "04",
+              title: "Memory & Control",
+              meta: "个人、历史、完成",
+              nodes: [
+                ["ios-history", "History", "Snapshots"],
+                ["ios-management", "Task Management", "Order · Tile Size"],
+                ["ios-settings", "Settings", "Connection · Privacy"],
+                ["ios-finish", "Finish / Resume", "Session Summary"]
+              ]
+            }
+          ]
+        },
+        macos: {
+          title: "macOS App",
+          subtitle: "MenuBarExtra 负责快速动作，Detail Window 负责完整工作区。",
+          centerMeta: "AnchorMacApp · MenuBarExtra · Window",
+          branches: [
+            {
+              id: "chrome",
+              className: "branch-ios",
+              index: "01",
+              title: "App Chrome",
+              meta: "两个入口",
+              nodes: [
+                ["mac-menu", "Menu Bar", "Quick Status"],
+                ["mac-window", "Detail Window", "NavigationSplitView"],
+                ["mac-sidebar", "Sidebar", "5 Sections"]
+              ]
+            },
+            {
+              id: "current",
+              className: "branch-mac",
+              index: "02",
+              title: "Current Work",
+              meta: "桌面焦点",
+              nodes: [
+                ["mac-dashboard", "Focus Dashboard", "Goal · Progress"],
+                ["mac-process", "Process Workspace", "Grid · Inspector"],
+                ["mac-priority", "Priority Action", "Decision · Blocked"],
+                ["mac-return", "Return Memory", "Away · Returning"]
+              ]
+            },
+            {
+              id: "secondary",
+              className: "branch-core",
+              index: "03",
+              title: "Workspace Sections",
+              meta: "侧边栏次级页",
+              nodes: [
+                ["mac-timeline", "Timeline", "All Events"],
+                ["mac-history", "History", "Snapshots"],
+                ["mac-sources", "Sources", "Health · Detail"],
+                ["mac-settings", "Settings", "Pairing · Notifications"]
+              ]
+            },
+            {
+              id: "actions",
+              className: "branch-runtime",
+              index: "04",
+              title: "Actions & Ingress",
+              meta: "Mac 独有能力",
+              nodes: [
+                ["mac-goal", "Goal Editor", "Update Goal"],
+                ["mac-note", "Note Composer", "Anchor Capture"],
+                ["mac-management", "Process Management", "Order · Tile Size"],
+                ["mac-source", "CLI / Sources", "File Inbox · Retry"]
+              ]
+            }
+          ]
+        }
+      };
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function getFallbackScreenshot(id, trigger) {
+        var label = trigger === center ? "ANCHOR" : (trigger && trigger.querySelector(".node-label") ? trigger.querySelector(".node-label").textContent : id);
+        var branch = trigger && trigger.closest(".branch");
+        var branchLabel = branch && branch.querySelector("h3") ? branch.querySelector("h3").textContent : views[currentView].title;
+        var isMac = id.indexOf("mac-") === 0;
+        var isShared = id === "center" || id.indexOf("core-") === 0 || (id.indexOf("runtime-") === 0 && id !== "runtime-cloud");
+        var detail = isMac
+          ? "仓库当前没有明确的 macOS 页面 PNG。"
+          : isShared
+            ? "共享内核 / 运行时模块不对应独立页面。"
+            : "该节点当前没有可用的静态页面 PNG。";
+        return {
+          title: label,
+          meta: branchLabel + " · 页面预览",
+          alt: "",
+          caption: detail,
+          emptyTitle: "暂无独立页面截图",
+          emptyMeta: detail
+        };
+      }
+
+      function getScreenshot(id, trigger) {
+        return screenshots[id] || getFallbackScreenshot(id, trigger);
+      }
+
+      function openScreenshot(id, trigger) {
+        var data = getScreenshot(id, trigger);
+        lastFocusedElement = trigger || document.activeElement;
+        screenshotTitle.textContent = data.title;
+        screenshotMeta.textContent = data.meta;
+        screenshotCaption.textContent = data.caption || "";
+        screenshotImage.width = data.width || 1206;
+        screenshotImage.height = data.height || 2622;
+        screenshotImage.onload = function () {
+          screenshotImage.hidden = false;
+          screenshotEmpty.hidden = true;
+        };
+        screenshotImage.onerror = function () {
+          screenshotImage.hidden = true;
+          screenshotEmpty.hidden = false;
+          screenshotEmptyTitle.textContent = "截图文件不可用";
+          screenshotEmptyMeta.textContent = "页面节点已保留，但对应 PNG 当前无法读取。";
+        };
+
+        if (data.src) {
+          screenshotEmptyTitle.textContent = "暂无独立页面截图";
+          screenshotEmptyMeta.textContent = "该页面截图无法加载。";
+          screenshotImage.hidden = false;
+          screenshotEmpty.hidden = true;
+          screenshotImage.alt = data.alt;
+          screenshotImage.src = data.src;
+        } else {
+          screenshotImage.hidden = true;
+          screenshotImage.removeAttribute("src");
+          screenshotImage.alt = "";
+          screenshotEmpty.hidden = false;
+          screenshotEmptyTitle.textContent = data.emptyTitle || "暂无独立页面截图";
+          screenshotEmptyMeta.textContent = data.emptyMeta || "该模块当前没有对应的页面 PNG。";
+        }
+
+        if (typeof screenshotDialog.showModal === "function") {
+          if (screenshotDialog.open) screenshotDialog.close();
+          screenshotDialog.showModal();
+        } else {
+          screenshotDialog.setAttribute("open", "");
+        }
+        screenshotClose.focus();
+      }
+
+      function closeScreenshot() {
+        if (typeof screenshotDialog.close === "function" && screenshotDialog.open) {
+          screenshotDialog.close();
+        } else if (screenshotDialog.open) {
+          screenshotDialog.removeAttribute("open");
+          if (lastFocusedElement && document.contains(lastFocusedElement)) lastFocusedElement.focus();
+          lastFocusedElement = null;
+        }
+      }
+
+      screenshotClose.addEventListener("click", closeScreenshot);
+      screenshotDialog.addEventListener("click", function (event) {
+        if (event.target === screenshotDialog) closeScreenshot();
+      });
+      screenshotDialog.addEventListener("close", function () {
+        if (lastFocusedElement && document.contains(lastFocusedElement)) lastFocusedElement.focus();
+        lastFocusedElement = null;
+      });
+      screenshotDialog.addEventListener("keydown", function (event) {
+        if (event.key !== "Tab") return;
+        var focusable = Array.prototype.slice.call(screenshotDialog.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"));
+        if (!focusable.length) return;
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      });
+
+      function renderBranch(branch) {
+        var nodeHtml = branch.nodes.map(function (item) {
+          var status = item[3] || "implemented";
+          var statusClass = status === "optional" ? " node-optional" : status === "planned" ? " node-planned" : "";
+          var statusLabel = status === "optional" ? "可选" : status === "planned" ? "规划中" : "当前实现";
+          return [
+            '<button class="mind-node' + statusClass + '" type="button" data-node-id="' + escapeHtml(item[0]) + '" data-branch-id="' + escapeHtml(branch.id) + '" aria-label="' + escapeHtml(item[1] + "，" + item[2] + "，" + statusLabel) + '">',
+            '<span class="node-label">' + escapeHtml(item[1]) + '</span>',
+            '<span class="node-meta">' + escapeHtml(item[2]) + '</span>',
+            '</button>'
+          ].join("");
+        }).join("");
+
+        return [
+          '<section class="branch ' + escapeHtml(branch.className) + '" data-branch-id="' + escapeHtml(branch.id) + '" aria-labelledby="branch-' + escapeHtml(branch.id) + '">',
+          '<div class="branch-head" data-branch-head="' + escapeHtml(branch.id) + '">',
+          '<span class="branch-index">' + escapeHtml(branch.index) + '</span>',
+          '<div><h3 id="branch-' + escapeHtml(branch.id) + '">' + escapeHtml(branch.title) + '</h3><p>' + escapeHtml(branch.meta) + '</p></div>',
+          '</div>',
+          '<div class="branch-nodes">' + nodeHtml + '</div>',
+          '</section>'
+        ].join("");
+      }
+
+      function renderReferences(items) {
+        if (!items || !items.length) {
+          referenceStrip.hidden = true;
+          referenceStrip.innerHTML = "";
+          return;
+        }
+        referenceStrip.hidden = false;
+        referenceStrip.innerHTML = '<span class="reference-label">外围参考 / 非运行时依赖</span>' + items.map(function (item) {
+          return '<span class="reference-chip">' + escapeHtml(item) + '</span>';
+        }).join("");
+      }
+
+      function renderView(name, updateHash) {
+        var view = views[name] || views.unified;
+        currentView = name;
+        selectedId = null;
+        selectedBranch = null;
+        document.getElementById("map-title").textContent = view.title;
+        document.getElementById("map-subtitle").textContent = view.subtitle;
+        document.getElementById("center-title").textContent = view.title === "ANCHOR" ? "ANCHOR" : view.title;
+        document.getElementById("center-meta").textContent = view.centerMeta;
+        stage.setAttribute("aria-label", view.title + " 思维导图");
+        branchesElement.innerHTML = view.branches.map(renderBranch).join("");
+        renderReferences(view.references);
+        setSelection(null, null);
+        document.querySelectorAll("[data-view]").forEach(function (tab) {
+          var active = tab.getAttribute("data-view") === name;
+          tab.setAttribute("aria-selected", active ? "true" : "false");
+          tab.tabIndex = active ? 0 : -1;
+        });
+        if (updateHash) window.history.replaceState(null, "", "#" + name);
+        window.requestAnimationFrame(function () {
+          drawLinks(view);
+          window.requestAnimationFrame(function () { drawLinks(view); });
+        });
+      }
+
+      function setSelection(id, branchId) {
+        selectedId = id;
+        selectedBranch = branchId;
+        center.classList.toggle("active", id === "center");
+        document.querySelectorAll(".mind-node").forEach(function (node) {
+          var nodeActive = id && node.getAttribute("data-node-id") === id;
+          var nodeDim = Boolean(id && !nodeActive && node.getAttribute("data-branch-id") !== branchId);
+          node.classList.toggle("active", Boolean(nodeActive));
+          node.classList.toggle("dim", nodeDim);
+        });
+        document.querySelectorAll(".branch").forEach(function (branch) {
+          var active = branch.getAttribute("data-branch-id") === branchId;
+          branch.classList.toggle("is-active", Boolean(active));
+          branch.classList.toggle("is-dim", Boolean(branchId && !active));
+        });
+        var selectionLabel = document.getElementById("selection-label");
+        var selectionMeta = document.getElementById("selection-meta");
+        if (!id) {
+          selectionLabel.textContent = currentView === "unified" ? "ANCHOR" : views[currentView].title;
+          selectionMeta.textContent = "点击任一节点，高亮它所在的分支";
+        } else if (id === "center") {
+          selectionLabel.textContent = views[currentView].title;
+          selectionMeta.textContent = views[currentView].centerMeta;
+        } else {
+          var activeNode = document.querySelector('[data-node-id="' + id + '"]');
+          selectionLabel.textContent = activeNode ? activeNode.querySelector(".node-label").textContent : id;
+          selectionMeta.textContent = activeNode ? activeNode.querySelector(".node-meta").textContent : "";
+        }
+      }
+
+      function drawLinks(view) {
+        var stageRect = stage.getBoundingClientRect();
+        var centerRect = center.getBoundingClientRect();
+        var centerX = centerRect.left - stageRect.left + centerRect.width / 2;
+        var centerY = centerRect.top - stageRect.top + centerRect.height / 2;
+        var paths = view.branches.map(function (branch, index) {
+          var head = document.querySelector('[data-branch-head="' + branch.id + '"]');
+          if (!head) return "";
+          var headRect = head.getBoundingClientRect();
+          var headX = headRect.left - stageRect.left + headRect.width / 2;
+          var headY = headRect.top - stageRect.top + headRect.height / 2;
+          var dx = headX - centerX;
+          var dy = headY - centerY;
+          var horizontal = Math.abs(dx) > Math.abs(dy);
+          var direction = horizontal ? (dx >= 0 ? 1 : -1) : (dy >= 0 ? 1 : -1);
+          var x1 = centerX;
+          var y1 = centerY;
+          var x2 = headX;
+          var y2 = headY;
+          if (horizontal) {
+            x1 += direction * centerRect.width / 2;
+            x2 -= direction * headRect.width / 2;
+          } else {
+            y1 += direction * centerRect.height / 2;
+            y2 -= direction * headRect.height / 2;
+          }
+          var bend = Math.max(42, Math.min(150, Math.abs(horizontal ? x2 - x1 : y2 - y1) * 0.38));
+          var d;
+          if (horizontal) {
+            d = "M " + x1 + " " + y1 + " C " + (x1 + direction * bend) + " " + y1 + " " + (x2 - direction * bend) + " " + y2 + " " + x2 + " " + y2;
+          } else {
+            d = "M " + x1 + " " + y1 + " C " + x1 + " " + (y1 + direction * bend) + " " + x2 + " " + (y2 - direction * bend) + " " + x2 + " " + y2;
+          }
+          var active = selectedBranch === branch.id;
+          var dim = selectedBranch && !active;
+          return '<path class="map-line' + (active ? " active" : "") + (dim ? " dim" : "") + '" data-branch-line="' + escapeHtml(branch.id) + '" d="' + d + '"></path>';
+        }).join("");
+        svg.setAttribute("viewBox", "0 0 " + stage.clientWidth + " " + stage.clientHeight);
+        svg.innerHTML = "<title>模块关系连接线</title>" + paths;
+      }
+
+      function scheduleDraw() {
+        window.cancelAnimationFrame(drawFrame);
+        drawFrame = window.requestAnimationFrame(function () {
+          drawLinks(views[currentView]);
+        });
+      }
+
+      document.addEventListener("click", function (event) {
+        var tab = event.target.closest("[data-view]");
+        if (tab) {
+          renderView(tab.getAttribute("data-view"), true);
+          return;
+        }
+        var node = event.target.closest("[data-node-id]");
+        if (node) {
+          setSelection(node.getAttribute("data-node-id"), node.getAttribute("data-branch-id"));
+          scheduleDraw();
+          openScreenshot(node.getAttribute("data-node-id"), node);
+          return;
+        }
+        if (event.target.closest("#mind-center")) {
+          setSelection("center", null);
+          scheduleDraw();
+          openScreenshot("center", center);
+        }
+      });
+
+      document.addEventListener("keydown", function (event) {
+        var tab = event.target.closest("[data-view]");
+        if (!tab) return;
+        var tabs = Array.prototype.slice.call(document.querySelectorAll("[data-view]"));
+        var index = tabs.indexOf(tab);
+        if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+          event.preventDefault();
+          tabs[(index + 1) % tabs.length].focus();
+        }
+        if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+          event.preventDefault();
+          tabs[(index - 1 + tabs.length) % tabs.length].focus();
+        }
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          renderView(tab.getAttribute("data-view"), true);
+        }
+      });
+
+      window.addEventListener("hashchange", function () {
+        var next = window.location.hash.slice(1);
+        if (views[next] && next !== currentView) renderView(next, false);
+      });
+
+      window.addEventListener("resize", scheduleDraw);
+      if (window.ResizeObserver) new ResizeObserver(scheduleDraw).observe(stage);
+
+      var initial = window.location.hash.slice(1);
+      renderView(views[initial] ? initial : "unified", false);
+    }());
+  </script>
+</body>
+</html>

@@ -16,7 +16,10 @@ struct ProcessCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 29)
+                Text(process.sourceName)
+                    .font(.caption2.bold())
+                    .foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
+                    .lineLimit(1)
                 Spacer(minLength: 4)
                 statusPill
             }
@@ -109,6 +112,9 @@ struct ProcessCard: View {
                 process.status == .needsDecision ? AnchorPalette.warmYellow : .white.opacity(0.55),
                 in: .capsule
             )
+            .lineLimit(1)
+            .minimumScaleFactor(0.78)
+            .fixedSize(horizontal: true, vertical: false)
             .accessibilityIdentifier("process.card.status")
     }
 

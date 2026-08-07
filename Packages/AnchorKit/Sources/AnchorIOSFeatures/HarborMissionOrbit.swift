@@ -24,11 +24,9 @@ struct HarborMissionOrbit: View {
             AnchorMark(size: 44)
 
             ForEach(Array(processes.prefix(4).enumerated()), id: \.element.id) { index, process in
-                Text(process.sourceSymbol)
-                    .font(.caption2.bold())
-                    .foregroundStyle(AnchorPalette.deepSea)
+                Circle()
+                    .fill(AnchorPalette.sourceMark(process.sourceTone))
                     .frame(width: 23, height: 23)
-                    .background(AnchorPalette.source(process.sourceTone), in: .circle)
                     .overlay { Circle().stroke(AnchorPalette.deepSea, lineWidth: 2) }
                     .shadow(color: .black.opacity(0.28), radius: 5, y: 3)
                     .offset(offsets[index])

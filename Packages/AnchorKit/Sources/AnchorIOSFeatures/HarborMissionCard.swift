@@ -107,12 +107,15 @@ struct HarborMissionCard: View {
             ) {
                 ForEach(processes.prefix(4)) { process in
                     HStack(spacing: 5) {
-                        SourceMark(
-                            symbol: process.sourceSymbol,
-                            tone: process.sourceTone,
-                            size: 19
-                        )
-                        .accessibilityIdentifier("mission.flow.source")
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(AnchorPalette.sourceMark(process.sourceTone))
+                            .frame(width: 19, height: 19)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .stroke(.white.opacity(0.42), lineWidth: 1)
+                            }
+                            .accessibilityHidden(true)
+                            .accessibilityIdentifier("mission.flow.source")
                         GeometryReader { proxy in
                             Capsule()
                                 .fill(.white.opacity(0.08))

@@ -28,6 +28,9 @@
     "%lld decisions" : {
 
     },
+    "%lld from Mac" : {
+
+    },
     "%lld notes" : {
 
     },
@@ -1756,6 +1759,9 @@
           }
         }
       }
+    },
+    "Listening" : {
+
     },
     "LIVE" : {
 
@@ -3631,6 +3637,9 @@
     "Raw work content stays on your devices unless you explicitly connect a source." : {
 
     },
+    "Ready for your voice" : {
+
+    },
     "Recent activity" : {
 
     },
@@ -4126,18 +4135,82 @@
         }
       }
     },
-    "setup.processes.syncing" : {
+    "setup.goal.label" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Syncing from Mac"
+            "value" : "What are you completing this time?"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在从 Mac 同步"
+            "value" : "这次要完成什么"
+          }
+        }
+      }
+    },
+    "setup.intro" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name the outcome, then add the work already in motion."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先写下结果，再加入已经启动的工作进程。"
+          }
+        }
+      }
+    },
+    "setup.keyboard.dictation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use keyboard dictation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用系统键盘听写"
+          }
+        }
+      }
+    },
+    "setup.mantra" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remember why first,\nthen decide what to do."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先记住为什么，\n再开始做什么。"
+          }
+        }
+      }
+    },
+    "setup.new.work" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New work"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新工作"
           }
         }
       }
@@ -4158,6 +4231,54 @@
         }
       }
     },
+    "setup.processes.syncing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syncing from Mac"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在从 Mac 同步"
+          }
+        }
+      }
+    },
+    "setup.start.anchoring" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start anchoring"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始锚定"
+          }
+        }
+      }
+    },
+    "setup.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establish an anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "建立锚点"
+          }
+        }
+      }
+    },
     "setup.voice.edit.hint" : {
       "localizations" : {
         "en" : {
@@ -4170,86 +4291,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "先说清楚，需要时再精确修改。"
-          }
-        }
-      }
-    },
-    "setup.voice.hint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Speak the completion standard, then edit the text if needed."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "说出完成标准，需要时再编辑文字。"
-          }
-        }
-      }
-    },
-    "setup.voice.input" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use voice input"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "用语音输入"
-          }
-        }
-      }
-    },
-    "setup.voice.listening" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Listening"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在聆听"
-          }
-        }
-      }
-    },
-    "setup.voice.ready" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ready for your voice"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "可以开始说话"
-          }
-        }
-      }
-    },
-    "setup.voice.stop" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stop listening"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "停止聆听"
           }
         }
       }
@@ -4334,114 +4375,82 @@
         }
       }
     },
-    "setup.goal.label" : {
+    "setup.voice.hint" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "What are you completing this time?"
+            "value" : "Speak the completion standard, then edit the text if needed."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这次要完成什么"
+            "value" : "说出完成标准，需要时再编辑文字。"
           }
         }
       }
     },
-    "setup.intro" : {
+    "setup.voice.input" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Name the outcome, then add the work already in motion."
+            "value" : "Use voice input"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "先写下结果，再加入已经启动的工作进程。"
+            "value" : "用语音输入"
           }
         }
       }
     },
-    "setup.keyboard.dictation" : {
+    "setup.voice.listening" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Use keyboard dictation"
+            "value" : "Listening"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用系统键盘听写"
+            "value" : "正在聆听"
           }
         }
       }
     },
-    "setup.mantra" : {
+    "setup.voice.ready" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remember why first,\nthen decide what to do."
+            "value" : "Ready for your voice"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "先记住为什么，\n再开始做什么。"
+            "value" : "可以开始说话"
           }
         }
       }
     },
-    "setup.new.work" : {
+    "setup.voice.stop" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "New work"
+            "value" : "Stop listening"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "新工作"
-          }
-        }
-      }
-    },
-    "setup.start.anchoring" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start anchoring"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开始锚定"
-          }
-        }
-      }
-    },
-    "setup.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Establish an anchor"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "建立锚点"
+            "value" : "停止聆听"
           }
         }
       }
@@ -4584,6 +4593,27 @@
       }
     },
     "Sources" : {
+
+    },
+    "Speak first. Refine the words below when needed." : {
+
+    },
+    "Speak the completion standard, then edit the text if needed." : {
+
+    },
+    "Speech input could not start. Try again." : {
+
+    },
+    "Speech input is not ready yet. Try again." : {
+
+    },
+    "Speech input is off. Enable Speech Recognition in Settings." : {
+
+    },
+    "Speech input is restricted on this device." : {
+
+    },
+    "Speech input is temporarily unavailable." : {
 
     },
     "stale" : {
@@ -4956,6 +4986,9 @@
     "Still running" : {
 
     },
+    "Stop listening" : {
+
+    },
     "summary" : {
       "localizations" : {
         "en" : {
@@ -4971,6 +5004,9 @@
           }
         }
       }
+    },
+    "Syncing from Mac" : {
+
     },
     "system.settings.open" : {
       "localizations" : {
@@ -5256,6 +5292,9 @@
 
     },
     "Use the microphone on the system keyboard whenever dictation is helpful." : {
+
+    },
+    "Use voice input" : {
 
     },
     "View %lld specific changes" : {

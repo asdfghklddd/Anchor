@@ -8,7 +8,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Anchor"
+            "value" : "Anchor Demo"
           }
         }
       }
@@ -20,13 +20,14 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Anchor iOS"
+            "value" : "Anchor iOS Demo"
           }
         }
       }
     },
     "NSBluetoothAlwaysUsageDescription" : {
       "comment" : "Privacy - Bluetooth Always Usage Description",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -44,6 +45,7 @@
     },
     "NSLocalNetworkUsageDescription" : {
       "comment" : "Privacy - Local Network Usage Description",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -55,6 +57,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anchor 使用本地网络连接已配对的 iPhone 与 Mac。"
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription" : {
+      "comment" : "Privacy - Microphone Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Anchor uses the microphone to turn your spoken completion standard into editable text."
+          }
+        }
+      }
+    },
+    "NSSpeechRecognitionUsageDescription" : {
+      "comment" : "Privacy - Speech Recognition Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Anchor uses Speech Recognition to transcribe your spoken completion standard on the New Work screen."
           }
         }
       }

@@ -25,6 +25,7 @@ struct HarborFocusIntro: View {
             }
         }
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("workspace.screen")
     }
 
     private var focusCopy: some View {
@@ -33,12 +34,6 @@ struct HarborFocusIntro: View {
                 .font(.caption2.bold())
                 .foregroundStyle(AnchorPalette.link)
                 .accessibilityIdentifier("workspace.focus.kicker")
-            Text(L10n.focusHeadline)
-                .font(.title.scaled(by: 0.9).bold())
-                .foregroundStyle(AnchorPalette.ink)
-                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
-                .minimumScaleFactor(0.84)
-                .accessibilityIdentifier("workspace.screen")
             Text(L10n.focusSummary(running: runningCount, attention: attentionCount))
                 .font(.caption)
                 .foregroundStyle(AnchorPalette.secondaryInk)

@@ -77,21 +77,26 @@ public struct SourceMark: View {
     private let symbol: String
     private let tone: String
     private let baseSize: CGFloat
+    private let showsSymbol: Bool
     @ScaledMetric(relativeTo: .title3) private var scale: CGFloat = 1
 
-    public init(symbol: String, tone: String, size: CGFloat = 42) {
+    public init(symbol: String, tone: String, size: CGFloat = 42, showsSymbol: Bool = true) {
         self.symbol = symbol
         self.tone = tone
         baseSize = size
+        self.showsSymbol = showsSymbol
     }
 
     public var body: some View {
         let size = baseSize * scale
-        Text(symbol)
-            .font(.subheadline.bold())
-            .foregroundStyle(AnchorPalette.deepSea)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .accessibilityHidden(true)
+        ZStack {
+            if showsSymbol {
+                Text(symbol)
+                    .font(.subheadline.bold())
+                    .foregroundStyle(AnchorPalette.deepSea)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
         .frame(width: size, height: size)
         .background(
             AnchorPalette.sourceMark(tone),
@@ -104,6 +109,7 @@ public struct SourceMark: View {
                 .padding(.top, size * 0.08)
         }
         .shadow(color: AnchorPalette.source(tone).opacity(0.24), radius: size * 0.18, y: size * 0.10)
+        .accessibilityHidden(true)
         .accessibilityRepresentation {
             EmptyView()
         }

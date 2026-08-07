@@ -127,7 +127,7 @@ flowchart LR
 
 ### 3.2 建议目录
 
-视频工程建议放在 Anchor 仓库里的独立 `Video/` 目录，或者单独建一个 `anchor-product-video` 仓库。第一天优先放在独立目录，避免污染 Swift app 的包、Xcode 工程和多人协作改动。
+视频工程建议放在 Anchor 仓库里的独立 `video/` 目录，或者单独建一个 `anchor-product-video` 仓库。第一天优先放在独立目录，避免污染 Swift app 的包、Xcode 工程和多人协作改动。
 
 ```text
 Anchor/
@@ -136,7 +136,7 @@ Anchor/
 ├── Product/Prototype/            # 设计参考和现有截图
 ├── Documentation/
 │   └── ANCHOR_PRODUCT_VIDEO_RESEARCH.md
-└── Video/                        # 明天再创建
+└── video/                        # Remotion 工程
     ├── package.json
     ├── remotion.config.ts
     ├── src/
@@ -264,13 +264,13 @@ export type Shot = {
 如果使用 iOS Simulator，可以录制 QuickTime movie：
 
 ```sh
-xcrun simctl io booted recordVideo --codec=h264 ./Video/public/app/anchor-ios-demo.mov
+xcrun simctl io booted recordVideo --codec=h264 ./video/public/media/anchor-ios-demo.mov
 ```
 
 停止录制时向命令发送 `Ctrl-C`。截图可以使用：
 
 ```sh
-xcrun simctl io booted screenshot ./Video/public/app/anchor-ios-dashboard.png
+xcrun simctl io booted screenshot ./video/public/screenshots/anchor-ios-dashboard.png
 ```
 
 录制时只保留一个 Booted simulator。完成后，在确认安全的情况下运行：
@@ -307,8 +307,8 @@ OpenAI 当前 Codex 文档也支持 skills、plugins、MCP、子任务、非交�
 
 ### 5.3 推荐的安全协作方式
 
-1. 先在 `Video/` 目录完成视频工程。
-2. 视频 Agent 默认只允许修改 `Video/`、`Documentation/` 和明确指定的素材目录。
+1. 先在 `video/` 目录完成视频工程。
+2. 视频 Agent 默认只允许修改 `video/`、`Documentation/` 和明确指定的素材目录。
 3. `Apps/`、`Packages/`、`Anchor.xcodeproj` 默认只读。
 4. 两个 Agent 不要同时编辑同一个 scene 文件；一个负责实现，另一个负责 review/QA。
 5. 每次开始前都检查 GitHub 的 main 更新和 open PR；发现更新先同步，再开始修改。
@@ -335,15 +335,15 @@ gh pr list --repo asdfghklddd/Anchor --state open --limit 20
 - 当前工作区有一批未提交的 Anchor native 代码改动；视频工作不能覆盖或格式化这些文件。
 - GitHub 网页公开页面返回 404，说明仓库页面不能通过公开网页直接读取；本次判断以远端 ref 和已认证 `gh` 结果为准。
 
-明天仍需重新执行这一步。即使只是创建 `Video/`，也建议先完成检查并保留当前 dirty worktree。
+明天仍需重新执行这一步。即使只是继续 `video/`，也建议先完成检查并保留当前 dirty worktree。
 
 ### Phase 1：创建视频工程（15–30 分钟）
 
 在仓库根目录执行：
 
 ```sh
-npx create-video --yes --blank Video
-cd Video
+npx create-video --yes --blank video
+cd video
 npm install
 npx remotion skills add
 npm run dev
@@ -453,7 +453,7 @@ ffprobe -v error -select_streams v:0 \
 3. 对比 HEAD、origin/main，并检查 open PR
 4. 阅读 README.md、Documentation/PRODUCT_BASELINE.md、当前 AnchorPalette.swift、AnchorDemoSupport 和 Product/Prototype/output/playwright/ 的参考图
 
-然后只在 Video/ 目录建立 Remotion + React + TypeScript 工程：
+然后只在 `video/` 目录建立 Remotion + React + TypeScript 工程：
 - 先做 8–12 秒 hero proof，不要直接写完整 40 秒
 - 使用 Anchor 的真实颜色、Anchor glyph、process card、needs decision、away、return 语义
 - 所有动画必须由 useCurrentFrame/interpolate/spring/Sequence 驱动
@@ -477,7 +477,7 @@ ffprobe -v error -select_streams v:0 \
 - Product/Prototype/output/playwright/ 的 home、decision、away、return 截图
 - Documentation/ANCHOR_PRODUCT_VIDEO_RESEARCH.md
 
-目标：在 Video/ 建立 Remotion 项目，先完成 8–12 秒 hero proof：多个 process cards 漂移 → 吸附到 Anchor → 进入真实 dashboard → 黄色 decision card 聚焦 → Logo 收尾。
+目标：在 `video/` 建立 Remotion 项目，先完成 8–12 秒 hero proof：多个 process cards 漂移 → 吸附到 Anchor → 进入真实 dashboard → 黄色 decision card 聚焦 → Logo 收尾。
 
 请按顺序：
 1. 提出最小文件结构和风险
@@ -514,7 +514,7 @@ Remotion、Chromium、FFmpeg、Xcode 和 Simulator 同时运行时，渲染可�
 
 明天第一轮不以“完整成片”作为唯一目标，而以以下结果作为通过条件：
 
-- `Video/` 独立工程能启动 Remotion Studio。
+- `video/` 独立工程能启动 Remotion Studio。
 - Codex 或 Claude Code 能在不修改 Anchor native app 的情况下生成/修改场景。
 - 8–12 秒 hero proof 能稳定渲染成 MP4。
 - 真实 Anchor UI、Anchor glyph 和当前视觉 tokens 已被正确使用。

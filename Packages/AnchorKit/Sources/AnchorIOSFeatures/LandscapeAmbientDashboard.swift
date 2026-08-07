@@ -655,7 +655,10 @@ private struct AmbientProcessTile: View {
         let tint = AnchorPalette.source(process.sourceTone)
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
-                SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 29)
+                Text(process.sourceName)
+                    .font(.caption2.bold())
+                    .foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
+                    .lineLimit(1)
                 Spacer(minLength: 4)
                 statusPill
             }
@@ -728,6 +731,7 @@ private struct AmbientProcessTile: View {
             )
             .lineLimit(1)
             .minimumScaleFactor(0.78)
+            .fixedSize(horizontal: true, vertical: false)
             .accessibilityIdentifier("ambient.tile.status")
     }
 
