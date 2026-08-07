@@ -259,6 +259,9 @@
     "Add process" : {
 
     },
+    "After your choice, Anchor will resume the workflow." : {
+
+    },
     "All processes keep running" : {
 
     },
@@ -2339,7 +2342,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "我仍在工位"
+            "value" : "我回来了"
           }
         }
       }
@@ -3683,6 +3686,9 @@
     "Reorder the processes or change their dashboard footprint." : {
 
     },
+    "Results updated" : {
+
+    },
     "resume" : {
       "localizations" : {
         "en" : {
@@ -3717,6 +3723,9 @@
           }
         }
       }
+    },
+    "Return" : {
+
     },
     "return.changes" : {
       "localizations" : {
@@ -3830,22 +3839,6 @@
         }
       }
     },
-    "return.next.step" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "YOUR NEXT STEP"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "你的下一步"
-          }
-        }
-      }
-    },
     "return.nav" : {
       "localizations" : {
         "en" : {
@@ -3858,6 +3851,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "返航"
+          }
+        }
+      }
+    },
+    "return.next.step" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YOUR NEXT STEP"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的下一步"
           }
         }
       }
@@ -3878,22 +3887,6 @@
         }
       }
     },
-    "return.results.updated" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Results updated"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "项结果更新"
-          }
-        }
-      }
-    },
     "return.recommended" : {
       "localizations" : {
         "en" : {
@@ -3906,6 +3899,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "建议下一步"
+          }
+        }
+      }
+    },
+    "return.results.updated" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Results updated"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "项结果更新"
           }
         }
       }
@@ -4113,6 +4122,214 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "需要听写时，可直接使用系统键盘上的麦克风。"
+          }
+        }
+      }
+    },
+    "setup.processes.syncing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syncing from Mac"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在从 Mac 同步"
+          }
+        }
+      }
+    },
+    "setup.processes.synced" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld from Mac"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来自 Mac 的 %lld 个"
+          }
+        }
+      }
+    },
+    "setup.voice.edit.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speak first. Refine the words below when needed."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先说清楚，需要时再精确修改。"
+          }
+        }
+      }
+    },
+    "setup.voice.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speak the completion standard, then edit the text if needed."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "说出完成标准，需要时再编辑文字。"
+          }
+        }
+      }
+    },
+    "setup.voice.input" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use voice input"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用语音输入"
+          }
+        }
+      }
+    },
+    "setup.voice.listening" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listening"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在聆听"
+          }
+        }
+      }
+    },
+    "setup.voice.ready" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready for your voice"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可以开始说话"
+          }
+        }
+      }
+    },
+    "setup.voice.stop" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop listening"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止聆听"
+          }
+        }
+      }
+    },
+    "setup.voice.error.denied" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speech input is off. Enable Speech Recognition in Settings."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语音输入已关闭，请在设置中开启语音识别。"
+          }
+        }
+      }
+    },
+    "setup.voice.error.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speech input could not start. Try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法启动语音输入，请再试一次。"
+          }
+        }
+      }
+    },
+    "setup.voice.error.not-determined" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speech input is not ready yet. Try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语音输入还没准备好，请再试一次。"
+          }
+        }
+      }
+    },
+    "setup.voice.error.restricted" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speech input is restricted on this device."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这台设备限制了语音输入。"
+          }
+        }
+      }
+    },
+    "setup.voice.error.unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speech input is temporarily unavailable."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语音输入暂时不可用。"
           }
         }
       }
@@ -4736,6 +4953,9 @@
         }
       }
     },
+    "Still running" : {
+
+    },
     "summary" : {
       "localizations" : {
         "en" : {
@@ -5038,10 +5258,16 @@
     "Use the microphone on the system keyboard whenever dictation is helpful." : {
 
     },
+    "View %lld specific changes" : {
+
+    },
     "View output" : {
 
     },
     "VoiceOver" : {
+
+    },
+    "Waiting for judgment" : {
 
     },
     "Waiting for you" : {

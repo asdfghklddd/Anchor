@@ -259,6 +259,38 @@ struct AnchorLinkCodecTests {
         #expect(await clientBase.currentProjection().session?.notes.first?.text == "Mac note")
     }
 
+    @Test("A paired iPhone can request the Mac's current process snapshot")
+    func processSnapshotRoundTrip() async throws {
+        let suffix = UUID().uuidString
+        let serverService = "com.andywang.anchor.tests.server.snapshot.\(suffix)"
+        let clientService = "com.andywang.anchor.tests.client.snapshot.\(suffix)"
+        defer {
+            deleteKeychainItems(service: serverService)
+            deleteKeychainItems(service: clientService)
+        }
+
+        let server = AnchorBonjourServer(
+            identityStore: PairingIdentityStore(service: serverService)
+        )
+        server.onCurrentProcessSnapshot = {
+            CurrentProcessSnapshot(processNames: ["Claude", "Gemini", "Claude"])
+        }
+        try server.start()
+        defer { server.stop() }
+
+        let client = AnchorBonjourClient(
+            identityStore: PairingIdentityStore(service: clientService)
+        )
+        defer { client.stop() }
+        client.startDiscovery()
+        try await client.pair(
+            using: try #require(await server.currentPairingCode())
+        )
+
+        let snapshot = try await client.currentProcessSnapshot()
+        #expect(snapshot.processNames == ["Claude", "Gemini"])
+    }
+
 }
 
 private actor EventRecorder {

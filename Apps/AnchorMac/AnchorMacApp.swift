@@ -1,6 +1,7 @@
 import AnchorCore
 import AnchorMacFeatures
 import AnchorTransport
+import AppKit
 import SwiftUI
 
 @main
@@ -21,6 +22,19 @@ struct AnchorMacApp: App {
             repository: repository,
             sources: [FileProcessSource()]
         )
+        server.onCurrentProcessSnapshot = {
+            let projection = await repository.currentProjection()
+            if let session = projection.session {
+                return CurrentProcessSnapshot(
+                    processNames: session.processes.map(\.sourceName)
+                )
+            }
+
+            let runningApplications = NSWorkspace.shared.runningApplications
+                .filter { $0.activationPolicy == .regular }
+                .compactMap(\ .localizedName)
+            return CurrentProcessSnapshot(processNames: runningApplications)
+        }
         let advertiser = AnchorProximityAdvertiser()
         server.onEvent = { envelope in
             let wasAlreadyApplied = await repository.currentProjection().session?.processedEventIDs.contains(envelope.id) == true

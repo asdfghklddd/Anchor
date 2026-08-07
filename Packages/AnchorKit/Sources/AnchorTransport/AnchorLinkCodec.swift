@@ -11,6 +11,8 @@ public enum AnchorLinkError: LocalizedError, Sendable {
     case pairingTimedOut
     case acknowledgementTimedOut
     case connectionLost
+    case processSnapshotTimedOut
+    case processSnapshotUnavailable
     case unsupportedOperation
 
     public var errorDescription: String? {
@@ -63,6 +65,18 @@ public enum AnchorLinkError: LocalizedError, Sendable {
                 defaultValue: "The local Anchor connection was interrupted.",
                 bundle: .module
             )
+        case .processSnapshotTimedOut:
+            String(
+                localized: "error.link.process-snapshot-timeout",
+                defaultValue: "The Mac did not return its current processes in time.",
+                bundle: .module
+            )
+        case .processSnapshotUnavailable:
+            String(
+                localized: "error.link.process-snapshot-unavailable",
+                defaultValue: "The Mac's current processes are not available right now.",
+                bundle: .module
+            )
         case .unsupportedOperation:
             String(
                 localized: "error.link.unsupported",
@@ -108,6 +122,8 @@ enum LinkPayloadKind: String, Codable, Sendable {
     case heartbeat
     case event
     case acknowledgement
+    case processSnapshotRequest
+    case processSnapshotResponse
 }
 
 struct LinkPayload: Codable, Sendable {
@@ -117,12 +133,16 @@ struct LinkPayload: Codable, Sendable {
     let sentAt: Date
     let event: EventEnvelope?
     let acknowledgedEventID: UUID?
+    let requestID: UUID?
+    let currentProcessSnapshot: CurrentProcessSnapshot?
 
     init(
         kind: LinkPayloadKind,
         sentAt: Date = .now,
         event: EventEnvelope? = nil,
         acknowledgedEventID: UUID? = nil,
+        requestID: UUID? = nil,
+        currentProcessSnapshot: CurrentProcessSnapshot? = nil,
         messageID: UUID = UUID(),
         sequence: UInt64 = 0
     ) {
@@ -132,6 +152,8 @@ struct LinkPayload: Codable, Sendable {
         self.sentAt = sentAt
         self.event = event
         self.acknowledgedEventID = acknowledgedEventID
+        self.requestID = requestID
+        self.currentProcessSnapshot = currentProcessSnapshot
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -141,6 +163,8 @@ struct LinkPayload: Codable, Sendable {
         case sentAt
         case event
         case acknowledgedEventID
+        case requestID
+        case currentProcessSnapshot
     }
 
     init(from decoder: any Decoder) throws {
@@ -151,6 +175,11 @@ struct LinkPayload: Codable, Sendable {
         sentAt = try container.decode(Date.self, forKey: .sentAt)
         event = try container.decodeIfPresent(EventEnvelope.self, forKey: .event)
         acknowledgedEventID = try container.decodeIfPresent(UUID.self, forKey: .acknowledgedEventID)
+        requestID = try container.decodeIfPresent(UUID.self, forKey: .requestID)
+        currentProcessSnapshot = try container.decodeIfPresent(
+            CurrentProcessSnapshot.self,
+            forKey: .currentProcessSnapshot
+        )
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -161,6 +190,8 @@ struct LinkPayload: Codable, Sendable {
         try container.encode(sentAt, forKey: .sentAt)
         try container.encodeIfPresent(event, forKey: .event)
         try container.encodeIfPresent(acknowledgedEventID, forKey: .acknowledgedEventID)
+        try container.encodeIfPresent(requestID, forKey: .requestID)
+        try container.encodeIfPresent(currentProcessSnapshot, forKey: .currentProcessSnapshot)
     }
 }
 
