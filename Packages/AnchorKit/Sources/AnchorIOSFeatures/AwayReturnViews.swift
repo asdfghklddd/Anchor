@@ -8,7 +8,7 @@ struct HandoffView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var secured = false
-    @State private var arrived = false
+    @State private var isGathering = false
 
     var body: some View {
         ZStack {
@@ -29,6 +29,7 @@ struct HandoffView: View {
                         .font(.title.bold())
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
+                        .accessibilityIdentifier("handoff.screen")
                     Text(L10n.handoffDetail)
                         .font(.body)
                         .foregroundStyle(.white.opacity(0.70))
@@ -47,13 +48,22 @@ struct HandoffView: View {
         }
         .accessibilityElement(children: .contain)
         .task {
-            arrived = true
             guard !reduceMotion else {
+                isGathering = true
                 secured = true
                 return
             }
-            try? await Task.sleep(for: .milliseconds(850))
-            withAnimation(.spring(duration: 0.5)) { secured = true }
+
+            withAnimation(.spring(duration: 0.72)) {
+                isGathering = true
+            }
+            do {
+                try await Task.sleep(for: .milliseconds(980))
+            } catch {
+                return
+            }
+            guard !Task.isCancelled else { return }
+            withAnimation(.spring(duration: 0.38)) { secured = true }
         }
     }
 
@@ -61,16 +71,16 @@ struct HandoffView: View {
         ZStack {
             ForEach(Array((model.projection.session?.processes ?? []).prefix(4).enumerated()), id: \.element.id) { index, process in
                 handoffCard(process)
-                    .offset(cardOffset(index))
-                    .scaleEffect(arrived ? (secured ? 0.52 : 0.72) : 1)
-                    .opacity(secured ? 0.28 : 0.92)
+                    .offset(isGathering ? .zero : cardOffset(index))
+                    .scaleEffect(isGathering ? 0.36 : 1)
+                    .opacity(isGathering ? 0 : 0.92)
             }
 
             ForEach([138.0, 188.0], id: \.self) { diameter in
                 Circle()
                     .stroke(AnchorPalette.cyan.opacity(secured ? 0.12 : 0.38), lineWidth: 2)
                     .frame(width: diameter, height: diameter)
-                    .scaleEffect(arrived ? 1 : 0.68)
+                    .scaleEffect(isGathering ? 1 : 0.68)
             }
 
             Circle()
@@ -95,7 +105,7 @@ struct HandoffView: View {
                 .shadow(color: AnchorPalette.cyan.opacity(0.46), radius: 24)
         }
         .frame(width: 300, height: 270)
-        .animation(reduceMotion ? nil : .spring(duration: 0.72), value: arrived)
+        .animation(reduceMotion ? nil : .spring(duration: 0.72), value: isGathering)
         .animation(reduceMotion ? nil : .spring(duration: 0.52), value: secured)
         .accessibilityHidden(true)
     }
@@ -125,6 +135,7 @@ struct HandoffView: View {
 struct AwayView: View {
     let projection: SessionProjection
     let model: AnchorSessionModel
+    private let onReturn: (() -> Void)?
     private let onProfile: () -> Void
     private let onNotifications: () -> Void
     private let onLayout: () -> Void
@@ -135,12 +146,14 @@ struct AwayView: View {
     init(
         projection: SessionProjection,
         model: AnchorSessionModel,
+        onReturn: (() -> Void)? = nil,
         onProfile: @escaping () -> Void = {},
         onNotifications: @escaping () -> Void = {},
         onLayout: @escaping () -> Void = {}
     ) {
         self.projection = projection
         self.model = model
+        self.onReturn = onReturn
         self.onProfile = onProfile
         self.onNotifications = onNotifications
         self.onLayout = onLayout
@@ -160,7 +173,11 @@ struct AwayView: View {
                         processGrid
 
                         Button(L10n.atDeskCorrection) {
-                            Task { await model.correctPresence(to: .atDesk) }
+                            if let onReturn {
+                                onReturn()
+                            } else {
+                                Task { await model.correctPresence(to: .atDesk) }
+                            }
                         }
                         .font(.headline.bold())
                         .foregroundStyle(.white)
@@ -211,6 +228,7 @@ struct AwayView: View {
                     .padding(.horizontal, 10)
                     .frame(minHeight: 30)
                     .background(AnchorPalette.seafoam.opacity(0.22), in: .capsule)
+                    .accessibilityIdentifier("away.duration")
 
                 Text(L10n.away)
                     .font(.title.bold())
@@ -245,14 +263,7 @@ struct AwayView: View {
                 ) {
                     ForEach(projection.session?.processes ?? []) { process in
                         HStack(spacing: 6) {
-                            Text(process.sourceSymbol)
-                                .font(.caption2.bold())
-                                .foregroundStyle(.white)
-                                .frame(width: 20, height: 20)
-                                .background(
-                                    AnchorPalette.source(process.sourceTone),
-                                    in: .rect(cornerRadius: 6, style: .continuous)
-                                )
+                            SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 20)
 
                             GeometryReader { proxy in
                                 Capsule()
@@ -286,6 +297,7 @@ struct AwayView: View {
                 Text(L10n.remoteProcesses)
                     .font(.caption2.bold())
                     .foregroundStyle(AnchorPalette.link)
+                    .accessibilityIdentifier("processes.kicker")
                 Text(L10n.synchronizedWork)
                     .font(.headline.bold())
                     .foregroundStyle(AnchorPalette.ink)

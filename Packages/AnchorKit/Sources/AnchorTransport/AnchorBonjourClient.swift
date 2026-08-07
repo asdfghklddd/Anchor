@@ -3,11 +3,17 @@ import CryptoKit
 import Foundation
 import Network
 
-public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProviding, LocalLinkControlling, AnchorEventTransport {
+public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProviding, LocalLinkControlling, AnchorEventTransport, CurrentProcessProviding {
     private typealias OperationContinuation = CheckedContinuation<Void, any Error>
+    private typealias SnapshotContinuation = CheckedContinuation<CurrentProcessSnapshot, any Error>
 
     private struct PendingDelivery {
         let continuation: OperationContinuation
+        let timeoutWorkItem: DispatchWorkItem
+    }
+
+    private struct PendingSnapshotRequest {
+        let continuation: SnapshotContinuation
         let timeoutWorkItem: DispatchWorkItem
     }
 
@@ -28,6 +34,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     private var pairingContinuation: OperationContinuation?
     private var pairingTimeoutWorkItem: DispatchWorkItem?
     private var pendingDeliveries: [UUID: PendingDelivery] = [:]
+    private var pendingSnapshotRequests: [UUID: PendingSnapshotRequest] = [:]
     private var eventApplicationTask: Task<Void, Never>?
     private var heartbeatSendWorkItem: DispatchWorkItem?
     private var heartbeatTimeoutWorkItem: DispatchWorkItem?
@@ -68,6 +75,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
             self.eventApplicationTask = nil
             self.finishPairing(with: .failure(CancellationError()))
             self.failAllDeliveries(with: CancellationError())
+            self.failAllSnapshotRequests(with: CancellationError())
             self.setConnection(.unavailable)
         }
     }
@@ -132,6 +140,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
                 }
                 self.finishPairing(with: .failure(AnchorLinkError.connectionLost))
                 self.failAllDeliveries(with: AnchorLinkError.connectionLost)
+                self.failAllSnapshotRequests(with: AnchorLinkError.connectionLost)
                 self.cancelHeartbeatTimers()
                 self.reconnectWorkItem?.cancel()
                 self.reconnectWorkItem = nil
@@ -213,6 +222,60 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         }
     }
 
+    public func currentProcessSnapshot() async throws -> CurrentProcessSnapshot {
+        try await withCheckedThrowingContinuation { (continuation: SnapshotContinuation) in
+            queue.async { [weak self] in
+                guard let self else {
+                    continuation.resume(throwing: CancellationError())
+                    return
+                }
+                guard self.connectionState == .connected,
+                      let peer = self.peer,
+                      let peerID = self.peerID,
+                      let key = self.identityStore.sharedKey(peerID: peerID) else {
+                    continuation.resume(throwing: AnchorLinkError.notPaired)
+                    return
+                }
+
+                let requestID = UUID()
+                do {
+                    let payload = LinkPayload(
+                        kind: .processSnapshotRequest,
+                        requestID: requestID
+                    )
+                    let sealed = try AnchorLinkCodec.seal(payload, using: key)
+                    let timeout = DispatchWorkItem { [weak self] in
+                        self?.finishSnapshot(
+                            requestID,
+                            with: .failure(AnchorLinkError.processSnapshotTimedOut)
+                        )
+                    }
+                    self.pendingSnapshotRequests[requestID] = PendingSnapshotRequest(
+                        continuation: continuation,
+                        timeoutWorkItem: timeout
+                    )
+                    self.queue.asyncAfter(
+                        deadline: .now() + Self.operationTimeout,
+                        execute: timeout
+                    )
+                    peer.send(
+                        LinkFrame(
+                            kind: .encrypted,
+                            senderID: self.deviceID,
+                            encryptedPayload: sealed
+                        )
+                    ) { [weak self] result in
+                        if case let .failure(error) = result {
+                            self?.finishSnapshot(requestID, with: .failure(error))
+                        }
+                    }
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
     private func startDiscoveryOnQueue() {
         guard browser == nil else { return }
         let browser = NWBrowser(for: .bonjour(type: AnchorBonjourServer.serviceType, domain: nil), using: .tcp)
@@ -262,6 +325,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
                 self.cancelHeartbeatTimers()
                 self.finishPairing(with: .failure(AnchorLinkError.connectionLost))
                 self.failAllDeliveries(with: AnchorLinkError.connectionLost)
+                self.failAllSnapshotRequests(with: AnchorLinkError.connectionLost)
                 self.setConnection(.disconnected)
                 self.scheduleReconnect()
             default:
@@ -362,6 +426,17 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
                 finishDelivery(eventID, with: .success(()))
                 return
             }
+            if payload.kind == .processSnapshotResponse, let requestID = payload.requestID {
+                if let snapshot = payload.currentProcessSnapshot {
+                    finishSnapshot(requestID, with: .success(snapshot))
+                } else {
+                    finishSnapshot(
+                        requestID,
+                        with: .failure(AnchorLinkError.processSnapshotUnavailable)
+                    )
+                }
+                return
+            }
             if payload.kind == .event,
                let event = payload.event,
                let onEvent {
@@ -429,6 +504,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         heartbeatTimeoutWorkItem = nil
         setConnection(.disconnected)
         failAllDeliveries(with: error)
+        failAllSnapshotRequests(with: error)
         scheduleHeartbeat()
     }
 
@@ -495,6 +571,21 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     private func failAllDeliveries(with error: any Error) {
         for id in Array(pendingDeliveries.keys) {
             finishDelivery(id, with: .failure(error))
+        }
+    }
+
+    private func finishSnapshot(
+        _ requestID: UUID,
+        with result: Result<CurrentProcessSnapshot, any Error>
+    ) {
+        guard let request = pendingSnapshotRequests.removeValue(forKey: requestID) else { return }
+        request.timeoutWorkItem.cancel()
+        request.continuation.resume(with: result)
+    }
+
+    private func failAllSnapshotRequests(with error: any Error) {
+        for requestID in Array(pendingSnapshotRequests.keys) {
+            finishSnapshot(requestID, with: .failure(error))
         }
     }
 

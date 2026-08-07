@@ -6,13 +6,32 @@ import SwiftUI
 
 struct AnchorSetupView: View {
     let model: AnchorSessionModel
+    let currentProcessProvider: (any CurrentProcessProviding)?
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var goalTitle = ""
     @State private var completionCriteria = ""
     @State private var processNames = [""]
+    @State private var speechInput = SpeechInputController()
+    @State private var isFetchingCurrentProcesses = false
+    @State private var didLoadCurrentProcesses = false
+    @State private var currentProcessStatus: CurrentProcessStatus = .idle
     @FocusState private var focusedField: Field?
+
+    init(
+        model: AnchorSessionModel,
+        currentProcessProvider: (any CurrentProcessProviding)? = nil
+    ) {
+        self.model = model
+        self.currentProcessProvider = currentProcessProvider
+    }
+
+    private enum CurrentProcessStatus {
+        case idle
+        case synced(Int)
+        case unavailable
+    }
 
     private enum Field: Hashable {
         case goal
@@ -43,6 +62,16 @@ struct AnchorSetupView: View {
             startDock
         }
         .navigationBarHidden(true)
+        .onChange(of: speechInput.transcript) { _, transcript in
+            guard !transcript.isEmpty else { return }
+            completionCriteria = transcript
+        }
+        .onDisappear {
+            speechInput.stop()
+        }
+        .task {
+            await loadCurrentProcesses()
+        }
     }
 
     private var setupNavigation: some View {
@@ -61,6 +90,8 @@ struct AnchorSetupView: View {
             Text(L10n.setupNewWork)
                 .font(.subheadline.bold())
                 .foregroundStyle(AnchorPalette.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
                 .accessibilityIdentifier("setup.screen")
             Spacer()
             Text("01")
@@ -69,26 +100,19 @@ struct AnchorSetupView: View {
                 .frame(width: 44, height: 44, alignment: .trailing)
         }
         .frame(minHeight: 54)
+        // Navigation chrome stays compact at accessibility sizes. The close
+        // button itself remains a 44pt target and is still VoiceOver-visible.
+        .dynamicTypeSize(.xSmall ... .xxxLarge)
     }
 
     private var setupHero: some View {
         HarborHeroSurface {
-            Group {
-                if dynamicTypeSize.isAccessibilitySize {
-                    VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
-                        heroCopy
-                        Divider().overlay(.white.opacity(0.14))
-                        heroStats
-                    }
-                } else {
-                    HStack(alignment: .center, spacing: AnchorSpacing.small) {
-                        heroCopy
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        Divider().overlay(.white.opacity(0.14))
-                        heroStats
-                            .frame(width: 100)
-                    }
-                }
+            HStack(alignment: .center, spacing: AnchorSpacing.small) {
+                heroCopy
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Divider().overlay(.white.opacity(0.14))
+                heroStats
+                    .frame(width: 100)
             }
             .padding(AnchorSpacing.medium)
         }
@@ -103,38 +127,39 @@ struct AnchorSetupView: View {
                 .font(.caption.bold())
                 .foregroundStyle(AnchorPalette.oceanHighlight)
             Text(L10n.setupMantra)
-                .font(.title.bold())
+                .font(
+                    dynamicTypeSize.isAccessibilitySize
+                        ? Font.title2.bold()
+                        : Font.title.bold()
+                )
                 .foregroundStyle(.white)
                 .fixedSize(horizontal: false, vertical: true)
         }
+        .dynamicTypeSize(.xSmall ... .accessibility1)
     }
 
     private var heroStats: some View {
-        Group {
-            if dynamicTypeSize.isAccessibilitySize {
-                HStack(spacing: AnchorSpacing.large) {
-                    setupStat(value: "\(processCount)", label: L10n.parallelProcesses)
-                    setupStat(value: completionCriteria.isEmpty ? "—" : "✓", label: L10n.completionReady)
-                }
-            } else {
-                VStack(alignment: .leading, spacing: 0) {
-                    setupStat(value: "\(processCount)", label: L10n.parallelProcesses)
-                        .padding(.bottom, AnchorSpacing.small)
-                    Divider().overlay(.white.opacity(0.14))
-                    setupStat(value: completionCriteria.isEmpty ? "—" : "✓", label: L10n.completionReady)
-                        .padding(.top, AnchorSpacing.small)
-                }
-            }
+        VStack(alignment: .leading, spacing: 0) {
+            setupStat(value: "\(processCount)", label: L10n.parallelProcesses)
+                .padding(.bottom, AnchorSpacing.small)
+            Divider().overlay(.white.opacity(0.14))
+            setupStat(value: completionCriteria.isEmpty ? "—" : "✓", label: L10n.completionReady)
+                .padding(.top, AnchorSpacing.small)
         }
+        .dynamicTypeSize(.xSmall ... .accessibility1)
     }
 
     private func setupStat(value: String, label: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(value)
-                .font(.title2.bold().monospacedDigit())
+                .font(
+                    dynamicTypeSize.isAccessibilitySize
+                        ? Font.title3.bold().monospacedDigit()
+                        : Font.title2.bold().monospacedDigit()
+                )
                 .foregroundStyle(AnchorPalette.seafoam)
             Text(label)
-                .font(.caption2)
+                .font(dynamicTypeSize.isAccessibilitySize ? .caption : .caption2)
                 .foregroundStyle(.white.opacity(0.62))
                 .lineLimit(2)
         }
@@ -148,7 +173,7 @@ struct AnchorSetupView: View {
                     .foregroundStyle(AnchorPalette.secondaryInk)
                 TextField(L10n.goalTitle, text: $goalTitle, axis: .vertical)
                     .font(.body.bold())
-                    .lineLimit(1 ... 3)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? 1 ... 2 : 1 ... 3)
                     .focused($focusedField, equals: .goal)
                     .submitLabel(.next)
                     .onSubmit { focusedField = .criteria }
@@ -162,27 +187,74 @@ struct AnchorSetupView: View {
                         .font(.caption.bold())
                         .foregroundStyle(AnchorPalette.secondaryInk)
                     Spacer()
-                    Button {
-                        focusedField = .criteria
-                    } label: {
-                        Image(systemName: "mic.fill")
-                            .font(.subheadline.bold())
-                            .foregroundStyle(AnchorPalette.link)
-                            .frame(width: 44, height: 44)
-                            .background(AnchorPalette.cyan.opacity(0.16), in: .circle)
-                    }
-                    .accessibilityLabel(L10n.keyboardDictation)
                 }
                 .frame(minHeight: 44)
 
                 TextField(L10n.completionCriteria, text: $completionCriteria, axis: .vertical)
                     .font(.body)
-                    .lineLimit(4 ... 7)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 ... 4 : 4 ... 7)
                     .focused($focusedField, equals: .criteria)
                     .accessibilityIdentifier("setup.criteria.field")
                     .harborInputSurface()
+
+                voiceInputControl
             }
         }
+        .dynamicTypeSize(.xSmall ... .accessibility2)
+    }
+
+    @ViewBuilder
+    private var voiceInputControl: some View {
+        VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
+                        voiceInputButton
+                        Text(L10n.voiceInputEditHint)
+                            .font(.body)
+                            .foregroundStyle(AnchorPalette.secondaryInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                } else {
+                    HStack(spacing: AnchorSpacing.small) {
+                        voiceInputButton
+                        Text(L10n.voiceInputEditHint)
+                            .font(.caption)
+                            .foregroundStyle(AnchorPalette.secondaryInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: 132, alignment: .leading)
+                    }
+                }
+            }
+            if let errorMessage = speechInput.errorMessage {
+                Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                    .foregroundStyle(AnchorPalette.sourceInk("coral"))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("setup.voice.input.error")
+            }
+        }
+        .padding(.top, AnchorSpacing.xSmall)
+    }
+
+    private var voiceInputButton: some View {
+        Button(action: toggleSpeechInput) {
+            Label(
+                speechInput.isRecording ? L10n.voiceInputStop : L10n.voiceInput,
+                systemImage: speechInput.isRecording ? "stop.fill" : "mic.fill"
+            )
+            .font(
+                dynamicTypeSize.isAccessibilitySize
+                    ? Font.body.bold()
+                    : Font.subheadline.bold()
+            )
+            .frame(maxWidth: .infinity, minHeight: 52)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(speechInput.isRecording ? AnchorPalette.coral : AnchorPalette.link)
+        .accessibilityValue(speechInput.isRecording ? L10n.voiceInputListening : L10n.voiceInputReady)
+        .accessibilityHint(L10n.voiceInputHint)
+        .accessibilityIdentifier("setup.voice.input.button")
     }
 
     private var processForm: some View {
@@ -197,9 +269,20 @@ struct AnchorSetupView: View {
                         .foregroundStyle(AnchorPalette.ink)
                 }
                 Spacer()
-                Text("\(processCount)/6")
-                    .font(.caption.bold().monospacedDigit())
-                    .foregroundStyle(AnchorPalette.secondaryInk)
+                VStack(alignment: .trailing, spacing: 3) {
+                    Text("\(processCount)/6")
+                        .font(.caption.bold().monospacedDigit())
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                    if isFetchingCurrentProcesses {
+                        Label(L10n.syncingProcesses, systemImage: "arrow.triangle.2.circlepath")
+                            .font(.caption2)
+                            .foregroundStyle(AnchorPalette.secondaryInk)
+                    } else if case let .synced(count) = currentProcessStatus, count > 0 {
+                        Label(L10n.syncedProcesses(count), systemImage: "checkmark.circle.fill")
+                            .font(.caption2)
+                            .foregroundStyle(AnchorPalette.mintInk)
+                    }
+                }
             }
             .padding(.top, AnchorSpacing.xLarge)
 
@@ -224,6 +307,7 @@ struct AnchorSetupView: View {
                 .buttonStyle(.plain)
             }
         }
+        .dynamicTypeSize(.xSmall ... .accessibility2)
     }
 
     private func processRow(index: Int) -> some View {
@@ -280,6 +364,7 @@ struct AnchorSetupView: View {
             .padding(.vertical, AnchorSpacing.small)
         }
         .background(AnchorPalette.paper.opacity(0.97))
+        .dynamicTypeSize(.xSmall ... .accessibility1)
     }
 
     private var processCount: Int {
@@ -323,6 +408,31 @@ struct AnchorSetupView: View {
             if await model.createSession(goal: goal, processes: processes) {
                 dismiss()
             }
+        }
+    }
+
+    private func toggleSpeechInput() {
+        focusedField = .criteria
+        speechInput.toggle(initialText: completionCriteria)
+    }
+
+    private func loadCurrentProcesses() async {
+        guard !didLoadCurrentProcesses, let currentProcessProvider else { return }
+        didLoadCurrentProcesses = true
+        isFetchingCurrentProcesses = true
+        defer { isFetchingCurrentProcesses = false }
+
+        do {
+            let snapshot = try await currentProcessProvider.currentProcessSnapshot()
+            let names = Array(snapshot.processNames.prefix(6))
+            guard !names.isEmpty else {
+                currentProcessStatus = .unavailable
+                return
+            }
+            processNames = names
+            currentProcessStatus = .synced(names.count)
+        } catch {
+            currentProcessStatus = .unavailable
         }
     }
 }

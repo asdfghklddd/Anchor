@@ -41,7 +41,11 @@ struct AnchorIOSApp: App {
 
     var body: some Scene {
         WindowGroup {
-            AnchorIOSRootView(model: model, linkController: client)
+            AnchorIOSRootView(
+                model: model,
+                linkController: client,
+                currentProcessProvider: client
+            )
         }
     }
 }

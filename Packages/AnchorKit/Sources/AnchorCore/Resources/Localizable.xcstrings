@@ -1,30 +1,103 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "error.decision.missing": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "The decision no longer exists." } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "这个判断项已不存在。" } }
+  "sourceLanguage" : "en",
+  "strings" : {
+    "error.decision.missing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The decision no longer exists."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个判断项已不存在。"
+          }
+        }
       }
     },
-    "error.decision.option.invalid": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "The selected option is unavailable." } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "所选选项当前不可用。" } }
+    "error.decision.option.invalid" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected option is unavailable."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所选选项当前不可用。"
+          }
+        }
       }
     },
-    "error.process.missing": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "The selected process no longer exists." } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "所选流程已不存在。" } }
+    "error.event.malformed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The Anchor event could not be decoded."
+          }
+        }
       }
     },
-    "error.session.none": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No active Anchor session." } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "当前没有进行中的 Anchor 会话。" } }
+    "error.event.schema.unsupported" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This Anchor event uses an unsupported schema."
+          }
+        }
+      }
+    },
+    "error.event.session.mismatch" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The Anchor event belongs to another session."
+          }
+        }
+      }
+    },
+    "error.process.missing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected process no longer exists."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所选流程已不存在。"
+          }
+        }
+      }
+    },
+    "error.session.none" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No active Anchor session."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前没有进行中的 Anchor 会话。"
+          }
+        }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

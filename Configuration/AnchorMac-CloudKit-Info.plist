@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<!-- Demo stays fixture-only and requests no transport permissions. -->
+<!-- CloudKit production variant; use only with a paid Developer Team. -->
 <dict>
+	<key>ANCHOR_CLOUDKIT_CONTAINER_IDENTIFIER</key>
+	<string>$(ANCHOR_CLOUDKIT_CONTAINER_IDENTIFIER)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Anchor Demo</string>
+	<string>Anchor</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -21,22 +23,11 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>LSRequiresIPhoneOS</key>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<key>LSUIElement</key>
 	<true/>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Anchor uses the microphone to turn your spoken completion standard into editable text.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Anchor uses Speech Recognition to transcribe your spoken completion standard on the New Work screen.</string>
-	<key>UILaunchScreen</key>
-	<dict>
-		<key>UIColorName</key>
-		<string>AnchorLaunchBackground</string>
-	</dict>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Anchor advertises a private service identifier so your paired iPhone can estimate proximity.</string>
 </dict>
 </plist>
