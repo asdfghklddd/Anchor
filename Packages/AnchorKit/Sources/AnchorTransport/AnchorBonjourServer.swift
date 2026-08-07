@@ -17,6 +17,7 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
     public static let serviceType = "_anchor._tcp"
 
     public var onEvent: (@Sendable (EventEnvelope) async throws -> Void)?
+    public var onCurrentProcessSnapshot: (@Sendable () async throws -> CurrentProcessSnapshot)?
     public var onConnectionState: (@Sendable (ConnectionState) -> Void)?
 
     private let queue = DispatchQueue(label: "com.andywang.anchor.bonjour.server")
@@ -267,6 +268,14 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
                     self.sendEncrypted(acknowledgement, using: key, to: peer)
                 }
             }
+        case .processSnapshotRequest:
+            respondToProcessSnapshotRequest(
+                requestID: payload.requestID,
+                using: key,
+                to: peer
+            )
+        case .processSnapshotResponse:
+            break
         case .acknowledgement:
             if let eventID = payload.acknowledgedEventID {
                 finishDelivery(eventID, with: .success(()))
@@ -298,6 +307,33 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
     private func sendEncrypted(_ payload: LinkPayload, using key: Data, to peer: LineConnection) {
         guard let sealed = try? AnchorLinkCodec.seal(payload, using: key) else { return }
         peer.send(LinkFrame(kind: .encrypted, senderID: deviceID, encryptedPayload: sealed))
+    }
+
+    private func respondToProcessSnapshotRequest(
+        requestID: UUID?,
+        using key: Data,
+        to peer: LineConnection
+    ) {
+        guard let requestID else { return }
+        let provider = onCurrentProcessSnapshot
+        Task { [weak self, weak peer] in
+            let snapshot = try? await provider?()
+            guard let self, let peer else { return }
+            self.queue.async { [weak self, weak peer] in
+                guard let self,
+                      let peer,
+                      self.peers.values.contains(where: { $0 === peer }) else { return }
+                self.sendEncrypted(
+                    LinkPayload(
+                        kind: .processSnapshotResponse,
+                        requestID: requestID,
+                        currentProcessSnapshot: snapshot
+                    ),
+                    using: key,
+                    to: peer
+                )
+            }
+        }
     }
 
     private static func makePairingCode() -> String {
