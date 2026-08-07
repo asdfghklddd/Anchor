@@ -87,21 +87,14 @@ public struct SourceMark: View {
 
     public var body: some View {
         let size = baseSize * scale
-        Canvas { context, canvasSize in
-            let mark = context.resolve(
-                Text(symbol)
-                    .font(.system(size: canvasSize.width * 0.48, weight: .bold))
-                    .foregroundStyle(.white)
-            )
-            context.draw(
-                mark,
-                at: CGPoint(x: canvasSize.width / 2, y: canvasSize.height / 2),
-                anchor: .center
-            )
-        }
+        Text(symbol)
+            .font(.subheadline.bold())
+            .foregroundStyle(AnchorPalette.deepSea)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .accessibilityHidden(true)
         .frame(width: size, height: size)
         .background(
-            AnchorPalette.source(tone),
+            AnchorPalette.sourceMark(tone),
             in: .rect(cornerRadius: size * 0.29, style: .continuous)
         )
         .overlay(alignment: .top) {
@@ -111,7 +104,9 @@ public struct SourceMark: View {
                 .padding(.top, size * 0.08)
         }
         .shadow(color: AnchorPalette.source(tone).opacity(0.24), radius: size * 0.18, y: size * 0.10)
-        .accessibilityHidden(true)
+        .accessibilityRepresentation {
+            EmptyView()
+        }
     }
 }
 

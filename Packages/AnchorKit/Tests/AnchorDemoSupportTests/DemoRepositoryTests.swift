@@ -74,6 +74,91 @@ struct DemoRepositoryTests {
         try? FileManager.default.removeItem(at: storage)
     }
 
+    @Test("A new demo setup seeds its process list from the current Mac fixture")
+    func currentProcessSnapshot() async throws {
+        let storage = URL.temporaryDirectory.appending(path: "anchor-demo-\(UUID().uuidString).json")
+        let repository = DemoSessionRepository(
+            storageURL: storage,
+            initialScenario: .empty,
+            restoresSavedState: false
+        )
+
+        let snapshot = try await repository.currentProcessSnapshot()
+        #expect(snapshot.processNames == ["Claude", "Gemini", "Seedance", "Final Cut"])
+        try? FileManager.default.removeItem(at: storage)
+    }
+
+    @Test("Demo playback exposes handoff before away and then returning")
+    @MainActor
+    func playbackTransitions() async throws {
+        let storage = URL.temporaryDirectory.appending(path: "anchor-demo-\(UUID().uuidString).json")
+        let repository = DemoSessionRepository(storageURL: storage, restoresSavedState: false)
+        let model = AnchorSessionModel(repository: repository, presenceProvider: repository)
+        model.start()
+        try await Task.sleep(for: .milliseconds(50))
+
+        await repository.playScenario(to: .away18Minutes)
+        try await waitUntil(timeout: .seconds(1)) { model.projection.session?.presence == .handingOff }
+        try await waitUntil(timeout: .seconds(3)) { model.projection.session?.presence == .away }
+
+        await repository.playScenario(to: .returning)
+        try await waitUntil(timeout: .seconds(2)) { model.projection.session?.presence == .returning }
+
+        model.stop()
+        try? FileManager.default.removeItem(at: storage)
+    }
+
+    @Test("Acknowledging return persists the active demo scenario")
+    func acknowledgeReturnPersistsActiveScenario() async throws {
+        let storage = URL.temporaryDirectory.appending(path: "anchor-demo-\(UUID().uuidString).json")
+        let repository = DemoSessionRepository(
+            storageURL: storage,
+            initialScenario: .returning,
+            restoresSavedState: false
+        )
+
+        try await Task.sleep(for: .milliseconds(220))
+        try await repository.send(.acknowledgeReturn)
+
+        #expect(await repository.activeScenario() == .active)
+        #expect(await repository.currentProjection().session?.presence == .atDesk)
+
+        let restored = DemoSessionRepository(storageURL: storage)
+        #expect(await restored.activeScenario() == .active)
+        #expect(await restored.currentProjection().session?.presence == .atDesk)
+        try? FileManager.default.removeItem(at: storage)
+    }
+
+    @Test("Correcting handoff cancels the pending away transition")
+    func correctingHandoffCancelsTransition() async throws {
+        let storage = URL.temporaryDirectory.appending(path: "anchor-demo-\(UUID().uuidString).json")
+        let repository = DemoSessionRepository(storageURL: storage, restoresSavedState: false)
+
+        await repository.playScenario(to: .away18Minutes)
+        #expect(await repository.currentProjection().session?.presence == .handingOff)
+        try await repository.send(.updatePresence(.atDesk, at: .now))
+        try await Task.sleep(for: .milliseconds(1_950))
+
+        #expect(await repository.activeScenario() == .active)
+        #expect(await repository.currentProjection().session?.presence == .atDesk)
+        try? FileManager.default.removeItem(at: storage)
+    }
+
+    @Test("Repeating the same demo scenario keeps the latest transition timing")
+    func repeatingScenarioUsesLatestTransition() async throws {
+        let storage = URL.temporaryDirectory.appending(path: "anchor-demo-\(UUID().uuidString).json")
+        let repository = DemoSessionRepository(storageURL: storage, restoresSavedState: false)
+
+        await repository.playScenario(to: .returning)
+        try await Task.sleep(for: .milliseconds(120))
+        await repository.playScenario(to: .returning)
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(await repository.currentProjection().session?.presence == .away)
+        try await Task.sleep(for: .milliseconds(120))
+        #expect(await repository.currentProjection().session?.presence == .returning)
+        try? FileManager.default.removeItem(at: storage)
+    }
+
     @Test("An incompatible fixture version resets to the requested baseline")
     func incompatibleFixtureVersionResets() async throws {
         let storage = URL.temporaryDirectory.appending(path: "anchor-demo-\(UUID().uuidString).json")

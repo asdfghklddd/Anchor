@@ -8,7 +8,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Anchor Demo"
+            "value" : "Anchor"
           }
         }
       }
@@ -20,14 +20,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Anchor iOS Demo"
+            "value" : "Anchor iOS"
           }
         }
       }
     },
     "NSBluetoothAlwaysUsageDescription" : {
       "comment" : "Privacy - Bluetooth Always Usage Description",
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -45,7 +44,6 @@
     },
     "NSLocalNetworkUsageDescription" : {
       "comment" : "Privacy - Local Network Usage Description",
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

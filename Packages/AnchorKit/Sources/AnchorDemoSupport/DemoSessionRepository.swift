@@ -16,6 +16,8 @@ public actor DemoSessionRepository: SessionRepository, PresenceSignalProviding, 
 
     private var state: PersistedState
     private let storageURL: URL
+    private var transitionTask: Task<Void, Never>?
+    private var transitionID: UUID?
     private var projectionContinuations: [UUID: AsyncStream<SessionProjection>.Continuation] = [:]
     private var signalContinuations: [UUID: AsyncStream<PresenceSignals>.Continuation] = [:]
 
@@ -47,6 +49,12 @@ public actor DemoSessionRepository: SessionRepository, PresenceSignalProviding, 
 
     public func currentProjection() -> SessionProjection { state.projection }
 
+    public func currentProcessSnapshot() async throws -> CurrentProcessSnapshot {
+        let names = state.projection.session?.processes.map(\.sourceName)
+            ?? ["Claude", "Gemini", "Seedance", "Final Cut"]
+        return CurrentProcessSnapshot(processNames: names)
+    }
+
     public func projections() -> AsyncStream<SessionProjection> {
         let id = UUID()
         return AsyncStream { continuation in
@@ -70,14 +78,81 @@ public actor DemoSessionRepository: SessionRepository, PresenceSignalProviding, 
     }
 
     public func send(_ command: SessionCommand) throws {
+        let previousScenario = state.scenario
+        let wasHandoff = state.scenario == .away18Minutes
+            && state.projection.session?.presence == .handingOff
+        let endsReturn: Bool = {
+            if case .acknowledgeReturn = command {
+                return state.scenario == .returning
+            }
+            return false
+        }()
+        let correctsHandoff: Bool = {
+            if case .updatePresence(.atDesk, at: _) = command {
+                return wasHandoff
+            }
+            return false
+        }()
+
+        if endsReturn || correctsHandoff {
+            cancelTransition()
+        }
+
         state.projection = try SessionReducer.reduce(state.projection, command: command)
+        if endsReturn {
+            state.scenario = .active
+        } else if correctsHandoff {
+            state.scenario = .active
+            state.projection = DemoFixtureFactory.projection(for: .active)
+        }
+
+        let scenarioChanged = state.scenario != previousScenario
         persist(clearExistingError: false)
         broadcastProjection()
+        if scenarioChanged {
+            broadcastSignals()
+        }
     }
 
     public func activeScenario() -> DemoScenario { state.scenario }
 
+    public func playScenario(to scenario: DemoScenario) {
+        cancelTransition()
+
+        switch scenario {
+        case .away18Minutes:
+            prepareHandoff()
+            let token = UUID()
+            transitionID = token
+            transitionTask = Task { [weak self] in
+                do {
+                    try await Task.sleep(for: .milliseconds(1_850))
+                } catch {
+                    return
+                }
+                guard !Task.isCancelled else { return }
+                await self?.finishTransition(to: scenario, token: token)
+            }
+        case .returning:
+            prepareReturn()
+            let token = UUID()
+            transitionID = token
+            transitionTask = Task { [weak self] in
+                do {
+                    try await Task.sleep(for: .milliseconds(180))
+                } catch {
+                    return
+                }
+                guard !Task.isCancelled else { return }
+                await self?.finishTransition(to: scenario, token: token)
+            }
+        default:
+            switchScenario(to: scenario)
+        }
+    }
+
     public func switchScenario(to scenario: DemoScenario) {
+        cancelTransition()
         state = PersistedState(
             scenario: scenario,
             projection: DemoFixtureFactory.projection(for: scenario)
@@ -88,6 +163,7 @@ public actor DemoSessionRepository: SessionRepository, PresenceSignalProviding, 
     }
 
     public func reset() {
+        cancelTransition()
         state = PersistedState(
             scenario: .active,
             projection: DemoFixtureFactory.projection(for: .active)
@@ -95,6 +171,37 @@ public actor DemoSessionRepository: SessionRepository, PresenceSignalProviding, 
         persist()
         broadcastProjection()
         broadcastSignals()
+    }
+
+    private func prepareHandoff() {
+        state.scenario = .away18Minutes
+        var projection = DemoFixtureFactory.projection(for: .away18Minutes)
+        projection.session?.presence = .handingOff
+        state.projection = projection
+        broadcastProjection()
+        broadcastSignals()
+    }
+
+    private func prepareReturn() {
+        state.scenario = .returning
+        state.projection = DemoFixtureFactory.projection(for: .away18Minutes)
+        broadcastProjection()
+    }
+
+    private func finishTransition(to scenario: DemoScenario, token: UUID) {
+        guard transitionID == token, state.scenario == scenario else { return }
+        state.projection = DemoFixtureFactory.projection(for: scenario)
+        persist(clearExistingError: false)
+        broadcastProjection()
+        broadcastSignals()
+        transitionTask = nil
+        transitionID = nil
+    }
+
+    private func cancelTransition() {
+        transitionTask?.cancel()
+        transitionTask = nil
+        transitionID = nil
     }
 
     private func broadcastProjection() {

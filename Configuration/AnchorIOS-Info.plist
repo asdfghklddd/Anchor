@@ -31,6 +31,10 @@
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Anchor uses the local network to connect your paired iPhone and Mac.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Anchor uses the microphone to turn your spoken completion standard into editable text.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Anchor uses Speech Recognition to transcribe your spoken completion standard on the New Work screen.</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

@@ -6,8 +6,10 @@ import SwiftUI
 public struct AnchorIOSRootView: View {
     private let model: AnchorSessionModel
     private let linkController: (any LocalLinkControlling)?
+    private let currentProcessProvider: (any CurrentProcessProviding)?
     private let auxiliaryToolbarLabel: String?
     private let auxiliaryToolbarAction: (() -> Void)?
+    private let onReturnFromAway: (() -> Void)?
 
     @State private var path: [AnchorRoute] = []
     @State private var sheet: AnchorSheet?
@@ -17,13 +19,17 @@ public struct AnchorIOSRootView: View {
     public init(
         model: AnchorSessionModel,
         linkController: (any LocalLinkControlling)? = nil,
+        currentProcessProvider: (any CurrentProcessProviding)? = nil,
         auxiliaryToolbarLabel: String? = nil,
-        auxiliaryToolbarAction: (() -> Void)? = nil
+        auxiliaryToolbarAction: (() -> Void)? = nil,
+        onReturnFromAway: (() -> Void)? = nil
     ) {
         self.model = model
         self.linkController = linkController
+        self.currentProcessProvider = currentProcessProvider
         self.auxiliaryToolbarLabel = auxiliaryToolbarLabel
         self.auxiliaryToolbarAction = auxiliaryToolbarAction
+        self.onReturnFromAway = onReturnFromAway
     }
 
     public var body: some View {
@@ -81,8 +87,15 @@ public struct AnchorIOSRootView: View {
         .sheet(item: $sheet) { item in
             sheetDestination(for: item)
         }
-        .fullScreenCover(item: $fullScreen) { item in
-            fullScreenDestination(for: item)
+        .fullScreenCover(
+            isPresented: Binding(
+                get: { fullScreen != nil },
+                set: { isPresented in
+                    if !isPresented { fullScreen = nil }
+                }
+            )
+        ) {
+            fullScreenDestination(for: fullScreen ?? .away)
         }
         .onGeometryChange(for: DevicePosture.self) { geometry in
             guard geometry.size.width > 0, geometry.size.height > 0 else { return .unknown }
@@ -179,7 +192,10 @@ public struct AnchorIOSRootView: View {
             .presentationDetents([.large])
         case .setup:
             NavigationStack {
-                AnchorSetupView(model: model)
+                AnchorSetupView(
+                    model: model,
+                    currentProcessProvider: currentProcessProvider
+                )
             }
             .presentationDetents([.large])
         case .note:
@@ -207,29 +223,23 @@ public struct AnchorIOSRootView: View {
 
     @ViewBuilder
     private func fullScreenDestination(for item: AnchorFullScreen) -> some View {
-        switch item {
-        case .handingOff:
-            HandoffView(model: model)
-        case .away:
-            AwayView(
-                projection: model.projection,
-                model: model,
-                onProfile: {
-                    fullScreen = nil
-                    path.append(.profile)
-                },
-                onNotifications: {
-                    fullScreen = nil
-                    sheet = .notifications
-                },
-                onLayout: {
-                    fullScreen = nil
-                    sheet = .layout
-                }
-            )
-        case .returning:
-            ReturnView(projection: model.projection, model: model)
-        }
+        AnchorFullScreenHost(
+            item: item,
+            model: model,
+            onReturn: onReturnFromAway,
+            onProfile: {
+                fullScreen = nil
+                path.append(.profile)
+            },
+            onNotifications: {
+                fullScreen = nil
+                sheet = .notifications
+            },
+            onLayout: {
+                fullScreen = nil
+                sheet = .layout
+            }
+        )
     }
 
     private func resolve(decision: Decision, option: DecisionOption) {
@@ -252,6 +262,45 @@ public struct AnchorIOSRootView: View {
         case .away: fullScreen = .away
         case .returning: fullScreen = .returning
         case .atDesk, .unknown, nil: fullScreen = nil
+        }
+    }
+}
+
+private struct AnchorFullScreenHost: View {
+    let item: AnchorFullScreen
+    let model: AnchorSessionModel
+    let onReturn: (() -> Void)?
+    let onProfile: () -> Void
+    let onNotifications: () -> Void
+    let onLayout: () -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ZStack {
+            content
+                .id(item)
+                .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+        }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.34), value: item)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch item {
+        case .handingOff:
+            HandoffView(model: model)
+        case .away:
+            AwayView(
+                projection: model.projection,
+                model: model,
+                onReturn: onReturn,
+                onProfile: onProfile,
+                onNotifications: onNotifications,
+                onLayout: onLayout
+            )
+        case .returning:
+            ReturnView(projection: model.projection, model: model)
         }
     }
 }

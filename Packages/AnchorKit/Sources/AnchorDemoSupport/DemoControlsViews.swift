@@ -7,14 +7,27 @@ import AnchorIOSFeatures
 
 public struct AnchorIOSDemoRootView: View {
     private let model: AnchorSessionModel
+    private let controller: any DemoControlling
+    @State private var showingControls = false
 
     public init(model: AnchorSessionModel, controller: any DemoControlling) {
         self.model = model
-        _ = controller
+        self.controller = controller
     }
 
     public var body: some View {
-        AnchorIOSRootView(model: model)
+        AnchorIOSRootView(
+            model: model,
+            currentProcessProvider: controller,
+            auxiliaryToolbarLabel: DemoL10n.controls,
+            auxiliaryToolbarAction: { showingControls = true },
+            onReturnFromAway: {
+                Task { await controller.playScenario(to: .returning) }
+            }
+        )
+        .sheet(isPresented: $showingControls) {
+            IOSDemoControlsView(controller: controller)
+        }
     }
 }
 
@@ -23,6 +36,16 @@ private struct IOSDemoControlsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedScenario = DemoScenario.active
 
+    private var scenarioSelection: Binding<DemoScenario> {
+        Binding(
+            get: { selectedScenario },
+            set: { scenario in
+                selectedScenario = scenario
+                Task { await controller.playScenario(to: scenario) }
+            }
+        )
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -30,15 +53,12 @@ private struct IOSDemoControlsView: View {
                     Text(DemoL10n.explanation)
                 }
                 Section(DemoL10n.controls) {
-                    Picker(DemoL10n.controls, selection: $selectedScenario) {
+                    Picker(DemoL10n.controls, selection: scenarioSelection) {
                         ForEach(DemoScenario.allCases) { scenario in
                             Text(DemoL10n.scenario(scenario)).tag(scenario)
                         }
                     }
                     .pickerStyle(.inline)
-                    .onChange(of: selectedScenario) { _, scenario in
-                        Task { await controller.switchScenario(to: scenario) }
-                    }
                 }
                 Section {
                     Button(DemoL10n.reset) {
@@ -89,17 +109,24 @@ private struct MacDemoControlsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selection = DemoScenario.active
 
+    private var scenarioSelection: Binding<DemoScenario> {
+        Binding(
+            get: { selection },
+            set: { scenario in
+                selection = scenario
+                Task { await controller.playScenario(to: scenario) }
+            }
+        )
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: AnchorSpacing.large) {
             Text(DemoL10n.controls).font(.title.bold())
             Text(DemoL10n.explanation).foregroundStyle(.secondary)
-            Picker(DemoL10n.controls, selection: $selection) {
+            Picker(DemoL10n.controls, selection: scenarioSelection) {
                 ForEach(DemoScenario.allCases) { scenario in
                     Text(DemoL10n.scenario(scenario)).tag(scenario)
                 }
-            }
-            .onChange(of: selection) { _, scenario in
-                Task { await controller.switchScenario(to: scenario) }
             }
             HStack {
                 Button(DemoL10n.reset) {

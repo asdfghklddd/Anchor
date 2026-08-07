@@ -58,6 +58,24 @@ public enum L10n {
     public static let addAnotherProcess = AnchorStrings.value("process.add.another", default: "Add another process")
     public static let startAnchoring = AnchorStrings.value("setup.start.anchoring", default: "Start anchoring")
     public static let keyboardDictation = AnchorStrings.value("setup.keyboard.dictation", default: "Use keyboard dictation")
+    public static let voiceInput = AnchorStrings.value("setup.voice.input", default: "Use voice input")
+    public static let voiceInputStop = AnchorStrings.value("setup.voice.stop", default: "Stop listening")
+    public static let voiceInputReady = AnchorStrings.value("setup.voice.ready", default: "Ready for your voice")
+    public static let voiceInputListening = AnchorStrings.value("setup.voice.listening", default: "Listening")
+    public static let voiceInputHint = AnchorStrings.value("setup.voice.hint", default: "Speak the completion standard, then edit the text if needed.")
+    public static let voiceInputEditHint = AnchorStrings.value("setup.voice.edit.hint", default: "Speak first. Refine the words below when needed.")
+    public static let voiceInputDenied = AnchorStrings.value("setup.voice.error.denied", default: "Speech input is off. Enable Speech Recognition in Settings.")
+    public static let voiceInputRestricted = AnchorStrings.value("setup.voice.error.restricted", default: "Speech input is restricted on this device.")
+    public static let voiceInputNotReady = AnchorStrings.value("setup.voice.error.not-determined", default: "Speech input is not ready yet. Try again.")
+    public static let voiceInputUnavailable = AnchorStrings.value("setup.voice.error.unavailable", default: "Speech input is temporarily unavailable.")
+    public static let voiceInputFailed = AnchorStrings.value("setup.voice.error.failed", default: "Speech input could not start. Try again.")
+    public static let syncingProcesses = AnchorStrings.value("setup.processes.syncing", default: "Syncing from Mac")
+    public static func syncedProcesses(_ count: Int) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value("setup.processes.synced", default: "%lld from Mac"),
+            count
+        )
+    }
     public static let anchorNote = AnchorStrings.value("note.anchor", default: "Drop an anchor")
     public static let anchorNotePrompt = AnchorStrings.value("note.prompt", default: "Capture a judgment, next step, or context marker.")
     public static let anchorCaptureHeadline = AnchorStrings.value("note.capture.headline", default: "Remember this moment, then keep moving.")

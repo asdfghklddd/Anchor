@@ -1,0 +1,6 @@
+// CloudKit variant for an Apple Developer Program Team.
+// Supply ANCHOR_CLOUDKIT_DEVELOPMENT_TEAM with the paid Team ID at build time.
+ANCHOR_CLOUDKIT_CONTAINER_IDENTIFIER = iCloud.com.andywang.anchor
+ANCHOR_IOS_DEVELOPMENT_TEAM = $(ANCHOR_CLOUDKIT_DEVELOPMENT_TEAM)
+ANCHOR_IOS_CODE_SIGN_ENTITLEMENTS = Configuration/AnchorIOS-CloudKit.entitlements
+ANCHOR_IOS_INFOPLIST_FILE = Configuration/AnchorIOS-CloudKit-Info.plist
