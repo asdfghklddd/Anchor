@@ -4,6 +4,8 @@ Anchor is a native iPhone and macOS attention companion for people coordinating
 several AI-assisted processes at once. It preserves the goal, live process state,
 human decisions, and the context needed to return after an interruption.
 
+![Anchor iPhone workspace](Product/Prototype/output/playwright/01-home-portrait.png)
+
 ## Current implementation
 
 - Dedicated iOS and macOS production apps with the shared bundle identifier
@@ -78,6 +80,16 @@ local acceptance matrix and remaining device-only checks are recorded in
 
 The Demo apps persist user actions under Application Support. Their developer
 controls can switch scenarios or restore the versioned baseline.
+
+## Public repository boundary
+
+The demo fixtures contain synthetic data only. Production targets do not link the
+demo support package. The bundled Nunito font is distributed with its original
+SIL Open Font License notice. No credentials, CloudKit secrets, or signing
+material are stored in this repository.
+
+The source is published for portfolio review. No redistribution or commercial-use
+license is granted.
 
 ## Production data boundary
 

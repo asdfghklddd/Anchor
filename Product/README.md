@@ -7,7 +7,7 @@ implementation.
 Included:
 
 - `Anchor.pdf` - original two-page product definition.
-- `主视觉设计方案.png` and `核心参考Figma.png` - early visual and flow references.
+- `主视觉设计方案.png` and `核心参考Figma.png` - early visual and flow references created during product exploration.
 - `src/` - current React implementation of the high-fidelity iOS prototype.
 - `output/playwright/` - portrait, landscape, handoff, return, decision, setup,
   profile, and responsive reference captures.
