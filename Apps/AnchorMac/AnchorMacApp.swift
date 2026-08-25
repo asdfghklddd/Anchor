@@ -37,6 +37,7 @@ struct AnchorMacApp: App {
             repository: repository,
             sources: [
                 FileProcessSource(sessionContextProvider: currentSessionContext),
+                WebProcessSource(sessionContextProvider: currentSessionContext),
                 workspaceSource,
             ]
         )

@@ -1,6 +1,153 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "web.detail.active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ is the active web app." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 是当前活跃的网页应用。" } }
+      }
+    },
+    "web.detail.background" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ moved to the background." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 已转入后台。" } }
+      }
+    },
+    "web.detail.closed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ was closed." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 已关闭。" } }
+      }
+    },
+    "web.detail.completed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ completed its current activity." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 已完成当前活动。" } }
+      }
+    },
+    "web.detail.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ reported a failure." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 报告了失败。" } }
+      }
+    },
+    "web.detail.running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ is running." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 正在运行。" } }
+      }
+    },
+    "web.event.active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ became active" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 已变为活跃状态" } }
+      }
+    },
+    "web.event.background" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ moved to the background" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 已转入后台" } }
+      }
+    },
+    "web.event.closed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ closed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 已关闭" } }
+      }
+    },
+    "web.event.completed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ completed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 已完成" } }
+      }
+    },
+    "web.event.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ failed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 失败" } }
+      }
+    },
+    "web.event.running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ progress updated" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 的进度已更新" } }
+      }
+    },
+    "web.metric.activity-state" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Activity state" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "活动状态" } }
+      }
+    },
+    "web.metric.progress" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Progress" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进度" } }
+      }
+    },
+    "web.source.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Web Apps" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "网页应用" } }
+      }
+    },
+    "web.state.active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Active" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "活跃" } }
+      }
+    },
+    "web.state.background" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Background" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "后台" } }
+      }
+    },
+    "web.state.closed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Closed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已关闭" } }
+      }
+    },
+    "web.state.completed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Completed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已完成" } }
+      }
+    },
+    "web.state.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "失败" } }
+      }
+    },
+    "web.state.running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Running" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "运行中" } }
+      }
+    },
     "cli.detail.completed" : {
       "extractionState" : "manual",
       "localizations" : {
