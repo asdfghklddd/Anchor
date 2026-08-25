@@ -33,6 +33,44 @@ quarantined without stopping later valid files. If the Mac has not created an
 Anchor session yet, a valid event is returned to the inbox and the source waits
 until a session exists instead of consuming the event in a retry loop.
 
+## Generic shell command lifecycle
+
+The CLI also accepts session-independent command signals. The production Mac
+companion binds these signals to the active Anchor session when it consumes the
+shared inbox file:
+
+```bash
+COMMAND_ID="$(anchor command start \
+  --name xcodebuild \
+  --workspace "$PWD" \
+  --terminal "${TERM_PROGRAM:-Terminal}")"
+
+anchor command finish \
+  --id "$COMMAND_ID" \
+  --name xcodebuild \
+  --workspace "$PWD" \
+  --terminal "${TERM_PROGRAM:-Terminal}" \
+  --exit-code "$?"
+```
+
+`--name` is reduced to the executable basename and `--workspace` is reduced to
+the final path component before either value is written. Command arguments and
+full working-directory paths are not stored.
+
+For opt-in automatic zsh lifecycle signals, add this to `.zshrc`:
+
+```bash
+eval "$(anchor shell zsh)"
+```
+
+The generated hook skips Anchor's own commands to prevent recursion. It reports
+start, finish, and exit status but does not parse terminal output or infer a
+percentage. Tool-specific structured adapters can add progress later without
+changing this generic lifecycle contract.
+
+Signals older than the active Anchor session are moved to `.ignored` and never
+attached to the new session. Signals wait in the inbox while no session exists.
+
 The CLI source declares observation capability only. A decision can be resolved
 in Anchor and synchronized to the Mac, but the CLI does not claim to execute a
 source-side action until a future adapter declares `resolveDecision` support.

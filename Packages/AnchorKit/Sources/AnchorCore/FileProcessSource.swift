@@ -10,11 +10,13 @@ public struct FileProcessSource: ProcessSource, Sendable {
     public let pollInterval: TimeInterval
     public let maximumFileSize: Int
     public let descriptor: SourceDescriptor
+    private let sessionContextProvider: @Sendable () async -> ProcessSourceSessionContext?
 
     public init(
         directoryURL: URL = FileProcessSource.defaultInboxURL(),
         pollInterval: TimeInterval = 0.25,
         maximumFileSize: Int = 1_048_576,
+        sessionContextProvider: @escaping @Sendable () async -> ProcessSourceSessionContext? = { nil },
         descriptor: SourceDescriptor = SourceDescriptor(
             id: FileProcessSource.defaultSourceID,
             name: "Anchor CLI",
@@ -27,6 +29,7 @@ public struct FileProcessSource: ProcessSource, Sendable {
         self.directoryURL = directoryURL
         self.pollInterval = max(0.05, pollInterval)
         self.maximumFileSize = max(1, maximumFileSize)
+        self.sessionContextProvider = sessionContextProvider
         self.descriptor = descriptor
     }
 
@@ -39,8 +42,9 @@ public struct FileProcessSource: ProcessSource, Sendable {
                         for fileURL in try pendingFiles() {
                             try Task.checkCancellation()
                             do {
-                                let event = try readAndConsume(fileURL)
-                                continuation.yield(event)
+                                if let event = try await readAndConsume(fileURL) {
+                                    continuation.yield(event)
+                                }
                             } catch is CancellationError {
                                 throw CancellationError()
                             } catch {
@@ -98,6 +102,10 @@ public struct FileProcessSource: ProcessSource, Sendable {
             at: directoryURL.appending(path: ".failed", directoryHint: .isDirectory),
             withIntermediateDirectories: true
         )
+        try fileManager.createDirectory(
+            at: directoryURL.appending(path: ".ignored", directoryHint: .isDirectory),
+            withIntermediateDirectories: true
+        )
     }
 
     private func pendingFiles() throws -> [URL] {
@@ -110,7 +118,7 @@ public struct FileProcessSource: ProcessSource, Sendable {
         .sorted { $0.lastPathComponent < $1.lastPathComponent }
     }
 
-    private func readAndConsume(_ fileURL: URL) throws -> ExternalProcessEvent {
+    private func readAndConsume(_ fileURL: URL) async throws -> ExternalProcessEvent? {
         let attributes = try fileURL.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
         guard attributes.isRegularFile == true else {
             throw FileProcessSourceError.notRegularFile(fileURL)
@@ -122,7 +130,29 @@ public struct FileProcessSource: ProcessSource, Sendable {
 
         do {
             let data = try Data(contentsOf: fileURL)
-            let event = try JSONDecoder.anchorExternal.decode(ExternalProcessEvent.self, from: data)
+            let event: ExternalProcessEvent
+            if let externalEvent = try? JSONDecoder.anchorExternal.decode(
+                ExternalProcessEvent.self,
+                from: data
+            ) {
+                event = externalEvent
+            } else {
+                let signal = try JSONDecoder.anchorExternal.decode(
+                    CLIProcessSignal.self,
+                    from: data
+                )
+                guard let session = await sessionContextProvider() else {
+                    return nil
+                }
+                guard signal.occurredAt >= session.startedAt else {
+                    try move(fileURL, to: ".ignored")
+                    return nil
+                }
+                event = try signal.externalEvent(
+                    sessionID: session.sessionID,
+                    sourceID: descriptor.id
+                )
+            }
             try move(fileURL, to: ".processed")
             return event
         } catch {

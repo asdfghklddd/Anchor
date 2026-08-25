@@ -1,5 +1,4 @@
 #if os(macOS)
-import CryptoKit
 import Foundation
 
 actor MacWorkspaceObservationReducer {
@@ -87,9 +86,10 @@ actor MacWorkspaceObservationReducer {
         transition: MacApplicationTransition
     ) -> ExternalProcessEvent {
         sequence &+= 1
-        let processID = MacWorkspaceIdentity.processID(
+        let processID = StableProcessIdentity.id(
+            namespace: "mac.workspace",
             sessionID: sessionID,
-            applicationIdentifier: application.identifier
+            externalID: application.identifier
         )
         let state = transition == .terminated
             ? MacWorkspaceStrings.closed
@@ -184,21 +184,6 @@ private enum MacApplicationTransition: Sendable {
         case .terminated:
             MacWorkspaceStrings.closedEvent(applicationName)
         }
-    }
-}
-
-private enum MacWorkspaceIdentity {
-    static func processID(sessionID: UUID, applicationIdentifier: String) -> UUID {
-        let value = "\(sessionID.uuidString.lowercased())|\(applicationIdentifier.lowercased())"
-        var bytes = Array(SHA256.hash(data: Data(value.utf8)).prefix(16))
-        bytes[6] = (bytes[6] & 0x0F) | 0x50
-        bytes[8] = (bytes[8] & 0x3F) | 0x80
-        return UUID(uuid: (
-            bytes[0], bytes[1], bytes[2], bytes[3],
-            bytes[4], bytes[5], bytes[6], bytes[7],
-            bytes[8], bytes[9], bytes[10], bytes[11],
-            bytes[12], bytes[13], bytes[14], bytes[15]
-        ))
     }
 }
 
