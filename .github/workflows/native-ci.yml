@@ -99,3 +99,17 @@ jobs:
             echo "Production archive contains Demo-only copy."
             exit 1
           fi
+      - name: Validate embedded macOS browser bridge
+        if: matrix.name == 'macOS Production'
+        shell: bash
+        run: |
+          set -euo pipefail
+          app_path="$(find "$RUNNER_TEMP/${{ matrix.archive }}.xcarchive/Products/Applications" -maxdepth 1 -name '*.app' -print -quit)"
+          helper_path="$app_path/Contents/Helpers/AnchorWebBridge"
+          test -x "$helper_path"
+          "$helper_path" --print-manifest | jq -e --arg helper "$helper_path" '
+            .name == "com.andywang.anchor.web"
+            and .path == $helper
+            and .type == "stdio"
+            and .allowed_origins == ["chrome-extension://omodbnhjlobhhkjcbaeokekfadoeiemk/"]
+          '

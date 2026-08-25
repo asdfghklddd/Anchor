@@ -27,7 +27,7 @@ human decisions, and the context needed to return after an interruption.
   ingestion, a durable CLI inbox, deterministic event replay, and a retryable
   durable-sync coordinator.
 - Production-only macOS application lifecycle, generic CLI lifecycle, and a
-  privacy-minimal Chromium WebExtension/native-messaging foundation.
+  privacy-minimal Chromium WebExtension with an embedded native-messaging helper.
 
 SwiftData-backed persistence, production CloudKit container activation, Safari
 packaging, site-specific web adapters, and direct integrations remain later phases. The MVP path

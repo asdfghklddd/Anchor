@@ -65,18 +65,29 @@ acknowledgement. Standard output contains protocol frames only.
 
 The host name is `com.andywang.anchor.web`. The extension public key pins its ID
 to `omodbnhjlobhhkjcbaeokekfadoeiemk`, and the native-host manifest allowlists
-only that exact extension origin. The committed manifest is a template; this
-checkpoint does not install or edit any browser profile.
+only that exact extension origin. The production macOS target embeds a dedicated
+universal `AnchorWebBridge` executable at `Contents/Helpers`. The helper has its
+own App Sandbox entitlement and shares only Anchor's App Group, so Chrome does
+not launch the SwiftUI app or gain a broader process boundary. The committed
+manifest is a template; this checkpoint does not install or edit any browser
+profile.
 
 For a local development check:
 
 ```bash
-cd Packages/AnchorKit
-swift build -c release --product anchor
+xcodebuild build \
+  -project Anchor.xcodeproj \
+  -scheme "Anchor macOS" \
+  -configuration Release \
+  -destination "platform=macOS" \
+  -derivedDataPath /tmp/anchor-web-bridge-build
 
-.build/release/anchor browser manifest \
-  --path "$PWD/.build/release/anchor"
+"/tmp/anchor-web-bridge-build/Build/Products/Release/Anchor macOS.app/Contents/Helpers/AnchorWebBridge" \
+  --print-manifest
 ```
+
+The Swift Package CLI remains available for protocol development with
+`anchor browser bridge` and `anchor browser manifest`.
 
 The generated JSON belongs at the browser-specific user NativeMessagingHosts
 location, for example:
@@ -87,8 +98,10 @@ location, for example:
 
 Load `Integrations/AnchorWebExtension` as an unpacked extension only on a test
 browser profile, register the generated manifest, then enable observation from
-the popup. A signed/notarized binary, in-app installer, uninstall path, and store
-distribution are still required before end-user release.
+the popup. A distribution-signed/notarized app, a separately authorized manifest
+installer/uninstaller, and browser-store distribution are still required before
+end-user release. The sandboxed app deliberately does not write Chrome's
+Application Support directories on launch.
 
 ## Safari boundary
 

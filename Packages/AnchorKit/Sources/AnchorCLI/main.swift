@@ -6,10 +6,8 @@ struct AnchorCLI {
     static func main() async throws {
         var arguments = Array(CommandLine.arguments.dropFirst())
         if let origin = arguments.first, origin.hasPrefix("chrome-extension://") {
-            guard origin == BrowserHostConfiguration.allowedOrigin else {
-                throw CLIError.unauthorizedBrowserOrigin
-            }
-            try runBrowserBridge(inbox: FileProcessSource.defaultWebInboxURL())
+            try BrowserNativeMessagingHost.validate(origin: origin)
+            try BrowserNativeMessagingHost.run()
             return
         }
 
@@ -46,7 +44,7 @@ struct AnchorCLI {
             let options = try BrowserBridgeOptions(
                 arguments: Array(arguments.dropFirst())
             )
-            try runBrowserBridge(
+            try BrowserNativeMessagingHost.run(
                 inbox: options.inboxURL ?? FileProcessSource.defaultWebInboxURL()
             )
         case "manifest":
@@ -59,102 +57,8 @@ struct AnchorCLI {
         }
     }
 
-    private static func runBrowserBridge(inbox: URL) throws {
-        while let payload = try readNativeMessage(from: .standardInput) {
-            let response: BrowserHostResponse
-            do {
-                let signal = try JSONDecoder.anchorExternal.decode(
-                    WebProcessSignal.self,
-                    from: payload
-                )
-                try signal.validate()
-                let timestamp = UInt64(
-                    max(0, signal.occurredAt.timeIntervalSince1970 * 1_000)
-                )
-                let filename = String(
-                    format: "%020llu-%020llu-web-%@.json",
-                    timestamp,
-                    signal.sequence,
-                    signal.id.uuidString.lowercased()
-                )
-                _ = try queue(
-                    try JSONEncoder.anchorExternal.encode(signal),
-                    itemID: signal.id,
-                    inbox: inbox,
-                    filename: filename
-                )
-                response = BrowserHostResponse(ok: true, eventID: signal.id)
-            } catch {
-                response = BrowserHostResponse(
-                    ok: false,
-                    error: "Anchor rejected the web activity signal."
-                )
-            }
-
-            try writeNativeMessage(
-                try JSONEncoder().encode(response),
-                to: .standardOutput
-            )
-        }
-    }
-
-    private static func readNativeMessage(from handle: FileHandle) throws -> Data? {
-        guard let header = try readExactly(
-            MemoryLayout<UInt32>.size,
-            from: handle,
-            allowsCleanEOF: true
-        ) else {
-            return nil
-        }
-        let payloadLength = try NativeMessagingFrameCodec.payloadLength(from: header)
-        guard let payload = try readExactly(
-            payloadLength,
-            from: handle,
-            allowsCleanEOF: false
-        ) else {
-            throw NativeMessagingFrameError.invalidPayloadLength(payloadLength)
-        }
-        return payload
-    }
-
-    private static func readExactly(
-        _ count: Int,
-        from handle: FileHandle,
-        allowsCleanEOF: Bool
-    ) throws -> Data? {
-        var result = Data()
-        while result.count < count {
-            let chunk = try handle.read(upToCount: count - result.count) ?? Data()
-            if chunk.isEmpty {
-                if result.isEmpty, allowsCleanEOF {
-                    return nil
-                }
-                throw NativeMessagingFrameError.invalidPayloadLength(result.count)
-            }
-            result.append(chunk)
-        }
-        return result
-    }
-
-    private static func writeNativeMessage(_ payload: Data, to handle: FileHandle) throws {
-        try handle.write(contentsOf: NativeMessagingFrameCodec.frame(payload))
-    }
-
     private static func printBrowserHostManifest(binaryPath: String) throws {
-        guard binaryPath.hasPrefix("/") else {
-            throw CLIError.invalidValue("--path", binaryPath)
-        }
-        let manifest: [String: Any] = [
-            "name": BrowserHostConfiguration.hostName,
-            "description": "Anchor privacy-minimal web observation bridge",
-            "path": binaryPath,
-            "type": "stdio",
-            "allowed_origins": [BrowserHostConfiguration.allowedOrigin],
-        ]
-        let data = try JSONSerialization.data(
-            withJSONObject: manifest,
-            options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
-        )
+        let data = try BrowserNativeMessagingHost.manifestData(binaryPath: binaryPath)
         FileHandle.standardOutput.write(data)
         FileHandle.standardOutput.write(Data("\n".utf8))
     }
@@ -350,24 +254,6 @@ struct AnchorCLI {
     }
 }
 
-private enum BrowserHostConfiguration {
-    static let hostName = "com.andywang.anchor.web"
-    static let extensionID = "omodbnhjlobhhkjcbaeokekfadoeiemk"
-    static let allowedOrigin = "chrome-extension://\(extensionID)/"
-}
-
-private struct BrowserHostResponse: Codable {
-    let ok: Bool
-    let eventID: UUID?
-    let error: String?
-
-    init(ok: Bool, eventID: UUID? = nil, error: String? = nil) {
-        self.ok = ok
-        self.eventID = eventID
-        self.error = error
-    }
-}
-
 private struct BrowserBridgeOptions {
     let inboxURL: URL?
 
@@ -522,7 +408,6 @@ private enum CLIError: LocalizedError {
     case missingValue(String)
     case unknownCommand(String)
     case unknownOption(String)
-    case unauthorizedBrowserOrigin
 
     var errorDescription: String? {
         switch self {
@@ -533,7 +418,6 @@ private enum CLIError: LocalizedError {
         case let .missingValue(option): "Missing value for \(option)."
         case let .unknownCommand(command): "Unknown command: \(command)."
         case let .unknownOption(option): "Unknown option: \(option)."
-        case .unauthorizedBrowserOrigin: "The browser extension origin is not authorized."
         }
     }
 }

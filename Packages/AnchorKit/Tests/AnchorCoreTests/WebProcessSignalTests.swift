@@ -162,6 +162,93 @@ struct WebProcessSignalTests {
         #expect(Data(frame.dropFirst(MemoryLayout<UInt32>.size)) == payload)
     }
 
+    @Test("The native host accepts only the pinned extension origin")
+    func nativeHostPinsExtensionOrigin() throws {
+        try BrowserNativeMessagingHost.validate(
+            origin: BrowserHostConfiguration.allowedOrigin
+        )
+        #expect(throws: BrowserNativeMessagingHostError.unauthorizedOrigin) {
+            try BrowserNativeMessagingHost.validate(
+                origin: "chrome-extension://unauthorized/"
+            )
+        }
+    }
+
+    @Test("The native host manifest contains the embedded helper path")
+    func nativeHostManifestUsesEmbeddedPath() throws {
+        let binaryPath = "/Applications/Anchor.app/Contents/Helpers/AnchorWebBridge"
+        let data = try BrowserNativeMessagingHost.manifestData(binaryPath: binaryPath)
+        let manifest = try #require(
+            JSONSerialization.jsonObject(with: data) as? [String: Any]
+        )
+
+        #expect(manifest["name"] as? String == BrowserHostConfiguration.hostName)
+        #expect(manifest["path"] as? String == binaryPath)
+        #expect(
+            manifest["allowed_origins"] as? [String]
+                == [BrowserHostConfiguration.allowedOrigin]
+        )
+    }
+
+    @Test("The shared native host queues a minimized signal and acknowledges it")
+    func nativeHostQueuesSignal() throws {
+        let inbox = URL.temporaryDirectory.appending(
+            path: "anchor-native-host-\(UUID().uuidString)"
+        )
+        defer { try? FileManager.default.removeItem(at: inbox) }
+        let input = Pipe()
+        let output = Pipe()
+        let signal = try WebProcessSignal(
+            activityID: UUID(),
+            sequence: 8,
+            state: .active,
+            siteHost: "https://Docs.Example.com/private?token=secret"
+        )
+        try input.fileHandleForWriting.write(
+            contentsOf: NativeMessagingFrameCodec.frame(
+                try JSONEncoder.anchorExternal.encode(signal)
+            )
+        )
+        try input.fileHandleForWriting.close()
+
+        try BrowserNativeMessagingHost.run(
+            inbox: inbox,
+            input: input.fileHandleForReading,
+            output: output.fileHandleForWriting
+        )
+
+        let optionalResponseHeader = try output.fileHandleForReading.read(
+            upToCount: MemoryLayout<UInt32>.size
+        )
+        let responseHeader = try #require(optionalResponseHeader)
+        let responseLength = try NativeMessagingFrameCodec.payloadLength(
+            from: responseHeader
+        )
+        let optionalResponseData = try output.fileHandleForReading.read(
+            upToCount: responseLength
+        )
+        let responseData = try #require(optionalResponseData)
+        let response = try #require(
+            JSONSerialization.jsonObject(with: responseData) as? [String: Any]
+        )
+        #expect(response["ok"] as? Bool == true)
+
+        let queuedURL = try #require(
+            FileManager.default.contentsOfDirectory(
+                at: inbox,
+                includingPropertiesForKeys: nil
+            ).first(where: { $0.pathExtension == "json" })
+        )
+        let queuedData = try Data(contentsOf: queuedURL)
+        let queued = try JSONDecoder.anchorExternal.decode(
+            WebProcessSignal.self,
+            from: queuedData
+        )
+        let queuedJSON = try #require(String(data: queuedData, encoding: .utf8))
+        #expect(queued.siteHost == "docs.example.com")
+        #expect(!queuedJSON.contains("secret"))
+    }
+
     private func firstEvent(
         from stream: AsyncThrowingStream<ExternalProcessEvent, Error>
     ) async throws -> ExternalProcessEvent {

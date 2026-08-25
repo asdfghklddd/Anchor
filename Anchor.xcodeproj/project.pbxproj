@@ -19,6 +19,8 @@
 		AA100000000000000000000A /* AnchorMacFeatures in Frameworks */ = {isa = PBXBuildFile; productRef = AA200000000000000000000A /* AnchorMacFeatures */; };
 		AA100000000000000000000B /* AnchorDemoSupport in Frameworks */ = {isa = PBXBuildFile; productRef = AA200000000000000000000B /* AnchorDemoSupport */; };
 		AA100000000000000000000C /* AnchorTransport in Frameworks */ = {isa = PBXBuildFile; productRef = AA200000000000000000000C /* AnchorTransport */; };
+		AA100000000000000000000D /* AnchorCore in Frameworks */ = {isa = PBXBuildFile; productRef = AA200000000000000000000D /* AnchorCore */; };
+		AA100000000000000000000E /* AnchorWebBridge in Copy Web Bridge */ = {isa = PBXBuildFile; fileRef = AA4000000000000000000007 /* AnchorWebBridge */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,7 +38,28 @@
 			remoteGlobalIDString = AA5000000000000000000004;
 			remoteInfo = "Anchor macOS Demo";
 		};
+		AA3000000000000000000003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA5000000000000000000007;
+			remoteInfo = AnchorWebBridge;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AA4300000000000000000001 /* Copy Web Bridge */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Helpers;
+			dstSubfolderSpec = 1;
+			files = (
+				AA100000000000000000000E /* AnchorWebBridge in Copy Web Bridge */,
+			);
+			name = "Copy Web Bridge";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		AA4000000000000000000001 /* Anchor iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anchor iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -45,6 +68,7 @@
 		AA4000000000000000000004 /* Anchor macOS Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anchor macOS Demo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA4000000000000000000005 /* AnchorIOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnchorIOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA4000000000000000000006 /* AnchorMacUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnchorMacUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA4000000000000000000007 /* AnchorWebBridge */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AnchorWebBridge; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -81,6 +105,11 @@
 		AA4100000000000000000007 /* Apps/Shared */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Apps/Shared;
+			sourceTree = "<group>";
+		};
+		AA4100000000000000000008 /* Apps/AnchorWebBridge */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Apps/AnchorWebBridge;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -140,6 +169,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA4200000000000000000007 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA100000000000000000000D /* AnchorCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -152,6 +189,7 @@
 				AA4100000000000000000004 /* Apps/AnchorMacDemo */,
 				AA4100000000000000000005 /* Apps/AnchorIOSUITests */,
 				AA4100000000000000000006 /* Apps/AnchorMacUITests */,
+				AA4100000000000000000008 /* Apps/AnchorWebBridge */,
 				AA4100000000000000000007 /* Apps/Shared */,
 				AA0000000000000000000003 /* Products */,
 			);
@@ -166,6 +204,7 @@
 				AA4000000000000000000004 /* Anchor macOS Demo.app */,
 				AA4000000000000000000005 /* AnchorIOSUITests.xctest */,
 				AA4000000000000000000006 /* AnchorMacUITests.xctest */,
+				AA4000000000000000000007 /* AnchorWebBridge */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -232,10 +271,12 @@
 				AA7000000000000000000003 /* Sources */,
 				AA4200000000000000000003 /* Frameworks */,
 				AA7100000000000000000003 /* Resources */,
+				AA4300000000000000000001 /* Copy Web Bridge */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AA7200000000000000000003 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				AA4100000000000000000003 /* Apps/AnchorMac */,
@@ -323,6 +364,28 @@
 			productReference = AA4000000000000000000006 /* AnchorMacUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		AA5000000000000000000007 /* AnchorWebBridge */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA6000000000000000000007 /* Build configuration list for PBXNativeTarget "AnchorWebBridge" */;
+			buildPhases = (
+				AA7000000000000000000007 /* Sources */,
+				AA4200000000000000000007 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AA4100000000000000000008 /* Apps/AnchorWebBridge */,
+			);
+			name = AnchorWebBridge;
+			packageProductDependencies = (
+				AA200000000000000000000D /* AnchorCore */,
+			);
+			productName = AnchorWebBridge;
+			productReference = AA4000000000000000000007 /* AnchorWebBridge */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -353,6 +416,9 @@
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = AA5000000000000000000004;
 					};
+					AA5000000000000000000007 = {
+						CreatedOnToolsVersion = 26.2;
+					};
 				};
 			};
 			buildConfigurationList = AA6000000000000000000000 /* Build configuration list for PBXProject "Anchor" */;
@@ -379,6 +445,7 @@
 				AA5000000000000000000004 /* Anchor macOS Demo */,
 				AA5000000000000000000005 /* AnchorIOSUITests */,
 				AA5000000000000000000006 /* AnchorMacUITests */,
+				AA5000000000000000000007 /* AnchorWebBridge */,
 			);
 		};
 /* End PBXProject section */
@@ -471,6 +538,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA7000000000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -483,6 +557,11 @@
 			isa = PBXTargetDependency;
 			target = AA5000000000000000000004 /* Anchor macOS Demo */;
 			targetProxy = AA3000000000000000000002 /* PBXContainerItemProxy */;
+		};
+		AA7200000000000000000003 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA5000000000000000000007 /* AnchorWebBridge */;
+			targetProxy = AA3000000000000000000003 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -847,6 +926,45 @@
 			};
 			name = Release;
 		};
+		AA9000000000000000000071 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Apps/AnchorWebBridge/AnchorWebBridge.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				DEVELOPMENT_TEAM = DZPUSA6232;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.web-bridge;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		AA9000000000000000000072 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Apps/AnchorWebBridge/AnchorWebBridge.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				DEVELOPMENT_TEAM = DZPUSA6232;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.web-bridge;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 6.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -909,6 +1027,15 @@
 			buildConfigurations = (
 				AA9000000000000000000061 /* Debug */,
 				AA9000000000000000000062 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA6000000000000000000007 /* Build configuration list for PBXNativeTarget "AnchorWebBridge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA9000000000000000000071 /* Debug */,
+				AA9000000000000000000072 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -982,6 +1109,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AA8000000000000000000001 /* XCLocalSwiftPackageReference "Packages/AnchorKit" */;
 			productName = AnchorTransport;
+		};
+		AA200000000000000000000D /* AnchorCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA8000000000000000000001 /* XCLocalSwiftPackageReference "Packages/AnchorKit" */;
+			productName = AnchorCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

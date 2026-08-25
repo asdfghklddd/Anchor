@@ -9,6 +9,7 @@ public enum FileProcessSignalKind: Sendable {
 /// The CLI writes one atomically-created JSON file per observation; this source
 /// moves consumed files out of the inbox before yielding them to the actor.
 public struct FileProcessSource: ProcessSource, Sendable {
+    public static let appGroupIdentifier = "group.com.andywang.anchor"
     public static let defaultSourceID = UUID(uuidString: "00000000-0000-4000-8000-000000000401") ?? UUID()
 
     public let directoryURL: URL
@@ -88,8 +89,8 @@ public struct FileProcessSource: ProcessSource, Sendable {
 
     public static func defaultInboxURL() -> URL {
         #if os(macOS)
-        return FileManager.default.homeDirectoryForCurrentUser
-            .appending(path: "Library/Group Containers/group.com.andywang.anchor/Anchor/Inbox", directoryHint: .isDirectory)
+        return defaultAppGroupContainerURL()
+            .appending(path: "Anchor/Inbox", directoryHint: .isDirectory)
         #else
         return URL.applicationSupportDirectory
             .appending(path: "Anchor/Inbox", directoryHint: .isDirectory)
@@ -98,16 +99,31 @@ public struct FileProcessSource: ProcessSource, Sendable {
 
     public static func defaultWebInboxURL() -> URL {
         #if os(macOS)
-        return FileManager.default.homeDirectoryForCurrentUser
-            .appending(
-                path: "Library/Group Containers/group.com.andywang.anchor/Anchor/WebInbox",
-                directoryHint: .isDirectory
-            )
+        return defaultAppGroupContainerURL()
+            .appending(path: "Anchor/WebInbox", directoryHint: .isDirectory)
         #else
         return URL.applicationSupportDirectory
             .appending(path: "Anchor/WebInbox", directoryHint: .isDirectory)
         #endif
     }
+
+    #if os(macOS)
+    private static func defaultAppGroupContainerURL() -> URL {
+        let fileManager = FileManager.default
+        if let containerURL = fileManager.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupIdentifier
+        ) {
+            return containerURL
+        }
+        // The supported standalone CLI is not sandboxed, so it falls back to
+        // the canonical user App Group path when the entitlement API is absent.
+        return fileManager.homeDirectoryForCurrentUser
+            .appending(
+                path: "Library/Group Containers/\(appGroupIdentifier)",
+                directoryHint: .isDirectory
+            )
+    }
+    #endif
 
     private func makeInboxDirectories() throws {
         let fileManager = FileManager.default
