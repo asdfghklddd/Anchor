@@ -18,9 +18,12 @@ struct AnchorMacApp: App {
         let localRepository = LocalSessionRepository(sourceID: identityStore.localDeviceID())
         let cloudSyncRunner = AnchorCloudSyncFactory.makeRunner(local: localRepository)
         let repository = LinkedSessionRepository(base: localRepository, transport: server)
+        let workspaceSource = MacWorkspaceProcessSource {
+            await repository.currentProjection().session?.id
+        }
         let sourceCoordinator = ProcessSourceCoordinator(
             repository: repository,
-            sources: [FileProcessSource()]
+            sources: [FileProcessSource(), workspaceSource]
         )
         server.onCurrentProcessSnapshot = {
             let projection = await repository.currentProjection()
