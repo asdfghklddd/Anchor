@@ -5,7 +5,14 @@ file from the shared application-group inbox:
 
 `~/Library/Group Containers/group.com.andywang.anchor/Anchor/Inbox/`
 
-The `anchor` executable is built from `Packages/AnchorKit`:
+The production macOS app embeds a separately signed `anchor` executable in
+`Contents/Helpers`. The Sources screen lets the user copy it to an explicitly
+selected shell `PATH` location; the sandbox never edits shell profiles or
+system directories on launch. A security-scoped bookmark is retained only to
+report whether that selected installation still exists.
+
+The same executable is also built from `Packages/AnchorKit` for protocol
+development:
 
 ```sh
 cd Packages/AnchorKit

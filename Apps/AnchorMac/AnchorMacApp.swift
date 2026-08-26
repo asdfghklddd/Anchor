@@ -11,6 +11,7 @@ struct AnchorMacApp: App {
     private let proximityAdvertiser: AnchorProximityAdvertiser
     private let sourceCoordinator: ProcessSourceCoordinator
     private let cloudSyncRunner: DurableSyncRunner?
+    private let sourceSetupModel: MacSourceSetupModel
 
     init() {
         let identityStore = PairingIdentityStore()
@@ -100,6 +101,7 @@ struct AnchorMacApp: App {
         self.server = server
         proximityAdvertiser = advertiser
         self.cloudSyncRunner = cloudSyncRunner
+        sourceSetupModel = MacSourceSetupModel()
         model = AnchorSessionModel(
             repository: repository,
             sourceHealthProvider: sourceCoordinator,
@@ -113,7 +115,11 @@ struct AnchorMacApp: App {
 
     var body: some Scene {
         Window("Anchor", id: "anchor-details") {
-            AnchorMacRootView(model: model, linkController: server)
+            AnchorMacRootView(
+                model: model,
+                linkController: server,
+                sourceSetupModel: sourceSetupModel
+            )
         }
         .defaultSize(width: 1080, height: 720)
 

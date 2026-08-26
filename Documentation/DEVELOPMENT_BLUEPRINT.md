@@ -430,7 +430,8 @@ are complete. Continue in this order:
    the existing `SessionRepository` protocol.
 3. Deploy the private CloudKit record schema, add matching entitlements, and
    surface local/cloud freshness without treating CloudKit as a real-time bus.
-4. Add the signed CLI distribution and manual Mac event capture UI.
+4. Validate the signed CLI and Chromium bridge installers in a notarized build,
+   then publish the browser extension through supported stores.
 5. Add production source adapters only after their permission and privacy scopes
    are documented and tested.
 6. Add widgets, Live Activities, and Safari integration after the persistence and

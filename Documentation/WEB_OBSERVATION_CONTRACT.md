@@ -68,9 +68,17 @@ to `omodbnhjlobhhkjcbaeokekfadoeiemk`, and the native-host manifest allowlists
 only that exact extension origin. The production macOS target embeds a dedicated
 universal `AnchorWebBridge` executable at `Contents/Helpers`. The helper has its
 own App Sandbox entitlement and shares only Anchor's App Group, so Chrome does
-not launch the SwiftUI app or gain a broader process boundary. The committed
-manifest is a template; this checkpoint does not install or edit any browser
-profile.
+not launch the SwiftUI app or gain a broader process boundary. The production
+Sources screen can install the pinned native-host manifest only after the user
+chooses a browser support folder in the system directory picker. It writes only
+`NativeMessagingHosts/com.andywang.anchor.web.json` below that folder and keeps
+a security-scoped bookmark for later diagnostics. It never scans or edits the
+rest of the browser profile.
+
+The formal app also bundles the reviewable WebExtension directory and can
+reveal it in Finder for explicit unpacked loading. Browser-store publication is
+still required for a normal end-user extension installation; installing the
+native host does not claim that the browser extension is enabled.
 
 For a local development check:
 
@@ -98,10 +106,10 @@ location, for example:
 
 Load `Integrations/AnchorWebExtension` as an unpacked extension only on a test
 browser profile, register the generated manifest, then enable observation from
-the popup. A distribution-signed/notarized app, a separately authorized manifest
-installer/uninstaller, and browser-store distribution are still required before
-end-user release. The sandboxed app deliberately does not write Chrome's
-Application Support directories on launch.
+the popup. A distribution-signed/notarized app and browser-store distribution
+are still required before end-user release. The sandboxed app deliberately does
+not write browser Application Support directories without a user-selected
+Powerbox grant.
 
 ## Safari boundary
 

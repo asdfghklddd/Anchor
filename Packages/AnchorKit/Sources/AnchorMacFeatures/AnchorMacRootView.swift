@@ -6,6 +6,7 @@ import SwiftUI
 public struct AnchorMacRootView: View {
     private let model: AnchorSessionModel
     private let linkController: (any LocalLinkControlling)?
+    private let sourceSetupModel: MacSourceSetupModel?
     private let auxiliaryToolbarLabel: String?
     private let auxiliaryToolbarAction: (() -> Void)?
     @AppStorage("anchor.mac.selected-section") private var selection = MacSection.current
@@ -15,11 +16,13 @@ public struct AnchorMacRootView: View {
     public init(
         model: AnchorSessionModel,
         linkController: (any LocalLinkControlling)? = nil,
+        sourceSetupModel: MacSourceSetupModel? = nil,
         auxiliaryToolbarLabel: String? = nil,
         auxiliaryToolbarAction: (() -> Void)? = nil
     ) {
         self.model = model
         self.linkController = linkController
+        self.sourceSetupModel = sourceSetupModel
         self.auxiliaryToolbarLabel = auxiliaryToolbarLabel
         self.auxiliaryToolbarAction = auxiliaryToolbarAction
     }
@@ -99,6 +102,7 @@ public struct AnchorMacRootView: View {
         case .sources:
             MacSourcesView(
                 projection: model.projection,
+                sourceSetupModel: sourceSetupModel,
                 onOpenSettings: { selection = .settings }
             )
         case .settings:

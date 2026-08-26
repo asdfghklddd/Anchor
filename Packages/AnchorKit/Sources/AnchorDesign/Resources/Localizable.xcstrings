@@ -4567,6 +4567,168 @@
         }
       }
     },
+    "source.setup.available" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Available" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "可安装" } }
+      }
+    },
+    "source.setup.browser.count" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld browsers" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个浏览器" } }
+      }
+    },
+    "source.setup.browser.install" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Install browser bridge…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "安装浏览器桥接…" } }
+      }
+    },
+    "source.setup.browser.missing" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The browser bridge is not included in this build." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此构建未包含浏览器桥接。" } }
+      }
+    },
+    "source.setup.browser.panel.message" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose the %@ support folder. Anchor will add only its native messaging manifest." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请选择 %@ 的支持文件夹。Anchor 只会添加自己的原生消息清单。" } }
+      }
+    },
+    "source.setup.browser.panel.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Install for %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "为 %@ 安装" } }
+      }
+    },
+    "source.setup.command.install" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Install command…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "安装命令…" } }
+      }
+    },
+    "source.setup.command.missing" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The Anchor command is not included in this build." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此构建未包含 Anchor 命令。" } }
+      }
+    },
+    "source.setup.command.panel.message" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose a folder already included in your shell PATH." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请选择已包含在 Shell PATH 中的文件夹。" } }
+      }
+    },
+    "source.setup.command.panel.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Install Anchor Command" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "安装 Anchor 命令" } }
+      }
+    },
+    "source.setup.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connect each layer explicitly. Anchor observes lifecycle and structured progress without reading document content." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "逐层明确连接。Anchor 获取生命周期与结构化进度，但不会读取文档内容。" } }
+      }
+    },
+    "source.setup.extension.missing" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The Anchor browser extension is not included in this build." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此构建未包含 Anchor 浏览器扩展。" } }
+      }
+    },
+    "source.setup.extension.show" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show extension" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "显示扩展" } }
+      }
+    },
+    "source.setup.install" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Install" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "安装" } }
+      }
+    },
+    "source.setup.installed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Installed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已安装" } }
+      }
+    },
+    "source.setup.mac-apps" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mac apps" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Mac App" } }
+      }
+    },
+    "source.setup.mac-apps.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Public workspace events show which apps are open, active, or closed." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通过公开的工作区事件获取 App 的打开、活跃与关闭状态。" } }
+      }
+    },
+    "source.setup.ready" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ready" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已就绪" } }
+      }
+    },
+    "source.setup.shell.copied" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "zsh setup copied. Paste it into Terminal to enable observation for that shell." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已复制 zsh 设置。粘贴到终端即可为该 Shell 启用状态获取。" } }
+      }
+    },
+    "source.setup.shell.copy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Copy zsh setup" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制 zsh 设置" } }
+      }
+    },
+    "source.setup.terminal" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Terminal commands" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "终端命令" } }
+      }
+    },
+    "source.setup.terminal.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Install the signed anchor command, then opt in to the zsh lifecycle hook. Command arguments and full paths are not stored." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "安装已签名的 anchor 命令，再主动启用 zsh 生命周期钩子。命令参数与完整路径不会被保存。" } }
+      }
+    },
+    "source.setup.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Set up observation" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "配置状态获取" } }
+      }
+    },
+    "source.setup.unavailable" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unavailable in this build" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此构建不可用" } }
+      }
+    },
+    "source.setup.web-apps" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Web apps" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Web App" } }
+      }
+    },
+    "source.setup.web-apps.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Install the native bridge for a Chromium browser. The extension reports only the active hostname unless a reviewed site adapter provides structured progress." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "为 Chromium 浏览器安装原生桥接。除非经过审核的站点适配器提供结构化进度，否则扩展只上报当前域名。" } }
+      }
+    },
+    "source.setup.web.distribution-detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The bridge and extension are separate: the bridge can be installed here, while a release build still requires extension-store distribution or explicit unpacked loading." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "桥接与扩展相互独立：可在此安装桥接；正式发布仍需通过扩展商店分发，或由用户明确以未打包方式载入扩展。" } }
+      }
+    },
     "sources" : {
       "localizations" : {
         "en" : {

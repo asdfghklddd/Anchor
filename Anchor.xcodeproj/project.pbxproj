@@ -21,6 +21,10 @@
 		AA100000000000000000000C /* AnchorTransport in Frameworks */ = {isa = PBXBuildFile; productRef = AA200000000000000000000C /* AnchorTransport */; };
 		AA100000000000000000000D /* AnchorCore in Frameworks */ = {isa = PBXBuildFile; productRef = AA200000000000000000000D /* AnchorCore */; };
 		AA100000000000000000000E /* AnchorWebBridge in Copy Web Bridge */ = {isa = PBXBuildFile; fileRef = AA4000000000000000000007 /* AnchorWebBridge */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BB1000000000000000000001 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB4000000000000000000002 /* main.swift */; };
+		BB1000000000000000000002 /* AnchorCore in Frameworks */ = {isa = PBXBuildFile; productRef = BB2000000000000000000001 /* AnchorCore */; };
+		BB1000000000000000000003 /* anchor in Copy Web Bridge */ = {isa = PBXBuildFile; fileRef = BB4000000000000000000001 /* anchor */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BB1000000000000000000004 /* AnchorWebExtension in Resources */ = {isa = PBXBuildFile; fileRef = BB4000000000000000000003 /* AnchorWebExtension */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +49,13 @@
 			remoteGlobalIDString = AA5000000000000000000007;
 			remoteInfo = AnchorWebBridge;
 		};
+		BB3000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BB5000000000000000000001;
+			remoteInfo = AnchorCommand;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -55,6 +66,7 @@
 			dstSubfolderSpec = 1;
 			files = (
 				AA100000000000000000000E /* AnchorWebBridge in Copy Web Bridge */,
+				BB1000000000000000000003 /* anchor in Copy Web Bridge */,
 			);
 			name = "Copy Web Bridge";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -69,6 +81,9 @@
 		AA4000000000000000000005 /* AnchorIOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnchorIOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA4000000000000000000006 /* AnchorMacUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnchorMacUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA4000000000000000000007 /* AnchorWebBridge */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AnchorWebBridge; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB4000000000000000000001 /* anchor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = anchor; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB4000000000000000000002 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Packages/AnchorKit/Sources/AnchorCLI/main.swift; sourceTree = SOURCE_ROOT; };
+		BB4000000000000000000003 /* AnchorWebExtension */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Integrations/AnchorWebExtension; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -177,6 +192,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BB4200000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB1000000000000000000002 /* AnchorCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -191,6 +214,8 @@
 				AA4100000000000000000006 /* Apps/AnchorMacUITests */,
 				AA4100000000000000000008 /* Apps/AnchorWebBridge */,
 				AA4100000000000000000007 /* Apps/Shared */,
+				BB4000000000000000000002 /* main.swift */,
+				BB4000000000000000000003 /* AnchorWebExtension */,
 				AA0000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -205,6 +230,7 @@
 				AA4000000000000000000005 /* AnchorIOSUITests.xctest */,
 				AA4000000000000000000006 /* AnchorMacUITests.xctest */,
 				AA4000000000000000000007 /* AnchorWebBridge */,
+				BB4000000000000000000001 /* anchor */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -277,6 +303,7 @@
 			);
 			dependencies = (
 				AA7200000000000000000003 /* PBXTargetDependency */,
+				BB7200000000000000000001 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				AA4100000000000000000003 /* Apps/AnchorMac */,
@@ -386,6 +413,25 @@
 			productReference = AA4000000000000000000007 /* AnchorWebBridge */;
 			productType = "com.apple.product-type.tool";
 		};
+		BB5000000000000000000001 /* AnchorCommand */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BB6000000000000000000001 /* Build configuration list for PBXNativeTarget "AnchorCommand" */;
+			buildPhases = (
+				BB7000000000000000000001 /* Sources */,
+				BB4200000000000000000001 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AnchorCommand;
+			packageProductDependencies = (
+				BB2000000000000000000001 /* AnchorCore */,
+			);
+			productName = anchor;
+			productReference = BB4000000000000000000001 /* anchor */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -419,6 +465,9 @@
 					AA5000000000000000000007 = {
 						CreatedOnToolsVersion = 26.2;
 					};
+					BB5000000000000000000001 = {
+						CreatedOnToolsVersion = 26.2;
+					};
 				};
 			};
 			buildConfigurationList = AA6000000000000000000000 /* Build configuration list for PBXProject "Anchor" */;
@@ -446,6 +495,7 @@
 				AA5000000000000000000005 /* AnchorIOSUITests */,
 				AA5000000000000000000006 /* AnchorMacUITests */,
 				AA5000000000000000000007 /* AnchorWebBridge */,
+				BB5000000000000000000001 /* AnchorCommand */,
 			);
 		};
 /* End PBXProject section */
@@ -469,6 +519,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB1000000000000000000004 /* AnchorWebExtension in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -545,6 +596,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BB7000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB1000000000000000000001 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -562,6 +621,11 @@
 			isa = PBXTargetDependency;
 			target = AA5000000000000000000007 /* AnchorWebBridge */;
 			targetProxy = AA3000000000000000000003 /* PBXContainerItemProxy */;
+		};
+		BB7200000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BB5000000000000000000001 /* AnchorCommand */;
+			targetProxy = BB3000000000000000000001 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -965,6 +1029,45 @@
 			};
 			name = Release;
 		};
+		BB9000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				DEVELOPMENT_TEAM = DZPUSA6232;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				OTHER_SWIFT_FLAGS = "-parse-as-library";
+				PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.command;
+				PRODUCT_NAME = anchor;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		BB9000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				DEVELOPMENT_TEAM = DZPUSA6232;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				OTHER_SWIFT_FLAGS = "-parse-as-library";
+				PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.command;
+				PRODUCT_NAME = anchor;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 6.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1040,6 +1143,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		BB6000000000000000000001 /* Build configuration list for PBXNativeTarget "AnchorCommand" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB9000000000000000000001 /* Debug */,
+				BB9000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -1111,6 +1223,11 @@
 			productName = AnchorTransport;
 		};
 		AA200000000000000000000D /* AnchorCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA8000000000000000000001 /* XCLocalSwiftPackageReference "Packages/AnchorKit" */;
+			productName = AnchorCore;
+		};
+		BB2000000000000000000001 /* AnchorCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = AA8000000000000000000001 /* XCLocalSwiftPackageReference "Packages/AnchorKit" */;
 			productName = AnchorCore;
