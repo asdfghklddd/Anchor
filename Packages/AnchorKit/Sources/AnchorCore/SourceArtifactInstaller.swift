@@ -40,6 +40,7 @@ public struct SourceArtifactInstaller: Sendable {
         }
     }
 
+    #if os(macOS)
     @discardableResult
     public func installBrowserManifest(
         helperURL: URL,
@@ -130,6 +131,7 @@ public struct SourceArtifactInstaller: Sendable {
         }
         return object["external_update_url"] as? String == Self.chromeWebStoreUpdateURL
     }
+    #endif
 }
 
 public enum SourceArtifactInstallerError: LocalizedError, Equatable, Sendable {
