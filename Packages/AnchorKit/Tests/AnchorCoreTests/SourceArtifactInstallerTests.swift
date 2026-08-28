@@ -76,6 +76,104 @@ struct SourceArtifactInstallerTests {
         #expect(!installer.browserManifestIsCurrent(at: manifest, helperURL: movedHelper))
     }
 
+    @Test(
+        "Known browsers resolve to fixed user support locations",
+        arguments: [
+            (ChromiumBrowserTarget.chrome, "Library/Application Support/Google/Chrome"),
+            (ChromiumBrowserTarget.edge, "Library/Application Support/Microsoft Edge"),
+            (ChromiumBrowserTarget.brave, "Library/Application Support/BraveSoftware/Brave-Browser"),
+            (ChromiumBrowserTarget.chromium, "Library/Application Support/Chromium"),
+        ]
+    )
+    func resolvesFixedBrowserSupportLocations(
+        browser: ChromiumBrowserTarget,
+        relativePath: String
+    ) {
+        let home = URL(filePath: "/Users/anchor-test", directoryHint: .isDirectory)
+
+        #expect(
+            browser.applicationSupportURL(homeDirectory: home).path
+                == home.appending(path: relativePath, directoryHint: .isDirectory).path
+        )
+    }
+
+    @Test("The automatic browser installer writes only the fixed manifest")
+    func installsManifestAtFixedBrowserLocation() throws {
+        let directory = makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let helper = directory.appending(path: "Anchor.app/Contents/Helpers/AnchorWebBridge")
+        try FileManager.default.createDirectory(
+            at: helper.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("helper".utf8).write(to: helper)
+
+        let manifest = try SourceArtifactInstaller().installBrowserManifest(
+            helperURL: helper,
+            browser: .chrome,
+            homeDirectory: directory
+        )
+
+        #expect(
+            manifest.path
+                == directory.appending(
+                    path: "Library/Application Support/Google/Chrome/NativeMessagingHosts/com.andywang.anchor.web.json"
+                ).path
+        )
+    }
+
+    @Test("Chrome external installation uses only the pinned Web Store update URL")
+    func installsPinnedChromeExternalExtensionPreference() throws {
+        let directory = makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let installer = SourceArtifactInstaller()
+
+        let preference = try #require(
+            try installer.installExternalExtensionPreference(
+                browser: .chrome,
+                homeDirectory: directory
+            )
+        )
+
+        #expect(
+            preference.path == directory.appending(
+                path: "Library/Application Support/Google/Chrome/External Extensions/omodbnhjlobhhkjcbaeokekfadoeiemk.json"
+            ).path
+        )
+        #expect(
+            installer.externalExtensionPreferenceIsCurrent(
+                browser: .chrome,
+                homeDirectory: directory
+            )
+        )
+        let object = try #require(
+            JSONSerialization.jsonObject(with: Data(contentsOf: preference)) as? [String: String]
+        )
+        #expect(object == [
+            "external_update_url": SourceArtifactInstaller.chromeWebStoreUpdateURL,
+        ])
+    }
+
+    @Test("Unvalidated browsers keep the explicit store fallback")
+    func doesNotWriteUnvalidatedExternalExtensionPreferences() throws {
+        let directory = makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let installer = SourceArtifactInstaller()
+
+        for browser in [
+            ChromiumBrowserTarget.edge,
+            .brave,
+            .chromium,
+        ] {
+            #expect(
+                try installer.installExternalExtensionPreference(
+                    browser: browser,
+                    homeDirectory: directory
+                ) == nil
+            )
+        }
+    }
+
     private func makeTemporaryDirectory() -> URL {
         let directory = URL.temporaryDirectory.appending(
             path: "anchor-source-installer-\(UUID().uuidString)",

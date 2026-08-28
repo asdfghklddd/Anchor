@@ -8,8 +8,9 @@ or network traffic.
 
 The production macOS app now registers a dedicated `WebProcessSource` that
 consumes `anchor.web.activity.v1` signals from the App Group `WebInbox`. The
-Chromium-compatible WebExtension in `Integrations/AnchorWebExtension` is disabled
-by default and begins observing only after the user enables its popup switch.
+Chromium-compatible WebExtension in `Integrations/AnchorWebExtension` begins
+after the browser's explicit installation confirmation. Its popup switch lets
+the user disable observation at any time without uninstalling it.
 
 The generic extension reports:
 
@@ -69,16 +70,28 @@ only that exact extension origin. The production macOS target embeds a dedicated
 universal `AnchorWebBridge` executable at `Contents/Helpers`. The helper has its
 own App Sandbox entitlement and shares only Anchor's App Group, so Chrome does
 not launch the SwiftUI app or gain a broader process boundary. The production
-Sources screen can install the pinned native-host manifest only after the user
-chooses a browser support folder in the system directory picker. It writes only
-`NativeMessagingHosts/com.andywang.anchor.web.json` below that folder and keeps
-a security-scoped bookmark for later diagnostics. It never scans or edits the
-rest of the browser profile.
+Sources screen asks a private, on-demand XPC service to install the pinned
+native-host manifest for a fixed supported browser target. The service accepts
+only the Chrome, Edge, Brave, or Chromium identifiers, computes the standard
+user support location itself, and writes the fixed
+`NativeMessagingHosts/com.andywang.anchor.web.json`. For Chrome it also writes
+`External Extensions/omodbnhjlobhhkjcbaeokekfadoeiemk.json`, containing only
+Chrome Web Store's official `external_update_url`. It never scans or edits the
+rest of the browser profile. The direct-distribution XPC service is deliberately
+outside App Sandbox so it can write those standard locations, while the main
+Anchor app and native messaging helper remain sandboxed. The service is
+on-demand, rejects other user IDs, and exposes no arbitrary path or file-write
+operation.
 
 The formal app also bundles the reviewable WebExtension directory and can
-reveal it in Finder for explicit unpacked loading. Browser-store publication is
-still required for a normal end-user extension installation; installing the
-native host does not claim that the browser extension is enabled.
+reveal it in Finder for explicit unpacked loading. For a cold Chrome launch,
+Anchor prepares both fixed files and launches Chrome so its documented external
+extension dialog remains the user's final confirmation. If Chrome is already
+running, or for another validated browser target, Anchor opens the store listing
+instead of forcibly quitting the user's browser. A successful first native message writes a small
+App Group connection receipt so Anchor can replace "awaiting confirmation" with
+"connected" without reading the browser profile. Browser-store publication is
+still required before that release flow can be exercised end to end.
 
 For a local development check:
 
@@ -107,9 +120,9 @@ location, for example:
 Load `Integrations/AnchorWebExtension` as an unpacked extension only on a test
 browser profile, register the generated manifest, then enable observation from
 the popup. A distribution-signed/notarized app and browser-store distribution
-are still required before end-user release. The sandboxed app deliberately does
-not write browser Application Support directories without a user-selected
-Powerbox grant.
+are still required before end-user release. The formal app's narrowly scoped XPC
+service replaces the earlier user-selected Powerbox folder step; unpacked loading
+remains a development fallback rather than the intended end-user flow.
 
 ## Safari boundary
 
@@ -124,6 +137,9 @@ not presented as Safari support.
 - Chrome's native messaging contract defines the host manifest, pinned
   `allowed_origins`, stdio framing, and output limits:
   <https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging>
+- Chrome's macOS external-extension contract defines the per-user preferences
+  file, Web Store-only update URL, and mandatory user confirmation:
+  <https://developer.chrome.com/docs/extensions/how-to/distribute/install-extensions>
 - Apple's Safari Web Extension documentation defines the three-sandbox native
   messaging and App Group design:
   <https://developer.apple.com/documentation/safariservices/messaging-between-the-app-and-javascript-in-a-safari-web-extension>

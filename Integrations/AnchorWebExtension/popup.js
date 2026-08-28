@@ -28,8 +28,8 @@ function statusText(enabled, bridgeStatus) {
 
 async function render() {
   const stored = await chrome.storage.local.get({
-    enabled: false,
-    bridgeStatus: "disabled"
+    enabled: true,
+    bridgeStatus: "connecting"
   });
   enabledInput.checked = stored.enabled === true;
   status.textContent = statusText(enabledInput.checked, stored.bridgeStatus);

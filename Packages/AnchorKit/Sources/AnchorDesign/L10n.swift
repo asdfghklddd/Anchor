@@ -301,7 +301,29 @@ public enum L10n {
     )
     public static let sourceSetupWebAppsDetail = AnchorStrings.value(
         "source.setup.web-apps.detail",
-        default: "Install the native bridge for a Chromium browser. The extension reports only the active hostname unless a reviewed site adapter provides structured progress."
+        default: "Anchor prepares the native bridge automatically, then opens the browser store. You only confirm the extension in your browser."
+    )
+    public static func sourceSetupConnectBrowser(_ browser: String) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value("source.setup.browser.connect", default: "Connect %@"),
+            browser
+        )
+    }
+    public static let sourceSetupOtherBrowser = AnchorStrings.value(
+        "source.setup.browser.other",
+        default: "Other browser"
+    )
+    public static let sourceSetupAwaitingBrowserConfirmation = AnchorStrings.value(
+        "source.setup.browser.awaiting-confirmation",
+        default: "Awaiting browser confirmation"
+    )
+    public static let sourceSetupBrowserConnected = AnchorStrings.value(
+        "source.setup.browser.connected",
+        default: "Connected"
+    )
+    public static let sourceSetupBrowserPrepared = AnchorStrings.value(
+        "source.setup.browser.prepared",
+        default: "Bridge ready"
     )
     public static let sourceSetupInstallBrowserBridge = AnchorStrings.value(
         "source.setup.browser.install",
@@ -313,7 +335,7 @@ public enum L10n {
     )
     public static let sourceSetupWebDistributionDetail = AnchorStrings.value(
         "source.setup.web.distribution-detail",
-        default: "The bridge and extension are separate: the bridge can be installed here, while a release build still requires extension-store distribution or explicit unpacked loading."
+        default: "Anchor writes only its fixed bridge and Web Store setup files. The browser keeps control of the final extension confirmation. Store publication is required before release."
     )
     public static func sourceSetupBrowserCount(_ count: Int) -> String {
         String.localizedStringWithFormat(
@@ -359,6 +381,19 @@ public enum L10n {
     public static let sourceSetupBrowserExtensionMissing = AnchorStrings.value(
         "source.setup.extension.missing",
         default: "The Anchor browser extension is not included in this build."
+    )
+    public static func sourceSetupBrowserStoreUnavailable(_ browser: String) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value(
+                "source.setup.browser.store-unavailable",
+                default: "The Anchor extension is not yet available in the %@ extension store."
+            ),
+            browser
+        )
+    }
+    public static let sourceSetupBrowserStoreOpenFailed = AnchorStrings.value(
+        "source.setup.browser.store-open-failed",
+        default: "Anchor could not open the browser extension store."
     )
     public static let connected = AnchorStrings.value("connected", default: "Connected")
     public static let unknown = AnchorStrings.value("unknown", default: "Unknown")

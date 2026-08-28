@@ -1,11 +1,14 @@
 import Foundation
 
-/// Installs the two explicit observation artifacts shipped by the production
-/// macOS app. All destinations are chosen by the user through the app UI.
+/// Installs the explicit observation artifacts shipped by the production app.
+/// Command destinations are user-selected; browser destinations and payloads
+/// are fixed by Anchor and exposed through a narrow setup service.
 public struct SourceArtifactInstaller: Sendable {
     public static let commandName = "anchor"
     public static let nativeMessagingDirectoryName = "NativeMessagingHosts"
     public static let nativeMessagingManifestName = "\(BrowserHostConfiguration.hostName).json"
+    public static let chromeWebStoreUpdateURL =
+        "https://clients2.google.com/service/update2/crx"
 
     public init() {}
 
@@ -66,6 +69,18 @@ public struct SourceArtifactInstaller: Sendable {
         return manifestURL
     }
 
+    @discardableResult
+    public func installBrowserManifest(
+        helperURL: URL,
+        browser: ChromiumBrowserTarget,
+        homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
+    ) throws -> URL {
+        try installBrowserManifest(
+            helperURL: helperURL,
+            browserSupportURL: browser.applicationSupportURL(homeDirectory: homeDirectory)
+        )
+    }
+
     public func browserManifestIsCurrent(
         at manifestURL: URL,
         helperURL: URL
@@ -78,6 +93,42 @@ public struct SourceArtifactInstaller: Sendable {
             && object["path"] as? String == helperURL.standardizedFileURL.path
             && object["allowed_origins"] as? [String]
                 == [BrowserHostConfiguration.allowedOrigin]
+    }
+
+    @discardableResult
+    public func installExternalExtensionPreference(
+        browser: ChromiumBrowserTarget,
+        homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
+    ) throws -> URL? {
+        guard browser.supportsExternalWebStoreInstall else { return nil }
+        let preferenceURL = browser.externalExtensionPreferenceURL(
+            homeDirectory: homeDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: preferenceURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        let data = try JSONSerialization.data(
+            withJSONObject: ["external_update_url": Self.chromeWebStoreUpdateURL],
+            options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        )
+        try data.write(to: preferenceURL, options: .atomic)
+        return preferenceURL
+    }
+
+    public func externalExtensionPreferenceIsCurrent(
+        browser: ChromiumBrowserTarget,
+        homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
+    ) -> Bool {
+        guard browser.supportsExternalWebStoreInstall else { return true }
+        let preferenceURL = browser.externalExtensionPreferenceURL(
+            homeDirectory: homeDirectory
+        )
+        guard let data = try? Data(contentsOf: preferenceURL),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return false
+        }
+        return object["external_update_url"] as? String == Self.chromeWebStoreUpdateURL
     }
 }
 

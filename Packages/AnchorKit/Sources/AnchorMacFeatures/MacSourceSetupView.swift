@@ -18,7 +18,7 @@ struct MacSourceSetupView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                sourceRow(
+                MacSourceSetupRow(
                     symbol: "macwindow",
                     title: L10n.sourceSetupMacApps,
                     detail: L10n.sourceSetupMacAppsDetail,
@@ -28,7 +28,7 @@ struct MacSourceSetupView: View {
 
                 Divider()
 
-                sourceRow(
+                MacSourceSetupRow(
                     symbol: "terminal",
                     title: L10n.sourceSetupTerminal,
                     detail: L10n.sourceSetupTerminalDetail,
@@ -57,22 +57,35 @@ struct MacSourceSetupView: View {
 
                 Divider()
 
-                sourceRow(
+                MacSourceSetupRow(
                     symbol: "network",
                     title: L10n.sourceSetupWebApps,
                     detail: L10n.sourceSetupWebAppsDetail,
                     status: browserStatus,
-                    isReady: !model.installedBrowsers.isEmpty
+                    isReady: model.lastBrowserConnectionAt != nil
                 ) {
-                    Menu(L10n.sourceSetupInstallBrowserBridge, systemImage: "puzzlepiece.extension") {
-                        ForEach(MacSourceSetupBrowser.allCases) { browser in
-                            Button(browser.displayName) {
-                                Task { await model.installBrowserBridge(for: browser) }
+                    if let preferredBrowser = model.preferredBrowser {
+                        Button(
+                            L10n.sourceSetupConnectBrowser(preferredBrowser.displayName),
+                            systemImage: "puzzlepiece.extension"
+                        ) {
+                            Task { await model.connectBrowser(preferredBrowser) }
+                        }
+                        .disabled(model.isWorking || !model.isBrowserBridgeBundled)
+                        .accessibilityIdentifier("mac.sources.setup.browser.connect")
+                    }
+
+                    if model.browsersAvailableForConnection.count > 1 {
+                        Menu(L10n.sourceSetupOtherBrowser, systemImage: "ellipsis.circle") {
+                            ForEach(model.browsersAvailableForConnection) { browser in
+                                Button(browser.displayName) {
+                                    Task { await model.connectBrowser(browser) }
+                                }
                             }
                         }
+                        .disabled(model.isWorking || !model.isBrowserBridgeBundled)
+                        .accessibilityIdentifier("mac.sources.setup.browser.other")
                     }
-                    .disabled(model.isWorking || !model.isBrowserBridgeBundled)
-                    .accessibilityIdentifier("mac.sources.setup.browser.install")
 
                     Button(L10n.sourceSetupShowExtension, systemImage: "folder") {
                         model.revealBrowserExtension()
@@ -98,6 +111,18 @@ struct MacSourceSetupView: View {
         } message: {
             Text(model.errorMessage ?? "")
         }
+        .task {
+            await model.refresh()
+        }
+        .task(id: model.awaitingConfirmationBrowser) {
+            guard model.awaitingConfirmationBrowser != nil else { return }
+            for _ in 0..<60 {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+                await model.refresh()
+                if model.awaitingConfirmationBrowser == nil { return }
+            }
+        }
     }
 
     private var commandStatus: String {
@@ -106,68 +131,16 @@ struct MacSourceSetupView: View {
     }
 
     private var browserStatus: String {
-        if !model.installedBrowsers.isEmpty {
-            return L10n.sourceSetupBrowserCount(model.installedBrowsers.count)
+        if model.awaitingConfirmationBrowser != nil {
+            return L10n.sourceSetupAwaitingBrowserConfirmation
+        }
+        if model.lastBrowserConnectionAt != nil {
+            return L10n.sourceSetupBrowserConnected
+        }
+        if !model.configuredBrowsers.isEmpty {
+            return L10n.sourceSetupBrowserPrepared
         }
         return model.isBrowserBridgeBundled ? L10n.sourceSetupAvailable : L10n.sourceSetupUnavailable
-    }
-
-    private func sourceRow<Actions: View>(
-        symbol: String,
-        title: String,
-        detail: String,
-        status: String,
-        isReady: Bool,
-        @ViewBuilder actions: () -> Actions
-    ) -> some View {
-        VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-            HStack(alignment: .top, spacing: AnchorSpacing.medium) {
-                Image(systemName: symbol)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(AnchorPalette.deepSea)
-                    .frame(width: 36, height: 36)
-                    .background(AnchorPalette.cyan.opacity(0.14), in: .circle)
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
-                    Text(title)
-                        .font(.headline)
-                    Text(detail)
-                        .font(.callout)
-                        .foregroundStyle(AnchorPalette.secondaryInk)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: AnchorSpacing.small)
-                Label(
-                    status,
-                    systemImage: isReady ? "checkmark.circle.fill" : "circle.dashed"
-                )
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(isReady ? AnchorPalette.mintInk : AnchorPalette.secondaryInk)
-            }
-            HStack(spacing: AnchorSpacing.small) {
-                actions()
-            }
-            .controlSize(.large)
-            .padding(.leading, 52)
-        }
-    }
-
-    private func sourceRow(
-        symbol: String,
-        title: String,
-        detail: String,
-        status: String,
-        isReady: Bool
-    ) -> some View {
-        sourceRow(
-            symbol: symbol,
-            title: title,
-            detail: detail,
-            status: status,
-            isReady: isReady
-        ) {
-            EmptyView()
-        }
     }
 }
 #endif

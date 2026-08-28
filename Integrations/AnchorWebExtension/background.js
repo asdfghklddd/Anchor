@@ -166,11 +166,18 @@ async function setEnabled(enabled) {
   await chrome.storage.local.set({ enabled: false, bridgeStatus: "disabled" });
 }
 
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener((details) => {
   void enqueue(async () => {
     const stored = await chrome.storage.local.get("enabled");
     if (typeof stored.enabled !== "boolean") {
-      await chrome.storage.local.set({ enabled: false, bridgeStatus: "disabled" });
+      const enabled = details.reason === "install";
+      await chrome.storage.local.set({
+        enabled,
+        bridgeStatus: enabled ? "connecting" : "disabled"
+      });
+      if (enabled) {
+        await observeActiveTab();
+      }
     }
   });
 });

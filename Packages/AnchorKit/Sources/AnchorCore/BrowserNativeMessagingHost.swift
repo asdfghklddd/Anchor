@@ -18,6 +18,7 @@ public enum BrowserNativeMessagingHost {
 
     public static func run(
         inbox: URL = FileProcessSource.defaultWebInboxURL(),
+        connectionReceiptURL: URL = BrowserConnectionReceipt.defaultURL(),
         input: FileHandle = .standardInput,
         output: FileHandle = .standardOutput
     ) throws {
@@ -44,6 +45,9 @@ public enum BrowserNativeMessagingHost {
                     inbox: inbox,
                     filename: filename
                 )
+                // The event is already durable. A status receipt must not turn a
+                // successful delivery into a browser retry and duplicate event.
+                try? BrowserConnectionReceipt().write(to: connectionReceiptURL)
                 response = BrowserHostResponse(ok: true, eventID: signal.id)
             } catch {
                 response = BrowserHostResponse(

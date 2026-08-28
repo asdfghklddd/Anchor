@@ -195,7 +195,11 @@ struct WebProcessSignalTests {
         let inbox = URL.temporaryDirectory.appending(
             path: "anchor-native-host-\(UUID().uuidString)"
         )
+        let connectionReceiptURL = inbox
+            .deletingLastPathComponent()
+            .appending(path: "anchor-native-host-receipt-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: inbox) }
+        defer { try? FileManager.default.removeItem(at: connectionReceiptURL) }
         let input = Pipe()
         let output = Pipe()
         let signal = try WebProcessSignal(
@@ -213,6 +217,7 @@ struct WebProcessSignalTests {
 
         try BrowserNativeMessagingHost.run(
             inbox: inbox,
+            connectionReceiptURL: connectionReceiptURL,
             input: input.fileHandleForReading,
             output: output.fileHandleForWriting
         )
@@ -247,6 +252,8 @@ struct WebProcessSignalTests {
         let queuedJSON = try #require(String(data: queuedData, encoding: .utf8))
         #expect(queued.siteHost == "docs.example.com")
         #expect(!queuedJSON.contains("secret"))
+        let receipt = try #require(BrowserConnectionReceipt.load(from: connectionReceiptURL))
+        #expect(receipt.extensionOrigin == BrowserHostConfiguration.allowedOrigin)
     }
 
     private func firstEvent(

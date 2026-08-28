@@ -22,12 +22,18 @@ public enum MacSourceSetupBrowser: String, CaseIterable, Identifiable, Sendable 
         }
     }
 
-    fileprivate var supportPathComponents: [String] {
+    fileprivate var target: ChromiumBrowserTarget {
+        ChromiumBrowserTarget(rawValue: rawValue) ?? .chrome
+    }
+
+    fileprivate var storeURL: URL? {
         switch self {
-        case .chrome: ["Google", "Chrome"]
-        case .edge: ["Microsoft Edge"]
-        case .brave: ["BraveSoftware", "Brave-Browser"]
-        case .chromium: ["Chromium"]
+        case .chrome, .brave, .chromium:
+            URL(
+                string: "https://chromewebstore.google.com/detail/anchor/\(BrowserHostConfiguration.extensionID)"
+            )
+        case .edge:
+            nil
         }
     }
 }
@@ -36,7 +42,11 @@ public enum MacSourceSetupBrowser: String, CaseIterable, Identifiable, Sendable 
 @Observable
 public final class MacSourceSetupModel {
     public private(set) var isCommandInstalled = false
-    public private(set) var installedBrowsers = Set<MacSourceSetupBrowser>()
+    public private(set) var configuredBrowsers = Set<MacSourceSetupBrowser>()
+    public private(set) var detectedBrowsers = Set<MacSourceSetupBrowser>()
+    public private(set) var preferredBrowser: MacSourceSetupBrowser?
+    public private(set) var awaitingConfirmationBrowser: MacSourceSetupBrowser?
+    public private(set) var lastBrowserConnectionAt: Date?
     public private(set) var isWorking = false
     public private(set) var didCopyShellSetup = false
     public var errorMessage: String?
@@ -45,10 +55,17 @@ public final class MacSourceSetupModel {
     public let isBrowserBridgeBundled: Bool
     public let isBrowserExtensionBundled: Bool
 
+    public var browsersAvailableForConnection: [MacSourceSetupBrowser] {
+        MacSourceSetupBrowser.allCases.filter {
+            detectedBrowsers.contains($0) && $0.storeURL != nil
+        }
+    }
+
     private let commandURL: URL
     private let browserBridgeURL: URL
     private let browserExtensionURL: URL
     private let installer = SourceArtifactInstaller()
+    private let browserSetupService = BrowserSetupServiceClient()
     private let defaults: UserDefaults
 
     public init(bundle: Bundle = .main, defaults: UserDefaults = .standard) {
@@ -62,25 +79,33 @@ public final class MacSourceSetupModel {
         isCommandBundled = FileManager.default.isExecutableFile(atPath: commandURL.path)
         isBrowserBridgeBundled = FileManager.default.isExecutableFile(atPath: browserBridgeURL.path)
         isBrowserExtensionBundled = FileManager.default.fileExists(atPath: browserExtensionURL.path)
-        refresh()
+        detectBrowsers()
+        refreshCommandStatus()
     }
 
-    public func refresh() {
+    public func refresh() async {
+        refreshCommandStatus()
+        detectBrowsers()
+        var currentBrowsers = Set<MacSourceSetupBrowser>()
+        for browser in MacSourceSetupBrowser.allCases {
+            if (try? await browserSetupService.browserIsPrepared(browser)) == true {
+                currentBrowsers.insert(browser)
+            }
+        }
+        configuredBrowsers = currentBrowsers
+        lastBrowserConnectionAt = BrowserConnectionReceipt.load()?.occurredAt
+        if let attempt = awaitingConfirmationBrowser,
+           currentBrowsers.contains(attempt),
+           let lastBrowserConnectionAt,
+           lastBrowserConnectionAt >= (connectionAttemptStartedAt ?? .distantFuture) {
+            awaitingConfirmationBrowser = nil
+        }
+    }
+
+    private func refreshCommandStatus() {
         isCommandInstalled = withBookmarkedURL(for: Self.commandBookmarkKey) { url in
             FileManager.default.isExecutableFile(atPath: url.path)
         } ?? false
-
-        installedBrowsers = Set(MacSourceSetupBrowser.allCases.filter { browser in
-            withBookmarkedURL(for: bookmarkKey(for: browser)) { supportURL in
-                let manifestURL = supportURL
-                    .appending(path: SourceArtifactInstaller.nativeMessagingDirectoryName)
-                    .appending(path: SourceArtifactInstaller.nativeMessagingManifestName)
-                return installer.browserManifestIsCurrent(
-                    at: manifestURL,
-                    helperURL: browserBridgeURL
-                )
-            } ?? false
-        })
     }
 
     public func installCommand() async {
@@ -104,29 +129,27 @@ public final class MacSourceSetupModel {
         }
     }
 
-    public func installBrowserBridge(for browser: MacSourceSetupBrowser) async {
+    public func connectBrowser(_ browser: MacSourceSetupBrowser) async {
         guard isBrowserBridgeBundled else {
             errorMessage = L10n.sourceSetupBrowserBridgeMissing
             return
         }
+        guard let storeURL = browser.storeURL else {
+            errorMessage = L10n.sourceSetupBrowserStoreUnavailable(browser.displayName)
+            return
+        }
 
-        let panel = NSOpenPanel()
-        panel.title = L10n.sourceSetupBrowserPanelTitle(browser.displayName)
-        panel.message = L10n.sourceSetupBrowserPanelMessage(browser.displayName)
-        panel.prompt = L10n.sourceSetupInstall
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.allowsMultipleSelection = false
-        panel.canCreateDirectories = true
-        panel.directoryURL = preferredBrowserSupportURL(for: browser)
-        guard await panel.begin() == .OK, let supportURL = panel.url else { return }
-
-        await performInstall {
-            try installer.installBrowserManifest(
-                helperURL: browserBridgeURL,
-                browserSupportURL: supportURL
-            )
-            try storeBookmark(for: supportURL, key: bookmarkKey(for: browser))
+        isWorking = true
+        didCopyShellSetup = false
+        defer { isWorking = false }
+        do {
+            try await browserSetupService.prepareBrowser(browser)
+            configuredBrowsers.insert(browser)
+            awaitingConfirmationBrowser = browser
+            connectionAttemptStartedAt = .now
+            try await openBrowserConfirmation(for: browser, storeURL: storeURL)
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -154,7 +177,7 @@ public final class MacSourceSetupModel {
         didCopyShellSetup = false
         defer {
             isWorking = false
-            refresh()
+            refreshCommandStatus()
         }
         do {
             try operation()
@@ -172,16 +195,51 @@ public final class MacSourceSetupModel {
         return FileManager.default.homeDirectoryForCurrentUser
     }
 
-    private func preferredBrowserSupportURL(for browser: MacSourceSetupBrowser) -> URL {
-        let applicationSupport = FileManager.default.homeDirectoryForCurrentUser
-            .appending(path: "Library/Application Support", directoryHint: .isDirectory)
-        let browserURL = browser.supportPathComponents.reduce(applicationSupport) { url, component in
-            url.appending(path: component, directoryHint: .isDirectory)
+    private func detectBrowsers() {
+        detectedBrowsers = Set(MacSourceSetupBrowser.allCases.filter { browser in
+            NSWorkspace.shared.urlForApplication(
+                withBundleIdentifier: browser.target.applicationBundleIdentifier
+            ) != nil
+        })
+
+        if let webURL = URL(string: "https://anchor.local"),
+           let defaultBrowserURL = NSWorkspace.shared.urlForApplication(toOpen: webURL),
+           let defaultIdentifier = Bundle(url: defaultBrowserURL)?.bundleIdentifier,
+           let browser = MacSourceSetupBrowser.allCases.first(where: {
+               $0.target.applicationBundleIdentifier == defaultIdentifier && $0.storeURL != nil
+           }) {
+            preferredBrowser = browser
+        } else {
+            preferredBrowser = MacSourceSetupBrowser.allCases.first(where: {
+                detectedBrowsers.contains($0) && $0.storeURL != nil
+            })
         }
-        if FileManager.default.fileExists(atPath: browserURL.path) {
-            return browserURL
+    }
+
+    private func openBrowserConfirmation(
+        for browser: MacSourceSetupBrowser,
+        storeURL: URL
+    ) async throws {
+        let bundleIdentifier = browser.target.applicationBundleIdentifier
+        let isRunning = !NSRunningApplication.runningApplications(
+            withBundleIdentifier: bundleIdentifier
+        ).isEmpty
+        if browser.target.supportsExternalWebStoreInstall,
+           !isRunning,
+           let applicationURL = NSWorkspace.shared.urlForApplication(
+               withBundleIdentifier: bundleIdentifier
+           ) {
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.activates = true
+            _ = try await NSWorkspace.shared.openApplication(
+                at: applicationURL,
+                configuration: configuration
+            )
+            return
         }
-        return applicationSupport
+        guard NSWorkspace.shared.open(storeURL) else {
+            throw MacSourceSetupError.couldNotOpenBrowserStore
+        }
     }
 
     private func storeBookmark(for url: URL, key: String) throws {
@@ -220,10 +278,18 @@ public final class MacSourceSetupModel {
         return operation(url)
     }
 
-    private func bookmarkKey(for browser: MacSourceSetupBrowser) -> String {
-        "anchor.mac.source-setup.browser.\(browser.rawValue)"
-    }
-
+    private var connectionAttemptStartedAt: Date?
     private static let commandBookmarkKey = "anchor.mac.source-setup.command"
+}
+
+private enum MacSourceSetupError: LocalizedError {
+    case couldNotOpenBrowserStore
+
+    var errorDescription: String? {
+        switch self {
+        case .couldNotOpenBrowserStore:
+            L10n.sourceSetupBrowserStoreOpenFailed
+        }
+    }
 }
 #endif

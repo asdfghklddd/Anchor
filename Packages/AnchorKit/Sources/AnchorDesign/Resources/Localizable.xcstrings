@@ -4579,6 +4579,24 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个浏览器" } }
       }
     },
+    "source.setup.browser.awaiting-confirmation" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Awaiting browser confirmation" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "等待浏览器确认" } }
+      }
+    },
+    "source.setup.browser.connect" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connect %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "连接 %@" } }
+      }
+    },
+    "source.setup.browser.connected" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connected" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已连接" } }
+      }
+    },
     "source.setup.browser.install" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Install browser bridge…" } },
@@ -4591,6 +4609,12 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此构建未包含浏览器桥接。" } }
       }
     },
+    "source.setup.browser.other" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Other browser" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "其他浏览器" } }
+      }
+    },
     "source.setup.browser.panel.message" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose the %@ support folder. Anchor will add only its native messaging manifest." } },
@@ -4601,6 +4625,24 @@
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Install for %@" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "为 %@ 安装" } }
+      }
+    },
+    "source.setup.browser.prepared" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bridge ready" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "桥接已就绪" } }
+      }
+    },
+    "source.setup.browser.store-open-failed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anchor could not open the browser extension store." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anchor 无法打开浏览器扩展商店。" } }
+      }
+    },
+    "source.setup.browser.store-unavailable" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The Anchor extension is not yet available in the %@ extension store." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anchor 扩展尚未在 %@ 扩展商店上架。" } }
       }
     },
     "source.setup.command.install" : {
@@ -4719,14 +4761,14 @@
     },
     "source.setup.web-apps.detail" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Install the native bridge for a Chromium browser. The extension reports only the active hostname unless a reviewed site adapter provides structured progress." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "为 Chromium 浏览器安装原生桥接。除非经过审核的站点适配器提供结构化进度，否则扩展只上报当前域名。" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anchor prepares the native bridge automatically, then opens the browser store. You only confirm the extension in your browser." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anchor 会自动准备原生桥接并打开扩展商店；你只需在浏览器中确认安装。" } }
       }
     },
     "source.setup.web.distribution-detail" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "The bridge and extension are separate: the bridge can be installed here, while a release build still requires extension-store distribution or explicit unpacked loading." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "桥接与扩展相互独立：可在此安装桥接；正式发布仍需通过扩展商店分发，或由用户明确以未打包方式载入扩展。" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anchor writes only its fixed bridge and Web Store setup files. The browser keeps control of the final extension confirmation. Store publication is required before release." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anchor 只写入固定的桥接和扩展商店配置文件；最终扩展确认仍由浏览器控制。正式发布前需要先完成扩展商店上架。" } }
       }
     },
     "sources" : {
