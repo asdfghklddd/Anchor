@@ -246,6 +246,103 @@ public enum L10n {
     public static let sourceProgress = AnchorStrings.value("source.progress", default: "Source progress")
     public static let sourceActivity = AnchorStrings.value("source.activity", default: "Recent source activity")
     public static let openSourceDetails = AnchorStrings.value("source.open.details", default: "Open source details")
+    public static let sourceSetupTitle = AnchorStrings.value(
+        "source.setup.title",
+        default: "Set up observation"
+    )
+    public static let sourceSetupDetail = AnchorStrings.value(
+        "source.setup.detail",
+        default: "Connect each layer explicitly. Anchor observes lifecycle and structured progress without reading document content."
+    )
+    public static let sourceSetupMacApps = AnchorStrings.value(
+        "source.setup.mac-apps",
+        default: "Mac apps"
+    )
+    public static let sourceSetupMacAppsDetail = AnchorStrings.value(
+        "source.setup.mac-apps.detail",
+        default: "Public workspace events show which apps are open, active, or closed."
+    )
+    public static let sourceSetupReady = AnchorStrings.value("source.setup.ready", default: "Ready")
+    public static let sourceSetupTerminal = AnchorStrings.value(
+        "source.setup.terminal",
+        default: "Terminal commands"
+    )
+    public static let sourceSetupTerminalDetail = AnchorStrings.value(
+        "source.setup.terminal.detail",
+        default: "Install the signed anchor command, then opt in to the zsh lifecycle hook. Command arguments and full paths are not stored."
+    )
+    public static let sourceSetupInstalled = AnchorStrings.value(
+        "source.setup.installed",
+        default: "Installed"
+    )
+    public static let sourceSetupAvailable = AnchorStrings.value(
+        "source.setup.available",
+        default: "Available"
+    )
+    public static let sourceSetupUnavailable = AnchorStrings.value(
+        "source.setup.unavailable",
+        default: "Unavailable in this build"
+    )
+    public static let sourceSetupInstallCommand = AnchorStrings.value(
+        "source.setup.command.install",
+        default: "Install command…"
+    )
+    public static let sourceSetupCopyShell = AnchorStrings.value(
+        "source.setup.shell.copy",
+        default: "Copy zsh setup"
+    )
+    public static let sourceSetupShellCopied = AnchorStrings.value(
+        "source.setup.shell.copied",
+        default: "zsh setup copied. Paste it into Terminal to enable observation for that shell."
+    )
+    public static let sourceSetupWebApps = AnchorStrings.value(
+        "source.setup.web-apps",
+        default: "Web apps"
+    )
+    public static let sourceSetupWebAppsDetail = AnchorStrings.value(
+        "source.setup.web-apps.detail",
+        default: "Anchor includes its Safari extension. Enable it once in Safari to share privacy-minimal web app state."
+    )
+    public static let sourceSetupEnableSafari = AnchorStrings.value(
+        "source.setup.safari.enable",
+        default: "Enable in Safari…"
+    )
+    public static let sourceSetupOpenSafariSettings = AnchorStrings.value(
+        "source.setup.safari.open-settings",
+        default: "Open Safari settings…"
+    )
+    public static let sourceSetupAwaitingSafariConfirmation = AnchorStrings.value(
+        "source.setup.safari.awaiting-confirmation",
+        default: "Awaiting Safari confirmation"
+    )
+    public static let sourceSetupSafariEnabled = AnchorStrings.value(
+        "source.setup.safari.enabled",
+        default: "Enabled"
+    )
+    public static let sourceSetupWebDistributionDetail = AnchorStrings.value(
+        "source.setup.web.distribution-detail",
+        default: "Safari keeps control of extension and website access. Anchor never reads page text, paths, forms, or private windows."
+    )
+    public static let sourceSetupCommandPanelTitle = AnchorStrings.value(
+        "source.setup.command.panel.title",
+        default: "Install Anchor Command"
+    )
+    public static let sourceSetupCommandPanelMessage = AnchorStrings.value(
+        "source.setup.command.panel.message",
+        default: "Choose a folder already included in your shell PATH."
+    )
+    public static let sourceSetupInstall = AnchorStrings.value(
+        "source.setup.install",
+        default: "Install"
+    )
+    public static let sourceSetupCommandMissing = AnchorStrings.value(
+        "source.setup.command.missing",
+        default: "The Anchor command is not included in this build."
+    )
+    public static let sourceSetupSafariExtensionMissing = AnchorStrings.value(
+        "source.setup.safari.missing",
+        default: "The Anchor Safari extension is not included in this build."
+    )
     public static let connected = AnchorStrings.value("connected", default: "Connected")
     public static let unknown = AnchorStrings.value("unknown", default: "Unknown")
     public static let permissionDenied = AnchorStrings.value("permission.denied", default: "Permission denied")

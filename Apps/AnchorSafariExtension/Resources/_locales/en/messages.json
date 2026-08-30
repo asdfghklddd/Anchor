@@ -1,0 +1,15 @@
+{
+  "extensionName": { "message": "Anchor for Safari" },
+  "extensionDescription": { "message": "Sends privacy-minimal active web app state to the Anchor macOS companion." },
+  "popupTitle": { "message": "Web observation" },
+  "enableLabel": { "message": "Observe active web apps" },
+  "enableHint": { "message": "Only after you turn this on." },
+  "privacySummary": { "message": "Anchor sends only the site hostname and lifecycle state. It does not send page titles, URL paths, page content, or form values." },
+  "loadingStatus": { "message": "Checking status…" },
+  "disabledStatus": { "message": "Observation is off." },
+  "connectedStatus": { "message": "Connected to Anchor." },
+  "unavailableStatus": { "message": "The Anchor app connection is unavailable." },
+  "connectingStatus": { "message": "Connecting to Anchor…" },
+  "updatingStatus": { "message": "Updating…" },
+  "updateFailedStatus": { "message": "Could not update observation." }
+}

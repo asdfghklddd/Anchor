@@ -1,20 +1,30 @@
 import Foundation
 
+public enum FileProcessSignalKind: Sendable {
+    case cli
+    case web
+}
+
 /// A small, sandbox-friendly handoff boundary for the supported Anchor CLI.
 /// The CLI writes one atomically-created JSON file per observation; this source
 /// moves consumed files out of the inbox before yielding them to the actor.
 public struct FileProcessSource: ProcessSource, Sendable {
+    public static let appGroupIdentifier = "group.com.andywang.anchor"
     public static let defaultSourceID = UUID(uuidString: "00000000-0000-4000-8000-000000000401") ?? UUID()
 
     public let directoryURL: URL
     public let pollInterval: TimeInterval
     public let maximumFileSize: Int
     public let descriptor: SourceDescriptor
+    private let sessionContextProvider: @Sendable () async -> ProcessSourceSessionContext?
+    private let signalKind: FileProcessSignalKind
 
     public init(
         directoryURL: URL = FileProcessSource.defaultInboxURL(),
         pollInterval: TimeInterval = 0.25,
         maximumFileSize: Int = 1_048_576,
+        sessionContextProvider: @escaping @Sendable () async -> ProcessSourceSessionContext? = { nil },
+        signalKind: FileProcessSignalKind = .cli,
         descriptor: SourceDescriptor = SourceDescriptor(
             id: FileProcessSource.defaultSourceID,
             name: "Anchor CLI",
@@ -27,6 +37,8 @@ public struct FileProcessSource: ProcessSource, Sendable {
         self.directoryURL = directoryURL
         self.pollInterval = max(0.05, pollInterval)
         self.maximumFileSize = max(1, maximumFileSize)
+        self.sessionContextProvider = sessionContextProvider
+        self.signalKind = signalKind
         self.descriptor = descriptor
     }
 
@@ -39,8 +51,9 @@ public struct FileProcessSource: ProcessSource, Sendable {
                         for fileURL in try pendingFiles() {
                             try Task.checkCancellation()
                             do {
-                                let event = try readAndConsume(fileURL)
-                                continuation.yield(event)
+                                if let event = try await readAndConsume(fileURL) {
+                                    continuation.yield(event)
+                                }
                             } catch is CancellationError {
                                 throw CancellationError()
                             } catch {
@@ -76,13 +89,41 @@ public struct FileProcessSource: ProcessSource, Sendable {
 
     public static func defaultInboxURL() -> URL {
         #if os(macOS)
-        return FileManager.default.homeDirectoryForCurrentUser
-            .appending(path: "Library/Group Containers/group.com.andywang.anchor/Anchor/Inbox", directoryHint: .isDirectory)
+        return defaultAppGroupContainerURL()
+            .appending(path: "Anchor/Inbox", directoryHint: .isDirectory)
         #else
         return URL.applicationSupportDirectory
             .appending(path: "Anchor/Inbox", directoryHint: .isDirectory)
         #endif
     }
+
+    public static func defaultWebInboxURL() -> URL {
+        #if os(macOS)
+        return defaultAppGroupContainerURL()
+            .appending(path: "Anchor/WebInbox", directoryHint: .isDirectory)
+        #else
+        return URL.applicationSupportDirectory
+            .appending(path: "Anchor/WebInbox", directoryHint: .isDirectory)
+        #endif
+    }
+
+    #if os(macOS)
+    private static func defaultAppGroupContainerURL() -> URL {
+        let fileManager = FileManager.default
+        if let containerURL = fileManager.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupIdentifier
+        ) {
+            return containerURL
+        }
+        // The supported standalone CLI is not sandboxed, so it falls back to
+        // the canonical user App Group path when the entitlement API is absent.
+        return fileManager.homeDirectoryForCurrentUser
+            .appending(
+                path: "Library/Group Containers/\(appGroupIdentifier)",
+                directoryHint: .isDirectory
+            )
+    }
+    #endif
 
     private func makeInboxDirectories() throws {
         let fileManager = FileManager.default
@@ -98,6 +139,10 @@ public struct FileProcessSource: ProcessSource, Sendable {
             at: directoryURL.appending(path: ".failed", directoryHint: .isDirectory),
             withIntermediateDirectories: true
         )
+        try fileManager.createDirectory(
+            at: directoryURL.appending(path: ".ignored", directoryHint: .isDirectory),
+            withIntermediateDirectories: true
+        )
     }
 
     private func pendingFiles() throws -> [URL] {
@@ -110,7 +155,7 @@ public struct FileProcessSource: ProcessSource, Sendable {
         .sorted { $0.lastPathComponent < $1.lastPathComponent }
     }
 
-    private func readAndConsume(_ fileURL: URL) throws -> ExternalProcessEvent {
+    private func readAndConsume(_ fileURL: URL) async throws -> ExternalProcessEvent? {
         let attributes = try fileURL.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
         guard attributes.isRegularFile == true else {
             throw FileProcessSourceError.notRegularFile(fileURL)
@@ -122,7 +167,48 @@ public struct FileProcessSource: ProcessSource, Sendable {
 
         do {
             let data = try Data(contentsOf: fileURL)
-            let event = try JSONDecoder.anchorExternal.decode(ExternalProcessEvent.self, from: data)
+            let event: ExternalProcessEvent
+            if let externalEvent = try? JSONDecoder.anchorExternal.decode(
+                ExternalProcessEvent.self,
+                from: data
+            ) {
+                event = externalEvent
+            } else {
+                switch signalKind {
+                case .cli:
+                    let signal = try JSONDecoder.anchorExternal.decode(
+                        CLIProcessSignal.self,
+                        from: data
+                    )
+                    guard let session = await sessionContextProvider() else {
+                        return nil
+                    }
+                    guard signal.occurredAt >= session.startedAt else {
+                        try move(fileURL, to: ".ignored")
+                        return nil
+                    }
+                    event = try signal.externalEvent(
+                        sessionID: session.sessionID,
+                        sourceID: descriptor.id
+                    )
+                case .web:
+                    let signal = try JSONDecoder.anchorExternal.decode(
+                        WebProcessSignal.self,
+                        from: data
+                    )
+                    guard let session = await sessionContextProvider() else {
+                        return nil
+                    }
+                    guard signal.occurredAt >= session.startedAt else {
+                        try move(fileURL, to: ".ignored")
+                        return nil
+                    }
+                    event = try signal.externalEvent(
+                        sessionID: session.sessionID,
+                        sourceID: descriptor.id
+                    )
+                }
+            }
             try move(fileURL, to: ".processed")
             return event
         } catch {

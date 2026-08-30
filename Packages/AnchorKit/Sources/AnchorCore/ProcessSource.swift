@@ -89,6 +89,18 @@ public struct SourceHealth: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// The minimum active-session context needed by a local observation source.
+/// Sources use the start boundary to avoid attaching stale signals to new work.
+public struct ProcessSourceSessionContext: Hashable, Sendable {
+    public let sessionID: UUID
+    public let startedAt: Date
+
+    public init(sessionID: UUID, startedAt: Date) {
+        self.sessionID = sessionID
+        self.startedAt = startedAt
+    }
+}
+
 public enum SourceAction: Codable, Hashable, Sendable {
     case open(URL)
     case resolveDecision(decisionID: UUID, optionID: UUID)

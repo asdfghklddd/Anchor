@@ -11,6 +11,7 @@ struct AnchorMacApp: App {
     private let proximityAdvertiser: AnchorProximityAdvertiser
     private let sourceCoordinator: ProcessSourceCoordinator
     private let cloudSyncRunner: DurableSyncRunner?
+    private let sourceSetupModel: MacSourceSetupModel
 
     init() {
         let identityStore = PairingIdentityStore()
@@ -18,9 +19,28 @@ struct AnchorMacApp: App {
         let localRepository = LocalSessionRepository(sourceID: identityStore.localDeviceID())
         let cloudSyncRunner = AnchorCloudSyncFactory.makeRunner(local: localRepository)
         let repository = LinkedSessionRepository(base: localRepository, transport: server)
+        let currentSessionContext: @Sendable () async -> ProcessSourceSessionContext? = {
+            guard let session = await repository.currentProjection().session else {
+                return nil
+            }
+            return ProcessSourceSessionContext(
+                sessionID: session.id,
+                startedAt: session.startedAt
+            )
+        }
+        let currentSessionID: @Sendable () async -> UUID? = {
+            await currentSessionContext()?.sessionID
+        }
+        let workspaceSource = MacWorkspaceProcessSource(
+            sessionIDProvider: currentSessionID
+        )
         let sourceCoordinator = ProcessSourceCoordinator(
             repository: repository,
-            sources: [FileProcessSource()]
+            sources: [
+                FileProcessSource(sessionContextProvider: currentSessionContext),
+                WebProcessSource(sessionContextProvider: currentSessionContext),
+                workspaceSource,
+            ]
         )
         server.onCurrentProcessSnapshot = {
             let projection = await repository.currentProjection()
@@ -81,6 +101,7 @@ struct AnchorMacApp: App {
         self.server = server
         proximityAdvertiser = advertiser
         self.cloudSyncRunner = cloudSyncRunner
+        sourceSetupModel = MacSourceSetupModel()
         model = AnchorSessionModel(
             repository: repository,
             sourceHealthProvider: sourceCoordinator,
@@ -94,7 +115,11 @@ struct AnchorMacApp: App {
 
     var body: some Scene {
         Window("Anchor", id: "anchor-details") {
-            AnchorMacRootView(model: model, linkController: server)
+            AnchorMacRootView(
+                model: model,
+                linkController: server,
+                sourceSetupModel: sourceSetupModel
+            )
         }
         .defaultSize(width: 1080, height: 720)
 

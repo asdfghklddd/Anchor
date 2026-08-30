@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Anchor Safari Observation</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Anchor</p>
+        <h1 data-i18n="popupTitle">Web observation</h1>
+      </header>
+
+      <label class="setting" for="enabled">
+        <span>
+          <strong data-i18n="enableLabel">Observe active web apps</strong>
+          <small data-i18n="enableHint">Only after you turn this on.</small>
+        </span>
+        <input id="enabled" type="checkbox" aria-describedby="privacy status">
+      </label>
+
+      <p id="privacy" class="privacy" data-i18n="privacySummary">
+        Anchor sends only the site hostname and lifecycle state. It does not send
+        page titles, URL paths, page content, or form values.
+      </p>
+
+      <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true">
+        <span data-i18n="loadingStatus">Checking status…</span>
+      </p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -99,3 +99,18 @@ jobs:
             echo "Production archive contains Demo-only copy."
             exit 1
           fi
+      - name: Validate embedded macOS Safari extension
+        if: matrix.name == 'macOS Production'
+        shell: bash
+        run: |
+          set -euo pipefail
+          app_path="$(find "$RUNNER_TEMP/${{ matrix.archive }}.xcarchive/Products/Applications" -maxdepth 1 -name '*.app' -print -quit)"
+          extension_path="$app_path/Contents/PlugIns/AnchorSafariExtension.appex"
+          test -x "$app_path/Contents/Helpers/anchor"
+          test -d "$extension_path"
+          test "$(plutil -extract NSExtension.NSExtensionPointIdentifier raw "$extension_path/Contents/Info.plist")" = "com.apple.Safari.web-extension"
+          test -f "$extension_path/Contents/Resources/manifest.json"
+          if find "$app_path" \( -iname '*Chrome*' -o -iname '*Chromium*' -o -iname '*AnchorWebBridge*' -o -iname '*BrowserSetupService*' \) -print | grep -q .; then
+            echo "Production archive contains a removed Chromium adapter."
+            exit 1
+          fi

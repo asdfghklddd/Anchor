@@ -1,0 +1,15 @@
+{
+  "extensionName": { "message": "Anchor Safari 网页观察" },
+  "extensionDescription": { "message": "向 Anchor macOS 配套应用发送经过隐私最小化的活跃网页应用状态。" },
+  "popupTitle": { "message": "网页观察" },
+  "enableLabel": { "message": "观察活跃的网页应用" },
+  "enableHint": { "message": "只有在你主动开启后才会观察。" },
+  "privacySummary": { "message": "Anchor 只发送站点域名和生命周期状态，不发送页面标题、URL 路径、页面内容或表单值。" },
+  "loadingStatus": { "message": "正在检查状态…" },
+  "disabledStatus": { "message": "网页观察已关闭。" },
+  "connectedStatus": { "message": "已连接到 Anchor。" },
+  "unavailableStatus": { "message": "Anchor 应用连接当前不可用。" },
+  "connectingStatus": { "message": "正在连接 Anchor…" },
+  "updatingStatus": { "message": "正在更新…" },
+  "updateFailedStatus": { "message": "无法更新网页观察状态。" }
+}

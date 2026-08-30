@@ -255,6 +255,7 @@ struct MacHistoryView: View {
 
 struct MacSourcesView: View {
     let projection: SessionProjection
+    let sourceSetupModel: MacSourceSetupModel?
     let onOpenSettings: () -> Void
 
     @State private var selectedSource: MacSourceGroup?
@@ -266,6 +267,10 @@ struct MacSourcesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AnchorSpacing.large) {
+                if let sourceSetupModel {
+                    MacSourceSetupView(model: sourceSetupModel)
+                }
+
                 MacSourceHealthSummary(projection: projection)
 
                 Text(L10n.connectedSources)

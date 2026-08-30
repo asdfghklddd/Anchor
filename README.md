@@ -26,9 +26,11 @@ human decisions, and the context needed to return after an interruption.
 - `AnchorCore`: a versioned external source contract, actor-based source
   ingestion, a durable CLI inbox, deterministic event replay, and a retryable
   durable-sync coordinator.
+- Production-only macOS application lifecycle, generic CLI lifecycle, and a
+  privacy-minimal Safari Web Extension embedded only in the formal macOS app.
 
-SwiftData-backed persistence, production CloudKit container activation, Safari
-adapters, and direct AI source integrations remain later phases. The MVP path
+SwiftData-backed persistence, production CloudKit container activation,
+site-specific web adapters, and direct integrations remain later phases. The MVP path
 already has a crash-safe local event store, an authenticated same-network link,
 an optional CloudKit event adapter, and a supported CLI contract.
 
@@ -41,6 +43,7 @@ Apps/
 ├── AnchorIOSDemo/         iPhone demo launcher
 ├── AnchorMac/             production menu bar app
 ├── AnchorMacDemo/         macOS demo launcher
+├── AnchorSafariExtension/ production Safari Web Extension
 ├── AnchorIOSUITests/
 ├── AnchorMacUITests/
 └── Shared/                app icon and accent assets

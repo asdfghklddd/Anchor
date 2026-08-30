@@ -34,7 +34,7 @@ flowchart LR
         UI["Menu bar and session UI"]
         Manual["Manual capture"]
         CLI["Anchor CLI adapter"]
-        Safari["Safari Web Extension - later"]
+        Safari["Safari Web Extension"]
         Adapters["Source adapters"]
         Normalizer["Event normalizer"]
         MacStore["Local event store"]
@@ -282,10 +282,11 @@ app’s Notification Center entries. Anchor must not base its architecture on th
 assumption. Broad Accessibility or Screen Recording access is also excluded from
 the MVP and would require a separate permission, privacy, and App Review decision.
 
-A Safari Web Extension is viable later. It runs in separate sandboxed components,
-uses explicit site permissions, and communicates with its containing app through
-native messaging and an App Group. Chrome/Edge support is a separate package even
-if much of the web-extension code is shared.
+The production macOS app embeds a Safari Web Extension. Its sandboxed native
+extension communicates through Safari native messaging and shares only the
+Anchor App Group with the containing app. Safari retains the final enable and
+website-access confirmation. Chrome, Edge, and Chromium packages are outside the
+MVP.
 
 ## iOS architecture
 
@@ -407,7 +408,8 @@ This phase proves the architecture before reproducing every prototype screen.
 
 ### Phase 5 - source expansion
 
-- Ship the Safari Web Extension with narrow site permissions.
+- Add narrow, site-specific Safari adapters only where generic lifecycle state is
+  insufficient.
 - Add the first two source-specific integrations chosen from user research.
 - Evaluate whether an optional Anchor cloud service is justified by latency,
   cross-platform, or collaboration requirements.
@@ -430,11 +432,12 @@ are complete. Continue in this order:
    the existing `SessionRepository` protocol.
 3. Deploy the private CloudKit record schema, add matching entitlements, and
    surface local/cloud freshness without treating CloudKit as a real-time bus.
-4. Add the signed CLI distribution and manual Mac event capture UI.
+4. Validate the signed CLI and embedded Safari Web Extension in a notarized
+   direct-distribution build.
 5. Add production source adapters only after their permission and privacy scopes
    are documented and tested.
-6. Add widgets, Live Activities, and Safari integration after the persistence and
-   merge contracts are stable.
+6. Add widgets, Live Activities, and site-specific Safari integrations after the
+   persistence and merge contracts are stable.
 
 ## Definition of done for every feature
 
