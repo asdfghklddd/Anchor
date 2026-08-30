@@ -2,11 +2,11 @@ const enabledInput = document.querySelector("#enabled");
 const status = document.querySelector("#status");
 
 function message(key, fallback) {
-  return chrome.i18n.getMessage(key) || fallback;
+  return browser.i18n.getMessage(key) || fallback;
 }
 
 function localizeDocument() {
-  document.documentElement.lang = chrome.i18n.getUILanguage().split("-")[0] || "en";
+  document.documentElement.lang = browser.i18n.getUILanguage().split("-")[0] || "en";
   for (const element of document.querySelectorAll("[data-i18n]")) {
     element.textContent = message(element.dataset.i18n, element.textContent.trim());
   }
@@ -27,7 +27,7 @@ function statusText(enabled, bridgeStatus) {
 }
 
 async function render() {
-  const stored = await chrome.storage.local.get({
+  const stored = await browser.storage.local.get({
     enabled: true,
     bridgeStatus: "connecting"
   });
@@ -39,7 +39,7 @@ enabledInput.addEventListener("change", async () => {
   enabledInput.setAttribute("aria-busy", "true");
   status.textContent = message("updatingStatus", "Updating…");
   try {
-    const response = await chrome.runtime.sendMessage({
+    const response = await browser.runtime.sendMessage({
       type: "anchor.setEnabled",
       enabled: enabledInput.checked
     });
@@ -54,7 +54,7 @@ enabledInput.addEventListener("change", async () => {
   }
 });
 
-chrome.storage.onChanged.addListener((changes, areaName) => {
+browser.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === "local" && (changes.enabled || changes.bridgeStatus)) {
     void render();
   }

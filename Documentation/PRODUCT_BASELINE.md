@@ -167,7 +167,8 @@ web extension and CLI are optional adapters distributed alongside it.
 - Native iOS and macOS app targets with a shared domain model.
 - Local persistence and crash-safe recovery.
 - Manual session and process creation.
-- A simulated source plus a supported CLI event source.
+- A simulated source, supported CLI event source, and generic Safari lifecycle
+  source.
 - Same-network low-latency sync with durable iCloud fallback.
 - Portrait dashboard, process detail, decision, handoff, away, return, and
   completion flows.
@@ -178,7 +179,7 @@ web extension and CLI are optional adapters distributed alongside it.
 
 ### Later phases
 
-- Safari web extension and additional browser packages.
+- Site-specific Safari adapters; other browser packages are outside the MVP.
 - Direct integrations with individual AI or creative services.
 - Voice capture and automatic context summarization.
 - Live Activities, StandBy tuning, and configurable widgets.

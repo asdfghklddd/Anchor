@@ -1,9 +1,0 @@
-{
-  "name": "com.andywang.anchor.web",
-  "description": "Anchor privacy-minimal web observation bridge",
-  "path": "/ABSOLUTE/PATH/TO/anchor",
-  "type": "stdio",
-  "allowed_origins": [
-    "chrome-extension://omodbnhjlobhhkjcbaeokekfadoeiemk/"
-  ]
-}

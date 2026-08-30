@@ -1,5 +1,5 @@
 {
-  "extensionName": { "message": "Anchor Web Observation" },
+  "extensionName": { "message": "Anchor for Safari" },
   "extensionDescription": { "message": "Sends privacy-minimal active web app state to the Anchor macOS companion." },
   "popupTitle": { "message": "Web observation" },
   "enableLabel": { "message": "Observe active web apps" },
@@ -8,7 +8,7 @@
   "loadingStatus": { "message": "Checking status…" },
   "disabledStatus": { "message": "Observation is off." },
   "connectedStatus": { "message": "Connected to Anchor." },
-  "unavailableStatus": { "message": "Anchor bridge is unavailable." },
+  "unavailableStatus": { "message": "The Anchor app connection is unavailable." },
   "connectingStatus": { "message": "Connecting to Anchor…" },
   "updatingStatus": { "message": "Updating…" },
   "updateFailedStatus": { "message": "Could not update observation." }

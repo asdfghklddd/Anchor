@@ -58,40 +58,22 @@ struct MacSourceSetupView: View {
                 Divider()
 
                 MacSourceSetupRow(
-                    symbol: "network",
+                    symbol: "safari",
                     title: L10n.sourceSetupWebApps,
                     detail: L10n.sourceSetupWebAppsDetail,
-                    status: browserStatus,
-                    isReady: model.lastBrowserConnectionAt != nil
+                    status: safariStatus,
+                    isReady: model.isSafariExtensionEnabled
                 ) {
-                    if let preferredBrowser = model.preferredBrowser {
-                        Button(
-                            L10n.sourceSetupConnectBrowser(preferredBrowser.displayName),
-                            systemImage: "puzzlepiece.extension"
-                        ) {
-                            Task { await model.connectBrowser(preferredBrowser) }
-                        }
-                        .disabled(model.isWorking || !model.isBrowserBridgeBundled)
-                        .accessibilityIdentifier("mac.sources.setup.browser.connect")
+                    Button(
+                        model.isSafariExtensionEnabled
+                            ? L10n.sourceSetupOpenSafariSettings
+                            : L10n.sourceSetupEnableSafari,
+                        systemImage: "puzzlepiece.extension"
+                    ) {
+                        Task { await model.openSafariExtensionSettings() }
                     }
-
-                    if model.browsersAvailableForConnection.count > 1 {
-                        Menu(L10n.sourceSetupOtherBrowser, systemImage: "ellipsis.circle") {
-                            ForEach(model.browsersAvailableForConnection) { browser in
-                                Button(browser.displayName) {
-                                    Task { await model.connectBrowser(browser) }
-                                }
-                            }
-                        }
-                        .disabled(model.isWorking || !model.isBrowserBridgeBundled)
-                        .accessibilityIdentifier("mac.sources.setup.browser.other")
-                    }
-
-                    Button(L10n.sourceSetupShowExtension, systemImage: "folder") {
-                        model.revealBrowserExtension()
-                    }
-                    .disabled(!model.isBrowserExtensionBundled)
-                    .accessibilityIdentifier("mac.sources.setup.extension.reveal")
+                    .disabled(model.isWorking || !model.isSafariExtensionBundled)
+                    .accessibilityIdentifier("mac.sources.setup.safari.open-settings")
                 }
 
                 Text(L10n.sourceSetupWebDistributionDetail)
@@ -114,13 +96,13 @@ struct MacSourceSetupView: View {
         .task {
             await model.refresh()
         }
-        .task(id: model.awaitingConfirmationBrowser) {
-            guard model.awaitingConfirmationBrowser != nil else { return }
+        .task(id: model.isAwaitingSafariConfirmation) {
+            guard model.isAwaitingSafariConfirmation else { return }
             for _ in 0..<60 {
                 try? await Task.sleep(for: .seconds(1))
                 guard !Task.isCancelled else { return }
                 await model.refresh()
-                if model.awaitingConfirmationBrowser == nil { return }
+                if !model.isAwaitingSafariConfirmation { return }
             }
         }
     }
@@ -130,17 +112,14 @@ struct MacSourceSetupView: View {
         return model.isCommandBundled ? L10n.sourceSetupAvailable : L10n.sourceSetupUnavailable
     }
 
-    private var browserStatus: String {
-        if model.awaitingConfirmationBrowser != nil {
-            return L10n.sourceSetupAwaitingBrowserConfirmation
+    private var safariStatus: String {
+        if model.isSafariExtensionEnabled { return L10n.sourceSetupSafariEnabled }
+        if model.isAwaitingSafariConfirmation {
+            return L10n.sourceSetupAwaitingSafariConfirmation
         }
-        if model.lastBrowserConnectionAt != nil {
-            return L10n.sourceSetupBrowserConnected
-        }
-        if !model.configuredBrowsers.isEmpty {
-            return L10n.sourceSetupBrowserPrepared
-        }
-        return model.isBrowserBridgeBundled ? L10n.sourceSetupAvailable : L10n.sourceSetupUnavailable
+        return model.isSafariExtensionBundled
+            ? L10n.sourceSetupAvailable
+            : L10n.sourceSetupUnavailable
     }
 }
 #endif

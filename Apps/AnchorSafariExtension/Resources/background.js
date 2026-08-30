@@ -1,7 +1,7 @@
-const HOST_NAME = "com.andywang.anchor.web";
 const SESSION_KEY = "anchorWebObservationState";
 const INITIAL_STATE = { sequence: 0, currentTabID: null, tabs: {} };
 
+// Serialize tab callbacks so lifecycle sequence numbers stay deterministic.
 let operationQueue = Promise.resolve();
 
 function enqueue(operation) {
@@ -10,7 +10,7 @@ function enqueue(operation) {
 }
 
 async function loadSessionState() {
-  const stored = await chrome.storage.session.get(SESSION_KEY);
+  const stored = await browser.storage.session.get(SESSION_KEY);
   const state = stored[SESSION_KEY];
   return state && typeof state === "object"
     ? state
@@ -18,11 +18,11 @@ async function loadSessionState() {
 }
 
 async function saveSessionState(state) {
-  await chrome.storage.session.set({ [SESSION_KEY]: state });
+  await browser.storage.session.set({ [SESSION_KEY]: state });
 }
 
 async function isEnabled() {
-  const stored = await chrome.storage.local.get({ enabled: false });
+  const stored = await browser.storage.local.get({ enabled: false });
   return stored.enabled === true;
 }
 
@@ -43,17 +43,17 @@ function hostnameForTab(tab) {
 
 async function deliver(signal) {
   try {
-    const response = await chrome.runtime.sendNativeMessage(HOST_NAME, signal);
+    const response = await browser.runtime.sendNativeMessage(signal);
     if (!response || response.ok !== true) {
       throw new Error("Native host rejected the signal.");
     }
-    await chrome.storage.local.set({
+    await browser.storage.local.set({
       bridgeStatus: "connected",
       lastDeliveryAt: new Date().toISOString()
     });
     return true;
   } catch {
-    await chrome.storage.local.set({ bridgeStatus: "unavailable" });
+    await browser.storage.local.set({ bridgeStatus: "unavailable" });
     return false;
   }
 }
@@ -68,7 +68,7 @@ async function sendState(entry, activityState, state) {
     state: activityState,
     occurredAt: new Date().toISOString(),
     siteHost: entry.siteHost,
-    browserName: "Browser"
+    browserName: "Safari"
   };
   const delivered = await deliver(signal);
   if (delivered) {
@@ -93,7 +93,7 @@ async function observeActiveTab() {
     return;
   }
 
-  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+  const [tab] = await browser.tabs.query({ active: true, lastFocusedWindow: true });
   const siteHost = hostnameForTab(tab);
   const state = await loadSessionState();
   if (!tab || typeof tab.id !== "number" || !siteHost) {
@@ -149,7 +149,7 @@ async function closeTab(tabID) {
 
 async function setEnabled(enabled) {
   if (enabled) {
-    await chrome.storage.local.set({ enabled: true, bridgeStatus: "connecting" });
+    await browser.storage.local.set({ enabled: true, bridgeStatus: "connecting" });
     await observeActiveTab();
     return;
   }
@@ -160,18 +160,18 @@ async function setEnabled(enabled) {
       await sendState(entry, "closed", state);
     }
   }
-  await chrome.storage.session.set({
+  await browser.storage.session.set({
     [SESSION_KEY]: structuredClone(INITIAL_STATE)
   });
-  await chrome.storage.local.set({ enabled: false, bridgeStatus: "disabled" });
+  await browser.storage.local.set({ enabled: false, bridgeStatus: "disabled" });
 }
 
-chrome.runtime.onInstalled.addListener((details) => {
+browser.runtime.onInstalled.addListener((details) => {
   void enqueue(async () => {
-    const stored = await chrome.storage.local.get("enabled");
+    const stored = await browser.storage.local.get("enabled");
     if (typeof stored.enabled !== "boolean") {
       const enabled = details.reason === "install";
-      await chrome.storage.local.set({
+      await browser.storage.local.set({
         enabled,
         bridgeStatus: enabled ? "connecting" : "disabled"
       });
@@ -182,27 +182,27 @@ chrome.runtime.onInstalled.addListener((details) => {
   });
 });
 
-chrome.runtime.onStartup.addListener(() => {
+browser.runtime.onStartup.addListener(() => {
   void enqueue(observeActiveTab);
 });
 
-chrome.tabs.onActivated.addListener(() => {
+browser.tabs.onActivated.addListener(() => {
   void enqueue(observeActiveTab);
 });
 
-chrome.tabs.onUpdated.addListener((tabID, changeInfo, tab) => {
+browser.tabs.onUpdated.addListener((tabID, changeInfo, tab) => {
   if (tab.active && (changeInfo.url || changeInfo.status === "complete")) {
     void enqueue(observeActiveTab);
   }
 });
 
-chrome.tabs.onRemoved.addListener((tabID) => {
+browser.tabs.onRemoved.addListener((tabID) => {
   void enqueue(() => closeTab(tabID));
 });
 
-chrome.windows.onFocusChanged.addListener((windowID) => {
+browser.windows.onFocusChanged.addListener((windowID) => {
   void enqueue(async () => {
-    if (windowID === chrome.windows.WINDOW_ID_NONE) {
+    if (windowID === browser.windows.WINDOW_ID_NONE) {
       const state = await loadSessionState();
       await backgroundCurrent(state);
       await saveSessionState(state);
@@ -212,7 +212,7 @@ chrome.windows.onFocusChanged.addListener((windowID) => {
   });
 });
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message || message.type !== "anchor.setEnabled") {
     return false;
   }

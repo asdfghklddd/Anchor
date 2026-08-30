@@ -5,20 +5,12 @@ import Foundation
 struct AnchorCLI {
     static func main() async throws {
         var arguments = Array(CommandLine.arguments.dropFirst())
-        if let origin = arguments.first, origin.hasPrefix("chrome-extension://") {
-            try BrowserNativeMessagingHost.validate(origin: origin)
-            try BrowserNativeMessagingHost.run()
-            return
-        }
-
         let command = arguments.first ?? "help"
         if !arguments.isEmpty {
             arguments.removeFirst()
         }
 
         switch command {
-        case "browser":
-            try browser(arguments)
         case "command":
             try commandLifecycle(arguments)
         case "emit":
@@ -33,34 +25,6 @@ struct AnchorCLI {
             printUsage()
             throw CLIError.unknownCommand(command)
         }
-    }
-
-    private static func browser(_ arguments: [String]) throws {
-        guard let subcommand = arguments.first else {
-            throw CLIError.unknownCommand("browser")
-        }
-        switch subcommand {
-        case "bridge":
-            let options = try BrowserBridgeOptions(
-                arguments: Array(arguments.dropFirst())
-            )
-            try BrowserNativeMessagingHost.run(
-                inbox: options.inboxURL ?? FileProcessSource.defaultWebInboxURL()
-            )
-        case "manifest":
-            let options = try BrowserManifestOptions(
-                arguments: Array(arguments.dropFirst())
-            )
-            try printBrowserHostManifest(binaryPath: options.binaryPath)
-        default:
-            throw CLIError.unknownCommand("browser \(subcommand)")
-        }
-    }
-
-    private static func printBrowserHostManifest(binaryPath: String) throws {
-        let data = try BrowserNativeMessagingHost.manifestData(binaryPath: binaryPath)
-        FileHandle.standardOutput.write(data)
-        FileHandle.standardOutput.write(Data("\n".utf8))
     }
 
     private static func emit(_ arguments: [String]) throws {
@@ -244,47 +208,8 @@ struct AnchorCLI {
             anchor shell zsh
               Print an opt-in zsh preexec/precmd integration script.
 
-            anchor browser bridge [--inbox PATH]
-              Run the Chromium native-messaging bridge over stdin/stdout.
-
-            anchor browser manifest --path ABSOLUTE_ANCHOR_CLI_PATH
-              Print the pinned native-host manifest without installing it.
             """
         )
-    }
-}
-
-private struct BrowserBridgeOptions {
-    let inboxURL: URL?
-
-    init(arguments: [String]) throws {
-        var inboxURL: URL?
-        var index = 0
-        while index < arguments.count {
-            let option = arguments[index]
-            index += 1
-            guard arguments.indices.contains(index) else {
-                throw CLIError.missingValue(option)
-            }
-            let value = arguments[index]
-            switch option {
-            case "--inbox": inboxURL = URL(filePath: value)
-            default: throw CLIError.unknownOption(option)
-            }
-            index += 1
-        }
-        self.inboxURL = inboxURL
-    }
-}
-
-private struct BrowserManifestOptions {
-    let binaryPath: String
-
-    init(arguments: [String]) throws {
-        guard arguments.count == 2, arguments[0] == "--path" else {
-            throw CLIError.missingOption("--path")
-        }
-        binaryPath = arguments[1]
     }
 }
 

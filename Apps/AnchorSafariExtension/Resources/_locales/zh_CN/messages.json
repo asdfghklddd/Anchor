@@ -1,5 +1,5 @@
 {
-  "extensionName": { "message": "Anchor 网页观察" },
+  "extensionName": { "message": "Anchor Safari 网页观察" },
   "extensionDescription": { "message": "向 Anchor macOS 配套应用发送经过隐私最小化的活跃网页应用状态。" },
   "popupTitle": { "message": "网页观察" },
   "enableLabel": { "message": "观察活跃的网页应用" },
@@ -8,7 +8,7 @@
   "loadingStatus": { "message": "正在检查状态…" },
   "disabledStatus": { "message": "网页观察已关闭。" },
   "connectedStatus": { "message": "已连接到 Anchor。" },
-  "unavailableStatus": { "message": "Anchor 本地桥接当前不可用。" },
+  "unavailableStatus": { "message": "Anchor 应用连接当前不可用。" },
   "connectingStatus": { "message": "正在连接 Anchor…" },
   "updatingStatus": { "message": "正在更新…" },
   "updateFailedStatus": { "message": "无法更新网页观察状态。" }

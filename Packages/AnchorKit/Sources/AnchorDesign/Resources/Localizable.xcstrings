@@ -4573,78 +4573,6 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "可安装" } }
       }
     },
-    "source.setup.browser.count" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld browsers" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个浏览器" } }
-      }
-    },
-    "source.setup.browser.awaiting-confirmation" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Awaiting browser confirmation" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "等待浏览器确认" } }
-      }
-    },
-    "source.setup.browser.connect" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connect %@" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "连接 %@" } }
-      }
-    },
-    "source.setup.browser.connected" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connected" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已连接" } }
-      }
-    },
-    "source.setup.browser.install" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Install browser bridge…" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "安装浏览器桥接…" } }
-      }
-    },
-    "source.setup.browser.missing" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "The browser bridge is not included in this build." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此构建未包含浏览器桥接。" } }
-      }
-    },
-    "source.setup.browser.other" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Other browser" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "其他浏览器" } }
-      }
-    },
-    "source.setup.browser.panel.message" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose the %@ support folder. Anchor will add only its native messaging manifest." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请选择 %@ 的支持文件夹。Anchor 只会添加自己的原生消息清单。" } }
-      }
-    },
-    "source.setup.browser.panel.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Install for %@" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "为 %@ 安装" } }
-      }
-    },
-    "source.setup.browser.prepared" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bridge ready" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "桥接已就绪" } }
-      }
-    },
-    "source.setup.browser.store-open-failed" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anchor could not open the browser extension store." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anchor 无法打开浏览器扩展商店。" } }
-      }
-    },
-    "source.setup.browser.store-unavailable" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "The Anchor extension is not yet available in the %@ extension store." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anchor 扩展尚未在 %@ 扩展商店上架。" } }
-      }
-    },
     "source.setup.command.install" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Install command…" } },
@@ -4675,18 +4603,6 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "逐层明确连接。Anchor 获取生命周期与结构化进度，但不会读取文档内容。" } }
       }
     },
-    "source.setup.extension.missing" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "The Anchor browser extension is not included in this build." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此构建未包含 Anchor 浏览器扩展。" } }
-      }
-    },
-    "source.setup.extension.show" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show extension" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "显示扩展" } }
-      }
-    },
     "source.setup.install" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Install" } },
@@ -4715,6 +4631,36 @@
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Ready" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已就绪" } }
+      }
+    },
+    "source.setup.safari.awaiting-confirmation" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Awaiting Safari confirmation" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "等待 Safari 确认" } }
+      }
+    },
+    "source.setup.safari.enable" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable in Safari…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 Safari 中启用…" } }
+      }
+    },
+    "source.setup.safari.enabled" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enabled" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已启用" } }
+      }
+    },
+    "source.setup.safari.missing" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The Anchor Safari extension is not included in this build." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此构建未包含 Anchor Safari 扩展。" } }
+      }
+    },
+    "source.setup.safari.open-settings" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Safari settings…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开 Safari 设置…" } }
       }
     },
     "source.setup.shell.copied" : {
@@ -4761,14 +4707,14 @@
     },
     "source.setup.web-apps.detail" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anchor prepares the native bridge automatically, then opens the browser store. You only confirm the extension in your browser." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anchor 会自动准备原生桥接并打开扩展商店；你只需在浏览器中确认安装。" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anchor includes its Safari extension. Enable it once in Safari to share privacy-minimal web app state." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anchor 已内置 Safari 扩展；只需在 Safari 中启用一次，即可共享经过隐私最小化的 Web App 状态。" } }
       }
     },
     "source.setup.web.distribution-detail" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Anchor writes only its fixed bridge and Web Store setup files. The browser keeps control of the final extension confirmation. Store publication is required before release." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Anchor 只写入固定的桥接和扩展商店配置文件；最终扩展确认仍由浏览器控制。正式发布前需要先完成扩展商店上架。" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Safari keeps control of extension and website access. Anchor never reads page text, paths, forms, or private windows." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "扩展与网站访问权限始终由 Safari 控制。Anchor 不读取页面文字、路径、表单或无痕窗口。" } }
       }
     },
     "sources" : {
