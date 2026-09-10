@@ -1,0 +1,88 @@
+{
+  "capturedAt": "2026-09-10T15:45:31Z",
+  "repositoryBaselineHead": "254ac981dd0bdb0aa494be12bb288b795dbf5399",
+  "branch": "codex/anchor-implementation-plan",
+  "scope": "Optimized Mac Codex resource gate and local MVP handoff",
+  "optimizedValidationBuild": {
+    "target": "Anchor macOS",
+    "configuration": "Release optimization with SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG and CODE_SIGNING_ALLOWED=NO",
+    "optimization": "-O -whole-module-optimization",
+    "buildSucceeded": true,
+    "distributionBuild": false,
+    "buildLog": "/tmp/anchor-release-validation-build.log"
+  },
+  "optimizedSoak": {
+    "isolatedValidationDirectory": "/tmp/anchor-mac-soak-e2e.jBDBr7",
+    "wallClockSeconds": 866.73,
+    "turnCount": 600,
+    "lifecycleEventCount": 1200,
+    "completedRunCount": 600,
+    "appRestartTurns": [200, 400, 600],
+    "atomicReplacementTurn": 300,
+    "inPlaceTruncationTurn": 450,
+    "restartWithoutReplay": true,
+    "uniqueRunIDs": true,
+    "uniqueSourceSessionIDs": true,
+    "uniqueEventIDs": true,
+    "checkpointContainsSelectedPath": false,
+    "stdoutBytes": 0,
+    "stderrBytes": 0,
+    "maximumResidentMemoryKilobytes": 337904,
+    "taskStoreBytes": 680045,
+    "sessionRepositoryBytes": 3751466,
+    "checkpointStoreBytes": 192,
+    "finalSyntheticSourceBytes": 36391
+  },
+  "coldRestart": {
+    "runCount": 600,
+    "eventCount": 1200,
+    "completedRunCount": 600,
+    "residentMemoryAfter2SecondsKilobytes": 147232,
+    "residentMemoryAfter10SecondsKilobytes": 146496,
+    "vmmapPhysicalFootprint": "65.1M",
+    "vmmapPeakPhysicalFootprint": "119.3M",
+    "stdoutBytes": 0,
+    "stderrBytes": 0,
+    "requiredForcedKill": false
+  },
+  "performanceInterpretation": {
+    "classification": "Post-MVP performance debt; not a blocker for a normal medium-task local acceptance run",
+    "staticCause": "LocalSessionRepository and TaskRunStore copy and encode whole state for each event, while reducers replay and sort accumulated histories.",
+    "leakProven": false,
+    "instrumentsAllocationTrace": "Unavailable because Developer Mode is disabled; the system setting was not changed."
+  },
+  "ownerAcceptanceLauncher": {
+    "path": "scripts/validation/launch-mac-local-mvp.sh",
+    "formalTargetOnly": true,
+    "usedDemoTarget": false,
+    "usedProductionAnchorData": false,
+    "requiresIPhone": false,
+    "requiresDeveloperAccount": false,
+    "uiInspectionDirectory": "/tmp/anchor-mac-mvp-user-test.CZPz4r",
+    "sourcesScreenObserved": true,
+    "systemOpenPanelObserved": true,
+    "candidateDirectoryLocatedByMetadata": true,
+    "candidateFilenameShownInPanelMessage": true,
+    "filePermissionGrantedDuringInspection": false,
+    "validationAppLeftRunning": false
+  },
+  "finalRegression": {
+    "anchorKitTestCount": 127,
+    "anchorKitSuiteCount": 13,
+    "anchorKitDurationSeconds": 3.691,
+    "allPassed": true,
+    "launcherShellSyntaxPassed": true
+  },
+  "decision": {
+    "macCodexLocalMVPDeveloperGate": "passed",
+    "ownerAcceptance": "pending",
+    "wholeAnchorProduct": "not complete"
+  },
+  "limitations": [
+    "The optimized package uses the Debug-only isolation gate and is not a signed distribution Release.",
+    "The public NSOpenPanel API does not reliably preselect an existing file; the user selects the displayed candidate and confirms Open.",
+    "Provisioned App Sandbox, iPhone synchronization, Claude Code, Safari long-response capture, sleep/wake and multi-hour real-user observation remain unverified.",
+    "No Demo target, VPN configuration, production Anchor data or Codex conversation body was changed or read for this handoff.",
+    "Implementation was not pushed or released when this evidence file was authored."
+  ]
+}

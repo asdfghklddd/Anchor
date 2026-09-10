@@ -1,0 +1,49 @@
+{
+  "capturedAt": "2026-09-10T03:10:16Z",
+  "repositoryHead": "254ac981dd0bdb0aa494be12bb288b795dbf5399",
+  "branch": "codex/anchor-implementation-plan",
+  "scope": "Mac-only task lifecycle boundary, current/history separation and interrupted-write recovery",
+  "implementedContract": [
+    "TaskRunStore exposes exactly one non-archived current task record and a separately sorted archived history.",
+    "A second foreground task is rejected unless it arrives through the explicit user-session activation boundary.",
+    "Completing a user-owned session archives the matching task without treating model-side run completion as task completion.",
+    "A new user session after completion receives a new task identity; the old task, work items, runs and events remain in history.",
+    "If the app stopped after a new session was saved but before the old task was archived, synchronization archives the older task at the new session start time.",
+    "A delayed older session cannot replace a newer foreground task or modify the persisted bytes."
+  ],
+  "automatedVerification": {
+    "fullSwiftTesting": "124 tests in 13 suites passed after 3.797 seconds",
+    "isolatedStoragePerTest": true,
+    "currentAndHistorySeparated": true,
+    "implicitSecondForegroundRejected": true,
+    "completedSessionCanCreateNewTask": true,
+    "interruptedBoundaryWriteRecovered": true,
+    "outOfOrderOlderActivationRejected": true,
+    "oldSourceEventIsolationCovered": true,
+    "macOSBuild": "Anchor macOS arm64 Debug build succeeded with CODE_SIGNING_ALLOWED=NO"
+  },
+  "liveCodexRestartVerification": {
+    "appPath": "/private/tmp/anchor-formal-derived/Build/Products/Debug/Anchor macOS.app",
+    "isolatedDataDirectory": "/tmp/anchor-real-codex-live.1sKfXT",
+    "taskCount": 1,
+    "currentTaskCount": 1,
+    "historyTaskCount": 0,
+    "workItemCount": 1,
+    "runCountBeforeRestart": 3,
+    "runCountAfterRestart": 3,
+    "eventCountBeforeRestart": 4,
+    "eventCountAfterRestart": 4,
+    "associationCount": 1,
+    "visibleTaskState": "running, no attention, no observed result, active",
+    "visibleRunCount": 3,
+    "replayedLifecycleEvents": 0,
+    "processRSSKilobytesAt106Seconds": 139984
+  },
+  "limitations": [
+    "The live restart used one still-active task, so archived history and a new task boundary are proven by isolated persistence tests rather than by changing the real user task.",
+    "The legacy macOS session workspace can still display a completed Session projection; complete foreground removal in the product journey remains part of the iPhone and cross-device acceptance.",
+    "Codex turn_aborted is still represented as a generic failed process event rather than the dedicated interrupted task outcome.",
+    "No iPhone, provisioned App Sandbox, Claude account, multi-hour background run or sleep-wake cycle was used.",
+    "The changes remain uncommitted and have not been pushed, merged, installed or released."
+  ]
+}

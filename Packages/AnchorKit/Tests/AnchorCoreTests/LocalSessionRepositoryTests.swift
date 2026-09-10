@@ -4,6 +4,33 @@ import Testing
 
 @Suite("Local session repository")
 struct LocalSessionRepositoryTests {
+    @Test("A new task replaces a completed foreground session after restart")
+    func completedSessionIsReplacedDurably() async throws {
+        let storage = URL.temporaryDirectory.appending(path: "anchor-new-task-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: storage) }
+        let repository = LocalSessionRepository(storageURL: storage, sourceID: UUID())
+        try await repository.send(
+            .createSession(
+                goal: AnchorGoal(title: "First", completionCriteria: "Done"),
+                processes: []
+            )
+        )
+        let firstID = try #require(await repository.currentProjection().session?.id)
+        try await repository.send(.completeSession)
+        try await repository.send(
+            .createSession(
+                goal: AnchorGoal(title: "Second", completionCriteria: "Done again"),
+                processes: []
+            )
+        )
+        let secondID = try #require(await repository.currentProjection().session?.id)
+        #expect(secondID != firstID)
+
+        let restored = LocalSessionRepository(storageURL: storage, sourceID: UUID())
+        #expect(await restored.currentProjection().session?.id == secondID)
+        #expect(await restored.currentProjection().session?.goal.title == "Second")
+    }
+
     @Test("User-created empty workspace state survives relaunch")
     func persistsUserSession() async throws {
         let storage = URL.temporaryDirectory.appending(path: "anchor-local-\(UUID().uuidString).json")

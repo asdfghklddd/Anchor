@@ -1,0 +1,55 @@
+{
+  "schema": "anchor.p0.evidence.v1",
+  "captured_on": "2026-09-04",
+  "status": "partial_read_only_audit",
+  "production_adapter_verified": false,
+  "two_device_verified": false,
+  "environment": {
+    "macos": "26.5.2",
+    "macos_build": "25F84",
+    "desktop_bundle_id": "com.openai.codex",
+    "desktop_version": "26.901.20858",
+    "embedded_codex_cli": "0.153.0-alpha.5",
+    "claude_code_cli": "2.1.220",
+    "standalone_chatgpt": "not_found_in_checked_locations",
+    "claude_process_at_snapshot": "not_observed"
+  },
+  "codex_record_evidence": {
+    "source_scope": "current_anchor_thread_only",
+    "record_window": "last_3000_serialized_records",
+    "max_parsed_line_bytes": 2097152,
+    "complete_history": false,
+    "malformed_parsed_lines": 0,
+    "session_id_matches_selected_thread": true,
+    "project_matches_anchor": true,
+    "event_counts": {
+      "task_started": 30,
+      "task_complete": 29,
+      "turn_aborted": 1
+    },
+    "lifecycle_excerpt": [
+      {"run_alias": "run-29", "event": "task_started", "at": "2026-09-04T02:12:48.163Z"},
+      {"run_alias": "run-29", "event": "task_complete", "at": "2026-09-04T02:21:21.242Z"},
+      {"run_alias": "run-30", "event": "task_started", "at": "2026-09-04T02:40:13.064Z"},
+      {"run_alias": "run-30", "event": "task_complete", "at": "2026-09-04T02:44:15.513Z"},
+      {"run_alias": "run-31", "event": "task_started", "at": "2026-09-04T06:12:59.403Z"}
+    ],
+    "realtime_subscription_verified": false,
+    "sandbox_read_access_verified": false,
+    "default_control_socket_query": "failed_socket_not_found"
+  },
+  "claude_evidence": {
+    "help_flags_observed": ["stream-json", "include-hook-events", "include-partial-messages", "resume", "session-id"],
+    "user_settings_hook_event_keys": [],
+    "all_configuration_scopes_inspected": false,
+    "controlled_turns_executed": 0,
+    "hooks_verified": false
+  },
+  "privacy": {
+    "raw_transcript_copied": false,
+    "conversation_text_in_evidence": false,
+    "real_thread_or_turn_ids_in_evidence": false,
+    "source_configurations_modified": false,
+    "model_requests_started": false
+  }
+}

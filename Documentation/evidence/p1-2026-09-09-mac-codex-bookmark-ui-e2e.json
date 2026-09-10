@@ -1,0 +1,62 @@
+{
+  "capturedAt": "2026-09-09T12:13:50Z",
+  "repositoryHead": "254ac98",
+  "branch": "codex/anchor-implementation-plan",
+  "scope": "Mac-only user-facing Codex file selection and bookmark restoration",
+  "build": {
+    "target": "Anchor macOS",
+    "configuration": "Debug",
+    "architecture": "arm64",
+    "codeSigningAllowed": false,
+    "appSandboxEnforced": false
+  },
+  "isolation": {
+    "temporaryTaskRoot": "/tmp/anchor-bookmark-final.JMH5z7",
+    "temporaryDefaultsSuite": "com.andywang.anchor.validation.anchor-bookmark-final.JMH5z7",
+    "usesRealUserContent": false,
+    "usesIPhone": false
+  },
+  "observedPhases": [
+    "real-nsopenpanel-opened",
+    "synthetic-jsonl-selected",
+    "ui-showed-selected-file-name",
+    "running-run-captured",
+    "app-restarted-without-reopening-panel",
+    "ui-restored-selected-file-name",
+    "completion-appended-after-restart",
+    "same-run-completed"
+  ],
+  "result": {
+    "taskCount": 1,
+    "workItemCount": 1,
+    "runCount": 1,
+    "associationCount": 1,
+    "sourceSessionID": "bookmark-turn-1",
+    "execution": "idle",
+    "outcome": "completed",
+    "checkpointOffsetBeforeRestart": 122,
+    "checkpointOffsetAfterCompletion": 245,
+    "checkpointKey": "codex.lifecycle.00000000-0000-4000-8000-000000000404",
+    "checkpointContainsSelectedFilePath": false,
+    "newCrashReport": false
+  },
+  "regressionsFoundAndCorrected": [
+    "The checkpoint dictionary key persisted the full selected JSONL path. It now uses the fixed Codex source ID and a regression assertion rejects path leakage.",
+    "Bookmark restoration could be entered concurrently by app startup and the Sources view. Restoration is now serialized on the main actor."
+  ],
+  "verification": {
+    "swiftTesting": "92 tests in 10 suites passed",
+    "macOSBuild": "Anchor macOS arm64 Debug build succeeded with CODE_SIGNING_ALLOWED=NO",
+    "headlessLifecycleE2E": "passed with path-leak assertion"
+  },
+  "signingBoundary": {
+    "automaticLocalSigning": "failed because Anchor macOS and AnchorSafariExtension require provisioning profiles",
+    "adHocSandboxSigning": "code signature verified but the process did not finish App Sandbox initialization",
+    "conclusion": "NSOpenPanel, bookmark persistence and restoration are verified without an iPhone or developer account; App Sandbox enforcement still requires a provisioned build."
+  },
+  "limitations": [
+    "The selected JSONL contains synthetic privacy-minimal lifecycle rows rather than real Codex conversation content.",
+    "The user-facing flow ran in an unsigned Debug app, so it does not prove sandbox extension issuance in a provisioned package.",
+    "Long-running observation and real Codex file rotation remain separate acceptance work."
+  ]
+}

@@ -1275,13 +1275,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anchor will save the goal, processes, decisions, and notes. You can resume this session later."
+            "value" : "Anchor will preserve this task in history and remove it from current work. Continuing the conversation later starts a new task."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anchor 会保存目标、进程、判断和笔记，之后仍可以恢复这个会话。"
+            "value" : "Anchor 会将这个任务完整保留在历史中，并从当前工作退出。之后继续同一对话时会作为新任务开始。"
           }
         }
       }
@@ -4631,6 +4631,138 @@
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Ready" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已就绪" } }
+      }
+    },
+    "source.setup.task.active" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Active" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进行中" } }
+      }
+    },
+    "source.setup.task.archived" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Archived" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已归档" } }
+      }
+    },
+    "source.setup.task.attention" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Attention" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "需要关注" } }
+      }
+    },
+    "source.setup.task.awaiting-confirmation" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Awaiting your confirmation" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "等待你的确认" } }
+      }
+    },
+    "source.setup.task.completed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Completed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已完成" } }
+      }
+    },
+    "source.setup.task.counts" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld work items · %2$lld runs" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld 个工作项 · %2$lld 次执行" } }
+      }
+    },
+    "source.setup.task.execution" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Execution" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "执行状态" } }
+      }
+    },
+    "source.setup.task.failed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "失败" } }
+      }
+    },
+    "source.setup.task.has-failure" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Prior failure" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "有过失败" } }
+      }
+    },
+    "source.setup.task.idle" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Idle" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "空闲" } }
+      }
+    },
+    "source.setup.task.interrupted" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Interrupted" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已中断" } }
+      }
+    },
+    "source.setup.task.lifecycle" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Task lifecycle" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "任务生命周期" } }
+      }
+    },
+    "source.setup.task.needs-input" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Needs input" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "等待输入" } }
+      }
+    },
+    "source.setup.task.no-attention" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "None" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无" } }
+      }
+    },
+    "source.setup.task.no-outcome" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No result yet" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚无结果" } }
+      }
+    },
+    "source.setup.task.outcome" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Observed result" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "观测结果" } }
+      }
+    },
+    "source.setup.task.queued" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Queued" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "等待执行" } }
+      }
+    },
+    "source.setup.task.running" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Running" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "运行中" } }
+      }
+    },
+    "source.setup.task.stale" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stale" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "可能已过期" } }
+      }
+    },
+    "source.setup.task.waiting" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting in background" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "后台等待" } }
+      }
+    },
+    "source.setup.task-observation" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Current task observation" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前任务观测" } }
+      }
+    },
+    "source.setup.task-observation.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Read-only state derived from observed runs. Finishing observed work does not end the task." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "由已观测执行只读推导；执行完成不会自动结束整体任务。" } }
       }
     },
     "source.setup.safari.awaiting-confirmation" : {

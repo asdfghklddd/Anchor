@@ -15,7 +15,11 @@ public enum SessionReducer {
             // not carry the generated session ID, so an existing workspace is
             // left intact; the event-backed repository performs the stronger
             // envelope-level identity check for replicated creates.
-            guard result.session == nil else { return result }
+            if let existing = result.session,
+               existing.status != .completed,
+               existing.status != .archived {
+                return result
+            }
             result.session = AnchorSession(
                 goal: goal,
                 status: .active,
@@ -284,7 +288,10 @@ public enum SessionReducer {
 
         switch operation {
         case let .createSession(session):
-            if let existing = result.session, existing.id != session.id {
+            if let existing = result.session,
+               existing.id != session.id,
+               existing.status != .completed,
+               existing.status != .archived {
                 return result
             }
             result.session = session

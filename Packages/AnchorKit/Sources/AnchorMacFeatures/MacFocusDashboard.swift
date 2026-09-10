@@ -5,11 +5,16 @@ import SwiftUI
 
 struct MacFocusDashboard: View {
     let model: AnchorSessionModel
+    let showsCompletedSessionInCurrentWork: Bool
     let onOpenTimeline: () -> Void
     let onOpenSettings: () -> Void
 
     var body: some View {
-        if let session = model.projection.session {
+        if let session = model.projection.session,
+           MacCurrentTaskPresentation.showsInForeground(
+               session.status,
+               includingCompleted: showsCompletedSessionInCurrentWork
+           ) {
             MacActiveWorkView(
                 model: model,
                 session: session,
@@ -21,6 +26,22 @@ struct MacFocusDashboard: View {
                 onOpenTimeline: onOpenTimeline,
                 onOpenSettings: onOpenSettings
             )
+        }
+    }
+}
+
+enum MacCurrentTaskPresentation {
+    static func showsInForeground(
+        _ status: SessionStatus?,
+        includingCompleted: Bool
+    ) -> Bool {
+        switch status {
+        case .draft, .active:
+            true
+        case .completed:
+            includingCompleted
+        case .archived, nil:
+            false
         }
     }
 }

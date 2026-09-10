@@ -1,0 +1,72 @@
+{
+  "capturedAt": "2026-09-04T12:42:09.141Z",
+  "scope": "current Anchor thread only",
+  "firstScan": {
+    "scannedBytes": 76035016,
+    "eventCounts": {
+      "task_started": 54,
+      "task_complete": 46,
+      "turn_aborted": 7
+    },
+    "distinctRuns": 54,
+    "counts": {
+      "malformed": 0,
+      "oversized": 4,
+      "duplicates": 0,
+      "ignored": 7034
+    },
+    "partialRecordDeferred": false
+  },
+  "checkpointReplay": {
+    "resetRequired": false,
+    "scannedBytes": 0,
+    "newLifecycleEvents": 0
+  },
+  "recentLifecycle": [
+    {
+      "eventID": "4cf0a5a253b4cd56f34e39171d11dc27e12f56fbe5ea809f462175282c814692",
+      "runAlias": "18911960a9014bc4",
+      "type": "task_started",
+      "at": "2026-09-04T12:09:51.235Z"
+    },
+    {
+      "eventID": "9186a15c07da8bdffdee227537f6cd8936600fec96d54b555bee43d29a2efe2d",
+      "runAlias": "18911960a9014bc4",
+      "type": "task_complete",
+      "at": "2026-09-04T12:10:12.270Z"
+    },
+    {
+      "eventID": "5f962fb94a952a1702c2f50c426c5de00781b852f886a200da63fd7050a526d1",
+      "runAlias": "61f04fc1867c15af",
+      "type": "task_started",
+      "at": "2026-09-04T12:10:17.222Z"
+    },
+    {
+      "eventID": "045900f253f6ffa0c05df8ac305785a20d2bfa5158f1b84fea7f0f29cafe5aff",
+      "runAlias": "61f04fc1867c15af",
+      "type": "task_complete",
+      "at": "2026-09-04T12:10:33.237Z"
+    },
+    {
+      "eventID": "0928f1731756c412690336a72deae2e443f7b064107b2e4ba9cc3f9b2be14d36",
+      "runAlias": "761102bfda5f1330",
+      "type": "task_started",
+      "at": "2026-09-04T12:37:43.293Z"
+    }
+  ],
+  "productionAdapterVerified": false,
+  "claudeAuth": {
+    "loggedIn": false,
+    "authMethod": "none",
+    "apiProvider": "firstParty",
+    "processAuthConfigured": false,
+    "userSettingsAuthConfigured": false,
+    "apiKeyHelperConfigured": false,
+    "controlledRequests": 0
+  },
+  "tests": {
+    "command": "node --test scripts/p0/codex-lifecycle-probe.test.mjs",
+    "passed": 7,
+    "failed": 0
+  }
+}

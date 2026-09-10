@@ -31,9 +31,12 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
     private var eventApplicationTask: Task<Void, Never>?
     private var replayWindow = LinkReplayWindow()
 
-    public init(identityStore: PairingIdentityStore = PairingIdentityStore()) {
+    public init(
+        identityStore: PairingIdentityStore = PairingIdentityStore(),
+        deviceID: UUID? = nil
+    ) {
         self.identityStore = identityStore
-        deviceID = identityStore.localDeviceID()
+        self.deviceID = deviceID ?? identityStore.localDeviceID()
         pairingCodeValue = Self.makePairingCode()
     }
 

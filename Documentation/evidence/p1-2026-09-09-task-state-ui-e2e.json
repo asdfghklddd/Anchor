@@ -1,0 +1,90 @@
+{
+  "capturedAt": "2026-09-09T12:53:23Z",
+  "repositoryHead": "254ac98",
+  "branch": "codex/anchor-implementation-plan",
+  "scope": "Task-level state aggregation and live macOS Sources diagnostic consumption",
+  "runtime": {
+    "app": "Anchor macOS arm64 Debug",
+    "validationDirectory": "/tmp/anchor-task-state-ui.zewxxd",
+    "refreshIntervalSeconds": 1,
+    "usesIPhone": false,
+    "usesDeveloperAccount": false,
+    "usesRealUserContent": false
+  },
+  "taskProjection": {
+    "dimensions": [
+      "execution",
+      "attention",
+      "observedOutcome",
+      "userControlledLifecycle"
+    ],
+    "verifiedRules": [
+      "Active work takes precedence over terminal sibling work items.",
+      "All observed work may be completed while the task lifecycle remains active.",
+      "Failure wins only when no work item is active.",
+      "An empty task remains idle with no observed outcome.",
+      "Archiving preserves unresolved observations and never fabricates completion.",
+      "Input order and states owned by another task do not affect the projection."
+    ]
+  },
+  "accessibilityTreeObservations": [
+    {
+      "phase": "running",
+      "values": {
+        "execution": "运行中",
+        "attention": "无",
+        "observedOutcome": "尚无结果",
+        "lifecycle": "进行中",
+        "workItems": 1,
+        "runs": 1
+      }
+    },
+    {
+      "phase": "completed-without-task-archive",
+      "values": {
+        "execution": "空闲",
+        "attention": "无",
+        "observedOutcome": "已完成",
+        "lifecycle": "进行中",
+        "workItems": 1,
+        "runs": 1
+      }
+    },
+    {
+      "phase": "completed-after-app-restart",
+      "values": {
+        "execution": "空闲",
+        "attention": "无",
+        "observedOutcome": "已完成",
+        "lifecycle": "进行中",
+        "workItems": 1,
+        "runs": 1
+      }
+    },
+    {
+      "phase": "attention-coexistence-fixture",
+      "values": {
+        "execution": "运行中",
+        "attention": "有过失败和等待输入",
+        "observedOutcome": "尚无结果",
+        "lifecycle": "进行中",
+        "workItems": 1,
+        "runs": 1
+      }
+    }
+  ],
+  "verification": {
+    "swiftTesting": "104 tests in 12 suites passed",
+    "macOSBuild": "Anchor macOS arm64 Debug build succeeded with CODE_SIGNING_ALLOWED=NO",
+    "headlessLifecycleE2E": "passed with restart and no replay",
+    "faultInjectionSoak": "8 turns passed with process restarts, atomic replacement and in-place truncation",
+    "macOSAccessibilityTree": "live running, completed, restart-restored and attention-coexistence states observed"
+  },
+  "limitations": [
+    "The runtime lifecycle events were synthetic privacy-minimal Codex JSONL rows.",
+    "The needs-input and prior-failure UI state used an isolated persisted fixture, not a real Codex event.",
+    "The current Codex adapter does not yet emit needs-input or explicit failure attention facts.",
+    "iPhone and transport consumers do not use AnchorTaskState yet.",
+    "The work remains uncommitted locally."
+  ]
+}

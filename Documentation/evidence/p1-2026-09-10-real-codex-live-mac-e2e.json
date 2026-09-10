@@ -1,0 +1,115 @@
+{
+  "capturedAt": "2026-09-10T03:10:16Z",
+  "repositoryHead": "254ac981dd0bdb0aa494be12bb288b795dbf5399",
+  "branch": "codex/anchor-implementation-plan",
+  "scope": "Mac-only live Codex rollout ingestion, bounded reads, restart recovery and visible task projection",
+  "source": {
+    "description": "The current Anchor conversation's real Codex rollout, explicitly selected for an isolated Debug run",
+    "readOnly": true,
+    "initialBytes": 103840753,
+    "snapshotBytes": 111781597,
+    "maximumReadBytesPerPoll": 4194304,
+    "taskBoundaryExcludedOlderLifecycleRows": true
+  },
+  "initialBoundary": {
+    "taskCount": 1,
+    "workItemCount": 1,
+    "associationCount": 1,
+    "runCount": 0,
+    "eventCount": 0
+  },
+  "liveCapture": {
+    "taskCount": 1,
+    "workItemCount": 1,
+    "associationCount": 1,
+    "runCount": 3,
+    "eventCount": 4,
+    "distinctSourceSessionCount": 3,
+    "eventKindsInOrder": [
+      "completed",
+      "started",
+      "completed",
+      "started"
+    ],
+    "eventVersion": 1,
+    "maximumObservedReceiveDelayMilliseconds": 138,
+    "taskLifecycle": "active",
+    "taskExecution": "running",
+    "taskOutcome": "none"
+  },
+  "restartVerification": {
+    "sameIsolatedDataDirectory": true,
+    "newlyBuiltBinary": true,
+    "runCountBeforeRestart": 3,
+    "runCountAfterRestart": 3,
+    "eventCountBeforeRestart": 4,
+    "eventCountAfterRestart": 4,
+    "replayedLifecycleEvents": 0,
+    "checkpointVersion": 1,
+    "checkpointOffsetAtSnapshot": 111780062,
+    "note": "The offset trails the file while the current JSONL row is incomplete; the source rereads from the last complete-line offset."
+  },
+  "visibleVerification": {
+    "method": "macOS accessibility tree from the exact formal Debug app path",
+    "codexFileNameVisible": true,
+    "workItemCountVisible": 1,
+    "runCountVisible": 3,
+    "executionVisible": "running",
+    "attentionVisible": "none",
+    "outcomeVisible": "none",
+    "taskLifecycleVisible": "active",
+    "iphoneUsed": false
+  },
+  "privacyVerification": {
+    "taskStoreSchemaVersion": 2,
+    "taskStoreBytes": 3448,
+    "eventKeys": [
+      "id",
+      "kind",
+      "occurredAt",
+      "receivedAt",
+      "runID",
+      "sourceID",
+      "sourceSequence",
+      "sourceSessionID",
+      "taskID",
+      "version",
+      "workItemID"
+    ],
+    "excludedFromTaskEvents": [
+      "prompt",
+      "model output",
+      "title",
+      "detail",
+      "file path"
+    ],
+    "checkpointContainsSelectedFilePath": false
+  },
+  "resourceSample": {
+    "firstRunElapsed": "8m41s",
+    "maximumObservedRSSKilobytes": 140528,
+    "firstRunFinalRSSKilobytes": 111600,
+    "restartRSSKilobytesAt106Seconds": 139984,
+    "stdoutBytes": 0,
+    "stderrBytes": 0
+  },
+  "automatedVerification": {
+    "boundedReadRegression": "A lifecycle row split across 32-byte reads passed",
+    "codexVisibleStatusRegression": "1 Swift Testing test passed",
+    "fullSwiftTesting": "124 tests in 13 suites passed after 3.797 seconds",
+    "macOSBuild": "Anchor macOS arm64 Debug build succeeded with CODE_SIGNING_ALLOWED=NO"
+  },
+  "bonjourIsolation": {
+    "finding": "An old DerivedData app launched during UI inspection advertised the same _anchor._tcp service and caused two full-suite pairing timeouts.",
+    "action": "Stopped only the exact app processes launched by this validation and reran the unchanged transport tests.",
+    "result": "All 124 tests passed in the clean local-service environment.",
+    "remainingProductCheck": "Multiple simultaneous Anchor services must be exercised during P2 device pairing acceptance."
+  },
+  "limitations": [
+    "This was an unsigned Debug app, not a provisioned App Sandbox build.",
+    "No iPhone or cross-device synchronization was used.",
+    "No Claude account or Claude live session was available.",
+    "This run did not cover several hours, sleep-wake, a real source file replacement, or Release resource usage.",
+    "The changes remain uncommitted and have not been pushed, merged, installed, or released."
+  ]
+}

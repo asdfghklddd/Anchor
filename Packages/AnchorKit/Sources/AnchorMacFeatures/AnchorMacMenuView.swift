@@ -11,6 +11,7 @@ public struct AnchorMacMenuView: View {
     private let onOpenSettings: () -> Void
     private let onContinueWorking: () -> Void
     private let onQuit: () -> Void
+    private let showsCompletedSessionInCurrentWork: Bool
 
     @State private var note = ""
 
@@ -21,7 +22,8 @@ public struct AnchorMacMenuView: View {
         onOpenSources: @escaping () -> Void,
         onOpenSettings: @escaping () -> Void,
         onContinueWorking: @escaping () -> Void,
-        onQuit: @escaping () -> Void
+        onQuit: @escaping () -> Void,
+        showsCompletedSessionInCurrentWork: Bool = true
     ) {
         self.model = model
         self.onOpenDetails = onOpenDetails
@@ -30,6 +32,7 @@ public struct AnchorMacMenuView: View {
         self.onOpenSettings = onOpenSettings
         self.onContinueWorking = onContinueWorking
         self.onQuit = onQuit
+        self.showsCompletedSessionInCurrentWork = showsCompletedSessionInCurrentWork
     }
 
     public var body: some View {
@@ -37,7 +40,7 @@ public struct AnchorMacMenuView: View {
             menuHeader
             Divider()
 
-            if let session = model.projection.session {
+            if let session = foregroundSession {
                 sessionSummary(session)
                 if session.presence != .atDesk {
                     MacMenuPresenceCard(
@@ -161,6 +164,17 @@ public struct AnchorMacMenuView: View {
         }
     }
 
+    private var foregroundSession: AnchorSession? {
+        guard let session = model.projection.session,
+              MacCurrentTaskPresentation.showsInForeground(
+                  session.status,
+                  includingCompleted: showsCompletedSessionInCurrentWork
+              ) else {
+            return nil
+        }
+        return session
+    }
+
     private func menuMetric(value: String, label: String, symbol: String) -> some View {
         VStack(spacing: 3) {
             Label(value, systemImage: symbol)
@@ -248,19 +262,19 @@ public struct AnchorMacMenuView: View {
     }
 
     private var primaryActionTitle: String {
-        guard let presence = model.projection.session?.presence else { return L10n.openDetails }
+        guard let presence = foregroundSession?.presence else { return L10n.openDetails }
         return presence == .away || presence == .returning
             ? L10n.continueWorking
             : L10n.openDetails
     }
 
     private var primaryActionSymbol: String {
-        guard let presence = model.projection.session?.presence else { return "macwindow" }
+        guard let presence = foregroundSession?.presence else { return "macwindow" }
         return presence == .away || presence == .returning ? "play.fill" : "macwindow"
     }
 
     private func primaryAction() {
-        if let presence = model.projection.session?.presence,
+        if let presence = foregroundSession?.presence,
            presence == .away || presence == .returning {
             onContinueWorking()
         } else {

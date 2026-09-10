@@ -1,0 +1,45 @@
+{
+  "capturedAt": "2026-09-09T12:38:09Z",
+  "repositoryHead": "254ac98",
+  "branch": "codex/anchor-implementation-plan",
+  "scope": "Deterministic three-dimensional WorkItem state projection backed by persisted Run history",
+  "implementation": {
+    "dimensions": [
+      "execution",
+      "attention",
+      "outcome"
+    ],
+    "attentionFacts": [
+      "needsInput",
+      "hasFailure",
+      "stale"
+    ],
+    "storeInterfaces": [
+      "workItemState(id:)",
+      "workItemStates(taskID:)"
+    ],
+    "legacyRunWithoutAttention": "decodes with an empty attention set"
+  },
+  "verifiedInvariants": [
+    "Input run order does not affect the projection.",
+    "Runs belonging to another WorkItem do not affect the projection.",
+    "A retry after failure becomes running and increments the reactivation generation.",
+    "A prior failure remains attention while replacement work is active.",
+    "A successful retry leaves the failed Run in history and clears current failure attention.",
+    "Needs-input and running facts can coexist without fabricating a terminal outcome.",
+    "Stale remains an attention fact and does not become failed or completed.",
+    "The projection remains the same after TaskRunStore restart."
+  ],
+  "verification": {
+    "swiftTesting": "99 tests in 11 suites passed",
+    "macOSBuild": "Anchor macOS arm64 Debug build succeeded with CODE_SIGNING_ALLOWED=NO",
+    "headlessLifecycleE2E": "passed",
+    "faultInjectionSoak": "8 turns passed with process restarts, atomic replacement and in-place truncation"
+  },
+  "limitations": [
+    "Task-level aggregate projection is not implemented.",
+    "The production Mac and iPhone UI do not consume this projection yet.",
+    "Real Codex needs-input and failure lifecycle evidence is not available through the current three-record JSONL adapter.",
+    "The new persistence fields and projection are uncommitted local work."
+  ]
+}

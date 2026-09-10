@@ -1,0 +1,60 @@
+{
+  "capturedAt": "2026-09-10T08:37:18Z",
+  "repositoryHead": "254ac981dd0bdb0aa494be12bb288b795dbf5399",
+  "branch": "codex/anchor-implementation-plan",
+  "scope": "Mac-only Codex interruption semantics and formal current-task foreground exit",
+  "codexInterruption": {
+    "sourceLifecycle": "turn_aborted",
+    "legacyProcessStatus": "failed",
+    "taskRunOutcome": "interrupted",
+    "immutableTaskEventKind": "interrupted",
+    "additiveCompatibilityField": "ExternalProcessEvent.observedOutcome",
+    "legacyEventWithoutFieldDecodes": true,
+    "formalAppE2E": {
+      "validationDirectory": "/tmp/anchor-mac-local-e2e.2s9UHR",
+      "taskCount": 1,
+      "workItemCount": 1,
+      "runCount": 4,
+      "eventCount": 6,
+      "associationCount": 1,
+      "interruptedRunCount": 1,
+      "interruptedEventCount": 1,
+      "restartWithoutReplay": true,
+      "outOfOrderAndDuplicateRegression": true,
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "appLeftRunning": false
+    }
+  },
+  "formalForegroundExit": {
+    "validationDirectory": "/tmp/anchor-formal-completion-final.7QeI9B",
+    "appPath": "/private/tmp/anchor-formal-derived/Build/Products/Debug/Anchor macOS.app",
+    "initialCurrentTaskCount": 1,
+    "initialHistoryTaskCount": 0,
+    "confirmationCopy": "The task is preserved in history, removed from current work, and later conversation continuation starts a new task.",
+    "visibleStateAfterConfirmation": "mac.empty.screen",
+    "currentTaskCountAfterConfirmation": 0,
+    "historyTaskCountAfterConfirmation": 1,
+    "archivedTaskHasEndTime": true,
+    "visibleStateAfterAppRestart": "mac.empty.screen",
+    "currentTaskCountAfterRestart": 0,
+    "historyTaskCountAfterRestart": 1,
+    "legacyHistoryPageStillAccessible": true,
+    "demoBehaviorPreservedByDefault": true,
+    "appLeftRunning": false
+  },
+  "automatedVerification": {
+    "fullSwiftTesting": "127 tests in 13 suites passed after 3.601 seconds",
+    "parameterizedTerminalLifecycleCases": 2,
+    "parameterizedForegroundVisibilityCases": 6,
+    "macOSBuild": "Anchor macOS arm64 Debug build succeeded with CODE_SIGNING_ALLOWED=NO",
+    "gitDiffCheck": "passed"
+  },
+  "limitations": [
+    "This completion flow used a Debug-only isolated local task rather than an iPhone-created task.",
+    "The legacy process projection remains failed-compatible for turn_aborted; the task-centric Run and Event carry the more precise interrupted meaning.",
+    "The macOS history page still reads the legacy Session projection; permanent detailed history consumption remains an iPhone P6 responsibility.",
+    "No provisioned App Sandbox, iPhone, Claude account, multi-hour background run or sleep-wake cycle was used.",
+    "The changes remain uncommitted and have not been pushed, merged, installed or released."
+  ]
+}

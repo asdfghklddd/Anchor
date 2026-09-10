@@ -1,0 +1,53 @@
+{
+  "capturedAt": "2026-09-09T07:57:41Z",
+  "repositoryHead": "254ac98",
+  "branch": "codex/anchor-implementation-plan",
+  "scope": "Mac-only Debug app lifecycle validation with an isolated temporary data root",
+  "command": "scripts/validation/mac-codex-local-e2e.sh <Anchor macOS.app>",
+  "fixture": {
+    "source": "synthetic privacy-minimal Codex lifecycle JSONL",
+    "usesRealUserContent": false,
+    "usesIPhone": false,
+    "usesKeychain": false
+  },
+  "observedPhases": [
+    "bound-empty-source",
+    "running-captured",
+    "completion-captured",
+    "restart-no-replay",
+    "post-restart-append-captured"
+  ],
+  "result": {
+    "taskCount": 1,
+    "workItemCount": 1,
+    "runCount": 2,
+    "associationCount": 1,
+    "checkpointCount": 1,
+    "firstRun": {
+      "sourceSessionID": "mac-local-turn-1",
+      "execution": "idle",
+      "outcome": "completed"
+    },
+    "secondRun": {
+      "sourceSessionID": "mac-local-turn-2",
+      "execution": "running",
+      "outcome": "none"
+    }
+  },
+  "regressionsFoundAndCorrected": [
+    "Codex and Mac workspace sources shared the same UUID, causing unrelated applications to be assigned to the Codex work item.",
+    "Session associations were not scoped by source ID.",
+    "SafariServices completion handlers inherited MainActor isolation and crashed on the Safari XPC callback queue.",
+    "Unsigned Debug validation blocked on Keychain device identity lookup. The isolated validation mode now injects a temporary device ID."
+  ],
+  "verification": {
+    "swiftTesting": "92 tests in 10 suites passed",
+    "macOSBuild": "Anchor macOS arm64 Debug build succeeded with CODE_SIGNING_ALLOWED=NO",
+    "newCrashAfterFix": false
+  },
+  "limitations": [
+    "The lifecycle rows are synthetic even though the built Anchor app, file observer, durable stores, restart and process lifetime are real.",
+    "The user-facing NSOpenPanel and security-scoped bookmark confirmation are not exercised by this environment-injected Debug path.",
+    "iPhone transport and Claude Code remain outside this Mac-only checkpoint."
+  ]
+}

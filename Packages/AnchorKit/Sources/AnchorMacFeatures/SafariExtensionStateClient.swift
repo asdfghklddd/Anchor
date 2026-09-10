@@ -6,31 +6,35 @@ import SafariServices
 struct SafariExtensionStateClient: Sendable {
     static let extensionIdentifier = "com.andywang.anchor.safari-extension"
 
-    func isEnabled() async throws -> Bool {
+    nonisolated func isEnabled() async throws -> Bool {
         try await withCheckedThrowingContinuation { continuation in
-            SFSafariExtensionManager.getStateOfSafariExtension(
-                withIdentifier: Self.extensionIdentifier
-            ) { state, error in
+            let completion: @Sendable (SFSafariExtensionState?, (any Error)?) -> Void = { state, error in
                 if let error {
                     continuation.resume(throwing: error)
                 } else {
                     continuation.resume(returning: state?.isEnabled == true)
                 }
             }
+            SFSafariExtensionManager.getStateOfSafariExtension(
+                withIdentifier: Self.extensionIdentifier,
+                completionHandler: completion
+            )
         }
     }
 
-    func showPreferences() async throws {
+    nonisolated func showPreferences() async throws {
         let _: Void = try await withCheckedThrowingContinuation { continuation in
-            SFSafariApplication.showPreferencesForExtension(
-                withIdentifier: Self.extensionIdentifier
-            ) { error in
+            let completion: @Sendable ((any Error)?) -> Void = { error in
                 if let error {
                     continuation.resume(throwing: error)
                 } else {
                     continuation.resume(returning: ())
                 }
             }
+            SFSafariApplication.showPreferencesForExtension(
+                withIdentifier: Self.extensionIdentifier,
+                completionHandler: completion
+            )
         }
     }
 }

@@ -4,6 +4,298 @@ import Testing
 
 @Suite("Process sources and durable sync")
 struct ProcessSourceTests {
+    @Test("A source event for an old session cannot mutate the current Anchor task")
+    func coordinatorRejectsOldSessionEvent() async throws {
+        let repository = InMemorySessionRepository()
+        try await repository.send(
+            .createSession(
+                goal: AnchorGoal(title: "Current task", completionCriteria: "Untouched"),
+                processes: []
+            )
+        )
+        let currentSessionID = try #require(await repository.currentProjection().session?.id)
+        let oldSessionID = UUID()
+        let sourceID = UUID()
+        let event = ExternalProcessEvent(
+            sessionID: oldSessionID,
+            sourceID: sourceID,
+            sequence: 1,
+            process: AnchorProcess(
+                sessionID: oldSessionID,
+                sourceID: sourceID,
+                externalID: "old-turn",
+                sourceName: "Codex",
+                sourceSymbol: "C",
+                sourceTone: "cyan",
+                title: "Old turn",
+                status: .completed
+            )
+        )
+        let source = SimulatedProcessSource(
+            descriptor: SourceDescriptor(
+                id: sourceID,
+                name: "Old Codex session",
+                kind: .integration,
+                symbol: "C",
+                tone: "cyan"
+            ),
+            script: [event]
+        )
+        let coordinator = ProcessSourceCoordinator(repository: repository, sources: [source])
+        await coordinator.start()
+        try await Task.sleep(for: .milliseconds(50))
+
+        let session = try #require(await repository.currentProjection().session)
+        #expect(session.id == currentSessionID)
+        #expect(session.processes.isEmpty)
+        let health = try #require(await coordinator.healthSnapshot().first)
+        #expect(health.eventCount == 0)
+        #expect(health.consecutiveFailures == 1)
+        #expect(health.lastError == ProcessSourceError.sessionMismatch.localizedDescription)
+    }
+
+    @Test("A source registered after coordinator start begins observing immediately")
+    func coordinatorRegistersSourceAtRuntime() async throws {
+        let repository = InMemorySessionRepository()
+        try await repository.send(.createSession(goal: AnchorGoal(title: "Test", completionCriteria: "Done"), processes: []))
+        let sessionID = try #require(await repository.currentProjection().session?.id)
+        let sourceID = UUID()
+        let event = ExternalProcessEvent(
+            sessionID: sessionID,
+            sourceID: sourceID,
+            sequence: 1,
+            process: AnchorProcess(
+                sessionID: sessionID,
+                sourceID: sourceID,
+                sourceName: "Codex",
+                sourceSymbol: "C",
+                sourceTone: "cyan",
+                title: "Turn",
+                status: .running
+            )
+        )
+        let source = SimulatedProcessSource(
+            descriptor: SourceDescriptor(id: sourceID, name: "Codex", kind: .integration, symbol: "C", tone: "cyan"),
+            script: [event]
+        )
+        let coordinator = ProcessSourceCoordinator(repository: repository, sources: [])
+        await coordinator.start()
+        await coordinator.register(source)
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(await repository.currentProjection().session?.processes.count == 1)
+        #expect(await coordinator.healthSnapshot().first?.descriptor.id == sourceID)
+    }
+
+    @Test("A confirmed session association persists an observed run")
+    func coordinatorPersistsAssociatedRun() async throws {
+        let repository = InMemorySessionRepository()
+        try await repository.send(.createSession(goal: AnchorGoal(title: "Test", completionCriteria: "Done"), processes: []))
+        let sessionID = try #require(await repository.currentProjection().session?.id)
+        let sourceID = UUID(); let taskID = UUID(); let itemID = UUID()
+        let process = AnchorProcess(id: UUID(), sessionID: sessionID, sourceID: sourceID,
+                                    externalID: "codex-turn-1",
+                                    sourceName: "Codex", sourceSymbol: "C", sourceTone: "cyan",
+                                    title: "Build", status: .completed, updatedAt: .now)
+        let event = ExternalProcessEvent(sessionID: sessionID, sourceID: sourceID, sequence: 1, process: process)
+        let storeURL = URL.temporaryDirectory.appending(path: "anchor-run-" + UUID().uuidString + ".json")
+        defer { try? FileManager.default.removeItem(at: storeURL) }
+        let store = TaskRunStore(url: storeURL)
+        try await store.upsert(task: AnchorTask(
+            id: taskID,
+            title: "Test",
+            completionCriteria: "Done",
+            createdAt: process.updatedAt.addingTimeInterval(-1)
+        ))
+        try await store.upsert(workItem: AnchorWorkItem(id: itemID, taskID: taskID, title: "Build"))
+        let source = SimulatedProcessSource(script: [event])
+        let coordinator = ProcessSourceCoordinator(repository: repository, sources: [source], taskRunStore: store)
+        try await coordinator.setAssociation(
+            AnchorEventAssociation(taskID: taskID, workItemID: itemID, confirmedByUser: true),
+            for: sessionID,
+            sourceID: sourceID
+        )
+        await coordinator.start()
+        try await Task.sleep(for: .milliseconds(50))
+        let snapshot = await store.snapshot()
+        #expect(snapshot.runs.count == 1)
+        #expect(snapshot.events.count == 1)
+        #expect(snapshot.runs.first?.outcome == .completed)
+        #expect(snapshot.runs.first?.sourceSessionID == process.externalID)
+        try await coordinator.record(event, association: AnchorEventAssociation(taskID: taskID, workItemID: itemID, confirmedByUser: true))
+        #expect((await store.snapshot()).runs.count == 1)
+        #expect((await store.snapshot()).events.count == 1)
+    }
+
+    @Test("A failed task-event commit leaves the Codex checkpoint replayable")
+    func coordinatorAcknowledgesCodexOnlyAfterTaskEventCommit() async throws {
+        let directory = URL.temporaryDirectory.appending(
+            path: "anchor-codex-commit-order-" + UUID().uuidString
+        )
+        let lifecycleURL = directory.appending(path: "session.jsonl")
+        let checkpointURL = directory.appending(path: "checkpoints.json")
+        let taskStoreURL = directory.appending(path: "task-runs.json")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+
+        let repository = InMemorySessionRepository()
+        try await repository.send(
+            .createSession(
+                goal: AnchorGoal(title: "Commit ordering", completionCriteria: "Replayed"),
+                processes: []
+            )
+        )
+        let sessionID = try #require(await repository.currentProjection().session?.id)
+        let task = AnchorTask(
+            id: sessionID,
+            title: "Commit ordering",
+            completionCriteria: "Replayed",
+            createdAt: .distantPast
+        )
+        let item = AnchorWorkItem(taskID: task.id, title: "Codex conversation")
+        let taskStore = TaskRunStore(url: taskStoreURL)
+        try await taskStore.upsert(task: task)
+        try await taskStore.upsert(workItem: item)
+
+        let checkpointStore = CodexLifecycleCheckpointStore(storageURL: checkpointURL)
+        let context = ProcessSourceSessionContext(
+            sessionID: sessionID,
+            startedAt: .distantPast
+        )
+        let line = #"{"timestamp":"2026-09-09T01:02:03.123Z","type":"event_msg","payload":{"type":"task_complete","turn_id":"commit-order"}}"# + "\n"
+        try Data(line.utf8).write(to: lifecycleURL)
+
+        let firstSource = CodexLifecycleFileSource(
+            fileURL: lifecycleURL,
+            pollInterval: 0.02,
+            sessionContextProvider: { context },
+            checkpointStore: checkpointStore
+        )
+        let firstCoordinator = ProcessSourceCoordinator(
+            repository: repository,
+            sources: [firstSource],
+            taskRunStore: taskStore
+        )
+        try await firstCoordinator.setAssociation(
+            AnchorEventAssociation(
+                taskID: task.id,
+                workItemID: item.id,
+                confirmedByUser: true
+            ),
+            for: sessionID,
+            sourceID: firstSource.descriptor.id
+        )
+
+        // Keep the actor's valid in-memory state while making its next atomic
+        // file replacement fail as if local storage became temporarily unavailable.
+        try FileManager.default.removeItem(at: taskStoreURL)
+        try FileManager.default.createDirectory(
+            at: taskStoreURL,
+            withIntermediateDirectories: false
+        )
+        let failedHealth = await firstCoordinator.healthChanges()
+        await firstCoordinator.start()
+        try await waitForHealthStatus(in: failedHealth, status: .failed)
+
+        #expect((await taskStore.snapshot()).events.isEmpty)
+        #expect(
+            try await checkpointStore.load(
+                for: CodexLifecycleFileSource.checkpointKey(for: firstSource.descriptor.id)
+            ) == nil
+        )
+        await firstCoordinator.stop()
+
+        try FileManager.default.removeItem(at: taskStoreURL)
+        let restartedSource = CodexLifecycleFileSource(
+            fileURL: lifecycleURL,
+            pollInterval: 0.02,
+            sessionContextProvider: { context },
+            checkpointStore: checkpointStore
+        )
+        let restartedCoordinator = ProcessSourceCoordinator(
+            repository: repository,
+            sources: [restartedSource],
+            taskRunStore: taskStore
+        )
+        let recoveredHealth = await restartedCoordinator.healthChanges()
+        await restartedCoordinator.start()
+        try await waitForHealthEvent(in: recoveredHealth)
+
+        #expect((await taskStore.snapshot()).events.count == 1)
+        #expect((await taskStore.snapshot()).runs.first?.outcome == .completed)
+        #expect(
+            try await checkpointStore.load(
+                for: CodexLifecycleFileSource.checkpointKey(for: restartedSource.descriptor.id)
+            ) != nil
+        )
+        await restartedCoordinator.stop()
+    }
+
+    @Test("A source association cannot capture another source in the same Anchor session")
+    func coordinatorScopesAssociationToSource() async throws {
+        let repository = InMemorySessionRepository()
+        try await repository.send(
+            .createSession(
+                goal: AnchorGoal(title: "Test", completionCriteria: "Done"),
+                processes: []
+            )
+        )
+        let sessionID = try #require(await repository.currentProjection().session?.id)
+        let codexSourceID = UUID()
+        let workspaceSourceID = UUID()
+        let task = AnchorTask(id: sessionID, title: "Test", completionCriteria: "Done")
+        let item = AnchorWorkItem(taskID: task.id, title: "Codex conversation")
+        let storeURL = URL.temporaryDirectory.appending(path: "anchor-source-scope-" + UUID().uuidString + ".json")
+        defer { try? FileManager.default.removeItem(at: storeURL) }
+        let store = TaskRunStore(url: storeURL)
+        try await store.upsert(task: task)
+        try await store.upsert(workItem: item)
+
+        func event(sourceID: UUID, externalID: String) -> ExternalProcessEvent {
+            ExternalProcessEvent(
+                sessionID: sessionID,
+                sourceID: sourceID,
+                sequence: 1,
+                process: AnchorProcess(
+                    sessionID: sessionID,
+                    sourceID: sourceID,
+                    externalID: externalID,
+                    sourceName: externalID,
+                    sourceSymbol: "S",
+                    sourceTone: "cyan",
+                    title: externalID,
+                    status: .running
+                )
+            )
+        }
+        let sources = [
+            ImmediateSource(
+                descriptor: SourceDescriptor(id: codexSourceID, name: "Codex", kind: .integration, symbol: "C", tone: "cyan"),
+                event: event(sourceID: codexSourceID, externalID: "codex-turn")
+            ),
+            ImmediateSource(
+                descriptor: SourceDescriptor(id: workspaceSourceID, name: "Mac", kind: .manual, symbol: "M", tone: "slate"),
+                event: event(sourceID: workspaceSourceID, externalID: "workspace-app")
+            ),
+        ]
+        let coordinator = ProcessSourceCoordinator(
+            repository: repository,
+            sources: sources,
+            taskRunStore: store
+        )
+        try await coordinator.setAssociation(
+            AnchorEventAssociation(taskID: task.id, workItemID: item.id, confirmedByUser: true),
+            for: sessionID,
+            sourceID: codexSourceID
+        )
+        await coordinator.start()
+        try await Task.sleep(for: .milliseconds(100))
+
+        let runs = await store.snapshot().runs
+        #expect(runs.count == 1)
+        #expect(runs.first?.sourceID == codexSourceID.uuidString)
+        #expect(runs.first?.sourceSessionID == "codex-turn")
+    }
+
     @Test("A normalized source event reaches the local repository exactly once")
     func coordinatorIngestsOneEvent() async throws {
         let storage = URL.temporaryDirectory.appending(path: "anchor-source-\(UUID().uuidString).json")

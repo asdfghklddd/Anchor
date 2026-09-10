@@ -1,0 +1,116 @@
+{
+  "capturedAt": "2026-09-10T02:05:22Z",
+  "repositoryHead": "254ac981dd0bdb0aa494be12bb288b795dbf5399",
+  "branch": "codex/anchor-implementation-plan",
+  "scope": "Mac-only immutable task events and commit-before-checkpoint durability",
+  "defectReproduction": {
+    "command": "scripts/validation/mac-codex-soak-e2e.sh <Anchor macOS.app> 60 0.25",
+    "failure": "The first event-enabled sustained run timed out while waiting for soak-turn-11.",
+    "initialInspection": {
+      "jsonlContainedTurn11": true,
+      "scannerCheckpointOffset": 2611,
+      "jsonlBytes": 2611,
+      "taskRunCount": 10,
+      "taskEventCount": 20
+    },
+    "residualDirectoryAfterLeakedAppContinued": {
+      "path": "/tmp/anchor-mac-soak-e2e.NUBaUy",
+      "taskRunCount": 11,
+      "taskEventCount": 22,
+      "note": "The later residual state is not evidence of permanent loss; it confirms the app continued after the script timeout."
+    },
+    "rootCause": "AsyncThrowingStream yield does not wait for its consumer. The source saved the batch-final checkpoint before SessionRepository and TaskRunStore had durably committed every yielded event, creating a crash-loss window."
+  },
+  "implementation": {
+    "eventPayload": [
+      "taskID",
+      "workItemID",
+      "runID",
+      "sourceID",
+      "sourceSessionID",
+      "sourceSequence",
+      "occurredAt",
+      "receivedAt",
+      "kind"
+    ],
+    "excludedContent": [
+      "prompt",
+      "model output",
+      "file path",
+      "title",
+      "detail"
+    ],
+    "durabilityRules": [
+      "Event and Run are committed in one atomic TaskRunStore replacement.",
+      "Codex prepares a checkpoint at each complete JSONL line and permits one unacknowledged delivery at a time.",
+      "The coordinator acknowledges only after SessionRepository and TaskRunStore both commit.",
+      "Repository or disk failure leaves the previous checkpoint replayable.",
+      "Known stale or invalid domain facts are acknowledged and discarded to avoid an infinite replay loop."
+    ]
+  },
+  "automatedVerification": {
+    "swiftTesting": "112 tests in 13 suites passed",
+    "unacknowledgedRestartReplay": true,
+    "taskStoreFailureLeavesCheckpointEmpty": true,
+    "recreatedCoordinatorRecoversSameEvent": true,
+    "legacyStoreWithoutEventsField": true,
+    "duplicateAndOutOfOrderEvents": true,
+    "eventIdentityConflictRejected": true,
+    "taskBoundaryAndArchiveRejected": true,
+    "macOSBuild": "Anchor macOS arm64 Debug build succeeded with CODE_SIGNING_ALLOWED=NO"
+  },
+  "runtimeVerification": {
+    "basic": {
+      "validationDirectory": "/tmp/anchor-mac-local-e2e.Mhvj8Q",
+      "runCount": 3,
+      "eventCount": 5,
+      "covers": [
+        "restart without replay",
+        "completion before start",
+        "late start backfill",
+        "duplicate completion"
+      ]
+    },
+    "shortSoak": {
+      "validationDirectory": "/tmp/anchor-mac-soak-e2e.KYHYx8",
+      "runCount": 8,
+      "eventCount": 16,
+      "allCompleted": true
+    },
+    "sustainedSoak": {
+      "validationDirectory": "/tmp/anchor-mac-soak-e2e.GRiyxr",
+      "runCount": 60,
+      "eventCount": 120,
+      "completedRunCount": 60,
+      "uniqueRunIDs": true,
+      "uniqueSourceSessionIDs": true,
+      "uniqueEventIDs": true,
+      "processRestartsAfterTurns": [20, 40, 60],
+      "atomicFileReplacementAtTurn": 30,
+      "inPlaceTruncationAtTurn": 45,
+      "checkpointOffset": 3824,
+      "currentJSONLBytes": 3824,
+      "checkpointContainsSelectedFilePath": false,
+      "maximumRSSKilobytes": 142160,
+      "taskRunStoreBytes": 67017,
+      "sessionRepositoryBytes": 429325,
+      "checkpointStoreBytes": 188,
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "validationAppLeftRunning": false
+    },
+    "bonjourIsolation": {
+      "finding": "A previously launched production Anchor instance advertised the same Bonjour service name and caused existing client tests to select the wrong endpoint.",
+      "action": "Stopped only the identified prior validation instance and reran without changing transport behavior.",
+      "result": "All Local link codec tests and the full suite passed in isolation."
+    }
+  },
+  "limitations": [
+    "Lifecycle rows were synthetic privacy-minimal Codex JSONL, not a live model turn.",
+    "The unsigned Debug build does not prove provisioned App Sandbox access.",
+    "No iPhone or cross-device synchronization was used.",
+    "The run was approximately half a minute, not a multi-hour, sleep-wake, or overnight observation.",
+    "Codex turn_aborted currently maps to a generic failed outcome because this file source does not expose a more specific abort reason.",
+    "The changes remain uncommitted and have not been pushed, merged, installed, or released."
+  ]
+}

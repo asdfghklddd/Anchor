@@ -209,7 +209,7 @@ public enum L10n {
     )
     public static let finishConfirmDetail = AnchorStrings.value(
         "finish.confirm.detail",
-        default: "Anchor will save the goal, processes, decisions, and notes. You can resume this session later."
+        default: "Anchor will preserve this task in history and remove it from current work. Continuing the conversation later starts a new task."
     )
     public static let completed = AnchorStrings.value("completed", default: "Session complete")
     public static let resume = AnchorStrings.value("resume", default: "Resume session")
@@ -343,6 +343,69 @@ public enum L10n {
         "source.setup.safari.missing",
         default: "The Anchor Safari extension is not included in this build."
     )
+    public static let sourceSetupCodex = AnchorStrings.value("source.setup.codex", default: "Codex")
+    public static let sourceSetupCodexDetail = AnchorStrings.value(
+        "source.setup.codex.detail",
+        default: "Choose the current Codex session file once. Anchor observes lifecycle metadata only."
+    )
+    public static let sourceSetupChooseCodexSession = AnchorStrings.value(
+        "source.setup.codex.choose-session", default: "Choose Session File"
+    )
+    public static let sourceSetupNotConnected = AnchorStrings.value(
+        "source.setup.not-connected", default: "Not connected"
+    )
+    public static let sourceSetupCodexPanelTitle = AnchorStrings.value(
+        "source.setup.codex.panel.title", default: "Choose Codex Session"
+    )
+    public static let sourceSetupCodexPanelMessage = AnchorStrings.value(
+        "source.setup.codex.panel.message", default: "Confirm the JSONL session that belongs to the current Anchor task."
+    )
+    public static let sourceSetupTaskObservation = AnchorStrings.value(
+        "source.setup.task-observation", default: "Current task observation"
+    )
+    public static let sourceSetupTaskObservationDetail = AnchorStrings.value(
+        "source.setup.task-observation.detail",
+        default: "Read-only state derived from observed runs. Finishing observed work does not end the task."
+    )
+    public static let sourceSetupTaskExecution = AnchorStrings.value(
+        "source.setup.task.execution", default: "Execution"
+    )
+    public static let sourceSetupTaskAttention = AnchorStrings.value(
+        "source.setup.task.attention", default: "Attention"
+    )
+    public static let sourceSetupTaskOutcome = AnchorStrings.value(
+        "source.setup.task.outcome", default: "Observed result"
+    )
+    public static let sourceSetupTaskLifecycle = AnchorStrings.value(
+        "source.setup.task.lifecycle", default: "Task lifecycle"
+    )
+    public static let sourceSetupTaskQueued = AnchorStrings.value("source.setup.task.queued", default: "Queued")
+    public static let sourceSetupTaskRunning = AnchorStrings.value("source.setup.task.running", default: "Running")
+    public static let sourceSetupTaskWaiting = AnchorStrings.value("source.setup.task.waiting", default: "Waiting in background")
+    public static let sourceSetupTaskIdle = AnchorStrings.value("source.setup.task.idle", default: "Idle")
+    public static let sourceSetupTaskNoAttention = AnchorStrings.value("source.setup.task.no-attention", default: "None")
+    public static let sourceSetupTaskNeedsInput = AnchorStrings.value("source.setup.task.needs-input", default: "Needs input")
+    public static let sourceSetupTaskHasFailure = AnchorStrings.value("source.setup.task.has-failure", default: "Prior failure")
+    public static let sourceSetupTaskStale = AnchorStrings.value("source.setup.task.stale", default: "Stale")
+    public static let sourceSetupTaskNoOutcome = AnchorStrings.value("source.setup.task.no-outcome", default: "No result yet")
+    public static let sourceSetupTaskCompleted = AnchorStrings.value("source.setup.task.completed", default: "Completed")
+    public static let sourceSetupTaskFailed = AnchorStrings.value("source.setup.task.failed", default: "Failed")
+    public static let sourceSetupTaskInterrupted = AnchorStrings.value("source.setup.task.interrupted", default: "Interrupted")
+    public static let sourceSetupTaskActive = AnchorStrings.value("source.setup.task.active", default: "Active")
+    public static let sourceSetupTaskAwaitingConfirmation = AnchorStrings.value(
+        "source.setup.task.awaiting-confirmation", default: "Awaiting your confirmation"
+    )
+    public static let sourceSetupTaskArchived = AnchorStrings.value("source.setup.task.archived", default: "Archived")
+    public static func sourceSetupTaskCounts(workItems: Int, runs: Int) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value(
+                "source.setup.task.counts",
+                default: "%1$lld work items · %2$lld runs"
+            ),
+            workItems,
+            runs
+        )
+    }
     public static let connected = AnchorStrings.value("connected", default: "Connected")
     public static let unknown = AnchorStrings.value("unknown", default: "Unknown")
     public static let permissionDenied = AnchorStrings.value("permission.denied", default: "Permission denied")

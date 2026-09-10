@@ -7,6 +7,7 @@ public struct AnchorMacRootView: View {
     private let model: AnchorSessionModel
     private let linkController: (any LocalLinkControlling)?
     private let sourceSetupModel: MacSourceSetupModel?
+    private let showsCompletedSessionInCurrentWork: Bool
     private let auxiliaryToolbarLabel: String?
     private let auxiliaryToolbarAction: (() -> Void)?
     @AppStorage("anchor.mac.selected-section") private var selection = MacSection.current
@@ -17,12 +18,14 @@ public struct AnchorMacRootView: View {
         model: AnchorSessionModel,
         linkController: (any LocalLinkControlling)? = nil,
         sourceSetupModel: MacSourceSetupModel? = nil,
+        showsCompletedSessionInCurrentWork: Bool = true,
         auxiliaryToolbarLabel: String? = nil,
         auxiliaryToolbarAction: (() -> Void)? = nil
     ) {
         self.model = model
         self.linkController = linkController
         self.sourceSetupModel = sourceSetupModel
+        self.showsCompletedSessionInCurrentWork = showsCompletedSessionInCurrentWork
         self.auxiliaryToolbarLabel = auxiliaryToolbarLabel
         self.auxiliaryToolbarAction = auxiliaryToolbarAction
     }
@@ -86,6 +89,7 @@ public struct AnchorMacRootView: View {
         case .current:
             MacFocusDashboard(
                 model: model,
+                showsCompletedSessionInCurrentWork: showsCompletedSessionInCurrentWork,
                 onOpenTimeline: { selection = .timeline },
                 onOpenSettings: { selection = .settings }
             )

@@ -1,0 +1,77 @@
+{
+  "capturedAt": "2026-09-10T02:23:14Z",
+  "repositoryHead": "254ac981dd0bdb0aa494be12bb288b795dbf5399",
+  "branch": "codex/anchor-implementation-plan",
+  "scope": "TaskRunStore schema migration, Event protocol versioning and recovery evidence",
+  "versions": {
+    "taskRunStoreSchema": 2,
+    "taskEventProtocol": 1,
+    "legacyMissingVersionMeans": 1
+  },
+  "migrationContract": [
+    "A versionless v1 store is decoded without losing Task, WorkItem, Run, Event or Association fields that it contains.",
+    "Before the first upgraded write, the exact legacy bytes are installed at task-runs.json.pre-v2.backup.",
+    "The v2 main file is written only after the recovery backup succeeds.",
+    "A conflicting existing backup is never overwritten.",
+    "A future top-level schema or future Event version is rejected instead of being interpreted as current data.",
+    "An unsupported or unreadable store remains byte-for-byte unchanged after a rejected mutation."
+  ],
+  "failedAttempt": {
+    "result": "Targeted test process exited with signal 5.",
+    "cause": "Foundation Data.write does not support combining atomic and withoutOverwriting.",
+    "correction": "Write an atomic unique temporary file in the same directory, then move it without replacing the backup; verify bytes if a concurrent backup appeared."
+  },
+  "automatedVerification": {
+    "targetedMigrationTests": "3 passed",
+    "fullSwiftTesting": "115 tests in 13 suites passed",
+    "legacyBytesPreservedExactly": true,
+    "backupCanBeDecodedForRecovery": true,
+    "futureSchemaPreservesSourceBytes": true,
+    "futureEventVersionRejected": true,
+    "macOSBuild": "Anchor macOS arm64 Debug build succeeded with CODE_SIGNING_ALLOWED=NO"
+  },
+  "runtimeVerification": {
+    "basic": {
+      "validationDirectory": "/tmp/anchor-mac-local-e2e.AKNh8T",
+      "runCount": 3,
+      "eventCount": 5,
+      "schemaVersion": 2,
+      "eventVersions": [1]
+    },
+    "shortSoak": {
+      "validationDirectory": "/tmp/anchor-mac-soak-e2e.AV0p7y",
+      "runCount": 8,
+      "eventCount": 16,
+      "allCompleted": true
+    },
+    "sustainedSoak": {
+      "validationDirectory": "/tmp/anchor-mac-soak-e2e.sbjshE",
+      "runCount": 60,
+      "eventCount": 120,
+      "completedRunCount": 60,
+      "schemaVersion": 2,
+      "eventVersions": [1],
+      "uniqueRunIDs": true,
+      "uniqueSourceSessionIDs": true,
+      "uniqueEventIDs": true,
+      "processRestartsAfterTurns": [20, 40, 60],
+      "atomicFileReplacementAtTurn": 30,
+      "inPlaceTruncationAtTurn": 45,
+      "maximumRSSKilobytes": 142032,
+      "taskRunStoreBytes": 68468,
+      "sessionRepositoryBytes": 429325,
+      "checkpointStoreBytes": 188,
+      "currentJSONLBytes": 3824,
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "validationAppLeftRunning": false
+    }
+  },
+  "limitations": [
+    "An old Anchor binary cannot understand or preserve fields introduced after it shipped; alternating old and new binaries on one data directory is unsupported.",
+    "The pre-v2 backup is a migration recovery point, not a continuously updated Event journal.",
+    "Lifecycle rows were synthetic privacy-minimal Codex JSONL rather than a live model turn.",
+    "No provisioned App Sandbox, iPhone synchronization, multi-hour background run or sleep-wake cycle was tested.",
+    "The changes remain uncommitted and have not been pushed, merged, installed, or released."
+  ]
+}

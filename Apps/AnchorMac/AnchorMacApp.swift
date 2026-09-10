@@ -10,15 +10,66 @@ struct AnchorMacApp: App {
     private let server: AnchorBonjourServer
     private let proximityAdvertiser: AnchorProximityAdvertiser
     private let sourceCoordinator: ProcessSourceCoordinator
+    private let taskLifecycleBridge: TaskSessionLifecycleBridge
     private let cloudSyncRunner: DurableSyncRunner?
     private let sourceSetupModel: MacSourceSetupModel
 
     init() {
+        let environment = ProcessInfo.processInfo.environment
+        let validationRootURL: URL?
+        let validationCodexURL: URL?
+        let validationShouldSeedSession: Bool
+        let validationDefaults: UserDefaults?
+#if DEBUG
+        validationRootURL = environment["ANCHOR_LOCAL_VALIDATION_ROOT"].map {
+            URL(filePath: $0, directoryHint: .isDirectory)
+        }
+        validationCodexURL = environment["ANCHOR_LOCAL_VALIDATION_CODEX_FILE"].map {
+            URL(filePath: $0)
+        }
+        validationShouldSeedSession = environment["ANCHOR_LOCAL_VALIDATION_SEED_SESSION"] == "1"
+        validationDefaults = environment["ANCHOR_LOCAL_VALIDATION_DEFAULTS_SUITE"].flatMap {
+            UserDefaults(suiteName: $0)
+        }
+#else
+        validationRootURL = nil
+        validationCodexURL = nil
+        validationShouldSeedSession = false
+        validationDefaults = nil
+#endif
+#if DEBUG
+        if let validationRootURL {
+            try? FileManager.default.createDirectory(
+                at: validationRootURL,
+                withIntermediateDirectories: true
+            )
+            try? Data("anchor-mac-local-validation-v1".utf8).write(
+                to: validationRootURL.appending(path: "launch-marker.txt"),
+                options: .atomic
+            )
+        }
+#endif
         let identityStore = PairingIdentityStore()
-        let server = AnchorBonjourServer(identityStore: identityStore)
-        let localRepository = LocalSessionRepository(sourceID: identityStore.localDeviceID())
+        let deviceID = validationRootURL == nil
+            ? identityStore.localDeviceID()
+            : UUID(uuidString: "00000000-0000-4000-8000-0000000004F0")!
+        let server = AnchorBonjourServer(identityStore: identityStore, deviceID: deviceID)
+        let localRepository = LocalSessionRepository(
+            storageURL: validationRootURL?.appending(path: "session-repository.json"),
+            sourceID: deviceID
+        )
+        let taskRunStore = validationRootURL.map {
+            TaskRunStore(url: $0.appending(path: "task-runs.json"))
+        } ?? TaskRunStore()
+        let codexCheckpointStore = validationRootURL.map {
+            CodexLifecycleCheckpointStore(storageURL: $0.appending(path: "codex-checkpoints.json"))
+        } ?? CodexLifecycleCheckpointStore()
         let cloudSyncRunner = AnchorCloudSyncFactory.makeRunner(local: localRepository)
         let repository = LinkedSessionRepository(base: localRepository, transport: server)
+        let taskLifecycleBridge = TaskSessionLifecycleBridge(
+            repository: repository,
+            taskRunStore: taskRunStore
+        )
         let currentSessionContext: @Sendable () async -> ProcessSourceSessionContext? = {
             guard let session = await repository.currentProjection().session else {
                 return nil
@@ -34,13 +85,16 @@ struct AnchorMacApp: App {
         let workspaceSource = MacWorkspaceProcessSource(
             sessionIDProvider: currentSessionID
         )
+        let sources: [any ProcessSource] = [
+            FileProcessSource(sessionContextProvider: currentSessionContext),
+            WebProcessSource(sessionContextProvider: currentSessionContext),
+            workspaceSource,
+        ]
+        // Discovery is a candidate only. Register Codex after explicit source-session binding.
         let sourceCoordinator = ProcessSourceCoordinator(
             repository: repository,
-            sources: [
-                FileProcessSource(sessionContextProvider: currentSessionContext),
-                WebProcessSource(sessionContextProvider: currentSessionContext),
-                workspaceSource,
-            ]
+            sources: sources,
+            taskRunStore: taskRunStore
         )
         server.onCurrentProcessSnapshot = {
             let projection = await repository.currentProjection()
@@ -101,7 +155,49 @@ struct AnchorMacApp: App {
         self.server = server
         proximityAdvertiser = advertiser
         self.cloudSyncRunner = cloudSyncRunner
-        sourceSetupModel = MacSourceSetupModel()
+        let bindCodexSession: @MainActor @Sendable (URL) async throws -> Void = { fileURL in
+            guard let session = await repository.currentProjection().session else {
+                throw SessionRepositoryError.noActiveSession
+            }
+            let task = AnchorTask(
+                id: session.id,
+                title: session.goal.title,
+                completionCriteria: session.goal.completionCriteria,
+                createdAt: session.startedAt
+            )
+            let workItemID = StableProcessIdentity.id(
+                namespace: "anchor.work-item.codex",
+                sessionID: session.id,
+                externalID: fileURL.lastPathComponent
+            )
+            let workItem = AnchorWorkItem(
+                id: workItemID,
+                taskID: task.id,
+                title: "Codex conversation",
+                createdAt: session.startedAt
+            )
+            try await taskRunStore.upsert(task: task)
+            try await taskRunStore.upsert(workItem: workItem)
+            let codexSource = CodexLifecycleFileSource(
+                fileURL: fileURL,
+                sessionContextProvider: currentSessionContext,
+                checkpointStore: codexCheckpointStore
+            )
+            try await sourceCoordinator.setAssociation(
+                AnchorEventAssociation(taskID: task.id, workItemID: workItem.id, confirmedByUser: true),
+                for: session.id,
+                sourceID: codexSource.descriptor.id
+            )
+            await sourceCoordinator.register(codexSource)
+        }
+        let setupModel = MacSourceSetupModel(
+            defaults: validationDefaults ?? .standard,
+            onCodexSessionSelected: bindCodexSession,
+            taskStateProvider: {
+                await taskRunStore.currentTaskRecord()?.state
+            }
+        )
+        sourceSetupModel = setupModel
         model = AnchorSessionModel(
             repository: repository,
             sourceHealthProvider: sourceCoordinator,
@@ -109,8 +205,50 @@ struct AnchorMacApp: App {
             durableSyncStatusProvider: cloudSyncRunner
         )
         self.sourceCoordinator = sourceCoordinator
-        Task { await sourceCoordinator.start() }
-        Task { await cloudSyncRunner?.start() }
+        self.taskLifecycleBridge = taskLifecycleBridge
+        let startup: @MainActor @Sendable () async -> Void = {
+#if DEBUG
+            if let validationRootURL {
+                try? Data("startup-task-running".utf8).write(
+                    to: validationRootURL.appending(path: "startup-marker.txt"),
+                    options: .atomic
+                )
+            }
+#endif
+            await taskLifecycleBridge.start()
+#if DEBUG
+            if let validationRootURL {
+                if (validationShouldSeedSession || validationCodexURL != nil),
+                   await repository.currentProjection().session == nil {
+                    try? await repository.send(
+                        .createSession(
+                            goal: AnchorGoal(
+                                title: "Mac local validation",
+                                completionCriteria: "Codex lifecycle is captured without an iPhone."
+                            ),
+                            processes: []
+                        )
+                    )
+                }
+                await sourceCoordinator.start()
+                if let validationCodexURL {
+                    try? await setupModel.connectCodexSession(validationCodexURL)
+                } else {
+                    await setupModel.restoreCodexSession()
+                }
+            } else {
+                await sourceCoordinator.start()
+                await setupModel.restoreCodexSession()
+            }
+#else
+            await sourceCoordinator.start()
+            await setupModel.restoreCodexSession()
+#endif
+            await cloudSyncRunner?.start()
+        }
+        DispatchQueue.main.async {
+            Task { await startup() }
+        }
     }
 
     var body: some Scene {
@@ -118,7 +256,8 @@ struct AnchorMacApp: App {
             AnchorMacRootView(
                 model: model,
                 linkController: server,
-                sourceSetupModel: sourceSetupModel
+                sourceSetupModel: sourceSetupModel,
+                showsCompletedSessionInCurrentWork: false
             )
         }
         .defaultSize(width: 1080, height: 720)
@@ -146,7 +285,8 @@ private struct MacMenuHost: View {
             onOpenSources: { open(.sources) },
             onOpenSettings: { open(.settings) },
             onContinueWorking: continueWorking,
-            onQuit: { NSApp.terminate(nil) }
+            onQuit: { NSApp.terminate(nil) },
+            showsCompletedSessionInCurrentWork: false
         )
     }
 

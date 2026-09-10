@@ -4,10 +4,11 @@
 
 - 建立日期：2026-09-04。
 - 产品决策状态：用户已确认本轮需求访谈总结，包括 Q37–Q39 的任务归属修正。
-- 工程状态：计划已建立；本文所列新阶段尚未实施或验收，不把已有基础代码算作新目标完成。
+- 产品名称澄清（D09）：用户所说的“本地 ChatGPT App”就是当前 `com.openai.codex` 应用，后文统一称 Codex；不额外适配独立 ChatGPT 桌面产品，Safari 长回复范围不变。
+- 工程状态：Mac Codex 本地 MVP 已达到开发者验收点并可交给用户无 iPhone 实测；完整 P0/P1 仍受 Claude、provisioned Sandbox、双设备与长期后台等范围约束，P2–P7 未整体完成。
 - 用途：之后每轮施工开始前阅读，结束后更新状态、证据、偏差和下一步。
 - 范围：正式版 Anchor iOS、Anchor macOS、共享包、Safari 扩展及必要 CLI 集成；不是 Demo 改造计划。
-- 本次授权：新增此计划文档。不包含业务代码修改、系统配置修改、提交、推送、合并或发布授权。
+- 当前授权：用户已于 2026-09-10 授权完成 Mac MVP 后提交并合并到本地 `main`；未授权推送、PR、发布或系统配置修改。
 
 ## 0. 如何使用这份计划
 
@@ -35,6 +36,18 @@
 | `/Users/andywang/Desktop/Anchor` | `codex/demo-animation-state-fix`，`14a22abc6020788652b7a15fa58dcae78022e0f6`，有既存改动 | 本计划当前存放位置；不能将此目录旧代码误当最新正式版 |
 
 不得覆盖现有 UI、本地化、视频、截图和清理相关改动；不得擅自切换脏分支、清空工作区或恢复文件。工程实现建议使用获准的独立 `codex/` 分支，提交、推送、PR、合并、发布分别按用户授权执行。必要英文注释说明非显然逻辑，PR 说明包含英文摘要与验证信息。
+
+### 0.3 Mac Codex 本地 MVP 验收点
+
+本验收点只定义“用户在没有 iPhone、开发者账号和 Claude 账号时，能否在正式 macOS target 上体验一条可信的 Codex 核心链路”，不代表完整 Anchor 产品或 P0–P7 全部完成。
+
+- [x] 正式 `Anchor macOS` 可在隔离目录构建、启动并创建本地测试 Task；不使用 Demo 或正式用户数据。
+- [x] 来源页按元数据找到最近 Codex JSONL，系统面板定位到其目录并显示候选文件名；用户选择文件后由系统完成最终授权。
+- [x] 真实 Codex `task_started`、`task_complete`、`turn_aborted` 可形成同一 WorkItem 下的 Run/Event，并区分 completed 与 interrupted。
+- [x] checkpoint 在事件持久化确认后推进；重启、原子替换、原地截断不丢失、不重放、不把来源路径写入 checkpoint。
+- [x] 当前任务、详细历史和用户确认结束的前台退出边界已在正式 Mac UI 与存储层通过。
+- [x] 127 项／13 套件、Debug 正式 target、优化 Release-validation、真实 rollout 和 600 Run／1200 Event 长稳回归通过。
+- [ ] 后续产品范围：provisioned Sandbox、iPhone 同步、Claude Code、Safari 长回复、睡眠唤醒及长稳存储性能优化。
 
 ## 1. 产品目标与不做什么
 
@@ -86,7 +99,7 @@ UI 完全可以改变，只冻结必要的数据契约、平台职责和用户�
 | R12 | 历史详细、可持久保留 | iPhone 本地保存至用户删除，私有 CloudKit 备份／恢复；Mac 不持有永久全量历史 |
 | R13 | 最小权限和可解释采集 | 首次任务引导辅助功能授权；拒绝或撤回后清晰降级，不伪装已启用 |
 | R14 | UI 可调整 | 功能、结构、旅程优先；正式版必须跑通，Demo 不是验收替代品 |
-| R15 | 最终覆盖全部约定来源 | Codex／ChatGPT 桌面端、Claude Code、CLI、Xcode、Safari 长回复、普通 Mac App；按来源公开真实精度 |
+| R15 | 最终覆盖全部约定来源 | Codex（用户此前称 ChatGPT App）、Claude Code、CLI、Xcode、Safari 长回复、普通 Mac App；按来源公开真实精度；不增加独立 ChatGPT 桌面产品 |
 
 ## 3. 数据结构、状态与归属设计
 
@@ -169,7 +182,7 @@ Mac 应用生命周期／有限 AX ／来源专用事件／CLI ／Safari
 
 | 来源 | 首选验证方向 | 能力边界与退化 |
 | --- | --- | --- |
-| Codex／ChatGPT 桌面端 | 核实实际应用身份与版本，检查能合法读取的结构化事件、会话状态；必要时窄范围 AX | 不能假定 ChatGPT 桌面端就是 CLI，也不能假定可接管已有 app-server 连接；不同产品分别验真 |
+| Codex 桌面端 | 以 `com.openai.codex` 身份核实版本，检查能合法读取的结构化事件、会话状态；必要时窄范围 AX | 用户已确认此项就是所称 ChatGPT App；不额外验证独立 ChatGPT，亦不能假定可接管已有 app-server 连接 |
 | Claude Code | 官方支持的 hooks／事件及稳定会话标识，辅以 CLI 生命周期 | 启动 `claude` 到退出不是每一轮回复；后台任务、等待授权、停止需分别验证 |
 | 通用 CLI | 可选 shell hook／包装器，开始、结束、退出码及安全的上下文标识 | 不默认读取参数／输出；重试、新 shell、进程中断不能误判或重复上报 |
 | Xcode | 先验证 CLI 构建／测试，再验证 GUI 场景的结构化结果或 AX | 不能把 `xcodebuild` 覆盖宣称为全部 Xcode GUI 覆盖；不可用时明确降低精度 |
@@ -217,51 +230,68 @@ Mac 应用生命周期／有限 AX ／来源专用事件／CLI ／Safari
 
 ## 6. 阶段施工清单
 
-所有阶段初始状态为“未开始”。顺序可根据 P0 证据调整，但不得静默取消 R15 来源范围；不成立的能力要回报用户并明确取舍。每个阶段结束必须更新第 9 节。
+各阶段当前状态见第 9 节。顺序可根据 P0 证据调整，但不得静默取消 R15 来源范围；不成立的能力要回报用户并明确取舍。每个阶段结束必须更新第 9 节。
 
 ### P0 — 真实来源能力验证（最高优先级）
 
 目标：先证明核心信息拿得到，不先围绕假设重构 UI。
 
-- [ ] 核实 Codex／ChatGPT 桌面端、Claude Code 的实际产品、版本、运行模式与可用接口，分别记录。
-- [ ] 对 Codex、ChatGPT 桌面端、Claude Code 逐产品建立能力记录，识别会话身份、每轮开始／完成、等待输入、失败／中断、继续执行。名称或安装包存在歧义时先核实，不能将 Codex 的证据替代独立 ChatGPT 产品。
+- [ ] 核实 Codex 桌面端、Claude Code 的实际产品、版本、运行模式与可用接口，分别记录。产品名称歧义已由用户澄清，可用接口验证仍未完成。
+- [ ] 对 Codex、Claude Code 两个核心来源建立能力记录，识别会话身份、每轮开始／完成、等待输入、失败／中断、继续执行；不能以一个来源的证据替代另一个。
 - [ ] 验证多会话、后台运行、应用重启与观察器重启，不把进程存活当模型状态。
-- [ ] 给每个来源生成能力表：已观测字段、观察方法、权限、精度、缺失字段、降级方案。
-- [ ] 保存经过脱敏的事件样本和可复现实验步骤，不保存无关对话或秘密。
+- [x] 给每个来源生成能力表：已观测字段、观察方法、权限、精度、缺失字段、降级方案。首轮见 `P0_SOURCE_CAPABILITY_AUDIT.md`；表中未验证项不等于已支持。
+- [x] 保存经过脱敏的事件样本和可复现实验步骤，不保存无关对话或秘密。当前有 Codex 实际记录与增量探针证据；Claude 因未登录仍未完成受控实测。
 - [ ] 明确最小权限、sandbox／签名可行性；任何新增配置先获准，不接管 Codex 控制链路。
 
-退出标准：上述核心产品各有真实样本支持可用能力；未安装、未验证及未支持字段逐项标注。缺少产品验证时只能报告部分完成；若核心能力拿不到，应报告具体阻碍并重新确认方案，不能用 fixture 将 P0 标成完成。
+完整退出标准：Codex 与 Claude Code 各有真实样本支持可用能力；未验证及未支持字段逐项标注。缺少任一核心来源验证时只能报告部分完成，不能用 fixture 将 P0 标成完成。独立 ChatGPT 桌面产品不参与退出判定。
+
+施工放行（D10）：用户暂无 Claude 账号，已确认先用 Codex 实际身份与生命周期证据推进 P1，并继续补验 Codex 权限、后台观察与恢复，再完成 Codex 双设备闭环。Claude 先保留适配契约、解析与模拟测试，真实受控验收待有可用账号后补齐；不要求为此注册或付费。该调整改变施工依赖，不代表 P0 完整通过。
 
 ### P1 — 领域模型、归属边界与兼容迁移
 
-依赖：P0 的来源身份和事件语义。
+- [x] 建立 Task、WorkItem、Run 及执行／注意事项／结果状态契约，并保留旧 Session 模型兼容。
+- [x] 提供明确关联后的 ExternalProcessEvent → AnchorRun 映射。
+- [x] Mac 端 TaskRunStore 支持原子写入与重启恢复，且终态 Run 不被迟到开始事件覆盖；旧版缺失来源 ID 的关联会被安全拒绝；AnchorKit 当前 127 个测试通过。
+- [x] 确认后的来源 session→Task/WorkItem 关联可持久化并在协调器重启时恢复；未确认映射会被拒绝。
+- [ ] 正式 Mac 设置页已实现 Codex JSONL 单次确认、安全作用域书签恢复、当前 Task/WorkItem 关联与运行中来源注册；真实 `NSOpenPanel`、独立偏好域书签恢复和当前 Codex 文件的真实生命周期追加／重启不重放已在无签名 Debug 包通过，另有约 16 分 54 秒、600 Run／1200 Event 的合成长稳回归通过；仍待 provisioned Sandbox 包、真实用户文件数小时运行与睡眠唤醒验收。
+- [x] 协调器支持运行中新增／替换来源，无需重启 Anchor；Codex 绑定过滤早于当前 Anchor Task 的历史生命周期记录。
+- [x] 独立正式实现目录的 `Anchor macOS` Debug target 构建通过（arm64，CODE_SIGNING_ALLOWED=NO）；Desktop 旧分支本轮构建失败，详见下方核对记录。
+- [x] CLI 生命周期信号已有解析测试并可生成标准 ExternalProcessEvent；Codex 生命周期日志已接入独立只读文件适配器。
+- [x] Codex JSONL 行扫描器已完成：仅保留三类生命周期记录，跳过损坏、正文和未知类型；新增扫描测试通过。
+- [x] Codex 增量扫描覆盖半行、完整行 checkpoint、文件身份、磁盘 checkpoint、损坏状态保护及显式 reset；checkpoint 不保存日志正文。
+- [x] CodexLifecycleFileSource 自动测试覆盖持续追加、原地截断、原子替换和重启不重放；真实 Debug App 已完成基础闭环、60 轮快速 soak、600 轮约 16 分 54 秒长稳回归，并从当前 Codex rollout 捕获真实完成／开始事件及跨构建重启恢复；checkpoint 不保存路径。真实用户文件的数小时／睡眠唤醒观察仍单独验收。
+- [x] CodexSessionFileLocator 已完成：按文件元数据选择最近 JSONL，会话定位不读取正文；临时目录排序测试通过。
 
-- [ ] 建立 Task／Work Item／Run／Event 及任务范围 Association。
-- [ ] 实现三维状态与确定性投影、重新活动代次、不可变历史结果。
+依赖：P0 已取得的 Codex 来源身份与事件语义证据；不等待 Claude 账号。Claude 尚未实测的契约明确标为暂定，解析和模拟测试不得充当真实来源证据。
+
+- [x] Task／Work Item／Run、任务范围 Association 与独立不可变 Event 领域层已建立；Event 与 Run 原子落盘，重复／乱序／迟到事件及旧数据缺失 Event 字段已有兼容测试。
+- [ ] WorkItem 与 Task 级执行／注意事项／结果三维确定性投影、重新活动代次、持久化重启读取及正式 Mac 来源页消费已实现；iPhone／同步消费与真实来源注意事项仍待完成。
 - [ ] 同会话延续不拆卡；跨 App 关联需要明确证据或用户确认。
-- [ ] 去重、乱序、迟到、重启恢复、执行中断、旧任务消息隔离都有测试。
-- [ ] 实现归档、前台退出、新 Task 创建及旧会话新边界。
-- [ ] 设计并验证旧持久数据迁移、事件协议版本和新旧客户端不兼容时的行为；保留恢复路径。
-- [ ] 历史层与当前任务投影分离，避免永久历史只挂在 current session 上。
+- [x] 去重、乱序、迟到、重启恢复、执行中断、旧任务消息隔离都有自动测试；真实来源与双设备部分仍按 A01–A10 单独验收。
+- [ ] 领域层已实现归档、新 Task 创建、旧会话新边界及中断写恢复；正式 macOS 已验证用户确认后退出当前页且重启不恢复，iPhone／双设备旅程仍待完成。
+- [x] TaskRunStore schema v2 与 Event protocol v1 已显式版本化；无版本旧历史升级前保存逐字节恢复副本，未来 schema／Event 版本拒绝读取且不覆盖原文件。旧二进制降级写入仍不支持，发布时必须禁止混用。
+- [x] TaskRunStore 已将唯一当前任务记录与完整归档历史分离；每条历史保留 Task、WorkItem、Run、Event 及三维状态，不再只挂在 current session 上。iPhone 历史消费仍属 P6。
 
 退出标准：A01–A09 中的自动测试部分通过，旧数据迁移有样本与回退证据；真实来源／双设备部分留给 P2，在此之前不得将对应完整验收项勾为通过。不要求此时做完视觉调整。
 
 ### P2 — 正式版第一个端到端闭环
 
-依赖：P1；先接一个 P0 已验证的核心来源，再逐个补齐其余核心产品。P2 所需的最小权限与一次性归属入口随闭环实现；P3 负责扩展和打磨，不能成为 P2 的隐性阻塞。
+依赖：P1；按 D10 先完成 Codex 子里程碑，Claude 真实闭环待有可用账号后补齐。Codex 正式进程权限、后台观察与恢复必须随接入实测，不能只用诊断脚本放行。P2 所需的最小权限与一次性归属入口随闭环实现；P3 负责扩展和打磨，不能成为 P2 的隐性阻塞。
 
 - [ ] iPhone 语音／文本创建目标与完成标准，Mac 获取当前 Task。
 - [ ] 真实会话接入，iPhone 展示同一子任务下多次执行。
 - [ ] 用户继续会话后卡片恢复进行中；失败恢复、待输入、未知状态正确。
 - [ ] 断连补传后去重，无串卡和伪造进度。
 - [ ] 用户确认结束，历史持久保存，前台清空；创建新 Task 后复用旧会话不污染历史。
-- [ ] Codex、ChatGPT 桌面端、Claude Code 分别完成来源到 Mac 到 iPhone 的证据链；不以其中一个产品替代另一个。
+- [ ] Codex、Claude Code 分别完成来源到 Mac 到 iPhone 的证据链；不以其中一个来源替代另一个。
 
-退出标准：正式 target、真实来源、真实 Mac＋iPhone 完成 A01–A10 及 A20；模拟器和人工 JSON 仅作辅助。
+Codex 子里程碑：正式 target、真实 Codex 来源、真实 Mac＋iPhone 完成 A01–A10 及 A20 中适用的链路与状态场景，逐项记录证据及未覆盖项；模拟器和人工 JSON 仅作辅助。该里程碑可独立交付并放行后续施工，不等待 Claude。
+
+完整退出标准：上述验收范围全部通过，且 Codex、Claude Code 各自有真实双设备证据链。Claude 延后期间 P2 只能报告 Codex 子里程碑完成，不得将整个 P2 或最终全来源验收标为通过。
 
 ### P3 — Mac 自动关联、权限与窄范围辅助功能
 
-依赖：P1/P2 已有稳定身份契约。
+依赖：P1 与 P2 的 Codex 子里程碑已有稳定身份契约，不等待 Claude 真实闭环。
 
 - [ ] 已确认会话与明确派生关系自动沿用，不逐轮询问。
 - [ ] 任务候选、待关联活动、忽略状态与来源健康清楚区分。
@@ -364,10 +394,10 @@ Mac 应用生命周期／有限 AX ／来源专用事件／CLI ／Safari
 
 | 阶段 | 状态 | 最近证据 | 下一步 |
 | --- | --- | --- | --- |
-| P0 | 未开始 | 无本轮真实采集验收 | 获准后核实产品身份并验证最小事件 |
-| P1 | 未开始 | 无 | 等待 P0 身份／事件结论 |
-| P2 | 未开始 | 无 | 等待 P1 |
-| P3 | 未开始 | 无 | 等待身份契约与最小闭环 |
+| P0 | 部分完成；Claude 真实验收延后，不阻塞 Codex 施工 | Codex 增量诊断、真实 `NSOpenPanel` 与书签恢复已验证；本机无对应 provisioning profile | 继续验证 provisioned Sandbox、真实 Codex 后台与进程恢复；Claude 待有可用账号后补验 |
+| P1 | Mac Codex 本地 MVP 达到用户验收点；完整阶段仍进行中 | Task/WorkItem/Run/Event 契约、来源级关联隔离、提交后确认 checkpoint、schema v2/Event v1 迁移回退、当前／历史分层、Codex interrupted 语义、正式 Mac 前台退出及三维诊断；127 项测试、真实面板／书签恢复、当前 Codex 文件真实事件／重启恢复、优化 Release-validation 及 600 Run／1200 Event 三故障长稳回归通过 | 用户先执行 Mac 本地验收；后续再做 provisioned Sandbox、真实用户文件数小时／睡眠唤醒、存储写入优化、iPhone／同步消费及真实来源迟到/乱序场景 |
+| P2 | 未开始；Codex 优先 | 无 | 等待 P1，先完成 Codex Mac→iPhone 闭环；Claude 真实闭环后补 |
+| P3 | 未开始 | 无 | 等待身份契约与 Codex 最小闭环，不等待 Claude 账号 |
 | P4 | 未开始 | 无 | 扩展 CLI／Xcode |
 | P5 | 未开始 | 无 | Safari 对话长回复 |
 | P6 | 未开始 | 无 | 返回、历史、后台与云恢复 |
@@ -402,6 +432,181 @@ GitHub main／开放 PR 检查：
 - 状态：只新增文档；没有执行 P0–P7，没有业务代码修改或真实双设备测试，没有提交／推送／合并／发布。
 - 下一步：获得实施授权后，从最新正式基线开展 P0；不要从桌面旧分支直接重建适配器。
 
+#### 2026-09-04 — 推送计划与开始 P0
+
+- 计划文档已单独提交并推送：`254ac981dd0bdb0aa494be12bb288b795dbf5399`，分支 `codex/anchor-implementation-plan`；尚未合并 main。
+- 原共享仓库拉取时出现 `origin/HEAD` 引用异常，未修复；使用独立副本 `/Users/andywang/worktrees/Anchor-implementation-plan` 完成文档推送及本轮 P0 记录。桌面目录的计划同步保持一致，业务改动不动。
+- 用户“继续”后开始 P0，只读核实产品身份、版本、CLI 帮助、本机 schema、当前 Anchor rollout 的结构字段；未配置 hooks、未启动模型测试、未使用 AX/OCR、未修改通知或网络。
+- 真实证据：本机名为 ChatGPT.app 的产品 bundle 是 `com.openai.codex`；当前会话记录有多组 `task_started/task_complete` 及 `turn_aborted`，支持分辨同会话多轮执行。
+- 限制：默认控制 socket 不存在，实时外部订阅及正式 Anchor 权限未验证；Claude 已安装但未做受控回合；独立 ChatGPT 未在限定位置找到，用户实际指代待确认。
+- 新增记录：`P0_SOURCE_CAPABILITY_AUDIT.md`、`evidence/p0-2026-09-04-source-metadata.json`。本轮未通过任何完整 A01–A20，也未提交／推送本轮 P0 变更。
+- 下一步：先确认产品范围，随后以隔离、最小权限的 Claude 会话验证开始／完成／中断／待输入，再验证 Codex 增量读取与恢复。
+
+#### 2026-09-04 — 增量诊断与认证前置检查
+
+- 当前 Claude 2.1.220 未登录；现有环境和用户 settings 没有配置 API 认证或 apiKeyHelper。没有读取凭据值、启动登录流程、发起模型请求、配置 hooks 或更改网络。
+- 新增 `scripts/p0/codex-lifecycle-probe.mjs` 与测试，仅作为 P0 只读诊断工具，不接入正式业务 target。
+- `node --test scripts/p0/codex-lifecycle-probe.test.mjs`：7 通过、0 失败；真实 Anchor 会话增量验证的 checkpoint 重读新增事件 0。
+- 新证据见 `evidence/p0-2026-09-04-incremental-probe.json`，核查报告第 8 节说明跳过超长记录、非追加改写和正式权限等限制。P0 未整体通过，P1–P7 不提前开始。
+- 所有本轮成果未提交／推送；桌面副本同步保持内容一致，既存业务改动不动。下一步由用户完成 Claude 登录后继续受控回合。
+
+#### 产品名称澄清后的施工记录
+
+- 用户明确确认“本地 ChatGPT App”就是当前 `com.openai.codex` 应用。
+- 已按 D09 修正 R15、P0/P2 退出要求及来源能力报告；此前“独立 ChatGPT 待确认”仅保留在首轮取证历史中，不再是当前阻碍。
+- 原始脱敏 JSON 保持不变：它记录当时查找结果，不定义产品范围。
+- 本次只更新文档，不启动模型、不配置 hooks、不修改业务代码、不提交或推送。P0 仍部分完成，完整验收结果不变。
+
+### 2026-09-04 — D10：无 Claude 账号时调整施工顺序
+
+- 用户说明“我没有账号”，随后以“ok”确认 Codex 优先方案；不再将登录 Claude 作为下一阶段的前置操作。
+- 下一步进入 P1，以已有 Codex 真实事件为输入建立领域模型与迁移测试；随后接正式 Mac→iPhone 的 Codex 闭环。
+- Claude Code 保留在最终范围内，先做解析与模拟测试，真实来源及双设备验收待有可用账号后补齐。模拟证据不能替代真实证据；P0/P2 完整退出及最终全来源验收不提前勾选。
+- 此决定取代此前施工日志中“下一步等待 Claude 登录”的安排；历史取证结果不改写。本次仅更新计划与能力报告，未改业务代码、账号配置或推送 GitHub。
+
+### 2026-09-06 — 构建目录与验收证据纠偏
+
+- 正式开发基线为独立目录 `/Users/andywang/worktrees/Anchor-implementation-plan`，当前 HEAD 为 `254ac98`；Desktop 仍是 `14a22ab` 的旧分支并有既存 UI 工作。局部文件复制不构成版本同步。
+- 独立目录最近一次全量 Swift 测试：80 项通过。此前该目录正式 macOS Debug 无签名构建通过，仅证明该目录的构建，不证明 Desktop 或真实运行完成。
+- 本轮 Desktop 构建明确失败：缺少 SourceArtifactInstaller、SafariExtensionStateClient，以及 sourceSetup 相关本地化成员。不能覆盖既存本地化工作来逐个搬运新基线依赖；后续正式实现与验收统一在独立目录开展。
+- 最近文件定位只提供候选，不能证明任务归属。独立目录及 Desktop 启动入口均已撤下未确认的自动 Codex 注册；前次回复中“启动已打通 Codex”不准确，以本记录为准。
+- 本轮调整了超出测试证据的勾选。整体目标仍未完成；下一步是在正式基线实现确认绑定、持久化关联及真实文件消费闭环，然后补充 Mac 本地验收证据。iPhone 与 Claude 账号仍非当前施工前置条件。
+
+### 2026-09-06 — Desktop 正式版构建复核
+
+- Desktop 正式目录 `/Users/andywang/Desktop/Anchor` 的 `Anchor macOS` arm64 Debug 构建已通过，命令使用 `CODE_SIGNING_ALLOWED=NO`，输出 `** BUILD SUCCEEDED **`。
+- 2026-09-07 复核：Desktop 正式目录通过 59 项、6 个套件；独立实现目录通过 82 项、10 个套件；Desktop 的 `Anchor macOS` arm64 Debug 无签名构建再次成功。测试数量差异来自两个工作区的既存协作差异，分别记录。
+- 构建期间恢复了正式基线中缺失的共享来源文件；Desktop 旧分支中的来源设置入口与当前基线不兼容，已移除其接线，未改 Demo target。
+- Codex 最近会话定位仍是候选发现，不自动绑定任务；当前正式启动链只启用已有 FileProcessSource，等待确认入口完成后再注册 Codex 会话源。
+
+### 2026-09-07 — Mac Codex 确认绑定验收点
+
+- 正式实现目录新增 Codex 会话文件确认入口：系统文件面板只允许选择 JSONL；保存安全作用域书签，恢复后重新注册观察器。
+- 确认时以当前 Anchor Session 创建／更新对应 Task 与 Codex WorkItem，持久化 session 关联，再动态注册来源；没有活动任务时明确失败。
+- 来源只接收不早于当前 Anchor Task 开始时间的生命周期记录，避免将同一 Codex 文件的旧 turn 混入新任务。
+- 协调器运行中注册测试、确认关联恢复测试、Task 归档隔离等均通过；独立实现目录全量 84 项、10 个套件通过。
+- `Anchor macOS` arm64 Debug 无签名构建成功；临时构建 App 启动后持续运行超过 19 秒，无立即崩溃，随后只结束该临时进程。
+- 文件面板真实点击、书签跨真实 App 重启、持续追加与文件替换仍需人工／长期运行证据，因此本项保持部分完成。
+
+### 2026-09-09 — Mac-only 验收复核
+
+- 独立正式实现目录 `/Users/andywang/worktrees/Anchor-implementation-plan` 的 `Anchor macOS` arm64 Debug 无签名构建再次通过；临时产物可启动并由系统注册，无构建错误。
+- 独立目录 AnchorKit 全量 Swift Testing 复跑通过 84 项、10 个套件；上一轮一次配对超时未能稳定复现，立即重跑通过。Desktop 正式目录全量测试通过 59 项、6 个套件，`Anchor macOS` arm64 Debug 构建也通过。
+- 本轮仍未操作 Demo target、VPN、账号或真实 iPhone；因此当前验收点是“Mac 本地正式版可构建、可启动、可测试，Codex 确认绑定链路已接线”，不是“真实用户授权与长期后台采集已完成”。
+- 下一项 Mac-only 工作聚焦真实手动验收：在设置页选择当前 Codex JSONL、确认安全作用域、观察追加的 task lifecycle，并验证 Anchor 重启后书签与 Task/WorkItem 关联恢复；完成前不勾选 P1 的完整退出项。
+
+### 2026-09-09 — 无 iPhone 的真实 Mac App Codex 闭环
+
+- 新增只在 Debug 环境变量存在时启用的隔离验收模式：使用临时数据根目录、临时设备 ID 和指定 JSONL，不访问用户正式 Anchor 数据或 Keychain；Release 行为不变。
+- 新增磁盘 checkpoint：仅保存文件编号、创建时间与完整行 scanner offset，不保存 Codex 日志正文；损坏 checkpoint 会报错且不会被覆盖。
+- 修复两项 E2E 才暴露的归属缺陷：Codex 与 Mac Workspace 原先共用固定来源 UUID；Association 原先只按 Anchor Session 匹配，会把同任务下其他来源误归到 Codex WorkItem。现在按 `Anchor Session + sourceID` 隔离，并有回归测试。
+- 修复 SafariServices XPC completion 在 Swift 6 下错误继承 MainActor 导致来源页崩溃的问题；改为显式 `@Sendable` completion。修复后验收运行没有生成新的 crash report。
+- `scripts/validation/mac-codex-local-e2e.sh` 驱动真实构建 App 完成：空文件绑定保持 0 Run、捕获 `task_started`、同 Run 变为 completed、结束并重启 App 后不重放、再追加新 turn 后生成第二个 Run。最终为 1 Task、1 WorkItem、2 Runs、1 Association、1 checkpoint。
+- 自动测试为 92 项、10 个套件全部通过；`Anchor macOS` arm64 Debug、`CODE_SIGNING_ALLOWED=NO` 构建通过。机器证据见 `Documentation/evidence/p1-2026-09-09-mac-local-codex-e2e.json`。
+- 该节点证明“不用 iPhone 也能在 Mac 本地重复验证正式 App 的核心 Codex 采集链”；事件仍为脱敏合成生命周期行，真实 NSOpenPanel／安全作用域书签与真实 Codex 文件的长时间观察尚未通过。
+
+### 2026-09-09 — 真实 NSOpenPanel 与书签跨进程恢复
+
+- 为不依赖 iPhone 创建活动任务，同时不污染正式 Anchor 数据，Debug 隔离模式新增可独立启用的本地 Task seed 与独立 `UserDefaults` suite；未指定 JSONL 时不会绕过用户文件确认。
+- 在最终 `Anchor macOS` 无签名 Debug 构建中实际打开系统 `NSOpenPanel`，选择隔离的生命周期 JSONL；来源页显示 `codex-session.jsonl`，磁盘生成 1 Task、1 WorkItem、1 Association 和 1 running Run。
+- 结束该 App 进程并以相同隔离数据和偏好域重启，没有再次打开文件面板；来源页自动恢复文件名。重启后追加 `task_complete`，同一 Run 变为 completed，checkpoint offset 从 122 推进到 245。
+- 真实运行发现 checkpoint 字典键仍泄露完整文件路径，与隐私说明不符。现改为固定 Codex source UUID 键，自动测试及 headless E2E 都断言 checkpoint 不包含所选路径；书签恢复入口也增加 MainActor 串行保护，避免 App 启动与来源页并发注册。
+- 最终复验：AnchorKit 92 项、10 个套件通过；正式 macOS arm64 Debug 无签名构建通过；headless 生命周期 E2E（含路径泄漏断言）通过；本轮没有新 Anchor crash report。结构化证据见 `Documentation/evidence/p1-2026-09-09-mac-codex-bookmark-ui-e2e.json`。
+- 签名边界已实际核查：本机 Xcode 自动签名因 `Anchor macOS` 和 `AnchorSafariExtension` 缺 provisioning profile 而失败；手工 ad-hoc 签名虽通过 `codesign --verify`，进程未完成 App Sandbox 初始化。因此本轮证明真实面板、书签写入／解析、跨进程恢复与恢复后采集，不证明 provisioned Sandbox 包的安全作用域授权。
+- 下一步 Mac-only 验收转向真实 Codex JSONL 的受控生命周期和较长时间的后台／轮转观察；有可用 provisioning profile 后再补 Sandbox 执法证据。未修改 Demo、VPN、账号或正式用户数据，未提交／推送／合并。
+
+### 2026-09-09 — 60 轮 Mac Codex 耐久与故障注入
+
+- 新增 `scripts/validation/mac-codex-soak-e2e.sh`，直接驱动正式 `Anchor macOS` Debug App；默认每秒完成一轮隐私最小化生命周期，共 60 轮／120 个事件。
+- 第 20、40 轮后及最终分别结束并重启验收 App；第 30 轮原子替换 JSONL，第 45 轮原地截断后继续写入。每轮都等待对应 source session 成为 completed，任何超时立即失败。
+- 最终保持 1 Task、1 WorkItem、1 Association、60 个唯一 Run；60 个 sourceSessionID 均唯一且全部 completed。checkpoint 只有固定 source UUID 键，不包含 JSONL 路径；最终重启没有重复 Run。
+- 运行期间观测到最高 RSS 138752 KiB；TaskRunStore 为 20174 bytes，事件仓库为 429325 bytes，checkpoint 为 188 bytes。本轮没有新 crash report。该数值是本机 Debug／一分钟样本，只作为后续回归基线，不等于 Release 长期资源结论。
+- 先执行的 8 轮快速 soak 及正式 60 轮 soak 均通过；AnchorKit 92 项／10 个套件和正式 arm64 Debug 构建也保持通过。结构化证据见 `Documentation/evidence/p1-2026-09-09-mac-codex-soak-e2e.json`。
+- 当前仍缺真实 Codex 文件在正在执行回合中的受控追加，以及数小时／睡眠唤醒级别观察；本轮不使用 iPhone，不把一分钟合成 soak 表述为长期真实来源通过。
+
+### 2026-09-09 — WorkItem 三维状态投影
+
+- `AnchorRun` 新增独立 `attention` 维度，当前支持 `needsInput`、`hasFailure`、`stale`；旧版持久数据缺失该字段时按空集合解码，不破坏已有 Run。
+- 新增确定性 `AnchorWorkItemStateProjector`：执行、注意事项、结果不互相覆盖；执行优先级固定为 running、waitingBackground、queued、idle，并按完成后的新活动计算重新活动代次。
+- 失败后的重试显示 running，同时保留可处理的历史失败提醒；重试成功后该失败只留在 Run 历史，不继续污染当前注意事项。`stale` 保持未知事实，不会伪造为失败或完成。
+- `TaskRunStore` 已提供单 WorkItem 与 Task 范围的投影读取接口；失败后重试的状态经过落盘、重新创建 Store 后仍一致。终态 Run 的不可变保护沿用现有持久化规则。
+- 全量 AnchorKit 99 项、11 个套件通过；正式 `Anchor macOS` arm64 Debug 无签名构建、基础 App 生命周期 E2E 与 8 轮替换／截断／重启回归通过。结构化证据见 `Documentation/evidence/p1-2026-09-09-work-item-state-projection.json`。
+- 该节点只完成 WorkItem 级纯投影与存储消费入口；Task 级汇总、正式 Mac／iPhone UI、同步协议和真实 Codex `needsInput`／失败事件接入仍未完成，因此 P1 完整三维状态项保持未勾选。
+
+### 2026-09-09 — Task 聚合与 Mac 实时诊断消费
+
+- 新增 `AnchorTaskStateProjector`，将同一 Task 下的 WorkItem 投影聚合为执行、注意事项和观测结果；输入顺序与其他 Task 的状态不会影响结果。活动工作优先于已完成兄弟项，全部观测结果完成时只显示模型侧 `completed`，Task lifecycle 仍保持用户控制的 `active`。
+- 聚合规则明确覆盖：活动工作与 `needsInput`／历史失败并存、无活动时失败优先、空 Task 保持 idle/unknown、用户归档时未解决状态不被伪造为完成。`TaskRunStore.taskState(id:)` 从落盘 Run 历史提供同一结果。
+- 正式 Mac 来源页新增轻量“当前任务观测”诊断区，只显示四个聚合字段和 WorkItem／Run 数量，不展示子任务卡或替代 iPhone Dashboard；页面显示期间每秒从 Store 刷新，离开页面即取消。
+- 真实无签名 Debug App 的辅助功能树确认：运行事件显示“运行中／无／尚无结果／进行中”；同一 Run 完成后约一秒更新为“空闲／无／已完成／进行中”，证明模型侧完成没有自动归档 Task；结束并重启 App 后完成状态仍恢复。
+- 隔离持久化 fixture 还确认“运行中／有过失败和等待输入／尚无结果／进行中”可同时显示。该状态是 UI 映射验证，不冒充真实 Codex `needsInput` 来源证据。
+- AnchorKit 104 项、12 个套件通过；正式 macOS arm64 Debug 无签名构建、基础 App E2E 与 8 轮重启／替换／截断回归通过。结构化证据见 `Documentation/evidence/p1-2026-09-09-task-state-ui-e2e.json`。
+- 本轮仍未使用 iPhone、开发者账号或真实用户内容；未修改 Demo、VPN 或正式数据，未提交／推送／合并。
+
+### 2026-09-10 — 不可变 Event 与提交后检查点确认
+
+- `TaskRunStore` 现把隐私最小化的不可变 Event 与对应 Run 投影作为一次原子文件替换提交；Event 只保留任务／子任务／Run／来源身份、来源序列、发生／接收时间及状态种类，不保存 prompt、模型输出、文件路径或标题正文。
+- Codex lifecycle 的开始、完成、中断等状态映射为独立 Event；重复事件按稳定 ID 幂等，ID 被复用于不同事实时拒绝，完成早于开始时仍保留两条事实、回填开始时间且不重开终态 Run。旧 `task-runs.json` 缺少 `events` 字段时按空历史读取并可继续追加。
+- 首次把 Event 加入 60 轮脚本后，第 11 轮曾超时。初始故障检查时 JSONL 已含第 11 轮且 checkpoint 已到文件末尾，而 TaskRunStore 仍停在 10 Run／20 Event，暴露出扫描器在下游持久化完成前推进 checkpoint 的不安全窗口；残留验证进程随后补写到 11／22，因此该目录现状不能再单独证明永久丢失，但旧代码顺序确实允许在该窗口崩溃时跳过未落库事件。
+- `ProcessSource` 新增显式 `acknowledge` 契约。Codex 源按完整行生成候选 checkpoint，一次只等待一个需要持久化的 Event；协调器只有在 SessionRepository 与 TaskRunStore 都成功提交后才确认并写 checkpoint。磁盘／仓库失败会保持旧 checkpoint 并进入可重试状态；跨 Session、越过 Task 边界等明确无效事实会被确认丢弃，避免永久重放。
+- 新增两类回归：未确认事件跨源实例重启后必须重放；真实让 TaskRunStore 的原子替换失败时 checkpoint 必须保持为空，修复存储并重建协调器后同一 Event 成功恢复。全量 AnchorKit 112 项／13 个套件通过。
+- 正式 `Anchor macOS` arm64 Debug、`CODE_SIGNING_ALLOWED=NO` 构建通过。基础真实 App E2E 为 3 Run／5 Event，覆盖完成先到、迟到开始与重复完成；8 轮回归为 8／16；最终 60 轮为 60／120，所有 ID 唯一、全部 Run 完成，包含第 20／40 轮和最终重启、第 30 轮原子替换、第 45 轮原地截断，最高 RSS 142160 KiB。
+- 验证脚本退出逻辑会等待被测 App 结束，必要时只终止精确 PID，避免失败后残留 Bonjour 广播污染后续配对测试。完整测试前发现一个先前 UI 验证 App 会让既有客户端连接错误的同名 Bonjour 服务；隔离该进程后 3 个配对测试及全量套件通过，未借此修改传输产品逻辑。
+- 结构化证据见 `Documentation/evidence/p1-2026-09-10-immutable-event-ack-e2e.json`。仍未使用 iPhone、真实 Codex 正在运行的回合、开发者账号或 provisioned Sandbox；`turn_aborted` 目前仍是通用失败映射，数小时后台／睡眠唤醒也未验证。本轮未修改 Demo、VPN 或正式用户数据，未提交／推送／合并。
+
+### 2026-09-10 — Task 历史与 Event 协议版本迁移
+
+- `TaskRunStore` 顶层格式现显式写入 `schemaVersion: 2`，`AnchorTaskEvent` 显式写入 `version: 1`。缺失顶层版本的既有文件按 v1 解释；缺失 Event version 的既有 Event 按 v1 解释。
+- v1 历史第一次发生写入前，Store 在同目录保存原始字节到 `task-runs.json.pre-v2.backup`，随后才原子写入 v2 主文件。已有备份内容不同则拒绝覆盖和迁移；这提供人工回退原件，不把“可重新解码”冒充“可恢复原文件”。
+- 顶层 schema 高于当前版本，或 Event version 高于当前版本时，初始化进入只读保护状态；后续修改抛出明确错误，原文件字节保持不变，也不会生成伪造备份。
+- 首次针对性测试暴露 Foundation 不支持 `atomic + withoutOverwriting` 的组合并触发 signal 5；实现改为同目录唯一临时文件原子写入后，以不覆盖的 move 安装备份，并在并发目标出现时逐字节核对。修正后相关 3 项通过；后续真实来源验收加入 Mac 状态回归后，全量为 117 项／13 套件。
+- 最新正式 macOS arm64 Debug 无签名构建通过；基础 App E2E 写出 schema v2 和 Event v1，共 3 Run／5 Event；8 轮为 8／16；最终 60 轮为 60／120，全部完成且 ID 唯一，三次重启、原子替换及原地截断均通过，最高 RSS 142032 KiB。
+- 结构化证据见 `Documentation/evidence/p1-2026-09-10-task-history-schema-migration.json`。旧版本 App 本身不知道 v2 规则，若允许它与新版本交替写同一文件，仍可能丢弃新字段；因此当前兼容承诺是“新版本安全读取／迁移旧文件，并拒绝未知未来文件”，不是双向降级写兼容。未提交／推送／合并。
+
+### 2026-09-10 — 当前 Codex rollout 的真实增量与重启 UI 验收
+
+- 正式 `Anchor macOS` Debug App 在独立临时数据根目录只读绑定当前 Anchor 对话对应的真实 Codex rollout。绑定时先将 checkpoint 定位到当前 Task 的时间边界，103,840,753 bytes 的既有历史没有生成 Run 或 Event；这验证旧会话历史不会倒灌当前 Anchor Task。
+- 随当前真实对话自然推进，App 捕获一个 `task_complete` 和下一回合的 `task_started`，落为 2 个不同 source session 的 2 Run／2 Event。两条 Event 的接收延迟均小于 140 ms；Task 聚合显示 running，任务 lifecycle 仍是 active，没有因模型侧完成自动归档。
+- 大文件读取改为每轮最多 4 MiB，避免首次绑定约 100 MiB rollout 时一次性把余量全部读入内存；新增 32-byte 分块回归证明跨读取边界的生命周期行仍完整。首轮真实运行 8 分 41 秒末 RSS 为 111600 KiB，启动／观察样本最高为 140528 KiB；这些仅是本机 Debug 样本，不是 Release 长期资源结论。
+- 重建正式 App 后复用同一隔离目录启动，重启前后保持 2 Run／2 Event，没有重放。辅助功能树同时确认来源行显示真实 JSONL 文件名，任务诊断显示“1 个工作项 · 2 次执行／运行中／无／尚无结果／进行中”。测试环境入口此前只绑定来源而未更新文件名，已统一到与面板／书签相同的连接方法并增加回归测试。
+- 干净 Bonjour 环境下 AnchorKit 117 项／13 套件通过，正式 arm64 Debug、`CODE_SIGNING_ALLOWED=NO` 构建通过。测试期间误启动的另一个旧 DerivedData App 会广播相同 `_anchor._tcp` 服务并造成配对测试超时；仅停止精确识别的本轮实例后重跑通过，未修改传输逻辑或系统网络配置。多 Anchor 服务发现的产品鲁棒性留给 P2 双设备验收。
+- 当前 `task-runs.json` 只含 Task／WorkItem／Run／Event 身份、状态和时间字段；Event 不含 prompt、模型输出、标题、detail 或文件路径。checkpoint 仍只保存固定来源键、文件身份及完整行 offset；当前活动行未完整时 offset 可落后文件长度，重启后从旧 offset 重读。
+- 机器证据见 `Documentation/evidence/p1-2026-09-10-real-codex-live-mac-e2e.json`。本轮没有 iPhone、开发者账号、provisioned Sandbox、Claude 账号、数小时后台或睡眠唤醒证据；没有修改 Demo、VPN 或正式 Anchor 用户数据，也没有提交／推送／合并。
+
+### 2026-09-10 — 当前任务、历史分层与新任务边界
+
+- `TaskRunStore` 新增当前任务记录与归档历史两条读取路径。当前层只有一个未归档 Task；历史记录按结束时间倒序，保留该 Task 的 WorkItem、Run、不可变 Event 和确定性三维状态，不再依赖 legacy `current session` 承载永久历史。
+- 新 Task 不能通过普通 `upsert` 静默挤掉当前 Task；只有用户会话生命周期桥接使用显式 `activate` 边界。完成 Session 会归档对应 Task，完成后创建 Session 会取得新 ID；来源侧 Run 完成仍不会结束整体 Task。
+- 补充崩溃窗口恢复：若新 Session 已落盘但旧 Task 尚未归档，启动同步会以新 Session 的开始时间封口旧 Task。迟到的更早 Session 会被拒绝，持久文件保持逐字节不变。
+- 全量 AnchorKit 124 项／13 套件通过，包含当前／历史分离、隐式第二前台任务拒绝、完成后新任务、边界写中断恢复、乱序旧任务拒绝以及既有旧来源消息隔离；正式 `Anchor macOS` arm64 Debug、`CODE_SIGNING_ALLOWED=NO` 构建通过。
+- 新构建复用真实 Codex 隔离目录后仍为 1 个当前 Task、1 WorkItem、3 Runs、4 Events、1 Association，来源页显示“1 个工作项 · 3 次执行／运行中／无／尚无结果／进行中”，没有重放。结构化证据见 `Documentation/evidence/p1-2026-09-10-task-current-history-boundary.json`。
+- 这一节点完成 P1 的数据层当前／历史分离；当时尚未完成的 legacy macOS 已完成 Session 可见退出和 `turn_aborted` 专用语义，已由紧随其后的 Mac-only 验收补齐。iPhone 历史消费仍未完成。未使用 iPhone、开发者账号、Claude、provisioned Sandbox、睡眠唤醒或数小时后台；未修改 Demo、VPN 或正式数据，未提交／推送／合并。
+
+### 2026-09-10 — Codex 中断语义与正式 Mac 前台退出
+
+- `ExternalProcessEvent` 增加可选的任务层观测结果；Codex `turn_aborted` 在 legacy Process 层保持 failed 兼容，但写入 TaskRunStore 时形成 `AnchorRunOutcome.interrupted` 与不可变 `AnchorTaskEventKind.interrupted`。缺失新字段的旧事件仍可解码。
+- 正式 App 本地 E2E 已把 `turn_aborted` 从 JSONL 经文件源、协调器和原子存储完整跑通；最终 4 Run／6 Event 中恰好 1 个 interrupted Run 和 1 条 interrupted Event，同时保留重启不重放、完成先到、迟到开始及重复完成回归。
+- 正式 macOS 入口明确关闭 completed Session 的当前工作展示；Demo 继续沿用默认行为，未修改 Demo 入口或场景。用户在真实 Debug 界面确认完成后，当前页立即切到 `mac.empty.screen`，磁盘从 1 当前／0 历史变为 0 当前／1 历史。
+- 重启同一正式 App 和同一隔离目录后仍显示空当前页，归档 Task 及结束时间保持存在；历史页仍可访问 legacy Session 记录。确认说明也已改为“保留到历史并退出当前工作，之后继续同一对话会作为新任务”。
+- 全量 AnchorKit 127 项／13 套件通过，正式 `Anchor macOS` arm64 Debug、`CODE_SIGNING_ALLOWED=NO` 构建通过。结构化证据见 `Documentation/evidence/p1-2026-09-10-codex-interruption-and-foreground-exit.json`。
+- 该节点将 P1 的“执行中断”自动测试项勾选，并完成 Mac-only 的前台退出验收；iPhone 创建／结束、双设备边界、provisioned Sandbox、数小时后台、睡眠唤醒和 Claude 仍未通过，因此 P1/P2 不整体勾选。未修改 VPN 或正式数据，未提交／推送／合并。
+
+### 2026-09-10 — 600 轮 Mac 持续观察、轮转与冷启动
+
+- 正式 `Anchor macOS` 无签名 Debug App 在独立临时目录连续运行 1014.06 秒（约 16 分 54 秒），每秒写入一轮合成 Codex 生命周期；最终 1 Task、1 WorkItem、1 Association、600 个唯一 Run、1200 条唯一 Event，全部 Run 为 completed。
+- 第 200、400 轮及最终重启 App，第 300 轮原子替换 JSONL，第 450 轮原地截断；每个故障点后历史均完整恢复，source session 无重复，checkpoint 仍只有固定来源键且不含所选文件路径。stdout/stderr 均为空，没有发现本轮新增 Anchor crash report，验证 App 已退出。
+- Debug 长运行最高 RSS 为 298688 KiB。用同一份 600 Run／1200 Event 历史冷启动后，2 秒和 10 秒 RSS 分别为 144896 KiB、154032 KiB，状态仍保持 600／1200 且无重放；这不能证明内存泄漏，但长运行分配峰值已经构成 Release＋Instruments 画像前不得忽略的性能风险。
+- 机器证据见 `Documentation/evidence/p1-2026-09-10-mac-codex-600-turn-soak.json`。该节点把一分钟级合成回归提升到约 17 分钟的进程后台观察，但仍不冒充真实用户文件的数小时运行。远程控制期间未触发 macOS 睡眠，避免切断控制链；provisioned Sandbox、睡眠唤醒、iPhone、Claude 和 Release 资源验收仍待完成。
+- 本轮只运行既有脚本并记录证据，没有修改业务实现、Demo、VPN 或正式用户数据；没有提交／推送／合并。
+
+### 2026-09-10 — Release 资源闸门与 Mac MVP 交接
+
+- 正式 `Anchor macOS` 以 `-O -whole-module-optimization` 构建优化验证包；为复用隔离测试入口仅附加 `DEBUG` 编译条件，不等同于分发 Release。600 Run／1200 Event 在 866.73 秒内完成，包含三次进程重启、一次原子替换和一次原地截断，最终数据完整，stdout/stderr 为空。
+- 优化验证长跑最大 RSS 为 337904 KiB；同一历史冷启动 2 秒／10 秒分别为 147232／146496 KiB，`vmmap` 的 physical footprint 为 65.1M、峰值 119.3M。现有仓库每个事件会复制、重放并重新编码完整 event/outbox/task state，可解释随历史增大的分配压力；当前证据不足以定性为泄漏。
+- Instruments 对目标进程的 Allocation attach 被本机关闭的 Developer Mode 阻止；未为测试启用 Developer Mode。该资源问题记录为中型任务 MVP 之后的性能债，不阻塞本地正确性验收，也不算生产长期资源通过。
+- 新增 `scripts/validation/launch-mac-local-mvp.sh`：构建正式 target，在临时目录创建测试 Task 并打开来源页；文件面板按元数据定位到最新候选目录并显示文件名，用户仍需选择文件并点击 Open 以完成系统授权。实际 UI 已验证到该面板并取消，没有授权或读取会话正文。
+- 最终回归为 AnchorKit 127 项／13 套件全部通过；结构化证据见 `Documentation/evidence/p1-2026-09-10-release-resource-and-mvp-handoff.json`。本节点只宣布 Mac Codex 本地 MVP 进入用户验收，不把 iPhone、Claude、Safari、provisioned Sandbox、睡眠唤醒或完整 P0/P1/P2 标成完成。
+
 ## 10. 决策与变更记录
 
 | 编号 | 日期 | 决定 | 原因／来源 |
@@ -414,6 +619,8 @@ GitHub main／开放 PR 检查：
 | D06 | 2026-09-04 汇总 | 用户最终结束，详细历史在 iPhone，云备份恢复 | 历史及最终总结确认 |
 | D07 | 2026-09-04 汇总 | Safari-only，不做 Chrome；无默认 OCR／私有依赖 | 已确认 MVP 和隐私边界 |
 | D08 | 2026-09-04 | 先来源验证，再核心模型，再真实闭环和扩展 | 施工方案；可按证据调整顺序，不减少最终范围 |
+| D09 | P0 身份澄清后 | 将误增的“独立 ChatGPT 桌面产品”从 R15、P0、P2 移除；本地核心来源为 Codex 与 Claude Code，Safari 不变 | 用户原话“是的，就是这个应用”，确认 `com.openai.codex` 即此前所指。纠正产品名称歧义，不降低两个核心来源的验收要求；旧版逐产品要求由此项取代 |
+| D10 | 2026-09-04 | Codex 优先推进 P1 与 P2 子里程碑；Claude 先保留解析与模拟测试，真实验收后补，不阻塞其他施工 | 用户“我没有账号”后以“ok”确认建议。无需为推进 Anchor 注册或付费；Claude 仍属最终范围，P0/P2 完整验收不能以模拟测试替代 |
 
 新增变更格式：日期、影响需求编号、旧规则、新规则、原因、用户确认、迁移／验证影响。不要删除历史决定来掩盖方向变化。
 

@@ -64,6 +64,10 @@ let package = Package(
             dependencies: ["AnchorCore", "AnchorDemoSupport"]
         ),
         .testTarget(
+            name: "AnchorMacFeaturesTests",
+            dependencies: ["AnchorCore", "AnchorMacFeatures"]
+        ),
+        .testTarget(
             name: "AnchorTransportTests",
             dependencies: ["AnchorCore", "AnchorTransport"]
         ),

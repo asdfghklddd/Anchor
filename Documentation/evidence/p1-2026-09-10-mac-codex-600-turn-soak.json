@@ -1,0 +1,63 @@
+{
+  "capturedAt": "2026-09-10T09:04:11Z",
+  "repositoryHead": "254ac981dd0bdb0aa494be12bb288b795dbf5399",
+  "branch": "codex/anchor-implementation-plan",
+  "scope": "Mac-only sustained Codex lifecycle observation, file rotation and process restart recovery",
+  "formalApp": {
+    "path": "/private/tmp/anchor-formal-derived/Build/Products/Debug/Anchor macOS.app",
+    "configuration": "arm64 Debug with CODE_SIGNING_ALLOWED=NO",
+    "isolatedValidationDirectory": "/tmp/anchor-mac-soak-e2e.lQ9mtC",
+    "usedRealAnchorData": false,
+    "usedRealCodexContent": false
+  },
+  "run": {
+    "wallClockSeconds": 1014.06,
+    "turnCount": 600,
+    "lifecycleEventCount": 1200,
+    "intervalSeconds": 1,
+    "taskCount": 1,
+    "workItemCount": 1,
+    "associationCount": 1,
+    "completedRunCount": 600,
+    "uniqueRunIDs": true,
+    "uniqueSourceSessionIDs": true,
+    "uniqueEventIDs": true,
+    "appRestartTurns": [200, 400, 600],
+    "atomicReplacementTurn": 300,
+    "inPlaceTruncationTurn": 450,
+    "restartWithoutReplay": true,
+    "checkpointContainsSelectedPath": false,
+    "stdoutBytes": 0,
+    "stderrBytes": 0,
+    "newAnchorCrashReportObserved": false,
+    "appLeftRunning": false
+  },
+  "resources": {
+    "maximumResidentMemoryKilobytes": 298688,
+    "coldRestartResidentMemoryAfter2SecondsKilobytes": 144896,
+    "coldRestartResidentMemoryAfter10SecondsKilobytes": 154032,
+    "systemWideFreeMemoryPercentObservedRange": [54, 57],
+    "taskStoreBytes": 680059,
+    "checkpointStoreBytes": 192,
+    "finalSyntheticSourceBytes": 36391
+  },
+  "coldRestartVerification": {
+    "runCount": 600,
+    "eventCount": 1200,
+    "completedRunCount": 600,
+    "stdoutBytes": 0,
+    "stderrBytes": 0,
+    "requiredForcedKill": false,
+    "appLeftRunning": false
+  },
+  "interpretation": {
+    "durability": "passed for this 16 minute 54 second synthetic Mac-only run",
+    "memory": "Long-running Debug RSS peaked near 292 MiB, then a cold start over the same 600-run history settled near 142-150 MiB. This is not enough to prove a leak, but Release and Instruments profiling remain required before calling resource behavior production-ready."
+  },
+  "limitations": [
+    "This was a synthetic lifecycle stream, not sixteen minutes of real model work or a multi-hour real-user observation.",
+    "The app was allowed to run behind the active terminal, but macOS sleep and wake were intentionally not triggered on the remotely controlled Mac.",
+    "No provisioned App Sandbox, iPhone, Claude account, Release build or Instruments allocation trace was used.",
+    "The changes remain uncommitted and have not been pushed, merged, installed or released."
+  ]
+}

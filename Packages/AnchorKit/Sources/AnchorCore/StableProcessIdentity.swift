@@ -1,8 +1,8 @@
 import CryptoKit
 import Foundation
 
-enum StableProcessIdentity {
-    static func id(namespace: String, sessionID: UUID, externalID: String) -> UUID {
+public enum StableProcessIdentity {
+    public static func id(namespace: String, sessionID: UUID, externalID: String) -> UUID {
         let value = [
             namespace.lowercased(),
             sessionID.uuidString.lowercased(),

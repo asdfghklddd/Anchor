@@ -141,6 +141,9 @@ public struct ExternalProcessEvent: Identifiable, Codable, Hashable, Sendable {
     public let event: ProcessEvent?
     public let decision: Decision?
     public let deduplicationKey: String?
+    /// Optional task-layer terminal meaning when the legacy process status is
+    /// too coarse. Older peers ignore this additive field safely.
+    public let observedOutcome: AnchorRunOutcome?
 
     public init(
         id: UUID = UUID(),
@@ -151,7 +154,8 @@ public struct ExternalProcessEvent: Identifiable, Codable, Hashable, Sendable {
         process: AnchorProcess,
         event: ProcessEvent? = nil,
         decision: Decision? = nil,
-        deduplicationKey: String? = nil
+        deduplicationKey: String? = nil,
+        observedOutcome: AnchorRunOutcome? = nil
     ) {
         self.id = id
         self.sessionID = sessionID
@@ -162,6 +166,7 @@ public struct ExternalProcessEvent: Identifiable, Codable, Hashable, Sendable {
         self.event = event
         self.decision = decision
         self.deduplicationKey = deduplicationKey
+        self.observedOutcome = observedOutcome
     }
 
     /// Converts an external observation into the operation consumed by the
@@ -258,6 +263,7 @@ public protocol ProcessSource: Sendable {
     var descriptor: SourceDescriptor { get }
     func events() -> AsyncThrowingStream<ExternalProcessEvent, Error>
     func perform(_ action: SourceAction) async throws -> SourceActionReceipt
+    func acknowledge(_ event: ExternalProcessEvent) async throws
     func retry(_ event: ExternalProcessEvent) async throws
 }
 
@@ -275,6 +281,12 @@ public protocol SourceActionPerforming: Sendable {
 public extension ProcessSource {
     func perform(_ action: SourceAction) async throws -> SourceActionReceipt {
         throw ProcessSourceError.unsupportedAction
+    }
+
+    /// Sources with durable cursors override this to advance only after the
+    /// normalized event has been committed by Anchor's repositories.
+    func acknowledge(_ event: ExternalProcessEvent) async throws {
+        _ = event
     }
 
     func retry(_ event: ExternalProcessEvent) async throws {

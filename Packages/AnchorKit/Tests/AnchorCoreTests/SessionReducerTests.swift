@@ -4,6 +4,27 @@ import Testing
 
 @Suite("Session reducer")
 struct SessionReducerTests {
+    @Test("A completed session can leave the foreground for a new task")
+    func completedSessionCanBeReplaced() throws {
+        let first = AnchorSession(
+            goal: AnchorGoal(title: "First", completionCriteria: "Done"),
+            status: .completed,
+            completedAt: Date(timeIntervalSince1970: 20)
+        )
+        let nextGoal = AnchorGoal(title: "Second", completionCriteria: "Done again")
+
+        let result = try SessionReducer.reduce(
+            SessionProjection(session: first),
+            command: .createSession(goal: nextGoal, processes: []),
+            now: Date(timeIntervalSince1970: 30)
+        )
+
+        #expect(result.session?.id != first.id)
+        #expect(result.session?.goal == nextGoal)
+        #expect(result.session?.status == .active)
+        #expect(result.session?.startedAt == Date(timeIntervalSince1970: 30))
+    }
+
     @Test("Replayed event envelope is idempotent")
     func envelopeDeduplication() throws {
         let sessionID = UUID()

@@ -1,0 +1,48 @@
+{
+  "capturedAt": "2026-09-09T12:22:58Z",
+  "repositoryHead": "254ac98",
+  "branch": "codex/anchor-implementation-plan",
+  "scope": "Mac-only sustained Codex lifecycle ingestion in the built Anchor app",
+  "command": "scripts/validation/mac-codex-soak-e2e.sh <Anchor macOS.app> 60 1",
+  "fixture": {
+    "source": "synthetic privacy-minimal Codex lifecycle JSONL",
+    "turnCount": 60,
+    "eventCount": 120,
+    "intervalSeconds": 1,
+    "usesIPhone": false,
+    "usesRealUserContent": false
+  },
+  "faultInjection": {
+    "processRestartsAfterTurns": [20, 40, 60],
+    "atomicFileReplacementAtTurn": 30,
+    "inPlaceTruncationAtTurn": 45
+  },
+  "result": {
+    "taskCount": 1,
+    "workItemCount": 1,
+    "runCount": 60,
+    "completedRunCount": 60,
+    "associationCount": 1,
+    "uniqueRunIDs": true,
+    "uniqueSourceSessionIDs": true,
+    "checkpointCount": 1,
+    "checkpointKey": "codex.lifecycle.00000000-0000-4000-8000-000000000404",
+    "checkpointContainsSelectedFilePath": false,
+    "maximumRSSKilobytes": 138752,
+    "taskRunStoreBytes": 20174,
+    "sessionRepositoryBytes": 429325,
+    "checkpointStoreBytes": 188,
+    "newCrashReport": false
+  },
+  "verification": {
+    "swiftTesting": "92 tests in 10 suites passed",
+    "macOSBuild": "Anchor macOS arm64 Debug build succeeded with CODE_SIGNING_ALLOWED=NO",
+    "shortSoak": "8 turns passed before the sustained run",
+    "sustainedSoak": "60 turns passed with all injected faults and final restart"
+  },
+  "limitations": [
+    "The sustained run lasted approximately one minute, not an overnight or multi-hour observation.",
+    "Lifecycle rows were synthetic; actual Codex rollout schema compatibility remains covered by earlier real-file diagnostics rather than this soak.",
+    "The Debug package was unsigned, so provisioned App Sandbox behavior remains unverified."
+  ]
+}
