@@ -607,6 +607,12 @@ GitHub main／开放 PR 检查：
 - 新增 `scripts/validation/launch-mac-local-mvp.sh`：构建正式 target，在临时目录创建测试 Task 并打开来源页；文件面板按元数据定位到最新候选目录并显示文件名，用户仍需选择文件并点击 Open 以完成系统授权。实际 UI 已验证到该面板并取消，没有授权或读取会话正文。
 - 最终回归为 AnchorKit 127 项／13 套件全部通过；结构化证据见 `Documentation/evidence/p1-2026-09-10-release-resource-and-mvp-handoff.json`。本节点只宣布 Mac Codex 本地 MVP 进入用户验收，不把 iPhone、Claude、Safari、provisioned Sandbox、睡眠唤醒或完整 P0/P1/P2 标成完成。
 
+### 2026-09-11 — GitHub CI 的 iOS 平台边界修复
+
+- `cf39482` 推送后，GitHub Native CI 的共享测试、macOS 正式版／Demo Release 和 macOS 生产归档通过；iOS 正式版、iOS Demo 与 iOS 生产归档在编译 `CodexSessionFileLocator` 时失败。
+- 根因是跨平台 `AnchorCore` 的默认参数直接引用 macOS-only `FileManager.homeDirectoryForCurrentUser`。修复后保留跨平台的显式 `init(rootURL:)`，仅在 `#if os(macOS)` 下提供从当前 Mac 用户目录发现 Codex 会话的无参数初始化器；没有给 iOS 伪造 Codex 路径，也没有修改 Demo 行为。
+- 本地复核通过 AnchorKit 127 项／13 套件、iOS 正式版 Release、iOS Demo Release、iOS 生产 archive 及其 Demo 资源排除边界，以及 macOS 正式版 Release。该节点只修复构建平台隔离，不改变 Mac MVP 数据契约或采集范围。
+
 ## 10. 决策与变更记录
 
 | 编号 | 日期 | 决定 | 原因／来源 |

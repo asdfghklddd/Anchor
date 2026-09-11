@@ -2,9 +2,17 @@ import Foundation
 
 public struct CodexSessionFileLocator: Sendable {
     public let rootURL: URL
-    public init(rootURL: URL = FileManager.default.homeDirectoryForCurrentUser.appending(path: ".codex/sessions")) {
+
+    public init(rootURL: URL) {
         self.rootURL = rootURL
     }
+
+#if os(macOS)
+    /// Codex Desktop stores local session metadata under the current Mac user's home directory.
+    public init() {
+        rootURL = FileManager.default.homeDirectoryForCurrentUser.appending(path: ".codex/sessions")
+    }
+#endif
 
     /// Returns the newest JSONL session file by filesystem modification time.
     /// File contents are never opened during discovery.
