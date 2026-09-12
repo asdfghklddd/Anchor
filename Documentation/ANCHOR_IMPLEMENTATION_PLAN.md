@@ -613,6 +613,12 @@ GitHub main／开放 PR 检查：
 - 根因是跨平台 `AnchorCore` 的默认参数直接引用 macOS-only `FileManager.homeDirectoryForCurrentUser`。修复后保留跨平台的显式 `init(rootURL:)`，仅在 `#if os(macOS)` 下提供从当前 Mac 用户目录发现 Codex 会话的无参数初始化器；没有给 iOS 伪造 Codex 路径，也没有修改 Demo 行为。
 - 本地复核通过 AnchorKit 127 项／13 套件、iOS 正式版 Release、iOS Demo Release、iOS 生产 archive 及其 Demo 资源排除边界，以及 macOS 正式版 Release。该节点只修复构建平台隔离，不改变 Mac MVP 数据契约或采集范围。
 
+### 2026-09-12 — 正式 macOS App 图标恢复
+
+- 缺少可见 App 图标的根因不是资产目录缺失：旧正式包已经生成 `AppIcon.icns`，但正式 macOS target 的 Debug／Release 都设置了 `LSUIElement=YES`，系统因此把它作为纯菜单栏后台应用并隐藏 Dock／应用切换器入口。
+- 正式 macOS target 已移除该隐藏标记，保留现有 `MenuBarExtra`；Demo 的两项 `LSUIElement` 配置不变。Mac 多尺寸 AppIcon 使用桌面项目根目录的最新蓝色 `ios app icon.png` 重新生成 16、32、64、128、256、512、1024px 资源，iOS 的 1024px `AppIcon.png` 未修改。
+- 正式 macOS Release 构建通过；最终包声明 `CFBundleIconFile/CFBundleIconName = AppIcon`、不含 `LSUIElement`，并生成 77342-byte `AppIcon.icns`，提取图像与蓝色 Anchor 源图一致。共享资产回归的 iOS 正式版 Release 也通过。
+
 ## 10. 决策与变更记录
 
 | 编号 | 日期 | 决定 | 原因／来源 |
