@@ -18,7 +18,7 @@ App Group `WebInbox`. The production app's `WebProcessSource` consumes that
 inbox. The containing app and native extension remain sandboxed and share only
 `group.com.andywang.anchor` for this flow.
 
-The Demo target embeds neither the Safari extension nor the CLI. The repository
+The archived Demo project embeds neither the Safari extension nor the CLI. The repository
 contains no Chromium native-messaging executable, host manifest, external update
 configuration, browser setup XPC service, or unpacked Chrome extension.
 
@@ -86,7 +86,7 @@ Verification must establish that:
 - the formal app contains the `.appex`, its manifest, and the `anchor` CLI;
 - the extension point is `com.apple.Safari.web-extension`;
 - the app and extension use the same App Group;
-- the Demo app contains none of those production adapters; and
+- the archived Demo apps contain none of those production adapters; and
 - no Chrome/Chromium helper, manifest, update URL, or setup service remains.
 
 ## Apple references

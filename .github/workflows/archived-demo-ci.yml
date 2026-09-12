@@ -1,0 +1,52 @@
+name: Archived Semifinal Demo CI
+
+on:
+  pull_request:
+    paths:
+      - "Archive/Competition/SemifinalDemo/**"
+      - ".github/workflows/archived-demo-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: archived-demo-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+
+jobs:
+  package-tests:
+    name: Archived DemoSupport tests
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+      - name: Test archived fixture package
+        working-directory: Archive/Competition/SemifinalDemo/Packages/AnchorDemoSupport
+        run: swift test
+
+  demo-builds:
+    name: ${{ matrix.name }} archive test build
+    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: iOS Demo
+            scheme: Anchor iOS Demo
+            destination: generic/platform=iOS Simulator
+          - name: macOS Demo
+            scheme: Anchor macOS Demo
+            destination: platform=macOS,arch=arm64
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build archived application and UI-test target
+        run: >-
+          xcodebuild build-for-testing
+          -project Archive/Competition/SemifinalDemo/AnchorSemifinalDemo.xcodeproj
+          -scheme "${{ matrix.scheme }}"
+          -configuration Debug
+          -destination "${{ matrix.destination }}"
+          CODE_SIGNING_ALLOWED=NO

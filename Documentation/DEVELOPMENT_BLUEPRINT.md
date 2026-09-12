@@ -9,6 +9,12 @@ and CI archive boundary are in place. SwiftData-backed persistence, production
 CloudKit container activation, Safari adapters, and direct source integrations
 remain planned follow-up phases.
 
+Current structure note, 2026-09-12: the semifinal fixture apps and their UI
+tests have moved to `Archive/Competition/SemifinalDemo` with a separate Xcode
+project. `Anchor.xcodeproj` and the root `AnchorKit` package now expose only
+formal product surfaces. Historical implementation sequencing below is retained
+for context; use `ANCHOR_IMPLEMENTATION_PLAN.md` for current delivery status.
+
 This document turns the product baseline into a buildable iOS and macOS system.
 It intentionally starts with one thin, trustworthy end-to-end path and leaves
 broad automation until the event model, sync behavior, and privacy boundaries are
@@ -82,26 +88,26 @@ same-network transport, while CloudKit remains the offline and away fallback.
 
 The repository now has independent app lifecycles, entitlements, permissions,
 and release boundaries. Production targets share `com.andywang.anchor` for
-universal purchase; Demo targets use `com.andywang.anchor.demo` and are the only
-apps that link `AnchorDemoSupport`.
+universal purchase. The archived Demo project uses `com.andywang.anchor.demo`
+and is the only project that links `AnchorDemoSupport`.
 
 Current targets and shared package modules:
 
 ```text
 Anchor.xcodeproj
 ├── Anchor iOS                 production iPhone application
-├── Anchor iOS Demo            persisted fixtures and scenario controls
 ├── Anchor macOS               production menu bar and detail window
-├── Anchor macOS Demo          desktop fixtures and scenario controls
-├── AnchorIOSUITests
-└── AnchorMacUITests
+├── AnchorSafariExtension      production Safari Web Extension
+└── AnchorCommand              production CLI
 Packages/AnchorKit
 ├── AnchorCore                 domain, commands, projections and presence reducer
 ├── AnchorDesign               semantic tokens, shared controls and localization
-├── AnchorDemoSupport          fixtures, mock repository and Demo-only controls
 ├── AnchorIOSFeatures          native iPhone feature UI
 ├── AnchorMacFeatures          native macOS feature UI
 └── AnchorTransport            Bonjour, Keychain trust, encrypted events and BLE RSSI
+Archive/Competition/SemifinalDemo
+├── AnchorSemifinalDemo.xcodeproj
+└── Packages/AnchorDemoSupport fixtures, mock repository and Demo-only controls
 ```
 
 The package boundaries keep production UI independent of fixtures and allow
@@ -423,7 +429,7 @@ This phase proves the architecture before reproducing every prototype screen.
 
 ## Next implementation backlog
 
-The native UI, Demo boundary, reducers, presence flow, and minimum local-link code
+The native UI, archived Demo boundary, reducers, presence flow, and minimum local-link code
 are complete. Continue in this order:
 
 1. Validate Bonjour pairing, encrypted event acknowledgement, BLE RSSI, dictation,

@@ -25,7 +25,16 @@ jobs:
       - uses: actions/checkout@v7
       - name: Show toolchain
         run: xcodebuild -version
-      - name: Test reducers, demo persistence, and transport
+      - name: Reject archived Demo surfaces in the production project
+        shell: bash
+        run: |
+          set -euo pipefail
+          project_list="$(xcodebuild -list -json -project Anchor.xcodeproj)"
+          if grep -E 'Anchor (iOS|macOS) Demo|AnchorDemoSupport|Anchor(IOS|Mac)UITests' <<<"$project_list"; then
+            echo "Production project exposes an archived Demo target, scheme, package, or UI-test target."
+            exit 1
+          fi
+      - name: Test reducers, sources, persistence, and transport
         working-directory: Packages/AnchorKit
         run: swift test
 
@@ -39,14 +48,8 @@ jobs:
           - name: iOS Production
             scheme: Anchor iOS
             destination: generic/platform=iOS Simulator
-          - name: iOS Demo
-            scheme: Anchor iOS Demo
-            destination: generic/platform=iOS Simulator
           - name: macOS Production
             scheme: Anchor macOS
-            destination: platform=macOS,arch=arm64
-          - name: macOS Demo
-            scheme: Anchor macOS Demo
             destination: platform=macOS,arch=arm64
     steps:
       - uses: actions/checkout@v7

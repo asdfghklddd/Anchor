@@ -41,7 +41,7 @@ the default schemes remain local-first. When a paid Developer Team is
 available, the variant files add the same entitlement and bundle key to both
 formal targets; their existing foreground
 `DurableSyncRunner` will then use this private container on the existing
-60-second cadence. Demo targets remain local-only.
+60-second cadence. The archived Demo project remains local-only.
 
 To build the future CloudKit variant without changing the current personal-Team
 configuration, provide the paid Team ID explicitly. The variant intentionally
