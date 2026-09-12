@@ -619,6 +619,12 @@ GitHub main／开放 PR 检查：
 - 正式 macOS target 已移除该隐藏标记，保留现有 `MenuBarExtra`；Demo 的两项 `LSUIElement` 配置不变。Mac 多尺寸 AppIcon 使用桌面项目根目录的最新蓝色 `ios app icon.png` 重新生成 16、32、64、128、256、512、1024px 资源，iOS 的 1024px `AppIcon.png` 未修改。
 - 正式 macOS Release 构建通过；最终包声明 `CFBundleIconFile/CFBundleIconName = AppIcon`、不含 `LSUIElement`，并生成 77342-byte `AppIcon.icns`，提取图像与蓝色 Anchor 源图一致。共享资产回归的 iOS 正式版 Release 也通过。
 
+### 2026-09-12 — 正式 macOS 菜单栏形态确认
+
+- 按产品取舍恢复正式 macOS Target 的 `LSUIElement = YES`：Anchor 保持纯菜单栏插件形态，不占用 Dock 与 App 切换器。
+- 正式菜单栏不再使用通用 `scope` SF Symbol，改为独立 `AnchorMenuBarIcon` 矢量模板资源；造型提炼自 iOS 的“A + 锚”，并由 macOS 自动适配深浅色菜单栏。
+- 完整蓝色 App Icon 继续保留在正式包资源中，用于 Finder、安装包与系统信息界面；Demo 菜单栏和 Target 配置保持不变。
+
 ## 10. 决策与变更记录
 
 | 编号 | 日期 | 决定 | 原因／来源 |

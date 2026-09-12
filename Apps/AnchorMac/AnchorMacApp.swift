@@ -265,7 +265,15 @@ struct AnchorMacApp: App {
         MenuBarExtra {
             MacMenuHost(model: model)
         } label: {
-            Label("Anchor", systemImage: "scope")
+            Label {
+                Text("Anchor")
+            } icon: {
+                Image("AnchorMenuBarIcon")
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 18, height: 18)
+            }
         }
         .menuBarExtraStyle(.window)
     }

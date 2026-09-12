@@ -871,6 +871,7 @@
 				INFOPLIST_FILE = "$(ANCHOR_MAC_INFOPLIST_FILE)";
 				INFOPLIST_KEY_CFBundleDisplayName = Anchor;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Anchor advertises a private service identifier so your paired iPhone can estimate proximity.";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
@@ -903,6 +904,7 @@
 				INFOPLIST_FILE = "$(ANCHOR_MAC_INFOPLIST_FILE)";
 				INFOPLIST_KEY_CFBundleDisplayName = Anchor;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Anchor advertises a private service identifier so your paired iPhone can estimate proximity.";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
