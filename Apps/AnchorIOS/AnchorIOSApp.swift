@@ -9,15 +9,64 @@ struct AnchorIOSApp: App {
     private let client: AnchorBonjourClient
     private let proximityScanner: AnchorProximityScanner
     private let cloudSyncRunner: DurableSyncRunner?
+    private let currentProcessProvider: AnchorBonjourClient?
 
     init() {
-        let identityStore = PairingIdentityStore()
+        let environment = ProcessInfo.processInfo.environment
+        let isUITesting: Bool
+        let uiTestStorageURL: URL?
+        let pairingIdentityService: String
+#if DEBUG
+        isUITesting = environment["ANCHOR_UI_TESTING"] == "1"
+        let uiTestStorageID = environment["ANCHOR_UI_TEST_STORAGE_ID"]
+            .flatMap(UUID.init(uuidString:)) ?? UUID()
+        uiTestStorageURL = isUITesting
+            ? FileManager.default.temporaryDirectory
+                .appending(path: "AnchorUITests", directoryHint: .isDirectory)
+                .appending(path: uiTestStorageID.uuidString, directoryHint: .isDirectory)
+                .appending(path: "session-repository.json")
+            : nil
+        pairingIdentityService = isUITesting
+            ? "com.andywang.anchor.ui-tests.\(uiTestStorageID.uuidString)"
+            : "com.andywang.anchor.local-link"
+#else
+        isUITesting = false
+        uiTestStorageURL = nil
+        pairingIdentityService = "com.andywang.anchor.local-link"
+#endif
+        if let uiTestStorageURL {
+            try? FileManager.default.createDirectory(
+                at: uiTestStorageURL.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+        }
+        let identityStore = PairingIdentityStore(service: pairingIdentityService)
         let client = AnchorBonjourClient(identityStore: identityStore)
         let scanner = AnchorProximityScanner { proximity in
             client.updateProximity(proximity)
         }
-        let localRepository = LocalSessionRepository(sourceID: identityStore.localDeviceID())
-        let cloudSyncRunner = AnchorCloudSyncFactory.makeRunner(local: localRepository)
+        let localRepository = LocalSessionRepository(
+            storageURL: uiTestStorageURL,
+            sourceID: identityStore.localDeviceID()
+        )
+        let cloudSyncRunner: DurableSyncRunner?
+        let presenceProvider: (any PresenceSignalProviding)?
+        let currentProcessProvider: AnchorBonjourClient?
+#if DEBUG
+        if isUITesting {
+            cloudSyncRunner = nil
+            presenceProvider = nil
+            currentProcessProvider = nil
+        } else {
+            cloudSyncRunner = AnchorCloudSyncFactory.makeRunner(local: localRepository)
+            presenceProvider = client
+            currentProcessProvider = client
+        }
+#else
+        cloudSyncRunner = AnchorCloudSyncFactory.makeRunner(local: localRepository)
+        presenceProvider = client
+        currentProcessProvider = client
+#endif
         let repository = LinkedSessionRepository(base: localRepository, transport: client)
         client.onEvent = { [weak repository] event in
             guard let repository else { throw CancellationError() }
@@ -30,13 +79,21 @@ struct AnchorIOSApp: App {
         self.client = client
         proximityScanner = scanner
         self.cloudSyncRunner = cloudSyncRunner
+        self.currentProcessProvider = currentProcessProvider
         model = AnchorSessionModel(
             repository: repository,
-            presenceProvider: client,
+            presenceProvider: presenceProvider,
             durableSyncStatusProvider: cloudSyncRunner
         )
+#if DEBUG
+        if !isUITesting {
+            scanner.start()
+            Task { await cloudSyncRunner?.start() }
+        }
+#else
         scanner.start()
         Task { await cloudSyncRunner?.start() }
+#endif
     }
 
     var body: some Scene {
@@ -44,7 +101,7 @@ struct AnchorIOSApp: App {
             AnchorIOSRootView(
                 model: model,
                 linkController: client,
-                currentProcessProvider: client
+                currentProcessProvider: currentProcessProvider
             )
         }
     }

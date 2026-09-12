@@ -55,6 +55,10 @@ Known local-acceptance boundaries:
   from the separate semifinal archive and are not part of the formal package.
 - Formal `Anchor macOS` arm64 Debug builds with signing disabled; an optimized
   Release-validation build using only the Debug isolation gate also succeeds.
+- Formal UI automation is now part of the production project rather than the
+  archived fixture project. The iPhone suite passed 2/2 real Simulator journeys:
+  required-field gating, task creation, process display, relaunch, and durable
+  recovery. Both iPhone and Mac UI-test bundles compile with the formal apps.
 - Real current Codex rollout capture, real system file panel/bookmark recovery,
   formal UI completion/foreground exit, restart without replay, and a 600-Run /
   1200-Event three-fault stress test have passed on this Mac.
@@ -64,8 +68,9 @@ Known local-acceptance boundaries:
 - Production archives: iOS and macOS both use `com.andywang.anchor`; archive scans
   contain no `AnchorDemoSupport`, fixture files, Demo state, controls, or scenario
   copy.
-- Production CI: 115 package tests, two Release builds, both production archives,
-  and the production/archive boundary run for `main`, `codex/**`, and pull requests.
+- Production CI: 115 package tests, two Release builds, two formal UI-test builds,
+  both production archives, and the production/archive boundary run for `main`,
+  `codex/**`, and pull requests.
   A separate path-scoped/manual workflow runs the archived package tests and two
   Demo build-for-testing jobs, including the fixture-bound UI-test targets,
   without making them part of the release surface.
@@ -93,9 +98,10 @@ verified above 12:1; all other findings fail the suite.
 
 ## Remaining device-only acceptance
 
-- Existing iOS/macOS UI-test targets are archived with the semifinal Demo because
-  they launch fixture apps. Formal production end-to-end UI targets remain a
-  separate milestone and are not implied by the historical matrix above.
+- The formal macOS UI suite covers empty-work/source navigation and the explicit
+  completion-confirmation/foreground-exit boundary. It compiles, but execution
+  is pending because Developer Mode is disabled on this Mac; Xcode could not
+  materialize its test Runner. No system security setting was changed.
 - Physical-device checks remain for VoiceOver reading order, system keyboard
   dictation, haptics, rotation, local-network permission prompts, Bluetooth
   behavior, Mac sleep/recovery, and a real two-device encrypted round trip.

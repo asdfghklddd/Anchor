@@ -20,22 +20,39 @@ struct AnchorMacApp: App {
         let validationCodexURL: URL?
         let validationShouldSeedSession: Bool
         let validationDefaults: UserDefaults?
+        let isUITesting: Bool
+        let pairingIdentityService: String
 #if DEBUG
-        validationRootURL = environment["ANCHOR_LOCAL_VALIDATION_ROOT"].map {
+        isUITesting = environment["ANCHOR_UI_TESTING"] == "1"
+        let uiTestStorageID = environment["ANCHOR_UI_TEST_STORAGE_ID"]
+            .flatMap(UUID.init(uuidString:)) ?? UUID()
+        let uiTestRootURL = isUITesting
+            ? FileManager.default.temporaryDirectory
+                .appending(path: "AnchorUITests", directoryHint: .isDirectory)
+                .appending(path: uiTestStorageID.uuidString, directoryHint: .isDirectory)
+            : nil
+        validationRootURL = uiTestRootURL ?? environment["ANCHOR_LOCAL_VALIDATION_ROOT"].map {
             URL(filePath: $0, directoryHint: .isDirectory)
         }
         validationCodexURL = environment["ANCHOR_LOCAL_VALIDATION_CODEX_FILE"].map {
             URL(filePath: $0)
         }
         validationShouldSeedSession = environment["ANCHOR_LOCAL_VALIDATION_SEED_SESSION"] == "1"
-        validationDefaults = environment["ANCHOR_LOCAL_VALIDATION_DEFAULTS_SUITE"].flatMap {
-            UserDefaults(suiteName: $0)
-        }
+        validationDefaults = environment["ANCHOR_LOCAL_VALIDATION_DEFAULTS_SUITE"]
+            .flatMap { UserDefaults(suiteName: $0) }
+            ?? (isUITesting
+                ? UserDefaults(suiteName: "com.andywang.anchor.ui-tests.\(uiTestStorageID.uuidString)")
+                : nil)
+        pairingIdentityService = isUITesting
+            ? "com.andywang.anchor.ui-tests.\(uiTestStorageID.uuidString)"
+            : "com.andywang.anchor.local-link"
 #else
+        isUITesting = false
         validationRootURL = nil
         validationCodexURL = nil
         validationShouldSeedSession = false
         validationDefaults = nil
+        pairingIdentityService = "com.andywang.anchor.local-link"
 #endif
 #if DEBUG
         if let validationRootURL {
@@ -49,7 +66,7 @@ struct AnchorMacApp: App {
             )
         }
 #endif
-        let identityStore = PairingIdentityStore()
+        let identityStore = PairingIdentityStore(service: pairingIdentityService)
         let deviceID = validationRootURL == nil
             ? identityStore.localDeviceID()
             : UUID(uuidString: "00000000-0000-4000-8000-0000000004F0")!
@@ -64,7 +81,14 @@ struct AnchorMacApp: App {
         let codexCheckpointStore = validationRootURL.map {
             CodexLifecycleCheckpointStore(storageURL: $0.appending(path: "codex-checkpoints.json"))
         } ?? CodexLifecycleCheckpointStore()
-        let cloudSyncRunner = AnchorCloudSyncFactory.makeRunner(local: localRepository)
+        let cloudSyncRunner: DurableSyncRunner?
+#if DEBUG
+        cloudSyncRunner = isUITesting
+            ? nil
+            : AnchorCloudSyncFactory.makeRunner(local: localRepository)
+#else
+        cloudSyncRunner = AnchorCloudSyncFactory.makeRunner(local: localRepository)
+#endif
         let repository = LinkedSessionRepository(base: localRepository, transport: server)
         let taskLifecycleBridge = TaskSessionLifecycleBridge(
             repository: repository,
@@ -142,16 +166,18 @@ struct AnchorMacApp: App {
                 }
             }
         }
-        do {
-            try server.start()
-        } catch {
-            Task {
-                try? await repository.send(
-                    .updateSignals(connection: .failed, proximity: .unknown, at: .now)
-                )
+        if !isUITesting {
+            do {
+                try server.start()
+            } catch {
+                Task {
+                    try? await repository.send(
+                        .updateSignals(connection: .failed, proximity: .unknown, at: .now)
+                    )
+                }
             }
+            advertiser.start()
         }
-        advertiser.start()
         self.server = server
         proximityAdvertiser = advertiser
         self.cloudSyncRunner = cloudSyncRunner
@@ -230,11 +256,13 @@ struct AnchorMacApp: App {
                         )
                     )
                 }
-                await sourceCoordinator.start()
-                if let validationCodexURL {
-                    try? await setupModel.connectCodexSession(validationCodexURL)
-                } else {
-                    await setupModel.restoreCodexSession()
+                if !isUITesting {
+                    await sourceCoordinator.start()
+                    if let validationCodexURL {
+                        try? await setupModel.connectCodexSession(validationCodexURL)
+                    } else {
+                        await setupModel.restoreCodexSession()
+                    }
                 }
             } else {
                 await sourceCoordinator.start()
@@ -244,7 +272,9 @@ struct AnchorMacApp: App {
             await sourceCoordinator.start()
             await setupModel.restoreCodexSession()
 #endif
-            await cloudSyncRunner?.start()
+            if !isUITesting {
+                await cloudSyncRunner?.start()
+            }
         }
         DispatchQueue.main.async {
             Task { await startup() }

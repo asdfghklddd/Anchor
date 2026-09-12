@@ -152,6 +152,7 @@ private struct MacActiveWorkView: View {
                         systemImage: "checkmark.seal"
                     )
                 }
+                .accessibilityIdentifier("mac.session.finish.button")
             }
             ToolbarItem {
                 Button {

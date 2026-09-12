@@ -41,6 +41,8 @@ Anchor.xcodeproj
 Apps/
 ├── AnchorIOS/             production iPhone launcher
 ├── AnchorMac/             production menu bar app
+├── AnchorIOSUITests/      isolated production iPhone journeys
+├── AnchorMacUITests/      isolated production Mac journeys
 ├── AnchorSafariExtension/ production Safari Web Extension
 └── Shared/                app icon and accent assets
 Packages/AnchorKit/
@@ -71,9 +73,15 @@ cd Packages/AnchorKit
 swift test
 ```
 
+The `Anchor iOS` and `Anchor macOS` schemes also contain the formal UI-test
+targets. Their launch environments create a private temporary repository and
+disable live CloudKit, proximity, Bonjour, and source observation, so the tests
+do not mutate the installed app's task data or source permissions.
+
 GitHub Actions builds both production Release schemes, runs the production
-package tests, archives both apps, and rejects archived Demo resources or copy
-in either archive. A separate archive workflow builds the semifinal Demo apps
+package tests, compiles both formal UI-test bundles, archives both apps, and
+rejects archived Demo resources or copy in either archive. A separate archive
+workflow builds the semifinal Demo apps
 and their fixture-bound UI-test targets only when archived files change or when
 it is started manually. The
 local acceptance matrix and remaining device-only checks are recorded in

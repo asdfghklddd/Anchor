@@ -111,6 +111,7 @@ struct MacSessionSummaryView: View {
         ) {
             Button(L10n.completeSession, action: completeSession)
                 .keyboardShortcut(.defaultAction)
+                .accessibilityIdentifier("mac.session.summary.confirm")
             Button(L10n.cancel, role: .cancel) { }
         } message: {
             Text(L10n.finishConfirmDetail)

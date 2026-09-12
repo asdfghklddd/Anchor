@@ -633,6 +633,14 @@ GitHub main／开放 PR 检查：
 - Native CI 新增结构闸门，拒绝 Demo target、scheme、DemoSupport 或 Demo UI-test target 回流正式工程；归档采用独立、路径触发／手动触发的 CI。
 - 本地迁移验收通过：正式 AnchorKit 115 项／12 套件、归档 DemoSupport 12 项／1 套件、正式 iOS/macOS Release 以及归档 iOS/macOS Demo Release 均通过。旧的 127 项／13 套件记录是拆分前的历史基线，不应被改写。
 
+### 2026-09-12 — 正式版端到端 UI 测试入口
+
+- 正式 `Anchor.xcodeproj` 新增独立的 `AnchorIOSUITests` 与 `AnchorMacUITests`，分别挂入正式 iOS/macOS scheme；它们测试生产启动器和生产界面，不链接归档 fixture 或 `AnchorDemoSupport`。
+- Debug-only 隔离入口为每条 UI 测试创建独立临时 Repository、Keychain service 和 Mac 来源偏好域，并停用 CloudKit、Bonjour、蓝牙接近与来源扫描；Release 不读取这些环境变量，正式用户数据与权限不参与自动测试。
+- iOS Simulator 实际执行 2/2 通过：任务必填约束，以及创建任务→显示进程→终止 App→重启恢复。AnchorKit 115 项／12 套件、iOS/macOS UI test build-for-testing、iOS/macOS Release 均通过。
+- macOS 两条用例覆盖空工作区到来源配置，以及完成摘要→最终确认→退出当前任务→历史仍可见。测试包已编译；本机 Developer Mode 关闭使 Xcode 无法生成 Runner，未改系统设置，真实执行留待用户启用后补验。
+- Native CI 结构闸门现在要求两个正式 UI-test target 存在，并新增 iOS/macOS `build-for-testing` 作业；归档 Demo UI tests 仍只属于独立归档工程与路径触发工作流。
+
 ## 10. 决策与变更记录
 
 | 编号 | 日期 | 决定 | 原因／来源 |

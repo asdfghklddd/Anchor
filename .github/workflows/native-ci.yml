@@ -30,10 +30,12 @@ jobs:
         run: |
           set -euo pipefail
           project_list="$(xcodebuild -list -json -project Anchor.xcodeproj)"
-          if grep -E 'Anchor (iOS|macOS) Demo|AnchorDemoSupport|Anchor(IOS|Mac)UITests' <<<"$project_list"; then
-            echo "Production project exposes an archived Demo target, scheme, package, or UI-test target."
+          if grep -E 'Anchor (iOS|macOS) Demo|AnchorDemoSupport' <<<"$project_list"; then
+            echo "Production project exposes an archived Demo target, scheme, or package."
             exit 1
           fi
+          grep -q 'AnchorIOSUITests' <<<"$project_list"
+          grep -q 'AnchorMacUITests' <<<"$project_list"
       - name: Test reducers, sources, persistence, and transport
         working-directory: Packages/AnchorKit
         run: swift test
@@ -59,6 +61,30 @@ jobs:
           -project Anchor.xcodeproj
           -scheme "${{ matrix.scheme }}"
           -configuration Release
+          -destination "${{ matrix.destination }}"
+          CODE_SIGNING_ALLOWED=NO
+
+  ui-test-builds:
+    name: ${{ matrix.name }} UI-test build
+    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: iOS Production
+            scheme: Anchor iOS
+            destination: generic/platform=iOS Simulator
+          - name: macOS Production
+            scheme: Anchor macOS
+            destination: platform=macOS,arch=arm64
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build application and formal UI tests
+        run: >-
+          xcodebuild build-for-testing
+          -project Anchor.xcodeproj
+          -scheme "${{ matrix.scheme }}"
+          -configuration Debug
           -destination "${{ matrix.destination }}"
           CODE_SIGNING_ALLOWED=NO
 
