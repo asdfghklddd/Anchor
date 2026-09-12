@@ -1,6 +1,6 @@
 # Anchor native validation record
 
-Last updated: 2026-09-10
+Last updated: 2026-09-12
 
 ## Mac Codex MVP local acceptance
 
@@ -18,7 +18,7 @@ From the repository root, run:
 ```
 
 The launcher builds the formal `Anchor macOS` target and opens it with a fresh
-temporary data root. It does not launch the Demo target or write production
+temporary data root. It does not launch the archived Demo project or write production
 Anchor data. In the App:
 
 1. Open **Sources**.
@@ -48,23 +48,29 @@ Known local-acceptance boundaries:
 
 ## Automated results
 
-- `AnchorKit`: 127 Swift Testing cases in 13 suites, including source parsing,
+- Formal `AnchorKit`: 115 Swift Testing cases in 12 suites, including source parsing,
   checkpoint acknowledgement, migration, task ownership/current-history rules,
   interruption semantics, presence, pairing, and encrypted transport.
+- Archived `AnchorDemoSupport`: 12 fixture-only cases in 1 suite. These are run
+  from the separate semifinal archive and are not part of the formal package.
 - Formal `Anchor macOS` arm64 Debug builds with signing disabled; an optimized
   Release-validation build using only the Debug isolation gate also succeeds.
 - Real current Codex rollout capture, real system file panel/bookmark recovery,
   formal UI completion/foreground exit, restart without replay, and a 600-Run /
   1200-Event three-fault stress test have passed on this Mac.
-- Release builds: `Anchor iOS`, `Anchor iOS Demo`, `Anchor macOS`, and
-  `Anchor macOS Demo` all build with Swift 6.2 and no Swift concurrency warnings.
+- Production Release builds: `Anchor iOS` and `Anchor macOS` build with Swift
+  6.2. The two archived semifinal Demo schemes also build independently from
+  `Archive/Competition/SemifinalDemo/AnchorSemifinalDemo.xcodeproj`.
 - Production archives: iOS and macOS both use `com.andywang.anchor`; archive scans
   contain no `AnchorDemoSupport`, fixture files, Demo state, controls, or scenario
   copy.
-- CI: package tests, the four Release builds, both production archives, and the
-  production/Demo boundary run for `main`, `codex/**`, and pull requests.
+- Production CI: 115 package tests, two Release builds, both production archives,
+  and the production/archive boundary run for `main`, `codex/**`, and pull requests.
+  A separate path-scoped/manual workflow runs the archived package tests and two
+  Demo build-for-testing jobs, including the fixture-bound UI-test targets,
+  without making them part of the release surface.
 
-## iPhone UI and accessibility matrix
+## Archived semifinal Demo UI and accessibility matrix
 
 | Device | Appearance / language / text | Result |
 | --- | --- | --- |
@@ -74,7 +80,7 @@ Known local-acceptance boundaries:
 | iPhone 17 Pro | Increased contrast | Active, return, and landscape audits passed |
 | iPhone 17 Pro Max | Dark / English / maximum accessibility size | Four core UI flows passed |
 
-Each matrix run covers the active workspace, portrait decision navigation, return
+These historical fixture runs cover the active workspace, portrait decision navigation, return
 summary, and landscape inline decision flow. The landscape flow additionally
 asserts selected state, confirms through the shared reducer, and waits for the
 resolved UI. `performAccessibilityAudit()` runs on the active, return, and
@@ -87,13 +93,15 @@ verified above 12:1; all other findings fail the suite.
 
 ## Remaining device-only acceptance
 
-- The macOS UI test target builds for testing, but this Mac has Developer Mode
-  disabled, so the runner cannot launch until the owner enables it intentionally.
+- Existing iOS/macOS UI-test targets are archived with the semifinal Demo because
+  they launch fixture apps. Formal production end-to-end UI targets remain a
+  separate milestone and are not implied by the historical matrix above.
 - Physical-device checks remain for VoiceOver reading order, system keyboard
   dictation, haptics, rotation, local-network permission prompts, Bluetooth
   behavior, Mac sleep/recovery, and a real two-device encrypted round trip.
-- SwiftData, CloudKit, offline merge, background transfer, CLI/Safari, and real AI
-  source adapters are later phases by design and are not represented by Demo data.
+- SwiftData, production CloudKit, offline merge, background transfer, and
+  provisioned CLI/Safari end-to-end checks remain later acceptance work. Archived
+  Demo data is not evidence for any production adapter.
 
 Simulator runs keep one device booted at a time and shut all devices down after
 acceptance to control local memory pressure.

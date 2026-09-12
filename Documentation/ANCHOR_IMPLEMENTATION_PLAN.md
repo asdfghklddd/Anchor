@@ -625,6 +625,14 @@ GitHub main／开放 PR 检查：
 - 正式菜单栏不再使用通用 `scope` SF Symbol，改为独立 `AnchorMenuBarIcon` 矢量模板资源；造型提炼自 iOS 的“A + 锚”，并由 macOS 自动适配深浅色菜单栏。
 - 完整蓝色 App Icon 继续保留在正式包资源中，用于 Finder、安装包与系统信息界面；Demo 菜单栏和 Target 配置保持不变。
 
+### 2026-09-12 — 复赛 Demo 与正式工程完成物理隔离
+
+- 在迁移前将已通过 CI 的完整基线冻结为 Git 标签 `competition-semifinal-demo-2026-09-12`，用于长期精确复现复赛版本。
+- iOS/macOS Demo 启动器、Demo 绑定的 UI tests、配置与 `AnchorDemoSupport` 已迁入 `Archive/Competition/SemifinalDemo`，并由独立的 `AnchorSemifinalDemo.xcodeproj` 和归档专用 Swift package 管理。
+- 正式 `Anchor.xcodeproj` 只保留 `Anchor iOS`、`Anchor macOS`、`AnchorSafariExtension` 与 `AnchorCommand`；正式 `AnchorKit` 不再暴露或编译 DemoSupport。归档仍可按需构建和测试，但不再参与正式发布面。
+- Native CI 新增结构闸门，拒绝 Demo target、scheme、DemoSupport 或 Demo UI-test target 回流正式工程；归档采用独立、路径触发／手动触发的 CI。
+- 本地迁移验收通过：正式 AnchorKit 115 项／12 套件、归档 DemoSupport 12 项／1 套件、正式 iOS/macOS Release 以及归档 iOS/macOS Demo Release 均通过。旧的 127 项／13 套件记录是拆分前的历史基线，不应被改写。
+
 ## 10. 决策与变更记录
 
 | 编号 | 日期 | 决定 | 原因／来源 |
@@ -639,6 +647,7 @@ GitHub main／开放 PR 检查：
 | D08 | 2026-09-04 | 先来源验证，再核心模型，再真实闭环和扩展 | 施工方案；可按证据调整顺序，不减少最终范围 |
 | D09 | P0 身份澄清后 | 将误增的“独立 ChatGPT 桌面产品”从 R15、P0、P2 移除；本地核心来源为 Codex 与 Claude Code，Safari 不变 | 用户原话“是的，就是这个应用”，确认 `com.openai.codex` 即此前所指。纠正产品名称歧义，不降低两个核心来源的验收要求；旧版逐产品要求由此项取代 |
 | D10 | 2026-09-04 | Codex 优先推进 P1 与 P2 子里程碑；Claude 先保留解析与模拟测试，真实验收后补，不阻塞其他施工 | 用户“我没有账号”后以“ok”确认建议。无需为推进 Anchor 注册或付费；Claude 仍属最终范围，P0/P2 完整验收不能以模拟测试替代 |
+| D11 | 2026-09-12 | 复赛 Demo 从正式 Xcode 工程与正式 Swift package 移入仓库归档；保留冻结标签与独立可构建工程 | 决赛开发只在正式版继续，避免 fixture、Demo scheme 和 Demo UI tests 混入生产发布面，同时保留可恢复历史 |
 
 新增变更格式：日期、影响需求编号、旧规则、新规则、原因、用户确认、迁移／验证影响。不要删除历史决定来掩盖方向变化。
 

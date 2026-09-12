@@ -13,7 +13,6 @@ let package = Package(
         .executable(name: "anchor", targets: ["AnchorCLI"]),
         .library(name: "AnchorCore", targets: ["AnchorCore"]),
         .library(name: "AnchorDesign", targets: ["AnchorDesign"]),
-        .library(name: "AnchorDemoSupport", targets: ["AnchorDemoSupport"]),
         .library(name: "AnchorIOSFeatures", targets: ["AnchorIOSFeatures"]),
         .library(name: "AnchorMacFeatures", targets: ["AnchorMacFeatures"]),
         .library(name: "AnchorTransport", targets: ["AnchorTransport"]),
@@ -33,16 +32,6 @@ let package = Package(
             resources: [.process("Resources")]
         ),
         .target(
-            name: "AnchorDemoSupport",
-            dependencies: [
-                "AnchorCore",
-                "AnchorDesign",
-                "AnchorIOSFeatures",
-                "AnchorMacFeatures",
-            ],
-            resources: [.process("Resources")]
-        ),
-        .target(
             name: "AnchorIOSFeatures",
             dependencies: ["AnchorCore", "AnchorDesign"]
         ),
@@ -58,10 +47,6 @@ let package = Package(
         .testTarget(
             name: "AnchorCoreTests",
             dependencies: ["AnchorCore"]
-        ),
-        .testTarget(
-            name: "AnchorDemoSupportTests",
-            dependencies: ["AnchorCore", "AnchorDemoSupport"]
         ),
         .testTarget(
             name: "AnchorMacFeaturesTests",

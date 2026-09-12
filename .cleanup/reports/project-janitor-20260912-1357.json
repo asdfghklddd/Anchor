@@ -1,0 +1,56 @@
+{
+  "target_path": "/Users/andywang/worktrees/Anchor-archive-semifinal-demo",
+  "mode": "organize",
+  "permission_level": "confirm-risky-explicitly-approved",
+  "git": {
+    "is_repo": true,
+    "branch": "codex/archive-semifinal-demo",
+    "dirty_before": false,
+    "baseline_commit": "f1a214057284ccb5d0d9c9435d5816bd94aec6be",
+    "archive_tag": "competition-semifinal-demo-2026-09-12"
+  },
+  "detected_stack": ["Swift 6.2", "Swift Package Manager", "Xcode", "GitHub Actions"],
+  "baseline": [
+    {"check": "main divergence", "result": "pass", "notes": "0 ahead, 0 behind"},
+    {"check": "open pull requests", "result": "pass", "notes": "none"},
+    {"check": "Native CI 34673330944", "result": "pass", "notes": "7 of 7 jobs succeeded"}
+  ],
+  "knowledge_hygiene": [
+    {"path": "README.md", "status": "updated"},
+    {"path": "Documentation/VALIDATION.md", "status": "updated"},
+    {"path": "Documentation/WEB_OBSERVATION_CONTRACT.md", "status": "updated"},
+    {"path": "Documentation/DEVELOPMENT_BLUEPRINT.md", "status": "updated"},
+    {"path": "Documentation/CLOUDKIT_MVP.md", "status": "updated"},
+    {"path": "Documentation/ANCHOR_IMPLEMENTATION_PLAN.md", "status": "updated"}
+  ],
+  "candidates": [
+    {"path": "Anchor.xcodeproj Demo targets and schemes", "category": "build-surface", "evidence": "E3", "confidence": "high", "planned_action": "move", "reason": "Separate semifinal fixture applications from the formal project", "risk": "Xcode graph validity"},
+    {"path": "Apps/AnchorIOSDemo and Apps/AnchorMacDemo", "category": "archived-implementation", "evidence": "E2", "confidence": "high", "planned_action": "archive", "reason": "Demo-only launchers", "risk": "Archived project buildability"},
+    {"path": "Apps/AnchorIOSUITests and Apps/AnchorMacUITests", "category": "archived-tests", "evidence": "E3", "confidence": "high", "planned_action": "archive", "reason": "Both test targets explicitly target Demo apps", "risk": "Formal UI coverage remains a separate milestone"},
+    {"path": "Packages/AnchorKit/Sources/AnchorDemoSupport", "category": "package-surface", "evidence": "E3", "confidence": "high", "planned_action": "extract", "reason": "Formal products do not depend on it", "risk": "Swift package dependency paths"},
+    {"path": ".github/workflows/native-ci.yml", "category": "ci-surface", "evidence": "E3", "confidence": "high", "planned_action": "update", "reason": "Stop building archived Demo targets in production CI", "risk": "Production validation must remain intact"}
+  ],
+  "duplicate_candidates": [],
+  "actions_taken": [
+    {"action": "tag", "target": "competition-semifinal-demo-2026-09-12", "result": "pushed"},
+    {"action": "worktree", "target": "/Users/andywang/worktrees/Anchor-archive-semifinal-demo", "result": "created"},
+    {"action": "archive", "target": "Archive/Competition/SemifinalDemo", "result": "33 source files, 2030514 bytes"},
+    {"action": "extract", "target": "Archive/Competition/SemifinalDemo/Packages/AnchorDemoSupport", "result": "independent local package"},
+    {"action": "prune", "target": "Anchor.xcodeproj", "result": "Demo apps and Demo-bound UI-test targets removed"},
+    {"action": "prune", "target": "Packages/AnchorKit", "result": "AnchorDemoSupport product, target, sources, and tests removed"},
+    {"action": "split-ci", "target": ".github/workflows", "result": "production and archived Demo workflows separated"}
+  ],
+  "deferred": ["Formal end-to-end UI-test replacement", "Separate GitHub repository", "Archive deletion"],
+  "verification_after": [
+    {"check": "formal Xcode graph", "result": "pass", "notes": "4 production targets; no Demo surface"},
+    {"check": "formal package tests", "result": "pass", "notes": "115 tests in 12 suites"},
+    {"check": "archived package tests", "result": "pass", "notes": "12 tests in 1 suite"},
+    {"check": "formal Release builds", "result": "pass", "notes": "iOS and macOS"},
+    {"check": "archived Demo Release builds", "result": "pass", "notes": "iOS and macOS"},
+    {"check": "archived Demo UI-test builds", "result": "pass", "notes": "iOS and macOS build-for-testing"},
+    {"check": "production archives", "result": "pass", "notes": "iOS and macOS; com.andywang.anchor"},
+    {"check": "production archive scan", "result": "pass", "notes": "no fixture or Demo payload"},
+    {"check": "macOS embedded products", "result": "pass", "notes": "CLI helper and Safari extension present"},
+    {"check": "syntax and patch hygiene", "result": "pass", "notes": "plist, project, YAML, and git diff checks"}
+  ]
+}
