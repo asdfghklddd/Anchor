@@ -32,6 +32,12 @@ public actor TaskSessionLifecycleBridge {
     }
 
     public func synchronize(_ projection: SessionProjection) async throws {
+        for archivedSession in projection.archivedSessions.sorted(by: {
+            $0.startedAt < $1.startedAt
+        }) {
+            try await synchronizeArchived(archivedSession)
+        }
+
         guard let session = projection.session else { return }
         let task = AnchorTask(
             id: session.id,
@@ -53,6 +59,29 @@ public actor TaskSessionLifecycleBridge {
                 at: session.completedAt ?? projection.generatedAt
             )
         }
+    }
+
+    private func synchronizeArchived(_ session: AnchorSession) async throws {
+        if await taskRunStore.taskState(id: session.id)?.lifecycle == .archived {
+            return
+        }
+        if await taskRunStore.currentTaskRecord()?.task.id == session.id {
+            try await taskRunStore.confirmTaskEnded(
+                taskID: session.id,
+                at: session.completedAt ?? session.startedAt
+            )
+            return
+        }
+        try await taskRunStore.restoreArchivedTask(
+            AnchorTask(
+                id: session.id,
+                title: session.goal.title,
+                completionCriteria: session.goal.completionCriteria,
+                createdAt: session.startedAt,
+                lifecycle: .archived,
+                endedAt: session.completedAt ?? session.startedAt
+            )
+        )
     }
 
     private func consume(_ projection: SessionProjection) async {

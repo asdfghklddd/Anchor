@@ -309,6 +309,8 @@ public struct ReturnSummary: Codable, Hashable, Sendable {
     public var completedCount: Int?
     public var failedCount: Int?
     public var newDecisionCount: Int?
+    /// Retained only to decode older snapshots that stored a synthetic score.
+    /// New summaries use the concrete counts above instead.
     public var netChangeScore: Int?
 
     public init(
@@ -333,10 +335,6 @@ public struct ReturnSummary: Codable, Hashable, Sendable {
         self.netChangeScore = netChangeScore
     }
 
-    public var impactPercent: Int {
-        if let netChangeScore { return max(0, min(100, netChangeScore)) }
-        return changes.isEmpty ? 0 : min(100, changes.count * 10)
-    }
 }
 
 public struct AnchorNotification: Identifiable, Codable, Hashable, Sendable {

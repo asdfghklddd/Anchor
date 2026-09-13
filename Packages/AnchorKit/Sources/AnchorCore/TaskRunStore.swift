@@ -108,6 +108,24 @@ public actor TaskRunStore {
             .map(taskRecord)
     }
 
+    /// Restores an already-completed task from the replicated session archive
+    /// without disturbing a newer foreground task. This is intentionally
+    /// separate from `activate`, whose job is to move the foreground boundary.
+    public func restoreArchivedTask(_ task: AnchorTask) throws {
+        guard task.lifecycle == .archived, task.endedAt != nil else {
+            throw TaskRunStoreError.invalidArchive
+        }
+        if let existing = state.tasks.first(where: { $0.id == task.id }) {
+            guard existing.lifecycle == .archived else {
+                throw TaskRunStoreError.activeTaskConflict
+            }
+            return
+        }
+        var next = state
+        next.tasks.append(task)
+        try persist(next)
+    }
+
     /// Activates a user-created foreground task and closes any older foreground
     /// task at this new task's boundary. This also repairs an interrupted
     /// completion write without merging the two histories.

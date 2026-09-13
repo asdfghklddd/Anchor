@@ -65,6 +65,7 @@ struct HarborTopBar: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(L10n.profile)
+        .accessibilityIdentifier("topbar.profile.button")
     }
 
     private var brandBlock: some View {

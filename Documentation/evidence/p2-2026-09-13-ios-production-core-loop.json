@@ -1,0 +1,73 @@
+{
+  "recordedAt": "2026-09-13T17:28:00+08:00",
+  "worktree": "/Users/andywang/worktrees/Anchor-main-mvp",
+  "branch": "codex/ios-production-core-loop",
+  "baseline": "343344b6c842643c08da0c04abd3fbf048d76979",
+  "originMainAtStart": "343344b6c842643c08da0c04abd3fbf048d76979",
+  "formalTargetsOnly": true,
+  "validation": [
+    {
+      "kind": "swift-test",
+      "result": "passed",
+      "tests": 119,
+      "suites": 12
+    },
+    {
+      "kind": "ios-ui-test",
+      "result": "passed",
+      "tests": 3,
+      "device": "iPhone 17 Pro Simulator",
+      "os": "iOS 26.3.1",
+      "xcresult": "/tmp/anchor-ios-core-loop.CTBSqK/Logs/Test/Test-Anchor iOS-2026.09.13_17-26-31-+0800.xcresult"
+    },
+    {
+      "kind": "ios-release-build",
+      "result": "passed",
+      "signing": "disabled"
+    },
+    {
+      "kind": "macos-release-build",
+      "result": "passed",
+      "signing": "disabled"
+    },
+    {
+      "kind": "ios-ui-test-build",
+      "result": "passed",
+      "signing": "disabled"
+    },
+    {
+      "kind": "macos-ui-test-build",
+      "result": "passed",
+      "signing": "disabled",
+      "execution": "not-run-developer-mode-disabled"
+    }
+  ],
+  "verified": [
+    "additive archive decoding",
+    "deterministic task archival and foreground clearing",
+    "idempotent late archived-session event isolation and acknowledgement",
+    "offline outbox flush and bidirectional repository projection",
+    "new task isolation from archived history",
+    "explicit iOS final confirmation",
+    "detailed iOS history recovery after relaunch",
+    "source-only process percentages and no synthetic iOS aggregate percentage"
+  ],
+  "notVerified": [
+    "physical iPhone to Mac pairing",
+    "real Bonjour disconnect and recovery",
+    "speech permission and dictation",
+    "Bluetooth and local-network permission prompts",
+    "CloudKit backup, restore, and deletion",
+    "background and lock-screen behavior",
+    "provisioned signing and sandbox",
+    "macOS UI-test execution",
+    "Claude Code real source"
+  ],
+  "safety": {
+    "archivedDemoModified": false,
+    "desktopCheckoutModified": false,
+    "productionUserDataModified": false,
+    "vpnConfigurationModified": false,
+    "systemDeveloperModeModified": false
+  }
+}

@@ -157,7 +157,7 @@ public struct AnchorIOSRootView: View {
         case .history:
             HistoryView(projection: model.projection) { path.append(.historyDetail($0)) }
         case let .historyDetail(id):
-            HistoryDetailView(projection: model.projection, snapshotID: id)
+            HistoryDetailView(projection: model.projection, sessionID: id)
         case .taskManagement:
             TaskManagementView(model: model)
         case .connections:

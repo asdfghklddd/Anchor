@@ -206,10 +206,10 @@ struct LandscapeAmbientDashboard: View {
                     Divider()
                         .overlay(.white.opacity(0.3))
 
-                    Text(projection.overallProgress ?? 0, format: .percent.precision(.fractionLength(0)))
-                        .font(.title2.bold().monospacedDigit())
+                    Text(TaskStatusPresentation.text(for: projection.session))
+                        .font(.headline.bold())
                         .foregroundStyle(AnchorPalette.oceanHighlight)
-                    Text(L10n.overallProgress)
+                    Text(L10n.currentStatus)
                         .font(.headline)
                         .foregroundStyle(.white.opacity(0.62))
                 }
@@ -237,10 +237,12 @@ struct LandscapeAmbientDashboard: View {
                     }
                     Spacer(minLength: 8)
                     VStack(alignment: .trailing, spacing: 0) {
-                        Text(projection.overallProgress ?? 0, format: .percent.precision(.fractionLength(0)))
-                            .font(.title2.bold().monospacedDigit())
+                        Text(TaskStatusPresentation.text(for: projection.session))
+                            .font(.headline.bold())
                             .foregroundStyle(AnchorPalette.oceanHighlight)
-                        Text(L10n.overallProgress)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.65)
+                        Text(L10n.currentStatus)
                             .font(.caption2)
                             .foregroundStyle(.white.opacity(0.62))
                     }
@@ -392,8 +394,10 @@ struct LandscapeAmbientDashboard: View {
                     ForEach(projection.session?.processes ?? []) { process in
                         ZStack(alignment: .leading) {
                             AnchorPalette.source(process.sourceTone).opacity(0.18)
-                            AnchorPalette.source(process.sourceTone)
-                                .frame(width: proxy.size.width / CGFloat(processCount) * (process.progress ?? 0))
+                            if let progress = process.progress {
+                                AnchorPalette.source(process.sourceTone)
+                                    .frame(width: proxy.size.width / CGFloat(processCount) * progress)
+                            }
                         }
                         .frame(maxWidth: .infinity)
                     }

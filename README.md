@@ -16,6 +16,10 @@ human decisions, and the context needed to return after an interruption.
   components, and a complete English/Simplified Chinese String Catalog.
 - `AnchorIOSFeatures`: setup, portrait dashboard, landscape Ambient workspace,
   decisions, anchor notes, handoff/away/return, history, management, and settings.
+- The production iPhone loop has an explicit final confirmation boundary:
+  completing a task clears the foreground while retaining detailed local task
+  history across relaunches. Task-level UI uses observable states instead of an
+  averaged progress percentage.
 - `AnchorMacFeatures`: menu bar status plus a native detail window using
   `NavigationSplitView`.
 - `AnchorTransport`: Bonjour discovery, one-time-code key agreement, Keychain

@@ -114,8 +114,10 @@ struct ProcessCard: View {
 
     private var metricContent: some View {
         HStack(alignment: .bottom, spacing: 7) {
-            ProcessMiniVisual(tone: process.sourceTone, tint: tint, progress: process.progress ?? 0)
-                .frame(maxWidth: 58, alignment: .leading)
+            if let progress = process.progress {
+                ProcessMiniVisual(tone: process.sourceTone, tint: tint, progress: progress)
+                    .frame(maxWidth: 58, alignment: .leading)
+            }
             VStack(alignment: .trailing, spacing: 0) {
                 Text(process.metric)
                     .font(.title.bold().monospacedDigit())

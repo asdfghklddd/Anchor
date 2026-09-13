@@ -17,6 +17,8 @@ struct LocalSessionRepositoryTests {
         )
         let firstID = try #require(await repository.currentProjection().session?.id)
         try await repository.send(.completeSession)
+        #expect(await repository.currentProjection().session == nil)
+        #expect(await repository.currentProjection().archivedSessions.map(\.id) == [firstID])
         try await repository.send(
             .createSession(
                 goal: AnchorGoal(title: "Second", completionCriteria: "Done again"),
@@ -25,10 +27,12 @@ struct LocalSessionRepositoryTests {
         )
         let secondID = try #require(await repository.currentProjection().session?.id)
         #expect(secondID != firstID)
+        #expect(await repository.currentProjection().archivedSessions.map(\.id) == [firstID])
 
         let restored = LocalSessionRepository(storageURL: storage, sourceID: UUID())
         #expect(await restored.currentProjection().session?.id == secondID)
         #expect(await restored.currentProjection().session?.goal.title == "Second")
+        #expect(await restored.currentProjection().archivedSessions.map(\.id) == [firstID])
     }
 
     @Test("User-created empty workspace state survives relaunch")
@@ -114,6 +118,40 @@ struct LocalSessionRepositoryTests {
         #expect(await receiver.pendingEvents().isEmpty)
         try? FileManager.default.removeItem(at: senderStorage)
         try? FileManager.default.removeItem(at: receiverStorage)
+    }
+
+    @Test("A late event is consumed without re-entering an archived task")
+    func archivedSessionConsumesLateRemoteEvents() async throws {
+        let storage = URL.temporaryDirectory.appending(path: "anchor-archived-boundary-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: storage) }
+        let repository = LocalSessionRepository(storageURL: storage, sourceID: UUID())
+        try await repository.send(
+            .createSession(
+                goal: AnchorGoal(title: "Finished", completionCriteria: "Preserved"),
+                processes: []
+            )
+        )
+        let sessionID = try #require(await repository.currentProjection().session?.id)
+        try await repository.send(.completeSession)
+        let lateNote = AnchorNote(
+            sessionID: sessionID,
+            text: "Must not re-enter current work",
+            createdAt: .now
+        )
+        let lateEnvelope = EventEnvelope(
+            sessionID: sessionID,
+            sourceID: UUID(),
+            sequence: 1,
+            type: EventEnvelope.operationType,
+            payload: try JSONEncoder.anchor.encode(SessionOperation.addNote(lateNote))
+        )
+
+        let before = await repository.currentProjection()
+        try await repository.applyRemote(lateEnvelope)
+        try await repository.applyRemote(lateEnvelope)
+        #expect(await repository.currentProjection() == before)
+        #expect(await repository.currentProjection().session == nil)
+        #expect(await repository.currentProjection().archivedSessions.first?.notes.isEmpty == true)
     }
 
     @Test("A v1 projection is migrated without losing the local session")

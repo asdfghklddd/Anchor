@@ -6,6 +6,7 @@ import SwiftUI
 struct HarborMissionCard: View {
     let session: AnchorSession?
     let onEdit: () -> Void
+    let onFinish: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -48,16 +49,21 @@ struct HarborMissionCard: View {
                         .accessibilityIdentifier("goal.title")
                 }
                 Spacer(minLength: 0)
-                Button(action: onEdit) {
-                    Image(systemName: session == nil ? "plus" : "pencil")
-                        .font(.subheadline.bold())
-                        .foregroundStyle(.white)
-                        .frame(width: 32, height: 32)
-                        .background(.white.opacity(0.12), in: .rect(cornerRadius: 14, style: .continuous))
-                        .frame(width: 44, height: 44)
+                HStack(spacing: 0) {
+                    Button(action: onEdit) {
+                        missionActionIcon(session == nil ? "plus" : "pencil")
+                    }
+                    .accessibilityLabel(session == nil ? L10n.establishAnchor : L10n.editGoal)
+                    .accessibilityIdentifier("goal.edit.button")
+
+                    if session != nil {
+                        Button(action: onFinish) {
+                            missionActionIcon("checkmark")
+                        }
+                        .accessibilityLabel(L10n.finish)
+                        .accessibilityIdentifier("mission.finish.button")
+                    }
                 }
-                .accessibilityLabel(session == nil ? L10n.establishAnchor : L10n.editGoal)
-                .accessibilityIdentifier("goal.edit.button")
             }
 
             Text(goalNote)
@@ -71,9 +77,10 @@ struct HarborMissionCard: View {
                     .font(.caption.bold())
                     .foregroundStyle(AnchorPalette.oceanHighlight)
                 Spacer(minLength: 6)
-                Text(overallProgress, format: .percent.precision(.fractionLength(0)))
-                    .font(.title.bold().monospacedDigit())
+                Text(taskStatus)
+                    .font(.headline.bold())
                     .foregroundStyle(AnchorPalette.warmYellow)
+                    .multilineTextAlignment(.trailing)
             }
 
             HStack(spacing: AnchorSpacing.medium) {
@@ -113,40 +120,57 @@ struct HarborMissionCard: View {
                             size: 19
                         )
                         .accessibilityIdentifier("mission.flow.source")
-                        GeometryReader { proxy in
-                            Capsule()
-                                .fill(.white.opacity(0.08))
-                                .overlay(alignment: .leading) {
-                                    Capsule()
-                                        .fill(AnchorPalette.source(process.sourceTone))
-                                        .frame(width: proxy.size.width * (process.progress ?? 0))
-                                }
+                        if let progress = process.progress {
+                            GeometryReader { proxy in
+                                Capsule()
+                                    .fill(.white.opacity(0.08))
+                                    .overlay(alignment: .leading) {
+                                        Capsule()
+                                            .fill(AnchorPalette.source(process.sourceTone))
+                                            .frame(width: proxy.size.width * progress)
+                                    }
+                            }
+                            .frame(height: 8)
+                            Text(progress, format: .percent.precision(.fractionLength(0)))
+                                .font(.caption2.monospacedDigit())
+                                .foregroundStyle(.white.opacity(0.92))
+                                .frame(width: 29, alignment: .trailing)
+                                .accessibilityIdentifier("mission.flow.progress")
+                        } else {
+                            Text(L10n.compactStatus(process.status))
+                                .font(.caption2.bold())
+                                .foregroundStyle(.white.opacity(0.92))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                                .accessibilityIdentifier("mission.flow.status")
                         }
-                        .frame(height: 8)
-                        Text(process.progress ?? 0, format: .percent.precision(.fractionLength(0)))
-                            .font(.caption2.monospacedDigit())
-                            .foregroundStyle(.white.opacity(0.92))
-                            .frame(width: 29, alignment: .trailing)
-                            .accessibilityIdentifier("mission.flow.progress")
                     }
                 }
             }
         }
         .accessibilityElement(children: .combine)
         .accessibilityRespondsToUserInteraction(false)
-        .accessibilityLabel(L10n.overallProgress)
-        .accessibilityValue(Text(overallProgress, format: .percent.precision(.fractionLength(0))))
+        .accessibilityLabel(L10n.currentStatus)
+        .accessibilityValue(taskStatus)
         .accessibilityIdentifier("mission.flow.summary")
+    }
+
+    private func missionActionIcon(_ symbol: String) -> some View {
+        Image(systemName: symbol)
+            .font(.subheadline.bold())
+            .foregroundStyle(.white)
+            .frame(width: 32, height: 32)
+            .background(.white.opacity(0.12), in: .rect(cornerRadius: 14, style: .continuous))
+            .frame(width: 44, height: 44)
     }
 
     private var runningCount: Int {
         processes.lazy.filter { $0.status == .running }.count
     }
 
-    private var overallProgress: Double {
-        let values = processes.compactMap(\.progress)
-        guard !values.isEmpty else { return 0 }
-        return values.reduce(0, +) / Double(values.count)
+    private var taskStatus: String {
+        TaskStatusPresentation.text(for: session)
     }
 
     private var goalNote: String {

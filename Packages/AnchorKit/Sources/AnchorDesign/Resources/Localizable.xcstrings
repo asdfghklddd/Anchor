@@ -1138,6 +1138,22 @@
         }
       }
     },
+    "disconnected.create.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create this task now. Anchor will sync it when your Mac reconnects."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "现在可以先创建任务；Mac 重新连接后，Anchor 会自动同步。"
+          }
+        }
+      }
+    },
     "Display accommodations" : {
 
     },

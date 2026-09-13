@@ -21,9 +21,12 @@ struct InsightsView: View {
                             .font(.title2.bold())
                         Text(projection.session?.goal.note ?? "")
                             .foregroundStyle(AnchorPalette.secondaryInk)
-                        if let progress = projection.overallProgress {
-                            AnchorProgress(value: progress, tint: AnchorPalette.periwinkle)
-                        }
+                        Label(
+                            TaskStatusPresentation.text(for: projection.session),
+                            systemImage: "waveform.path.ecg"
+                        )
+                        .font(.subheadline.bold())
+                        .foregroundStyle(AnchorPalette.secondaryInk)
                     }
                 }
                 Text(L10n.activity).font(.title2.bold())
@@ -213,7 +216,7 @@ struct ProfileView: View {
                 HStack(spacing: 0) {
                     sessionMetric(L10n.minuteCount(focusMinutes), label: L10n.focusTime)
                     Divider().padding(.vertical, 6)
-                    sessionMetric(projection.overallProgress?.formatted(.percent.precision(.fractionLength(0))) ?? "—", label: L10n.overallProgress)
+                    sessionMetric(TaskStatusPresentation.text(for: projection.session), label: L10n.currentStatus)
                     Divider().padding(.vertical, 6)
                     sessionMetric("\(completedCount)/\(processCount)", label: L10n.completedWork)
                 }
@@ -230,11 +233,16 @@ struct ProfileView: View {
             .shadow(color: AnchorPalette.deepSea.opacity(0.08), radius: 12, y: 7)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("profile.session.card")
     }
 
     private func sessionMetric(_ value: String, label: String) -> some View {
         VStack(spacing: 2) {
-            Text(value).font(.title3.bold().monospacedDigit()).foregroundStyle(AnchorPalette.ink).lineLimit(1)
+            Text(value)
+                .font(.title3.bold().monospacedDigit())
+                .foregroundStyle(AnchorPalette.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.65)
             Text(label).font(.caption2).foregroundStyle(AnchorPalette.secondaryInk).lineLimit(1)
         }
         .frame(maxWidth: .infinity)
@@ -254,6 +262,7 @@ struct ProfileView: View {
                 Spacer()
                 Button(L10n.history) { onRoute(.history) }
                     .font(.caption.bold())
+                    .accessibilityIdentifier("profile.history.button")
             }
 
             VStack(spacing: 0) {
@@ -386,49 +395,47 @@ struct HistoryView: View {
 
     var body: some View {
         List {
-            if let session = projection.session {
+            ForEach(projection.archivedSessions) { session in
                 Button { onOpen(session.id) } label: {
-                    HistoryRow(
-                        title: session.goal.title,
-                        date: session.startedAt,
-                        status: session.status
-                    )
+                    HistoryRow(session: session)
                 }
                 .buttonStyle(.plain)
-                ForEach(session.snapshots) { snapshot in
-                    Button { onOpen(snapshot.id) } label: {
-                        HistoryRow(title: snapshot.goalTitle, date: snapshot.createdAt, status: .active)
-                    }
-                    .buttonStyle(.plain)
-                }
+                .accessibilityIdentifier("history.row.\(session.id.uuidString)")
             }
         }
         .overlay {
-            if projection.session == nil {
-                ContentUnavailableView(L10n.emptyTitle, systemImage: "clock")
+            if projection.archivedSessions.isEmpty {
+                ContentUnavailableView(
+                    L10n.history,
+                    systemImage: "clock",
+                    description: Text(L10n.historyEmptyDetail)
+                )
             }
         }
         .navigationTitle(L10n.history)
+        .accessibilityIdentifier("history.screen")
     }
 }
 
 private struct HistoryRow: View {
-    let title: String
-    let date: Date
-    let status: SessionStatus
+    let session: AnchorSession
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.headline)
-                Text(date, format: .dateTime.month().day().hour().minute())
+                Text(session.goal.title).font(.headline)
+                Text(session.goal.completionCriteria)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                Text(session.completedAt ?? session.startedAt, format: .dateTime.month().day().hour().minute())
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Image(systemName: status == .completed ? "checkmark.seal.fill" : "scope")
-                .foregroundStyle(status == .completed ? AnchorPalette.seafoam : AnchorPalette.coral)
-                .accessibilityLabel(status == .completed ? L10n.completed : L10n.workspace)
+            Image(systemName: "checkmark.seal.fill")
+                .foregroundStyle(AnchorPalette.seafoam)
+                .accessibilityLabel(L10n.completed)
         }
         .padding(.vertical, AnchorSpacing.xSmall)
     }
@@ -436,7 +443,7 @@ private struct HistoryRow: View {
 
 struct HistoryDetailView: View {
     let projection: SessionProjection
-    let snapshotID: UUID
+    let sessionID: UUID
 
     var body: some View {
         ScrollView {
@@ -444,24 +451,34 @@ struct HistoryDetailView: View {
                 AnchorCard(tint: AnchorPalette.seafoam) {
                     VStack(alignment: .leading, spacing: AnchorSpacing.small) {
                         Text(L10n.currentGoal).font(.caption.bold())
-                        Text(title).font(.title.bold())
-                        if let date {
-                            Text(date, format: .dateTime.year().month().day().hour().minute())
+                        Text(session?.goal.title ?? L10n.emptyTitle).font(.title.bold())
+                        if let session {
+                            Text(session.goal.completionCriteria)
+                                .foregroundStyle(AnchorPalette.secondaryInk)
+                            Text(session.completedAt ?? session.startedAt, format: .dateTime.year().month().day().hour().minute())
                                 .foregroundStyle(AnchorPalette.secondaryInk)
                         }
                     }
                 }
-                Text(L10n.processes).font(.title2.bold())
-                ForEach(displayedProcesses) { process in
-                    ProcessCard(process: process, isRemote: false)
+                if let session, !session.processes.isEmpty {
+                    Text(L10n.processes).font(.title2.bold())
+                    ForEach(session.processes) { process in
+                        ProcessCard(process: process, isRemote: false)
+                    }
                 }
-                if !displayedNotes.isEmpty {
+                if let session, !session.notes.isEmpty {
                     Text(L10n.notes).font(.title2.bold())
-                    ForEach(displayedNotes, id: \.self) { note in
-                        Text(note)
+                    ForEach(session.notes) { note in
+                        Text(note.text)
                             .padding(AnchorSpacing.medium)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .background(AnchorPalette.surface, in: .rect(cornerRadius: 18))
+                    }
+                }
+                if let session, !session.timeline.isEmpty {
+                    Text(L10n.activity).font(.title2.bold())
+                    ForEach(session.timeline) { event in
+                        EventRow(event: event)
                     }
                 }
             }
@@ -471,26 +488,10 @@ struct HistoryDetailView: View {
         }
         .background(AnchorPalette.paper)
         .navigationTitle(L10n.sessionSummary)
+        .accessibilityIdentifier("history.detail.screen")
     }
 
-    private var snapshot: ContextSnapshot? {
-        projection.session?.snapshots.first { $0.id == snapshotID }
-    }
-    private var title: String {
-        snapshot?.goalTitle ?? projection.session?.goal.title ?? L10n.emptyTitle
-    }
-    private var date: Date? {
-        snapshot?.createdAt ?? projection.session?.startedAt
-    }
-    private var displayedProcesses: [AnchorProcess] {
-        snapshot?.processes ?? projection.session?.processes ?? []
-    }
-    private var displayedNotes: [String] {
-        if let snapshot {
-            return snapshot.latestNote.map { [$0] } ?? []
-        }
-        return projection.session?.notes.map(\.text) ?? []
-    }
+    private var session: AnchorSession? { projection.archivedSession(id: sessionID) }
 }
 
 struct TaskManagementView: View {
@@ -559,6 +560,7 @@ struct TaskManagementView: View {
 struct FinishSessionView: View {
     let model: AnchorSessionModel
     @Environment(\.dismiss) private var dismiss
+    @State private var showingCompletionConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -575,26 +577,15 @@ struct FinishSessionView: View {
                             Label(L10n.decisionCount(model.projection.session?.decisions.filter { $0.status == .resolved }.count ?? 0), systemImage: "checkmark.bubble")
                         }
                     }
-                    if model.projection.session?.status == .completed {
-                        Label(L10n.completed, systemImage: "checkmark.seal.fill")
-                            .font(.title2.bold())
-                            .foregroundStyle(AnchorPalette.ink)
-                        Button(L10n.resume) {
-                            Task {
-                                await model.send(.resumeSession)
-                                dismiss()
-                            }
-                        }
-                        .buttonStyle(AnchorPrimaryButtonStyle())
-                    } else {
-                        Button(L10n.completeSession) {
-                            Task {
-                                await model.send(.completeSession)
-                                dismiss()
-                            }
-                        }
-                        .buttonStyle(AnchorPrimaryButtonStyle())
+                    Text(L10n.finishConfirmDetail)
+                        .font(.subheadline)
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button(L10n.completeSession) {
+                        showingCompletionConfirmation = true
                     }
+                    .buttonStyle(AnchorPrimaryButtonStyle())
+                    .accessibilityIdentifier("session.finish.button")
                 }
                 .padding(AnchorSpacing.large)
                 .frame(maxWidth: 680)
@@ -606,6 +597,22 @@ struct FinishSessionView: View {
                     Button(L10n.close) { dismiss() }
                 }
             }
+        }
+        .confirmationDialog(
+            L10n.finishConfirmTitle,
+            isPresented: $showingCompletionConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.completeSession) {
+                Task {
+                    guard await model.send(.completeSession) else { return }
+                    dismiss()
+                }
+            }
+            .accessibilityIdentifier("session.finish.confirm")
+            Button(L10n.cancel, role: .cancel) { }
+        } message: {
+            Text(L10n.finishConfirmDetail)
         }
     }
 }

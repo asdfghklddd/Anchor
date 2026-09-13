@@ -197,7 +197,7 @@ struct AnchorLinkCodecTests {
         #expect(await recorder.events == [firstEvent, secondEvent])
     }
 
-    @Test("A paired client and server replicate durable operations in both directions")
+    @Test("The production phone-to-Mac task loop preserves status and history")
     func bidirectionalRepositoryRoundTrip() async throws {
         let suffix = UUID().uuidString
         let serverService = "com.andywang.anchor.tests.server.repo.\(suffix)"
@@ -237,6 +237,16 @@ struct AnchorLinkCodecTests {
             try await clientRepository.applyRemote(event)
         }
 
+        // The phone owns task creation even while the Mac is offline. The
+        // durable event remains queued until the authenticated link returns.
+        try await clientRepository.send(
+            .createSession(
+                goal: AnchorGoal(title: "Phone goal", completionCriteria: "Synced"),
+                processes: []
+            )
+        )
+        #expect(await clientBase.pendingEvents().count == 1)
+
         try server.start()
         defer { server.stop() }
         client.startDiscovery()
@@ -244,19 +254,85 @@ struct AnchorLinkCodecTests {
         try await client.pair(
             using: try #require(await server.currentPairingCode())
         )
-
-        try await clientRepository.send(
-            .createSession(
-                goal: AnchorGoal(title: "Phone goal", completionCriteria: "Synced"),
-                processes: []
-            )
-        )
+        await clientRepository.flushPendingEvents()
         #expect(await clientBase.pendingEvents().isEmpty)
         #expect(await serverBase.currentProjection().session?.goal.title == "Phone goal")
 
         try await serverRepository.send(.addNote("Mac note"))
         #expect(await serverBase.pendingEvents().isEmpty)
         #expect(await clientBase.currentProjection().session?.notes.first?.text == "Mac note")
+
+        let sessionID = try #require(await serverBase.currentProjection().session?.id)
+        let sourceID = UUID()
+        let processID = UUID()
+        let runningAt = Date.now
+        let runningProcess = AnchorProcess(
+            id: processID,
+            sessionID: sessionID,
+            sourceID: sourceID,
+            externalID: "codex-session",
+            sourceName: "Codex",
+            sourceSymbol: "C",
+            sourceTone: "cyan",
+            title: "Codex conversation",
+            status: .running,
+            updatedAt: runningAt
+        )
+        try await serverRepository.send(
+            .observeProcess(
+                ProcessObservation(
+                    process: runningProcess,
+                    event: ProcessEvent(
+                        sessionID: sessionID,
+                        processID: processID,
+                        sourceID: sourceID,
+                        externalID: "codex-turn-1",
+                        occurredAt: runningAt,
+                        kind: .progress,
+                        title: "Codex started"
+                    )
+                )
+            )
+        )
+        #expect(await clientBase.currentProjection().session?.processes.first?.status == .running)
+
+        let completedAt = runningAt.addingTimeInterval(1)
+        var completedProcess = runningProcess
+        completedProcess.status = .completed
+        completedProcess.updatedAt = completedAt
+        try await serverRepository.send(
+            .observeProcess(
+                ProcessObservation(
+                    process: completedProcess,
+                    event: ProcessEvent(
+                        sessionID: sessionID,
+                        processID: processID,
+                        sourceID: sourceID,
+                        externalID: "codex-turn-1",
+                        occurredAt: completedAt,
+                        kind: .completed,
+                        title: "Codex completed"
+                    )
+                )
+            )
+        )
+        #expect(await clientBase.currentProjection().session?.processes.first?.status == .completed)
+
+        try await clientRepository.send(.completeSession)
+        #expect(await clientBase.currentProjection().session == nil)
+        #expect(await serverBase.currentProjection().session == nil)
+        #expect(await clientBase.currentProjection().archivedSessions.first?.id == sessionID)
+        #expect(await serverBase.currentProjection().archivedSessions.first?.id == sessionID)
+        #expect(await clientBase.currentProjection().archivedSessions.first?.timeline.count == 2)
+
+        try await clientRepository.send(
+            .createSession(
+                goal: AnchorGoal(title: "Next phone goal", completionCriteria: "Separated"),
+                processes: []
+            )
+        )
+        #expect(await serverBase.currentProjection().session?.goal.title == "Next phone goal")
+        #expect(await serverBase.currentProjection().archivedSessions.first?.id == sessionID)
     }
 
     @Test("A paired iPhone can request the Mac's current process snapshot")

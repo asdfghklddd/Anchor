@@ -175,6 +175,7 @@ struct ProfileDetailSheet: View {
                                 Button(L10n.finish, action: onFinish)
                                     .buttonStyle(.bordered)
                                     .tint(AnchorPalette.link)
+                                    .accessibilityIdentifier("profile.session.finish.button")
                             }
                             .frame(maxWidth: .infinity)
                         } else {
@@ -274,7 +275,7 @@ struct ProfileDetailSheet: View {
         HStack(spacing: 0) {
             profileMetric(L10n.minuteCount(focusMinutes), label: L10n.focusTime)
             Divider().padding(.vertical, 8)
-            profileMetric(projection.overallProgress?.formatted(.percent.precision(.fractionLength(0))) ?? "—", label: L10n.overallProgress)
+            profileMetric(TaskStatusPresentation.text(for: projection.session), label: L10n.currentStatus)
             Divider().padding(.vertical, 8)
             profileMetric("\(completedCount)/\(processCount)", label: L10n.completedWork)
         }
@@ -287,6 +288,8 @@ struct ProfileDetailSheet: View {
             Text(value)
                 .font(.title3.bold().monospacedDigit())
                 .foregroundStyle(AnchorPalette.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.65)
             Text(label)
                 .font(.caption2)
                 .foregroundStyle(AnchorPalette.secondaryInk)
@@ -315,11 +318,17 @@ struct ProfileDetailSheet: View {
                         }
                         Spacer(minLength: 4)
                         VStack(alignment: .trailing, spacing: 4) {
-                            Text(process.progress ?? 0, format: .percent.precision(.fractionLength(0)))
-                                .font(.caption.bold().monospacedDigit())
-                                .foregroundStyle(AnchorPalette.ink)
-                            AnchorProgress(value: process.progress ?? 0, tint: AnchorPalette.source(process.sourceTone))
-                                .frame(width: 64)
+                            if let progress = process.progress {
+                                Text(progress, format: .percent.precision(.fractionLength(0)))
+                                    .font(.caption.bold().monospacedDigit())
+                                    .foregroundStyle(AnchorPalette.ink)
+                                AnchorProgress(value: progress, tint: AnchorPalette.source(process.sourceTone))
+                                    .frame(width: 64)
+                            } else {
+                                Text(L10n.compactStatus(process.status))
+                                    .font(.caption.bold())
+                                    .foregroundStyle(AnchorPalette.secondaryInk)
+                            }
                         }
                     }
                     .padding(.vertical, 10)
@@ -471,7 +480,7 @@ private extension ProfileDetailKind {
         case .focus: L10n.minuteCount(max(0, Int(Date.now.timeIntervalSince(projection.session?.startedAt ?? .now) / 60)))
         case .contexts: "\((projection.session?.notes.count ?? 0) + (projection.session?.snapshots.count ?? 0))"
         case .anchors: "\(projection.session?.processes.filter { $0.status == .completed }.count ?? 0)"
-        case .session, .returnMemory: projection.overallProgress?.formatted(.percent.precision(.fractionLength(0))) ?? "—"
+        case .session, .returnMemory: TaskStatusPresentation.text(for: projection.session)
         case .decisionTrace: projection.openDecisions.isEmpty ? "✓" : "1"
         case .contextSnapshot: "\(projection.session?.processes.count ?? 0)/\(projection.session?.processes.count ?? 0)"
         }

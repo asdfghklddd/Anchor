@@ -265,22 +265,32 @@ struct AwayView: View {
                         HStack(spacing: 6) {
                             SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 20)
 
-                            GeometryReader { proxy in
-                                Capsule()
-                                    .fill(.white.opacity(0.11))
-                                    .overlay(alignment: .leading) {
-                                        Capsule()
-                                            .fill(AnchorPalette.cyan)
-                                            .frame(width: proxy.size.width * (process.progress ?? 0))
-                                    }
+                            if let progress = process.progress {
+                                GeometryReader { proxy in
+                                    Capsule()
+                                        .fill(.white.opacity(0.11))
+                                        .overlay(alignment: .leading) {
+                                            Capsule()
+                                                .fill(AnchorPalette.cyan)
+                                                .frame(width: proxy.size.width * progress)
+                                        }
+                                }
+                                .frame(height: 4)
+                            } else {
+                                Text(L10n.compactStatus(process.status))
+                                    .font(.caption2.bold())
+                                    .foregroundStyle(.white.opacity(0.86))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.75)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
                             }
-                            .frame(height: 4)
                         }
                         .frame(maxWidth: .infinity, minHeight: 20, alignment: .leading)
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel("\(process.sourceName), \(L10n.taskProgress)")
                         .accessibilityValue(
-                            (process.progress ?? 0).formatted(.percent.precision(.fractionLength(0)))
+                            process.progress?.formatted(.percent.precision(.fractionLength(0)))
+                                ?? L10n.status(process.status)
                         )
                         .accessibilityIdentifier("away.summary.progress")
                     }
@@ -550,18 +560,18 @@ struct ReturnView: View {
     private var impactCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(L10n.returnImpact)
+                Text(L10n.returnChanges)
                     .font(.caption.bold())
                     .foregroundStyle(AnchorPalette.mintInk)
                 Spacer()
-                Text("+\(impactPercent)%")
+                Text("\(changes.count)")
                     .font(.caption.bold().monospacedDigit())
                     .foregroundStyle(.white)
                     .padding(.horizontal, 7)
                     .padding(.vertical, 3)
                     .background(AnchorPalette.mintInk, in: .capsule)
             }
-            Text(L10n.returnProgress(impactPercent))
+            Text(L10n.returnChangesSummary(changes.count))
                 .font(.headline.bold())
                 .foregroundStyle(AnchorPalette.ink)
             Text(recommendedProcess?.detail ?? L10n.returnDetail)
@@ -716,10 +726,6 @@ struct ReturnView: View {
 
     private var changes: [ReturnChange] {
         projection.session?.returnSummary?.changes ?? []
-    }
-
-    private var impactPercent: Int {
-        projection.session?.returnSummary?.impactPercent ?? 0
     }
 
     private var runningCount: Int {

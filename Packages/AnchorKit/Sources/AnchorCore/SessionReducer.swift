@@ -20,6 +20,9 @@ public enum SessionReducer {
                existing.status != .archived {
                 return result
             }
+            if let existing = result.session {
+                result.archive(existing)
+            }
             result.session = AnchorSession(
                 goal: goal,
                 status: .active,
@@ -154,7 +157,12 @@ public enum SessionReducer {
             var merged = remoteSession
             merged.processedEventIDs.formUnion(result.session?.processedEventIDs ?? [])
             merged.processedEventIDs.insert(envelope.id)
-            result.session = merged
+            if merged.status == .completed || merged.status == .archived {
+                result.archive(merged)
+                result.session = nil
+            } else {
+                result.session = merged
+            }
             result.dataObservedAt = envelope.timestamp
 
         case let .updatePresence(presence, date):
@@ -203,16 +211,6 @@ public enum SessionReducer {
                     }.count
                     let failedCount = changes.filter { $0.kind == .failed }.count
                     let newDecisionCount = changes.filter { $0.kind == .decisionRequired }.count
-                    let impact = min(
-                        100,
-                        max(
-                            0,
-                            completedCount * 25
-                                + newDecisionCount * 15
-                                + changes.filter { $0.kind == .progress }.count * 5
-                                - failedCount * 20
-                        )
-                    )
                     session.returnSummary = ReturnSummary(
                         awaySince: awaySince,
                         generatedAt: date,
@@ -221,8 +219,7 @@ public enum SessionReducer {
                         elapsedSeconds: max(0, date.timeIntervalSince(awaySince)),
                         completedCount: completedCount,
                         failedCount: failedCount,
-                        newDecisionCount: newDecisionCount,
-                        netChangeScore: impact
+                        newDecisionCount: newDecisionCount
                     )
                 }
                 if previous != presence {
@@ -258,11 +255,14 @@ public enum SessionReducer {
             }
 
         case .completeSession:
-            try result.withSession { session in
-                session.status = .completed
-                session.completedAt = now
-                session.snapshots.insert(session.makeSnapshot(at: now), at: 0)
+            guard var session = result.session else {
+                throw SessionRepositoryError.noActiveSession
             }
+            session.status = .completed
+            session.completedAt = now
+            session.snapshots.insert(session.makeSnapshot(at: now), at: 0)
+            result.archive(session)
+            result.session = nil
 
         case .resumeSession:
             try result.withSession { session in
@@ -293,6 +293,9 @@ public enum SessionReducer {
                existing.status != .completed,
                existing.status != .archived {
                 return result
+            }
+            if let existing = result.session, existing.id != session.id {
+                result.archive(existing)
             }
             result.session = session
             result.dataObservedAt = operationDate
@@ -493,16 +496,6 @@ public enum SessionReducer {
                     }.count
                     let failedCount = changes.filter { $0.kind == .failed }.count
                     let newDecisionCount = changes.filter { $0.kind == .decisionRequired }.count
-                    let impact = min(
-                        100,
-                        max(
-                            0,
-                            completedCount * 25
-                                + newDecisionCount * 15
-                                + changes.filter { $0.kind == .progress }.count * 5
-                                - failedCount * 20
-                        )
-                    )
                     session.returnSummary = ReturnSummary(
                         awaySince: awaySince,
                         generatedAt: at,
@@ -511,8 +504,7 @@ public enum SessionReducer {
                         elapsedSeconds: max(0, at.timeIntervalSince(awaySince)),
                         completedCount: completedCount,
                         failedCount: failedCount,
-                        newDecisionCount: newDecisionCount,
-                        netChangeScore: impact
+                        newDecisionCount: newDecisionCount
                     )
                 }
                 if previous != status {
@@ -535,11 +527,14 @@ public enum SessionReducer {
             }
 
         case let .completeSession(at):
-            try result.withSession { session in
-                session.status = .completed
-                session.completedAt = at
-                session.snapshots.insert(session.makeSnapshot(at: at), at: 0)
+            guard var session = result.session else {
+                throw SessionRepositoryError.noActiveSession
             }
+            session.status = .completed
+            session.completedAt = at
+            session.snapshots.insert(session.makeSnapshot(at: at), at: 0)
+            result.archive(session)
+            result.session = nil
 
         case .resumeSession:
             try result.withSession { session in

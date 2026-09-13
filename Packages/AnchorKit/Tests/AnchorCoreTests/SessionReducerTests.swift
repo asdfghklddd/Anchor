@@ -4,6 +4,29 @@ import Testing
 
 @Suite("Session reducer")
 struct SessionReducerTests {
+    @Test("Older projections decode with an empty task archive")
+    func archivedSessionsAreAdditivelyCompatible() throws {
+        let projection = SessionProjection(
+            session: AnchorSession(
+                goal: AnchorGoal(title: "Legacy", completionCriteria: "Still readable")
+            )
+        )
+        let encoded = try JSONEncoder.anchor.encode(projection)
+        var object = try #require(
+            JSONSerialization.jsonObject(with: encoded) as? [String: Any]
+        )
+        object.removeValue(forKey: "archivedSessions")
+        let legacyPayload = try JSONSerialization.data(withJSONObject: object)
+
+        let decoded = try JSONDecoder.anchor.decode(
+            SessionProjection.self,
+            from: legacyPayload
+        )
+
+        #expect(decoded.session?.goal.title == "Legacy")
+        #expect(decoded.archivedSessions.isEmpty)
+    }
+
     @Test("A completed session can leave the foreground for a new task")
     func completedSessionCanBeReplaced() throws {
         let first = AnchorSession(
@@ -23,6 +46,40 @@ struct SessionReducerTests {
         #expect(result.session?.goal == nextGoal)
         #expect(result.session?.status == .active)
         #expect(result.session?.startedAt == Date(timeIntervalSince1970: 30))
+        #expect(result.archivedSessions.map(\.id) == [first.id])
+    }
+
+    @Test("Final confirmation removes the task from current work and preserves its details")
+    func completionArchivesTheForegroundSession() throws {
+        let completedAt = Date(timeIntervalSince1970: 30)
+        let process = AnchorProcess(
+            sourceName: "Codex",
+            sourceSymbol: "C",
+            sourceTone: "cyan",
+            title: "Production conversation",
+            status: .completed
+        )
+        let note = AnchorNote(text: "Keep the validation evidence")
+        let session = AnchorSession(
+            goal: AnchorGoal(title: "Ship iOS", completionCriteria: "Core loop passes"),
+            processes: [process],
+            notes: [note]
+        )
+
+        let result = try SessionReducer.reduce(
+            SessionProjection(session: session),
+            command: .completeSession,
+            now: completedAt
+        )
+
+        #expect(result.session == nil)
+        let archived = try #require(result.archivedSessions.first)
+        #expect(archived.id == session.id)
+        #expect(archived.status == .completed)
+        #expect(archived.completedAt == completedAt)
+        #expect(archived.processes == [process])
+        #expect(archived.notes == [note])
+        #expect(archived.snapshots.count == 1)
     }
 
     @Test("Replayed event envelope is idempotent")
@@ -286,7 +343,7 @@ struct SessionReducerTests {
         #expect(summary.newDecisionCount == 1)
         #expect(summary.failedCount == 0)
         #expect(summary.recommendedProcessID == secondProcess.id)
-        #expect(summary.impactPercent == 40)
+        #expect(summary.netChangeScore == nil)
         #expect(summary.changes.map(\.title) == ["A decision is waiting", "Completed while away"])
     }
 }

@@ -417,6 +417,10 @@ public enum L10n {
         "disconnected.detail",
         default: "The Mac is offline. Work already synced remains available."
     )
+    public static let disconnectedCreateDetail = AnchorStrings.value(
+        "disconnected.create.detail",
+        default: "Create this task now. Anchor will sync it when your Mac reconnects."
+    )
     public static let connectionFailedDetail = AnchorStrings.value(
         "connection.failed.detail",
         default: "Anchor could not reach the Mac service. Check the local connection and try again."

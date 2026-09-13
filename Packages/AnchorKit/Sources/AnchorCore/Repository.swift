@@ -233,6 +233,12 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
             ), session.id == envelope.sessionID else {
                 throw SessionRepositoryError.malformedEvent
             }
+            if projection.archivedSessions.contains(where: { $0.id == session.id }) {
+                // A terminal task owns this identity permanently. Consume a
+                // delayed delivery as a no-op so transports can acknowledge it
+                // without reviving the task or creating a retry storm.
+                return
+            }
             if let currentSessionID = projection.session?.id,
                currentSessionID != session.id {
                 throw SessionRepositoryError.eventSessionMismatch
@@ -242,14 +248,21 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
                 remote: session,
                 envelopeTimestamp: envelope.timestamp
             )
-            let nextProjection = SessionProjection(
+            var nextProjection = SessionProjection(
                 session: mergedSession,
+                archivedSessions: projection.archivedSessions,
                 connection: projection.connection,
                 proximity: projection.proximity,
                 generatedAt: .now,
                 dataObservedAt: max(projection.dataObservedAt ?? envelope.timestamp, envelope.timestamp),
-                errorMessage: projection.errorMessage
+                errorMessage: projection.errorMessage,
+                sourceHealth: projection.sourceHealth,
+                durableSyncState: projection.durableSyncState
             )
+            if mergedSession.status == .completed || mergedSession.status == .archived {
+                nextProjection.archive(mergedSession)
+                nextProjection.session = nil
+            }
             try write(
                 baseProjection: nextProjection,
                 events: events,
@@ -298,6 +311,11 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
 
         let currentSessionID = projection.session?.id
         let operationSessionID = operation.sessionID ?? envelope.sessionID
+        if projection.archivedSessions.contains(where: { $0.id == operationSessionID }) {
+            // See the legacy projection path above: this event is safely
+            // consumed but can no longer mutate foreground or archived state.
+            return
+        }
         if let currentSessionID, currentSessionID != operationSessionID {
             throw SessionRepositoryError.eventSessionMismatch
         }

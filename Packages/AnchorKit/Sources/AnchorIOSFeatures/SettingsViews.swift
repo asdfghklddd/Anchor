@@ -58,6 +58,7 @@ struct ConnectionSettingsView: View {
         }
         .navigationTitle(L10n.connections)
         .task { displayedCode = await controller?.currentPairingCode() }
+        .accessibilityIdentifier("connections.screen")
     }
 
     private var connectionLabel: String {

@@ -26,8 +26,20 @@ struct PortraitDashboard: View {
                         .padding(.top, 10)
                         .padding(.bottom, 12)
 
-                    HarborMissionCard(session: projection.session) {
-                        onSheet(projection.session == nil ? .setup : .goal)
+                    if projection.session == nil {
+                        emptyConnectionCard
+                            .padding(.bottom, AnchorSpacing.small)
+                    }
+
+                    HarborMissionCard(
+                        session: projection.session,
+                        onEdit: { onSheet(projection.session == nil ? .setup : .goal) },
+                        onFinish: { onSheet(.finish) }
+                    )
+
+                    if isObservedWorkComplete {
+                        observedCompletionPrompt
+                            .padding(.top, AnchorSpacing.small)
                     }
 
                     HarborWaveDivider()
@@ -102,6 +114,91 @@ struct PortraitDashboard: View {
             }
         }
         .padding(.bottom, 4)
+    }
+
+    private var emptyConnectionCard: some View {
+        AnchorCard(tint: projection.connection == .connected ? AnchorPalette.seafoam : AnchorPalette.cyan) {
+            VStack(alignment: .leading, spacing: AnchorSpacing.small) {
+                Label(
+                    connectionTitle,
+                    systemImage: projection.connection == .connected
+                        ? "macbook.and.iphone"
+                        : "wifi.slash"
+                )
+                .font(.headline)
+                .foregroundStyle(AnchorPalette.ink)
+                .accessibilityIdentifier("workspace.connection.status")
+
+                Text(connectionDetail)
+                    .font(.subheadline)
+                    .foregroundStyle(AnchorPalette.secondaryInk)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button {
+                    onRoute(.connections)
+                } label: {
+                    Label(L10n.connections, systemImage: "chevron.right")
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(AnchorPalette.link)
+                .accessibilityIdentifier("workspace.connection.action")
+            }
+        }
+    }
+
+    private var connectionTitle: String {
+        switch projection.connection {
+        case .connected: L10n.macConnected
+        case .pairing: L10n.remoteSyncing
+        case .permissionDenied: L10n.permissionDenied
+        case .failed: L10n.actionFailed
+        case .disconnected, .unavailable: L10n.disconnected
+        }
+    }
+
+    private var connectionDetail: String {
+        switch projection.connection {
+        case .connected: L10n.contextSyncStable
+        case .permissionDenied: L10n.permissionDeniedDetail
+        case .failed: L10n.connectionFailedDetail
+        case .pairing: L10n.remoteSyncing
+        case .disconnected, .unavailable: L10n.disconnectedCreateDetail
+        }
+    }
+
+    private var observedCompletionPrompt: some View {
+        AnchorCard(tint: AnchorPalette.seafoam) {
+            HStack(alignment: .center, spacing: AnchorSpacing.small) {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.title2)
+                    .foregroundStyle(AnchorPalette.mintInk)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L10n.finishConfirmTitle)
+                        .font(.headline)
+                        .foregroundStyle(AnchorPalette.ink)
+                    Text(L10n.finishConfirmDetail)
+                        .font(.caption)
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: AnchorSpacing.xSmall)
+                Button(L10n.finish) { onSheet(.finish) }
+                    .buttonStyle(.borderedProminent)
+                    .tint(AnchorPalette.link)
+                    .accessibilityIdentifier("session.review-finish.button")
+            }
+        }
+        .accessibilityIdentifier("session.observed-complete.banner")
+    }
+
+    /// Only source-backed work can suggest model-side completion. Manually
+    /// named placeholders and app presence never become completion evidence.
+    private var isObservedWorkComplete: Bool {
+        guard let session = projection.session else { return false }
+        let observed = session.processes.filter { $0.sourceID != nil }
+        return !observed.isEmpty && observed.allSatisfy { $0.status == .completed }
     }
 
     private func processGrid(session: AnchorSession) -> some View {

@@ -2,6 +2,10 @@ import Foundation
 
 public struct SessionProjection: Codable, Hashable, Sendable {
     public var session: AnchorSession?
+    /// Completed user-owned tasks retained independently from the single
+    /// foreground session. Older saved projections decode this as an empty
+    /// history, so the addition remains wire- and storage-compatible.
+    public var archivedSessions: [AnchorSession]
     public var connection: ConnectionState
     public var proximity: ProximityState
     public var generatedAt: Date
@@ -14,6 +18,7 @@ public struct SessionProjection: Codable, Hashable, Sendable {
 
     public init(
         session: AnchorSession? = nil,
+        archivedSessions: [AnchorSession] = [],
         connection: ConnectionState = .unavailable,
         proximity: ProximityState = .unknown,
         generatedAt: Date = .now,
@@ -23,6 +28,7 @@ public struct SessionProjection: Codable, Hashable, Sendable {
         durableSyncState: DurableSyncState = .notConfigured
     ) {
         self.session = session
+        self.archivedSessions = archivedSessions
         self.connection = connection
         self.proximity = proximity
         self.generatedAt = generatedAt
@@ -34,6 +40,7 @@ public struct SessionProjection: Codable, Hashable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case session
+        case archivedSessions
         case connection
         case proximity
         case generatedAt
@@ -46,6 +53,10 @@ public struct SessionProjection: Codable, Hashable, Sendable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         session = try container.decodeIfPresent(AnchorSession.self, forKey: .session)
+        archivedSessions = try container.decodeIfPresent(
+            [AnchorSession].self,
+            forKey: .archivedSessions
+        ) ?? []
         connection = try container.decodeIfPresent(ConnectionState.self, forKey: .connection) ?? .unavailable
         proximity = try container.decodeIfPresent(ProximityState.self, forKey: .proximity) ?? .unknown
         generatedAt = try container.decodeIfPresent(Date.self, forKey: .generatedAt) ?? .now
@@ -62,6 +73,23 @@ public struct SessionProjection: Codable, Hashable, Sendable {
     }
 
     public static let empty = SessionProjection()
+
+    /// Inserts one terminal session by stable identity and keeps task history
+    /// in a deterministic newest-first order.
+    public mutating func archive(_ completedSession: AnchorSession) {
+        archivedSessions.removeAll { $0.id == completedSession.id }
+        archivedSessions.append(completedSession)
+        archivedSessions.sort { lhs, rhs in
+            let lhsDate = lhs.completedAt ?? lhs.startedAt
+            let rhsDate = rhs.completedAt ?? rhs.startedAt
+            if lhsDate != rhsDate { return lhsDate > rhsDate }
+            return lhs.id.uuidString < rhs.id.uuidString
+        }
+    }
+
+    public func archivedSession(id: UUID) -> AnchorSession? {
+        archivedSessions.first { $0.id == id }
+    }
 
     public var openDecisions: [Decision] {
         session?.decisions.filter { $0.status == .open } ?? []

@@ -3,12 +3,13 @@
 > Product decisions are confirmed; implementation completion requires evidence.
 
 - 建立日期：2026-09-04。
+- 最近更新：2026-09-13。
 - 产品决策状态：用户已确认本轮需求访谈总结，包括 Q37–Q39 的任务归属修正。
 - 产品名称澄清（D09）：用户所说的“本地 ChatGPT App”就是当前 `com.openai.codex` 应用，后文统一称 Codex；不额外适配独立 ChatGPT 桌面产品，Safari 长回复范围不变。
-- 工程状态：Mac Codex 本地 MVP 已达到开发者验收点并可交给用户无 iPhone 实测；完整 P0/P1 仍受 Claude、provisioned Sandbox、双设备与长期后台等范围约束，P2–P7 未整体完成。
+- 工程状态：Mac Codex 本地 MVP 已达到开发者验收点；正式 iOS 的创建、重启恢复、最终确认、前台退出和详细历史已完成模拟器与协议级闭环。真实 iPhone↔Mac、CloudKit、蓝牙后台与 Claude 仍未验收，P0–P7 均未整体完成。
 - 用途：之后每轮施工开始前阅读，结束后更新状态、证据、偏差和下一步。
 - 范围：正式版 Anchor iOS、Anchor macOS、共享包、Safari 扩展及必要 CLI 集成；不是 Demo 改造计划。
-- 当前授权：用户已于 2026-09-10 授权完成 Mac MVP 后提交并合并到本地 `main`；未授权推送、PR、发布或系统配置修改。
+- 当前授权：用户已于 2026-09-13 授权继续构建正式 iOS App；本轮使用独立 `codex/ios-production-core-loop` 分支，未授权推送、PR、合并、发布或系统配置修改。
 
 ## 0. 如何使用这份计划
 
@@ -268,9 +269,9 @@ Mac 应用生命周期／有限 AX ／来源专用事件／CLI ／Safari
 - [ ] WorkItem 与 Task 级执行／注意事项／结果三维确定性投影、重新活动代次、持久化重启读取及正式 Mac 来源页消费已实现；iPhone／同步消费与真实来源注意事项仍待完成。
 - [ ] 同会话延续不拆卡；跨 App 关联需要明确证据或用户确认。
 - [x] 去重、乱序、迟到、重启恢复、执行中断、旧任务消息隔离都有自动测试；真实来源与双设备部分仍按 A01–A10 单独验收。
-- [ ] 领域层已实现归档、新 Task 创建、旧会话新边界及中断写恢复；正式 macOS 已验证用户确认后退出当前页且重启不恢复，iPhone／双设备旅程仍待完成。
+- [ ] 领域层已实现归档、新 Task 创建、旧会话新边界及中断写恢复；正式 macOS 已验证用户确认后退出当前页且重启不恢复，正式 iOS 也已通过模拟器旅程；真实双设备旅程仍待完成。
 - [x] TaskRunStore schema v2 与 Event protocol v1 已显式版本化；无版本旧历史升级前保存逐字节恢复副本，未来 schema／Event 版本拒绝读取且不覆盖原文件。旧二进制降级写入仍不支持，发布时必须禁止混用。
-- [x] TaskRunStore 已将唯一当前任务记录与完整归档历史分离；每条历史保留 Task、WorkItem、Run、Event 及三维状态，不再只挂在 current session 上。iPhone 历史消费仍属 P6。
+- [x] TaskRunStore 已将唯一当前任务记录与完整归档历史分离；每条历史保留 Task、WorkItem、Run、Event 及三维状态，不再只挂在 current session 上。正式 iOS 已消费本地归档并显示任务详情；CloudKit 恢复与删除语义仍属 P6。
 
 退出标准：A01–A09 中的自动测试部分通过，旧数据迁移有样本与回退证据；真实来源／双设备部分留给 P2，在此之前不得将对应完整验收项勾为通过。不要求此时做完视觉调整。
 
@@ -278,11 +279,11 @@ Mac 应用生命周期／有限 AX ／来源专用事件／CLI ／Safari
 
 依赖：P1；按 D10 先完成 Codex 子里程碑，Claude 真实闭环待有可用账号后补齐。Codex 正式进程权限、后台观察与恢复必须随接入实测，不能只用诊断脚本放行。P2 所需的最小权限与一次性归属入口随闭环实现；P3 负责扩展和打磨，不能成为 P2 的隐性阻塞。
 
-- [ ] iPhone 语音／文本创建目标与完成标准，Mac 获取当前 Task。
+- [ ] iPhone 语音／文本创建目标与完成标准，Mac 获取当前 Task。正式 iOS 文本创建及离线队列到模拟 Mac Repository 已通过；语音真机与真实 Mac 仍待验收。
 - [ ] 真实会话接入，iPhone 展示同一子任务下多次执行。
 - [ ] 用户继续会话后卡片恢复进行中；失败恢复、待输入、未知状态正确。
-- [ ] 断连补传后去重，无串卡和伪造进度。
-- [ ] 用户确认结束，历史持久保存，前台清空；创建新 Task 后复用旧会话不污染历史。
+- [ ] 断连补传后去重，无串卡和伪造进度。Repository 级离线补传、双向状态和旧任务迟到事件隔离已通过；真实网络断连仍待验收。
+- [ ] 用户确认结束，历史持久保存，前台清空；创建新 Task 后复用旧会话不污染历史。正式 iOS 模拟器已完成前四项，真实双设备与复用真实来源会话仍待验收。
 - [ ] Codex、Claude Code 分别完成来源到 Mac 到 iPhone 的证据链；不以其中一个来源替代另一个。
 
 Codex 子里程碑：正式 target、真实 Codex 来源、真实 Mac＋iPhone 完成 A01–A10 及 A20 中适用的链路与状态场景，逐项记录证据及未覆盖项；模拟器和人工 JSON 仅作辅助。该里程碑可独立交付并放行后续施工，不等待 Claude。
@@ -328,7 +329,7 @@ Codex 子里程碑：正式 target、真实 Codex 来源、真实 Mac＋iPhone �
 - [ ] 用已离开＋BLE 接近变化＋Mac 恢复活动验证返回，而非仅按连接或横屏。
 - [ ] 区分连接、接近与数据新鲜度；未知不强行返回，也不依赖常规手动返回按钮。
 - [ ] iPhone 按子任务展示整体状态、返回差异、失败／待处理与可展开事件。
-- [ ] 移除虚构 impact 百分比；无重要变化时简短表达。
+- [x] 移除虚构 impact 百分比；正式 iOS 只在来源提供明确数值时显示该进程进度，任务级与返回页改用可验证状态和变化数量。
 - [ ] 横屏 Dashboard 与必要的 Live Activity 使用同一状态投影，记录后台能力与刷新限制。
 - [ ] iPhone 历史多任务浏览、重启恢复、私有 CloudKit 备份恢复和删除行为通过测试。
 - [ ] Mac 临时缓存须在可靠归档交接之后清理，离线时不丢事件。
@@ -396,11 +397,11 @@ Codex 子里程碑：正式 target、真实 Codex 来源、真实 Mac＋iPhone �
 | --- | --- | --- | --- |
 | P0 | 部分完成；Claude 真实验收延后，不阻塞 Codex 施工 | Codex 增量诊断、真实 `NSOpenPanel` 与书签恢复已验证；本机无对应 provisioning profile | 继续验证 provisioned Sandbox、真实 Codex 后台与进程恢复；Claude 待有可用账号后补验 |
 | P1 | Mac Codex 本地 MVP 达到用户验收点；完整阶段仍进行中 | Task/WorkItem/Run/Event 契约、来源级关联隔离、提交后确认 checkpoint、schema v2/Event v1 迁移回退、当前／历史分层、Codex interrupted 语义、正式 Mac 前台退出及三维诊断；127 项测试、真实面板／书签恢复、当前 Codex 文件真实事件／重启恢复、优化 Release-validation 及 600 Run／1200 Event 三故障长稳回归通过 | 用户先执行 Mac 本地验收；后续再做 provisioned Sandbox、真实用户文件数小时／睡眠唤醒、存储写入优化、iPhone／同步消费及真实来源迟到/乱序场景 |
-| P2 | 未开始；Codex 优先 | 无 | 等待 P1，先完成 Codex Mac→iPhone 闭环；Claude 真实闭环后补 |
+| P2 | 进行中；模拟器／协议闭环通过，真实双设备未验收 | 正式 iOS 3/3 UI 旅程；Repository 双向、离线补传、完成归档与新任务边界集成测试 | 在真实 iPhone 与正式 Mac 上完成配对、Codex 状态回传和断连补传；Claude 真实闭环后补 |
 | P3 | 未开始 | 无 | 等待身份契约与 Codex 最小闭环，不等待 Claude 账号 |
 | P4 | 未开始 | 无 | 扩展 CLI／Xcode |
 | P5 | 未开始 | 无 | Safari 对话长回复 |
-| P6 | 未开始 | 无 | 返回、历史、后台与云恢复 |
+| P6 | 已开始；本地 iOS 历史边界与可信状态呈现完成 | 最终确认后清空前台、重启后详细历史恢复；虚构整体／返回百分比已移除 | 继续真实返回判断、CloudKit 备份／删除及后台恢复 |
 | P7 | 未开始 | 无 | 全部阶段回归与获准交付 |
 
 ### 9.2 每轮记录模板
@@ -640,6 +641,17 @@ GitHub main／开放 PR 检查：
 - iOS Simulator 实际执行 2/2 通过：任务必填约束，以及创建任务→显示进程→终止 App→重启恢复。AnchorKit 115 项／12 套件、iOS/macOS UI test build-for-testing、iOS/macOS Release 均通过。
 - macOS 两条用例覆盖空工作区到来源配置，以及完成摘要→最终确认→退出当前任务→历史仍可见。测试包已编译；本机 Developer Mode 关闭使 Xcode 无法生成 Runner，未改系统设置，真实执行留待用户启用后补验。
 - Native CI 结构闸门现在要求两个正式 UI-test target 存在，并新增 iOS/macOS `build-for-testing` 作业；归档 Demo UI tests 仍只属于独立归档工程与路径触发工作流。
+
+### 2026-09-13 — 正式 iOS 当前任务、最终确认与详细历史闭环
+
+- 从 `main@343344b6c842643c08da0c04abd3fbf048d76979` 的干净独立 worktree 创建 `codex/ios-production-core-loop`；开工前已 fetch/prune，`origin/main` 同 SHA，GitHub 无开放 PR。Desktop checkout、归档 Demo、VPN 与正式用户数据均未修改。
+- `SessionProjection` 以可向后解码的缺省字段加入完整任务归档。用户最终确认后，当前 Session 原子转入按稳定 ID 去重、确定性倒序的历史并清空前台；旧任务的迟到远端事件会被幂等消费但不再应用，既不能复活／污染新 Task，也不会形成传输重试风暴。
+- 正式 iOS 首页增加直达 Mac 连接配置的首启入口、显式结束捷径与二次确认；结束后任务不再留在前台，重启后可从历史查看完成标准、进程、备注与时间线。TaskRunStore bridge 可恢复旧归档而不挤掉较新的当前任务。
+- 任务级 UI 不再平均不同来源的进度，返回页也不再生成事件“收益百分比”。仅当来源明确提供数值时显示该进程百分比；其他位置显示运行中、需处理、失联、等待确认等可验证状态或具体变化数量。
+- `swift test --quiet`：119/119、12 套件通过。正式 iOS 在 iPhone 17 Pro（iOS 26.3.1 Simulator）3/3 UI 旅程通过：必填约束与连接入口、创建后重启恢复、最终确认后前台清空及详细历史重启恢复。正式 iOS Release、正式 macOS Release、两端 `build-for-testing` 均通过。
+- Repository 集成测试已覆盖 iPhone 离线创建、配对后补传、Mac 备注与 Codex running/completed 回传、iPhone 最终确认、双方前台清空、旧历史保留以及新目标同步。它是同进程协议级证据，不冒充真实 Bonjour／双设备证据。
+- A07 的单元与 iOS UI 层、A09 的相关单元／集成层，以及 A17 的“无虚构收益或整体进度”UI 规则已通过；真实 iPhone↔Mac、系统本地网络／蓝牙权限、语音、CloudKit、后台／锁屏、provisioned signing 和 Mac UI 执行仍未验证。Mac UI 测试包可编译，但本机 Developer Mode 仍关闭，未更改该设置。
+- 结构化记录：`Documentation/evidence/p2-2026-09-13-ios-production-core-loop.json`。本轮完成后仅提交本地功能分支；推送、PR、合并和发布另行授权。
 
 ## 10. 决策与变更记录
 

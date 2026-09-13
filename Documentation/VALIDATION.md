@@ -1,6 +1,36 @@
 # Anchor native validation record
 
-Last updated: 2026-09-12
+Last updated: 2026-09-13
+
+## Formal iOS core-loop developer acceptance
+
+Status: **Simulator and protocol-level verification passed; physical-device pairing remains pending**.
+
+The production iOS target now covers the local task boundary that the product
+requires: create a task, persist it through relaunch, explicitly confirm its
+end, remove it from the foreground, and reopen its full details from task
+history after another relaunch. A first-run card links directly to Mac
+connection settings. Production iOS surfaces no longer average unrelated
+process percentages or synthesize an impact percentage; a percentage is shown
+only when its source supplied that process value.
+
+Verified on an iPhone 17 Pro Simulator running iOS 26.3.1:
+
+1. Connection entry, setup required-field gating, and editable text creation.
+2. Task creation, process display, app termination, and durable recovery.
+3. Finish shortcut, explicit second confirmation, foreground exit, relaunch,
+   task-history navigation, and detailed criteria/process recovery.
+
+The repository integration test additionally covers offline iPhone creation,
+later flush to a paired Mac repository, Mac-originated note and Codex
+running/completed updates, completion on iPhone, history on both replicas, and
+a subsequent new task without reviving the archived one. This is deterministic
+in-process protocol evidence, not a claim of real Bonjour or two-device success.
+
+Remaining physical-device checks include speech permission and dictation,
+local-network and Bluetooth prompts, real Mac pairing and interruption,
+CloudKit backup/deletion, background/lock-screen behavior, and provisioned
+signing.
 
 ## Mac Codex MVP local acceptance
 
@@ -48,7 +78,7 @@ Known local-acceptance boundaries:
 
 ## Automated results
 
-- Formal `AnchorKit`: 115 Swift Testing cases in 12 suites, including source parsing,
+- Formal `AnchorKit`: 119 Swift Testing cases in 12 suites, including source parsing,
   checkpoint acknowledgement, migration, task ownership/current-history rules,
   interruption semantics, presence, pairing, and encrypted transport.
 - Archived `AnchorDemoSupport`: 12 fixture-only cases in 1 suite. These are run
@@ -56,9 +86,10 @@ Known local-acceptance boundaries:
 - Formal `Anchor macOS` arm64 Debug builds with signing disabled; an optimized
   Release-validation build using only the Debug isolation gate also succeeds.
 - Formal UI automation is now part of the production project rather than the
-  archived fixture project. The iPhone suite passed 2/2 real Simulator journeys:
-  required-field gating, task creation, process display, relaunch, and durable
-  recovery. Both iPhone and Mac UI-test bundles compile with the formal apps.
+  archived fixture project. The iPhone suite passed 3/3 real Simulator journeys:
+  connection/setup gating, task creation and relaunch, plus explicit completion,
+  foreground exit, and detailed history recovery. Both iPhone and Mac UI-test
+  bundles compile with the formal apps.
 - Real current Codex rollout capture, real system file panel/bookmark recovery,
   formal UI completion/foreground exit, restart without replay, and a 600-Run /
   1200-Event three-fault stress test have passed on this Mac.

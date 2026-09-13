@@ -48,6 +48,11 @@ final class AnchorIOSUITests: XCTestCase {
         defer { app.terminate() }
         app.launch()
 
+        XCTAssertTrue(element("workspace.connection.status", in: app).waitForExistence(timeout: 8))
+        app.buttons["workspace.connection.action"].tap()
+        XCTAssertTrue(element("connections.screen", in: app).waitForExistence(timeout: 3))
+        app.navigationBars.buttons.firstMatch.tap()
+
         let anchorButton = app.buttons["anchor.note.button"]
         XCTAssertTrue(anchorButton.waitForExistence(timeout: 8))
         anchorButton.tap()
@@ -64,6 +69,57 @@ final class AnchorIOSUITests: XCTestCase {
 
         type("Run validation", into: element("setup.process.field.0", in: app))
         XCTAssertTrue(startButton.isEnabled)
+    }
+
+    @MainActor
+    func testFinalConfirmationClearsCurrentWorkAndRestoresDetailedHistory() throws {
+        XCUIDevice.shared.orientation = .portrait
+        let app = isolatedApplication()
+        defer { app.terminate() }
+        app.launch()
+
+        let anchorButton = app.buttons["anchor.note.button"]
+        XCTAssertTrue(anchorButton.waitForExistence(timeout: 8))
+        anchorButton.tap()
+        type("Archived production task", into: element("setup.goal.field", in: app))
+        type("The full task remains available in history", into: element("setup.criteria.field", in: app))
+        type("Validate the final boundary", into: element("setup.process.field.0", in: app))
+        app.buttons["setup.start.button"].tap()
+
+        let finishShortcut = app.buttons["mission.finish.button"]
+        XCTAssertTrue(finishShortcut.waitForExistence(timeout: 5))
+        finishShortcut.tap()
+        let finishButton = app.buttons["session.finish.button"]
+        XCTAssertTrue(finishButton.waitForExistence(timeout: 5))
+        finishButton.tap()
+        let confirmation = app.buttons
+            .matching(identifier: "session.finish.confirm")
+            .firstMatch
+        XCTAssertTrue(confirmation.waitForExistence(timeout: 3))
+        confirmation.tap()
+
+        XCTAssertTrue(element("workspace.empty.processes", in: app).waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Archived production task"].exists)
+
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(element("workspace.empty.processes", in: app).waitForExistence(timeout: 8))
+
+        app.buttons["topbar.profile.button"].tap()
+        let historyButton = app.buttons["profile.history.button"]
+        if !historyButton.waitForExistence(timeout: 2) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(historyButton.waitForExistence(timeout: 3))
+        historyButton.tap()
+
+        XCTAssertTrue(element("history.screen", in: app).waitForExistence(timeout: 3))
+        let archivedTitle = app.staticTexts["Archived production task"]
+        XCTAssertTrue(archivedTitle.waitForExistence(timeout: 3))
+        archivedTitle.tap()
+        XCTAssertTrue(element("history.detail.screen", in: app).waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["The full task remains available in history"].exists)
+        XCTAssertTrue(app.staticTexts["Validate the final boundary"].exists)
     }
 
     @MainActor

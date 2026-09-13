@@ -103,6 +103,31 @@ func currentTaskAndHistoryAreSeparated() async throws {
     #expect(await restored.taskHistory() == history)
 }
 
+@Test("Restoring older task history does not replace newer current work")
+func restoredArchivePreservesCurrentTask() async throws {
+    let directory = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = TaskRunStore(url: directory.appendingPathComponent("task-history.json"))
+    let current = AnchorTask(
+        title: "Current task",
+        completionCriteria: "Keep working",
+        createdAt: Date(timeIntervalSince1970: 20)
+    )
+    let archived = AnchorTask(
+        title: "Earlier task",
+        completionCriteria: "Already done",
+        createdAt: Date(timeIntervalSince1970: 10),
+        lifecycle: .archived,
+        endedAt: Date(timeIntervalSince1970: 15)
+    )
+
+    try await store.activate(task: current)
+    try await store.restoreArchivedTask(archived)
+
+    #expect(await store.currentTaskRecord()?.task == current)
+    #expect(await store.taskHistory().map(\.task) == [archived])
+}
+
 @Test("A second foreground task is rejected unless the transition is explicit")
 func implicitSecondForegroundTaskIsRejected() async throws {
     let directory = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)
