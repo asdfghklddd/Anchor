@@ -21,11 +21,16 @@ Verified on an iPhone 17 Pro Simulator running iOS 26.3.1:
 3. Finish shortcut, explicit second confirmation, foreground exit, relaunch,
    task-history navigation, and detailed criteria/process recovery.
 
-The repository integration test additionally covers offline iPhone creation,
-later flush to a paired Mac repository, Mac-originated note and Codex
-running/completed updates, completion on iPhone, history on both replicas, and
-a subsequent new task without reviving the archived one. This is deterministic
-in-process protocol evidence, not a claim of real Bonjour or two-device success.
+Repository integration tests cover offline iPhone creation, later flush to a
+paired Mac repository, Mac-originated notes and Codex running/completed updates,
+completion on iPhone, history on both replicas, and a subsequent new task without
+reviving the archived one. A separate end-to-end test now writes real-format
+Codex JSONL, lets the production file source and coordinator consume it, sends
+the resulting events through an authenticated Network.framework Bonjour link,
+queues the running event while the client is disconnected, flushes it after
+reconnection, and then observes completed in the iPhone repository. This
+exercises the real transport stack on one Mac; it does not replace physical
+two-device testing.
 
 Remaining physical-device checks include speech permission and dictation,
 local-network and Bluetooth prompts, real Mac pairing and interruption,
@@ -34,7 +39,7 @@ signing.
 
 ## Mac Codex MVP local acceptance
 
-Status: **developer verification passed; ready for owner testing without an iPhone**.
+Status: **Mac ingestion and code-level iPhone synchronization passed; physical-device acceptance remains pending**.
 
 For direct Xcode acceptance, open the production project, select the
 `Anchor macOS` scheme and `My Mac`, then Run. Its Debug configuration uses
@@ -43,9 +48,11 @@ account or provisioning profile. Release and Archive keep the production
 automatic-signing and App Group configuration.
 
 The current Mac-side MVP can create an isolated local test task, let the owner
-confirm one Codex JSONL in the system file panel, observe lifecycle changes,
-recover its bookmark/checkpoint after relaunch, and keep current work separate
-from archived history. It does not read prompt or model-response bodies.
+authorize the Codex sessions folder once, show a bounded list of recent task
+candidates, explicitly attach one or more candidates to the current Anchor
+task, observe lifecycle changes, recover bookmarks/checkpoints and task-scoped
+associations after relaunch, and keep current work separate from archived
+history. It does not retain prompt, model-response, or tool-output bodies.
 
 From the repository root, run:
 
@@ -58,17 +65,19 @@ temporary data root. It does not launch the archived Demo project or write produ
 Anchor data. In the App:
 
 1. Open **Sources**.
-2. Under Codex, click **Choose session**. Anchor locates the directory that
-   contains the newest JSONL by filesystem modification time and shows its
-   filename in the panel message without reading the file contents.
-3. Select that filename and click **Open**. The public `NSOpenPanel` API does not
-   reliably preselect an existing file, so these two system-panel actions remain
-   the authorization boundary.
+2. Under Codex, click **Authorize Sessions Folder**, select the Codex `sessions`
+   folder, and confirm the system panel. Anchor then discovers up to 12 recent
+   JSONL candidates from session identity, workspace basename, modification time,
+   and lifecycle events only.
+3. Click **Track** on the candidate that belongs to the current Anchor task. A
+   candidate never mutates task history before this explicit association. The
+   existing **Choose session** flow remains available as a single-file fallback.
 4. Start and finish a Codex turn, then verify the task observation changes.
 5. Quit and rerun the launcher with the printed validation directory to verify
-   bookmark/checkpoint recovery without selecting the file again.
+   folder bookmark, task association, and lifecycle checkpoint recovery.
 6. Use the current-task completion action and confirm that current work becomes
-   empty while history remains available.
+   empty while history remains available. A source bound to the old task must
+   not update a later Anchor task.
 
 Known local-acceptance boundaries:
 
@@ -78,13 +87,26 @@ Known local-acceptance boundaries:
   App Sandbox and App Group entitlement so local Codex/CLI file observation and
   Bonjour can be exercised without a provisioning profile. It does not prove
   the provisioned sandbox boundary or Safari App Group handoff.
-- Claude Code, iPhone synchronization, Safari long-response capture, sleep/wake,
-  and release distribution are outside this Mac Codex MVP checkpoint.
+- Claude Code, physical iPhone synchronization, Safari long-response capture,
+  sleep/wake, and release distribution remain outside this local checkpoint.
 - A 600-Run stress test preserves all data but raises long-running RSS. This is
   recorded as post-MVP performance work; normal medium-task acceptance should
   focus on correctness and workflow.
 
 ## Automated results
+
+The 2026-09-14 Codex-to-iPhone MVP change passed all 26 Codex-focused tests and
+all 125 package tests. The earlier three `pairingTimedOut` failures were traced
+to tests browsing the same `_anchor._tcp` service as the already-running Anchor
+app; transport tests now inject an isolated Bonjour service type while production
+keeps `_anchor._tcp`. The metadata supervisor, privacy minimization, multi-session
+tracking, task isolation, lifecycle scanner, encrypted local link, iPhone
+projection, reconnect outbox, and checkpoint tests all passed. The end-to-end
+Codex reconnect case also passed five consecutive repetitions. Formal `Anchor macOS` arm64 Debug
+and unmodified `Anchor iOS` Debug builds also passed. The pre-existing untracked
+`ProcessTaskSheet.swift` was not edited; its required `Open on Mac` shared
+localization was added so the formal iOS target remains buildable. Both formal
+iOS and macOS Release configurations also build with signing disabled.
 
 - Formal `AnchorKit`: 119 Swift Testing cases in 12 suites, including source parsing,
   checkpoint acknowledgement, migration, task ownership/current-history rules,

@@ -38,14 +38,30 @@ struct MacSourceSetupView: View {
                     symbol: "bubble.left.and.text.bubble.right",
                     title: L10n.sourceSetupCodex,
                     detail: L10n.sourceSetupCodexDetail,
-                    status: model.codexSessionFileName ?? L10n.sourceSetupNotConnected,
-                    isReady: model.codexSessionFileName != nil
+                    status: codexStatus,
+                    isReady: !model.trackedCodexSessionIDs.isEmpty
                 ) {
+                    Button(L10n.sourceSetupCodexAuthorizeFolder, systemImage: "folder.badge.plus") {
+                        Task { await model.authorizeCodexSessionsFolder() }
+                    }
+                    .disabled(model.isWorking)
+                    .accessibilityIdentifier("mac.sources.setup.codex.authorize-folder")
+
                     Button(L10n.sourceSetupChooseCodexSession, systemImage: "doc.badge.plus") {
                         Task { await model.selectCodexSession() }
                     }
                     .disabled(model.isWorking)
                     .accessibilityIdentifier("mac.sources.setup.codex.choose-session")
+                }
+
+                if !model.codexCandidates.isEmpty {
+                    MacCodexCandidateList(
+                        candidates: model.codexCandidates,
+                        isTracking: model.isTracking,
+                        onTrack: { candidate in
+                            Task { await model.trackCodexSession(candidate) }
+                        }
+                    )
                 }
 
                 Divider()
@@ -139,6 +155,16 @@ struct MacSourceSetupView: View {
     private var commandStatus: String {
         if model.isCommandInstalled { return L10n.sourceSetupInstalled }
         return model.isCommandBundled ? L10n.sourceSetupAvailable : L10n.sourceSetupUnavailable
+    }
+
+    private var codexStatus: String {
+        if !model.trackedCodexSessionIDs.isEmpty {
+            return L10n.sourceSetupCodexTrackedCount(model.trackedCodexSessionIDs.count)
+        }
+        if model.codexSessionsFolderName != nil {
+            return L10n.sourceSetupCodexFolderReady
+        }
+        return L10n.sourceSetupNotConnected
     }
 
     private var safariStatus: String {

@@ -2437,6 +2437,23 @@
         }
       }
     },
+    "process.action.open.on.mac" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open on Mac"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Mac 上打开"
+          }
+        }
+      }
+    },
     "process.action.view.output" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4589,6 +4606,90 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "可安装" } }
       }
     },
+    "source.setup.codex" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Codex" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Codex" } }
+      }
+    },
+    "source.setup.codex.authorize-folder" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Authorize Sessions Folder…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "授权会话文件夹…" } }
+      }
+    },
+    "source.setup.codex.choose-session" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose Session File" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择会话文件" } }
+      }
+    },
+    "source.setup.codex.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Authorize the Codex sessions folder once. Anchor discovers task metadata, then tracks only tasks you associate." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "一次性授权 Codex 会话文件夹。Anchor 会发现任务元数据，但只跟踪你确认关联的任务。" } }
+      }
+    },
+    "source.setup.codex.folder-panel.message" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Grant read-only access so Anchor can discover Codex tasks. Nothing is associated until you choose Track." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "授予只读访问，以便 Anchor 发现 Codex 任务。只有你点击“跟踪”后才会建立关联。" } }
+      }
+    },
+    "source.setup.codex.folder-panel.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose Codex Sessions Folder" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择 Codex 会话文件夹" } }
+      }
+    },
+    "source.setup.codex.folder-ready" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Folder access granted" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已授权文件夹" } }
+      }
+    },
+    "source.setup.codex.panel.message" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Confirm the JSONL session that belongs to the current Anchor task." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请确认属于当前 Anchor 任务的 JSONL 会话。" } }
+      }
+    },
+    "source.setup.codex.panel.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose Codex Session" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择 Codex 会话" } }
+      }
+    },
+    "source.setup.codex.recent-tasks" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent Codex tasks" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近的 Codex 任务" } }
+      }
+    },
+    "source.setup.codex.recent-tasks.detail" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Discovered from local metadata and lifecycle events. Track once to associate future runs with this Anchor task." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "根据本地元数据和生命周期事件发现。确认跟踪一次后，后续执行会继续归入当前 Anchor 任务。" } }
+      }
+    },
+    "source.setup.codex.track" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Track" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "跟踪" } }
+      }
+    },
+    "source.setup.codex.tracked" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tracking" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在跟踪" } }
+      }
+    },
+    "source.setup.codex.tracked-count" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld Codex tasks tracked" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在跟踪 %lld 个 Codex 任务" } }
+      }
+    },
     "source.setup.command.install" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Install command…" } },
@@ -4641,6 +4742,12 @@
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Public workspace events show which apps are open, active, or closed." } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通过公开的工作区事件获取 App 的打开、活跃与关闭状态。" } }
+      }
+    },
+    "source.setup.not-connected" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not connected" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未连接" } }
       }
     },
     "source.setup.ready" : {

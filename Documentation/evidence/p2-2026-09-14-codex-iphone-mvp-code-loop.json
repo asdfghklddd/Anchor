@@ -1,0 +1,86 @@
+{
+  "recordedAt": "2026-09-14T17:04:00+08:00",
+  "mvpDefinition": "Mac Anchor actively reads and follows real Codex tasks and synchronizes their state to iPhone",
+  "branch": "main",
+  "baseline": "f4fc90e0da02f00449853272f4a5b08e65378040",
+  "originMainAtStart": "f4fc90e0da02f00449853272f4a5b08e65378040",
+  "openPullRequestsAtStart": 0,
+  "verifiedCodePath": [
+    "real-format Codex JSONL lifecycle",
+    "CodexLifecycleFileSource incremental reader",
+    "ProcessSourceCoordinator task-bound ingestion",
+    "LinkedSessionRepository durable outbox",
+    "disconnected Mac event queue and reconnect flush",
+    "single-flight concurrent flush completion",
+    "authenticated Network.framework Bonjour transport",
+    "iPhone LocalSessionRepository remote application",
+    "iPhone running and completed projection",
+    "Mac TaskRunStore started and completed history"
+  ],
+  "transportIsolation": {
+    "productionServiceType": "_anchor._tcp",
+    "testServiceType": "per-test injected Bonjour type",
+    "reason": "prevent a running production Anchor app from capturing test pairing",
+    "productionBehaviorChanged": false
+  },
+  "reconnectScenario": {
+    "runningQueuedWhileIPhoneDisconnected": true,
+    "runningFlushedAfterReconnect": true,
+    "completedDeliveredWhileConnected": true,
+    "consecutivePassingRuns": 5,
+    "pendingMacOutboxAfterCompletion": 0
+  },
+  "validation": [
+    {
+      "kind": "codex-focused-swift-tests",
+      "result": "passed",
+      "tests": 26
+    },
+    {
+      "kind": "anchor-kit-full-test",
+      "result": "passed",
+      "tests": 125,
+      "suites": 12
+    },
+    {
+      "kind": "macos-debug-build",
+      "result": "passed",
+      "architecture": "arm64",
+      "signing": "disabled"
+    },
+    {
+      "kind": "ios-debug-build",
+      "result": "passed",
+      "device": "iPhone 17 Pro Simulator",
+      "os": "iOS 26.3.1",
+      "signing": "disabled",
+      "excludedSourceFiles": []
+    },
+    {
+      "kind": "macos-release-build",
+      "result": "passed",
+      "architecture": "arm64",
+      "signing": "disabled"
+    },
+    {
+      "kind": "ios-release-build",
+      "result": "passed",
+      "signing": "disabled",
+      "excludedSourceFiles": []
+    }
+  ],
+  "acceptanceState": {
+    "codeLevelMVP": "passed",
+    "physicalIPhoneToMac": "pending",
+    "productionSandboxFolderAuthorization": "pending",
+    "realDeviceDisconnectRecovery": "pending"
+  },
+  "safety": {
+    "codexConfigurationModified": false,
+    "privateCodexIPCUsed": false,
+    "vpnConfigurationModified": false,
+    "preExistingProcessTaskSheetModified": false,
+    "publicationAuthorization": "direct commit and push to main without a pull request",
+    "publicationResult": "recorded by Git history and push receipt"
+  }
+}

@@ -6,9 +6,15 @@ public protocol AnchorEventTransport: Sendable {
 }
 
 public actor LinkedSessionRepository: SessionRepository {
+    private struct ActiveFlush {
+        let id: UUID
+        let task: Task<Void, Never>
+    }
+
     private let base: any SessionRepository
     private let eventBackedBase: (any EventBackedSessionRepository)?
     private let transport: any AnchorEventTransport
+    private var activeFlush: ActiveFlush?
 
     public init(
         base: any SessionRepository,
@@ -53,14 +59,35 @@ public actor LinkedSessionRepository: SessionRepository {
     /// Sends events in deterministic order. A transport failure leaves the
     /// remaining events in the durable outbox for the next connection attempt.
     public func flushPendingEvents() async {
-        guard let eventBackedBase else { return }
-        for event in await eventBackedBase.pendingEvents() {
-            do {
-                try await transport.send(event)
-                try await eventBackedBase.markDelivered(event.id)
-            } catch {
-                return
+        while true {
+            if let activeFlush {
+                await activeFlush.task.value
+                if self.activeFlush?.id == activeFlush.id {
+                    self.activeFlush = nil
+                }
+                // A command may have queued another event while the shared
+                // flush was suspended. Recheck instead of returning early.
+                continue
             }
+            guard let eventBackedBase else { return }
+            let transport = self.transport
+            let id = UUID()
+            let task = Task {
+                for event in await eventBackedBase.pendingEvents() {
+                    do {
+                        try await transport.send(event)
+                        try await eventBackedBase.markDelivered(event.id)
+                    } catch {
+                        return
+                    }
+                }
+            }
+            activeFlush = ActiveFlush(id: id, task: task)
+            await task.value
+            if activeFlush?.id == id {
+                activeFlush = nil
+            }
+            return
         }
     }
 }

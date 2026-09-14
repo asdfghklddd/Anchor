@@ -3,13 +3,13 @@
 > Product decisions are confirmed; implementation completion requires evidence.
 
 - 建立日期：2026-09-04。
-- 最近更新：2026-09-13。
+- 最近更新：2026-09-14。
 - 产品决策状态：用户已确认本轮需求访谈总结，包括 Q37–Q39 的任务归属修正。
 - 产品名称澄清（D09）：用户所说的“本地 ChatGPT App”就是当前 `com.openai.codex` 应用，后文统一称 Codex；不额外适配独立 ChatGPT 桌面产品，Safari 长回复范围不变。
-- 工程状态：Mac Codex 本地 MVP 已达到开发者验收点；正式 iOS 的创建、重启恢复、最终确认、前台退出和详细历史已完成模拟器与协议级闭环。真实 iPhone↔Mac、CloudKit、蓝牙后台与 Claude 仍未验收，P0–P7 均未整体完成。
+- 工程状态：Mac 读取真实 Codex 并通过生产 Bonjour 协议同步到 iPhone Repository 的代码级 MVP 已闭环；正式 iOS/macOS Debug 与 AnchorKit 125 项测试通过。真实 iPhone↔Mac 硬件验收、CloudKit、蓝牙后台与 Claude 仍未完成，不能把代码级证据表述为真机交付。
 - 用途：之后每轮施工开始前阅读，结束后更新状态、证据、偏差和下一步。
 - 范围：正式版 Anchor iOS、Anchor macOS、共享包、Safari 扩展及必要 CLI 集成；不是 Demo 改造计划。
-- 当前授权：用户已于 2026-09-13 授权继续构建正式 iOS App；本轮使用独立 `codex/ios-production-core-loop` 分支，未授权推送、PR、合并、发布或系统配置修改。
+- 当前授权：用户于 2026-09-14 将 MVP 明确定义为“Mac Anchor 主动读取并跟进真实 Codex 任务并同步给 iPhone”，并已授权只纳入本轮 MVP 文件、直接提交并推送到 `main`，不创建 PR。
 
 ## 0. 如何使用这份计划
 
@@ -397,8 +397,8 @@ Codex 子里程碑：正式 target、真实 Codex 来源、真实 Mac＋iPhone �
 | --- | --- | --- | --- |
 | P0 | 部分完成；Claude 真实验收延后，不阻塞 Codex 施工 | Codex 增量诊断、真实 `NSOpenPanel` 与书签恢复已验证；本机无对应 provisioning profile | 继续验证 provisioned Sandbox、真实 Codex 后台与进程恢复；Claude 待有可用账号后补验 |
 | P1 | Mac Codex 本地 MVP 达到用户验收点；完整阶段仍进行中 | Task/WorkItem/Run/Event 契约、来源级关联隔离、提交后确认 checkpoint、schema v2/Event v1 迁移回退、当前／历史分层、Codex interrupted 语义、正式 Mac 前台退出及三维诊断；127 项测试、真实面板／书签恢复、当前 Codex 文件真实事件／重启恢复、优化 Release-validation 及 600 Run／1200 Event 三故障长稳回归通过 | 用户先执行 Mac 本地验收；后续再做 provisioned Sandbox、真实用户文件数小时／睡眠唤醒、存储写入优化、iPhone／同步消费及真实来源迟到/乱序场景 |
-| P2 | 进行中；模拟器／协议闭环通过，真实双设备未验收 | 正式 iOS 3/3 UI 旅程；Repository 双向、离线补传、完成归档与新任务边界集成测试 | 在真实 iPhone 与正式 Mac 上完成配对、Codex 状态回传和断连补传；Claude 真实闭环后补 |
-| P3 | 未开始 | 无 | 等待身份契约与 Codex 最小闭环，不等待 Claude 账号 |
+| P2 | Codex 代码级 MVP 闭环通过；真实双设备未验收 | 真实格式 JSONL→Mac 来源协调器→认证 Bonjour→iPhone Repository 的 running/completed 测试通过；正式两端 Debug 构建通过 | 在真实 iPhone 与正式 Mac 上完成配对、真实 Codex 状态回传和断连补传 |
+| P3 | 已开始；Codex 候选发现与显式多会话跟踪已接线 | 一次性目录授权、2 秒驻留监督器、最近 12 个候选、当前 Anchor Task 范围的持久关联；Codex 聚焦测试 26 项通过 | 真实 Sandbox 权限、数小时／睡眠唤醒、候选忽略／改归属与真实误关联率验收 |
 | P4 | 未开始 | 无 | 扩展 CLI／Xcode |
 | P5 | 未开始 | 无 | Safari 对话长回复 |
 | P6 | 已开始；本地 iOS 历史边界与可信状态呈现完成 | 最终确认后清空前台、重启后详细历史恢复；虚构整体／返回百分比已移除 | 继续真实返回判断、CloudKit 备份／删除及后台恢复 |
@@ -653,6 +653,21 @@ GitHub main／开放 PR 检查：
 - A07 的单元与 iOS UI 层、A09 的相关单元／集成层，以及 A17 的“无虚构收益或整体进度”UI 规则已通过；真实 iPhone↔Mac、系统本地网络／蓝牙权限、语音、CloudKit、后台／锁屏、provisioned signing 和 Mac UI 执行仍未验证。Mac UI 测试包可编译，但本机 Developer Mode 仍关闭，未更改该设置。
 - 结构化记录：`Documentation/evidence/p2-2026-09-13-ios-production-core-loop.json`。本轮完成后仅提交本地功能分支；推送、PR、合并和发布另行授权。
 
+### 2026-09-14 — Codex 驻留监督与显式多会话跟踪
+
+- 开工前确认 `main`、`origin/main` 与 GitHub `main` 均为 `f4fc90e0da02f00449853272f4a5b08e65378040`，无开放 PR；既有未跟踪清理报告、截图、iOS WIP 与视频目录均未修改。
+- 对本机 Codex `0.154.0-alpha.6.2` 做只读 app-server 探针。独立 `thread/list` 虽可列出任务，但 20 个任务均为 `notLoaded`；桌面 App 使用私有 stdio／Unix 文件描述符，且没有公开 control socket。因此不接管桌面连接，也不把实验性 app-server 当生产同步契约。
+- 正式 macOS 来源页增加一次性 Codex sessions 目录授权。授权后，驻留监督器每 2 秒读取最近 12 个 JSONL 的 session identity、工作区 basename、更新时间和 `task_started`／`task_complete`／`turn_aborted`，不保留 prompt、response 或 tool output。
+- 候选只用于发现。用户点击 **Track** 后，才把对应 Codex session 显式绑定到当前 Anchor Task；同一任务可跟踪多个 Codex session，关联以目录相对路径持久化。Anchor Task 切换后旧来源上下文失效，不能污染新任务。
+- 没有增加传统 cron、后台远程控制、Codex 配置、VPN 配置或对话内容索引。常驻 `AsyncStream` 在 App 运行时观察，既能及时同步，也避免定时任务重复启动进程和并发扫描。
+- 首轮全量测试的 3 个 `pairingTimedOut` 来自测试与已运行正式 Anchor 共用 `_anchor._tcp`。生产默认保持不变，Server／Client 只增加可注入的测试 service type；三个真实 Network.framework 传输测试改用隔离类型后全部通过。
+- 新增端到端测试直接写入真实格式 Codex JSONL，经 `CodexLifecycleFileSource → ProcessSourceCoordinator → LinkedSessionRepository → 加密 Bonjour → iPhone LocalSessionRepository`。`running` 在 iPhone 断开时进入 Mac 持久 outbox，重连后自动补传，随后在线接收 `completed`；Mac TaskRunStore 同时保留 started/completed 事件。该场景连续 5 次通过。
+- 重连测试暴露 `flushPendingEvents()` 的重入完成语义：自动补传与显式补传并发时，后调用者可能提前返回。现以 single-flight 共享发送任务，并让等待者在当前批次后重新检查 outbox，避免重复发送或漏掉并发入队事件。
+- 验证：Codex 聚焦测试 26 项、全量 package 125 项全部通过；正式 `Anchor macOS` arm64 Debug／Release 与未经排除参数的正式 `Anchor iOS` Debug／Release 构建通过。既有未跟踪 `ProcessTaskSheet.swift` 未修改，只补充其引用的共享 `Open on Mac` 中英文文案。
+- 用户明确本轮 MVP 定义为“Mac Anchor 主动读取并跟进真实 Codex 任务并同步给 iPhone”。当前结论是代码级闭环完成，真实 iPhone 与正式 Mac 的系统权限、配对、断连补传和真实 Codex 连续运行仍需硬件验收。
+- 结构化同步证据：`Documentation/evidence/p2-2026-09-14-codex-iphone-mvp-code-loop.json`。
+- 结构化记录：`Documentation/evidence/p3-2026-09-14-codex-resident-supervisor.json`。用户已授权本轮直接提交并推送到 `main`；实际提交 SHA 以 Git 历史和发布回执为准。
+
 ## 10. 决策与变更记录
 
 | 编号 | 日期 | 决定 | 原因／来源 |
@@ -668,6 +683,7 @@ GitHub main／开放 PR 检查：
 | D09 | P0 身份澄清后 | 将误增的“独立 ChatGPT 桌面产品”从 R15、P0、P2 移除；本地核心来源为 Codex 与 Claude Code，Safari 不变 | 用户原话“是的，就是这个应用”，确认 `com.openai.codex` 即此前所指。纠正产品名称歧义，不降低两个核心来源的验收要求；旧版逐产品要求由此项取代 |
 | D10 | 2026-09-04 | Codex 优先推进 P1 与 P2 子里程碑；Claude 先保留解析与模拟测试，真实验收后补，不阻塞其他施工 | 用户“我没有账号”后以“ok”确认建议。无需为推进 Anchor 注册或付费；Claude 仍属最终范围，P0/P2 完整验收不能以模拟测试替代 |
 | D11 | 2026-09-12 | 复赛 Demo 从正式 Xcode 工程与正式 Swift package 移入仓库归档；保留冻结标签与独立可构建工程 | 决赛开发只在正式版继续，避免 fixture、Demo scheme 和 Demo UI tests 混入生产发布面，同时保留可恢复历史 |
+| D12 | 2026-09-14 | MVP 定义为 Mac Anchor 主动读取并跟进真实 Codex 任务，并把状态同步给 iPhone | 用户本轮明确确认；代码级闭环与真实双设备验收必须分别记录 |
 
 新增变更格式：日期、影响需求编号、旧规则、新规则、原因、用户确认、迁移／验证影响。不要删除历史决定来掩盖方向变化。
 

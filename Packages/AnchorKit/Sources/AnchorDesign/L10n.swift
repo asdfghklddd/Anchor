@@ -346,11 +346,46 @@ public enum L10n {
     public static let sourceSetupCodex = AnchorStrings.value("source.setup.codex", default: "Codex")
     public static let sourceSetupCodexDetail = AnchorStrings.value(
         "source.setup.codex.detail",
-        default: "Choose the current Codex session file once. Anchor observes lifecycle metadata only."
+        default: "Authorize the Codex sessions folder once. Anchor discovers task metadata, then tracks only tasks you associate."
     )
     public static let sourceSetupChooseCodexSession = AnchorStrings.value(
         "source.setup.codex.choose-session", default: "Choose Session File"
     )
+    public static let sourceSetupCodexAuthorizeFolder = AnchorStrings.value(
+        "source.setup.codex.authorize-folder", default: "Authorize Sessions Folder…"
+    )
+    public static let sourceSetupCodexFolderReady = AnchorStrings.value(
+        "source.setup.codex.folder-ready", default: "Folder access granted"
+    )
+    public static let sourceSetupCodexFolderPanelTitle = AnchorStrings.value(
+        "source.setup.codex.folder-panel.title", default: "Choose Codex Sessions Folder"
+    )
+    public static let sourceSetupCodexFolderPanelMessage = AnchorStrings.value(
+        "source.setup.codex.folder-panel.message",
+        default: "Grant read-only access so Anchor can discover Codex tasks. Nothing is associated until you choose Track."
+    )
+    public static let sourceSetupCodexRecentTasks = AnchorStrings.value(
+        "source.setup.codex.recent-tasks", default: "Recent Codex tasks"
+    )
+    public static let sourceSetupCodexRecentTasksDetail = AnchorStrings.value(
+        "source.setup.codex.recent-tasks.detail",
+        default: "Discovered from local metadata and lifecycle events. Track once to associate future runs with this Anchor task."
+    )
+    public static let sourceSetupCodexTrack = AnchorStrings.value(
+        "source.setup.codex.track", default: "Track"
+    )
+    public static let sourceSetupCodexTracked = AnchorStrings.value(
+        "source.setup.codex.tracked", default: "Tracking"
+    )
+    public static func sourceSetupCodexTrackedCount(_ count: Int) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value(
+                "source.setup.codex.tracked-count",
+                default: "%lld Codex tasks tracked"
+            ),
+            count
+        )
+    }
     public static let sourceSetupNotConnected = AnchorStrings.value(
         "source.setup.not-connected", default: "Not connected"
     )
@@ -429,6 +464,7 @@ public enum L10n {
     public static let noEvents = AnchorStrings.value("events.none", default: "No events yet")
     public static let openDetails = AnchorStrings.value("mac.open.details", default: "Open Anchor")
     public static let openCurrentProcess = AnchorStrings.value("mac.open.current", default: "Open current process")
+    public static let openOnMac = AnchorStrings.value("process.action.open.on.mac", default: "Open on Mac")
     public static let currentWork = AnchorStrings.value("mac.current.work", default: "Current work")
     public static let timeline = AnchorStrings.value("timeline", default: "Timeline")
     public static let historyNoSnapshots = AnchorStrings.value(

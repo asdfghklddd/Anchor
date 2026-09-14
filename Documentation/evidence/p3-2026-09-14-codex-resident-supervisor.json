@@ -1,0 +1,77 @@
+{
+  "recordedAt": "2026-09-14T16:45:00+08:00",
+  "branch": "main",
+  "baseline": "f4fc90e0da02f00449853272f4a5b08e65378040",
+  "originMainAtStart": "f4fc90e0da02f00449853272f4a5b08e65378040",
+  "openPullRequestsAtStart": 0,
+  "codexProbe": {
+    "cliVersion": "0.154.0-alpha.6.2",
+    "separateThreadListCount": 20,
+    "loadedThreadCount": 0,
+    "desktopTransport": "private-stdio-and-unix-file-descriptors",
+    "publicControlSocketPresent": false,
+    "decision": "do-not-attach-to-private-desktop-ipc"
+  },
+  "implementation": {
+    "observation": "authorized-session-folder-jsonl",
+    "pollIntervalSeconds": 2,
+    "candidateLimit": 12,
+    "candidateFields": [
+      "session-id",
+      "workspace-basename",
+      "originator",
+      "modification-time",
+      "latest-supported-lifecycle"
+    ],
+    "retainedContentBodies": false,
+    "association": "explicit-user-track-per-anchor-task",
+    "multipleCodexSessionsPerAnchorTask": true,
+    "backgroundCronAdded": false,
+    "privateCodexIPCUsed": false
+  },
+  "validation": [
+    {
+      "kind": "codex-focused-swift-tests",
+      "result": "passed",
+      "tests": 26,
+      "residentStreamObserved": "running-to-completed"
+    },
+    {
+      "kind": "anchor-kit-full-test",
+      "result": "passed",
+      "passed": 125,
+      "total": 125,
+      "initialPairingTimeoutCause": "tests shared the production Bonjour service type with a running Anchor app",
+      "resolution": "transport tests inject an isolated Bonjour service type"
+    },
+    {
+      "kind": "macos-debug-build",
+      "result": "passed",
+      "architecture": "arm64",
+      "signing": "disabled"
+    },
+    {
+      "kind": "ios-debug-build",
+      "result": "passed",
+      "excludedSourceFiles": [],
+      "preExistingProcessTaskSheetModified": false,
+      "compatibilityFix": "added the referenced shared Open on Mac localization"
+    }
+  ],
+  "notVerified": [
+    "provisioned App Sandbox folder bookmark",
+    "multi-hour real Codex observation",
+    "sleep and wake recovery",
+    "physical iPhone to Mac synchronization",
+    "candidate ignore and reassignment UX",
+    "real-world association error rate"
+  ],
+  "safety": {
+    "codexConfigurationModified": false,
+    "privateCodexIPCModified": false,
+    "vpnConfigurationModified": false,
+    "preExistingUntrackedFilesModified": false,
+    "publicationAuthorization": "direct commit and push to main without a pull request",
+    "publicationResult": "recorded by Git history and push receipt"
+  }
+}

@@ -185,6 +185,11 @@ struct AnchorMacApp: App {
             guard let session = await repository.currentProjection().session else {
                 throw SessionRepositoryError.noActiveSession
             }
+            let sourceID = StableProcessIdentity.id(
+                namespace: "anchor.source.codex-session",
+                sessionID: session.id,
+                externalID: fileURL.lastPathComponent
+            )
             let task = AnchorTask(
                 id: session.id,
                 title: session.goal.title,
@@ -204,10 +209,26 @@ struct AnchorMacApp: App {
             )
             try await taskRunStore.upsert(task: task)
             try await taskRunStore.upsert(workItem: workItem)
+            let boundSessionContext: @Sendable () async -> ProcessSourceSessionContext? = {
+                guard let context = await currentSessionContext(),
+                      context.sessionID == session.id else {
+                    return nil
+                }
+                return context
+            }
             let codexSource = CodexLifecycleFileSource(
                 fileURL: fileURL,
-                sessionContextProvider: currentSessionContext,
-                checkpointStore: codexCheckpointStore
+                sessionContextProvider: boundSessionContext,
+                checkpointStore: codexCheckpointStore,
+                descriptor: SourceDescriptor(
+                    id: sourceID,
+                    name: "Codex",
+                    kind: .integration,
+                    symbol: "C",
+                    tone: "cyan",
+                    capabilities: [.observe],
+                    permission: .granted
+                )
             )
             try await sourceCoordinator.setAssociation(
                 AnchorEventAssociation(taskID: task.id, workItemID: workItem.id, confirmedByUser: true),
@@ -219,6 +240,7 @@ struct AnchorMacApp: App {
         let setupModel = MacSourceSetupModel(
             defaults: validationDefaults ?? .standard,
             onCodexSessionSelected: bindCodexSession,
+            currentAnchorSessionID: currentSessionID,
             taskStateProvider: {
                 await taskRunStore.currentTaskRecord()?.state
             }

@@ -25,6 +25,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     private let queue = DispatchQueue(label: "com.andywang.anchor.bonjour.client")
     private let identityStore: PairingIdentityStore
     private let deviceID: UUID
+    private let serviceType: String
     private var browser: NWBrowser?
     private var discoveredEndpoint: NWEndpoint?
     private var peer: LineConnection?
@@ -50,8 +51,12 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     public var onEvent: (@Sendable (EventEnvelope) async throws -> Void)?
     public var onConnectionState: (@Sendable (ConnectionState) -> Void)?
 
-    public init(identityStore: PairingIdentityStore = PairingIdentityStore()) {
+    public init(
+        identityStore: PairingIdentityStore = PairingIdentityStore(),
+        serviceType: String = AnchorBonjourServer.serviceType
+    ) {
         self.identityStore = identityStore
+        self.serviceType = serviceType
         deviceID = identityStore.localDeviceID()
     }
 
@@ -278,7 +283,10 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
 
     private func startDiscoveryOnQueue() {
         guard browser == nil else { return }
-        let browser = NWBrowser(for: .bonjour(type: AnchorBonjourServer.serviceType, domain: nil), using: .tcp)
+        let browser = NWBrowser(
+            for: .bonjour(type: serviceType, domain: nil),
+            using: .tcp
+        )
         browser.stateUpdateHandler = { [weak self, weak browser] state in
             guard let self, self.browser === browser else { return }
             switch state {

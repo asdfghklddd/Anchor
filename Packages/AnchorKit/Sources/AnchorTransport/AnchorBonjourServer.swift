@@ -23,6 +23,8 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
     private let queue = DispatchQueue(label: "com.andywang.anchor.bonjour.server")
     private let identityStore: PairingIdentityStore
     private let deviceID: UUID
+    private let advertisedServiceType: String
+    private let advertisedServiceName: String
     private var listener: NWListener?
     private var peers: [ObjectIdentifier: LineConnection] = [:]
     private var peerIDs: [ObjectIdentifier: UUID] = [:]
@@ -33,10 +35,14 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
 
     public init(
         identityStore: PairingIdentityStore = PairingIdentityStore(),
-        deviceID: UUID? = nil
+        deviceID: UUID? = nil,
+        serviceType: String = AnchorBonjourServer.serviceType,
+        serviceName: String = "Anchor"
     ) {
         self.identityStore = identityStore
         self.deviceID = deviceID ?? identityStore.localDeviceID()
+        advertisedServiceType = serviceType
+        advertisedServiceName = serviceName
         pairingCodeValue = Self.makePairingCode()
     }
 
@@ -47,7 +53,10 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
     private func startOnQueue() throws {
         guard listener == nil else { return }
         let listener = try NWListener(using: .tcp)
-        listener.service = NWListener.Service(name: "Anchor", type: Self.serviceType)
+        listener.service = NWListener.Service(
+            name: advertisedServiceName,
+            type: advertisedServiceType
+        )
         listener.stateUpdateHandler = { [weak self, weak listener] state in
             guard let self, self.listener === listener else { return }
             switch state {
