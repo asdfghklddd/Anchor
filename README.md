@@ -70,6 +70,12 @@ Open `Anchor.xcodeproj`, then choose one of the two production app schemes:
 - `Anchor iOS`
 - `Anchor macOS`
 
+The `Anchor macOS` scheme uses ad-hoc **Sign to Run Locally** signing for its
+Debug run and test actions, so a developer account is not required for local
+owner acceptance. Release and Archive retain the production App Group and
+automatic-signing settings. The Safari extension is bundled in Debug, but its
+cross-process App Group handoff still requires a provisioned Release build.
+
 Run package tests without booting a simulator:
 
 ```sh

@@ -1,0 +1,49 @@
+{
+  "recordedAt": "2026-09-14T08:17:00+08:00",
+  "worktree": "/Users/andywang/worktrees/Anchor-main-mvp",
+  "branch": "codex/ios-production-core-loop",
+  "baseline": "9e5d4fd9ea6d596deca4f39aa7d00078954ae200",
+  "validation": [
+    {
+      "kind": "macos-debug-default-xcode-build",
+      "result": "passed",
+      "signing": "Sign to Run Locally"
+    },
+    {
+      "kind": "macos-debug-isolated-launch",
+      "result": "passed",
+      "productionData": "not-used"
+    },
+    {
+      "kind": "macos-ui-test-build",
+      "result": "passed",
+      "signing": "Sign to Run Locally"
+    },
+    {
+      "kind": "swift-test",
+      "result": "passed",
+      "tests": 119,
+      "suites": 12
+    },
+    {
+      "kind": "release-signing-settings",
+      "result": "preserved",
+      "style": "Automatic",
+      "team": "DZPUSA6232",
+      "entitlements": "Apps/AnchorMac/AnchorMac.entitlements"
+    }
+  ],
+  "localDebugBoundary": {
+    "developerAccountRequired": false,
+    "hostAppSandboxEnabled": false,
+    "appGroupEnabled": false,
+    "safariAppGroupHandoffVerified": false
+  },
+  "safety": {
+    "archivedDemoModified": false,
+    "desktopDirtyCheckoutModified": false,
+    "productionUserDataModified": false,
+    "vpnConfigurationModified": false,
+    "systemDeveloperModeModified": false
+  }
+}

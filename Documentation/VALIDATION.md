@@ -1,6 +1,6 @@
 # Anchor native validation record
 
-Last updated: 2026-09-13
+Last updated: 2026-09-14
 
 ## Formal iOS core-loop developer acceptance
 
@@ -36,6 +36,12 @@ signing.
 
 Status: **developer verification passed; ready for owner testing without an iPhone**.
 
+For direct Xcode acceptance, open the production project, select the
+`Anchor macOS` scheme and `My Mac`, then Run. Its Debug configuration uses
+ad-hoc **Sign to Run Locally** signing and does not require an Apple developer
+account or provisioning profile. Release and Archive keep the production
+automatic-signing and App Group configuration.
+
 The current Mac-side MVP can create an isolated local test task, let the owner
 confirm one Codex JSONL in the system file panel, observe lifecycle changes,
 recover its bookmark/checkpoint after relaunch, and keep current work separate
@@ -68,8 +74,10 @@ Known local-acceptance boundaries:
 
 - The launcher is Debug-only test scaffolding because no iPhone is currently
   available to create a real task. Release ignores these environment variables.
-- The local build is unsigned and does not prove provisioned App Sandbox
-  behavior. A developer account is not required for this isolated test.
+- The direct Xcode Debug build is ad-hoc signed and intentionally omits the host
+  App Sandbox and App Group entitlement so local Codex/CLI file observation and
+  Bonjour can be exercised without a provisioning profile. It does not prove
+  the provisioned sandbox boundary or Safari App Group handoff.
 - Claude Code, iPhone synchronization, Safari long-response capture, sleep/wake,
   and release distribution are outside this Mac Codex MVP checkpoint.
 - A 600-Run stress test preserves all data but raises long-running RSS. This is
@@ -83,8 +91,9 @@ Known local-acceptance boundaries:
   interruption semantics, presence, pairing, and encrypted transport.
 - Archived `AnchorDemoSupport`: 12 fixture-only cases in 1 suite. These are run
   from the separate semifinal archive and are not part of the formal package.
-- Formal `Anchor macOS` arm64 Debug builds with signing disabled; an optimized
-  Release-validation build using only the Debug isolation gate also succeeds.
+- Formal `Anchor macOS` arm64 Debug builds with default Xcode settings using
+  ad-hoc local signing; an optimized Release-validation build with signing
+  disabled also succeeds.
 - Formal UI automation is now part of the production project rather than the
   archived fixture project. The iPhone suite passed 3/3 real Simulator journeys:
   connection/setup gating, task creation and relaunch, plus explicit completion,
