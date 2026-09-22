@@ -162,7 +162,7 @@ struct AnchorMacApp: App {
                     .updateSignals(connection: state, proximity: .unknown, at: .now)
                 )
                 if state == .connected {
-                    await repository.flushPendingEvents()
+                    await repository.reconcilePeerHistory()
                 }
             }
         }

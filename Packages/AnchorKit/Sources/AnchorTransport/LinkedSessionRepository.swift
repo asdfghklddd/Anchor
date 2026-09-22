@@ -90,6 +90,49 @@ public actor LinkedSessionRepository: SessionRepository {
             return
         }
     }
+
+    /// Replays retained immutable events for current work, or the newest
+    /// terminal task when no work is active, after an authenticated reconnect.
+    /// The receiver's event IDs, source sequences, and deduplication keys make
+    /// this safe when both peers already contain some or all of the history.
+    public func reconcilePeerHistory() async {
+        while true {
+            if let activeFlush {
+                await activeFlush.task.value
+                if self.activeFlush?.id == activeFlush.id {
+                    self.activeFlush = nil
+                }
+                continue
+            }
+            guard let eventBackedBase else { return }
+            let projection = await eventBackedBase.currentProjection()
+            guard let reconciliationSessionID = projection.session?.id
+                ?? projection.archivedSessions.first?.id else {
+                return
+            }
+            let retainedEvents = await eventBackedBase.retainedEvents().filter {
+                $0.sessionID == reconciliationSessionID
+            }
+            let transport = self.transport
+            let id = UUID()
+            let task = Task {
+                for event in retainedEvents {
+                    do {
+                        try await transport.send(event)
+                        try await eventBackedBase.markDelivered(event.id)
+                    } catch {
+                        return
+                    }
+                }
+            }
+            activeFlush = ActiveFlush(id: id, task: task)
+            await task.value
+            if activeFlush?.id == id {
+                activeFlush = nil
+            }
+            return
+        }
+    }
 }
 
 public enum LinkedSessionDecoder {

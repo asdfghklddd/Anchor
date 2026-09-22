@@ -96,6 +96,31 @@ struct LocalSessionRepositoryTests {
         try? FileManager.default.removeItem(at: storage)
     }
 
+    @Test("Acknowledged events remain available for peer reconciliation after relaunch")
+    func retainedHistorySurvivesAcknowledgementAndRelaunch() async throws {
+        let storage = URL.temporaryDirectory.appending(
+            path: "anchor-retained-events-\(UUID().uuidString).json"
+        )
+        defer { try? FileManager.default.removeItem(at: storage) }
+        let sourceID = UUID()
+        let first = LocalSessionRepository(storageURL: storage, sourceID: sourceID)
+        try await first.send(
+            .createSession(
+                goal: AnchorGoal(title: "Reconcile", completionCriteria: "Recovered"),
+                processes: []
+            )
+        )
+        let event = try #require(await first.pendingEvents().first)
+
+        try await first.markDelivered(event.id)
+        #expect(await first.pendingEvents().isEmpty)
+        #expect(await first.retainedEvents() == [event])
+
+        let restored = LocalSessionRepository(storageURL: storage, sourceID: sourceID)
+        #expect(await restored.pendingEvents().isEmpty)
+        #expect(await restored.retainedEvents() == [event])
+    }
+
     @Test("A remote operation is applied once and duplicate delivery is harmless")
     func remoteOperationIsIdempotent() async throws {
         let senderStorage = URL.temporaryDirectory.appending(path: "anchor-sender-\(UUID().uuidString).json")

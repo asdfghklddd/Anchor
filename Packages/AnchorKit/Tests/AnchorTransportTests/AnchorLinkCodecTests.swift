@@ -128,6 +128,54 @@ struct AnchorLinkCodecTests {
         #expect(session.goal == goal)
     }
 
+    @Test("Reconnect reconciliation replays acknowledged current history without obsolete tasks")
+    func reconnectReplaysRetainedHistory() async throws {
+        let suffix = UUID().uuidString
+        let sourceStorage = URL.temporaryDirectory.appending(
+            path: "anchor-reconcile-source-\(suffix).json"
+        )
+        let targetStorage = URL.temporaryDirectory.appending(
+            path: "anchor-reconcile-target-\(suffix).json"
+        )
+        defer {
+            try? FileManager.default.removeItem(at: sourceStorage)
+            try? FileManager.default.removeItem(at: targetStorage)
+        }
+
+        let source = LocalSessionRepository(storageURL: sourceStorage, sourceID: UUID())
+        let target = LocalSessionRepository(storageURL: targetStorage, sourceID: UUID())
+        try await source.send(
+            .createSession(
+                goal: AnchorGoal(title: "Obsolete history", completionCriteria: "Archived"),
+                processes: []
+            )
+        )
+        try await source.send(.completeSession)
+        try await source.send(
+            .createSession(
+                goal: AnchorGoal(title: "Recovered history", completionCriteria: "Visible"),
+                processes: []
+            )
+        )
+        let retainedEvents = await source.retainedEvents()
+        let currentEvent = try #require(retainedEvents.last)
+        for event in await source.pendingEvents() {
+            try await source.markDelivered(event.id)
+        }
+        #expect(await source.pendingEvents().isEmpty)
+
+        let linked = LinkedSessionRepository(
+            base: source,
+            transport: ApplyingEventTransport(receiver: target)
+        )
+        await linked.reconcilePeerHistory()
+        await linked.reconcilePeerHistory()
+
+        #expect(await target.currentProjection().session?.goal.title == "Recovered history")
+        #expect(await target.currentProjection().archivedSessions.isEmpty == true)
+        #expect(await target.retainedEvents() == [currentEvent])
+    }
+
     @Test("Updating trust material does not delete the existing Keychain item first")
     func keychainUpdate() throws {
         let service = "com.andywang.anchor.tests.keychain.\(UUID().uuidString)"
@@ -557,6 +605,18 @@ private actor EventRecorder {
 
     func record(_ event: EventEnvelope) {
         events.append(event)
+    }
+}
+
+private actor ApplyingEventTransport: AnchorEventTransport {
+    let receiver: any EventBackedSessionRepository
+
+    init(receiver: any EventBackedSessionRepository) {
+        self.receiver = receiver
+    }
+
+    func send(_ event: EventEnvelope) async throws {
+        try await receiver.applyRemote(event)
     }
 }
 

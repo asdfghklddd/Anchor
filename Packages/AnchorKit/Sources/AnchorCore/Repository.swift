@@ -10,6 +10,7 @@ public protocol SessionRepository: Sendable {
 /// them and can apply the same mutations received from another device.
 public protocol EventBackedSessionRepository: SessionRepository {
     func pendingEvents() async -> [EventEnvelope]
+    func retainedEvents() async -> [EventEnvelope]
     func applyRemote(_ envelope: EventEnvelope) async throws
     func markDelivered(_ eventID: UUID) async throws
 }
@@ -220,6 +221,13 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
 
     public func pendingEvents() -> [EventEnvelope] {
         outbox.sorted(by: Self.eventSort)
+    }
+
+    /// Returns the immutable local event history, including events that a peer
+    /// acknowledged previously. A paired peer can replay this history after a
+    /// reconnect and rely on repository-level idempotency for reconciliation.
+    public func retainedEvents() -> [EventEnvelope] {
+        events.sorted(by: Self.eventSort)
     }
 
     public func applyRemote(_ envelope: EventEnvelope) throws {

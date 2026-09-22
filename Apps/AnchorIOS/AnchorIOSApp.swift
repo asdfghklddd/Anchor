@@ -80,7 +80,7 @@ struct AnchorIOSApp: App {
         }
         client.onConnectionState = { [weak repository] state in
             guard state == .connected else { return }
-            Task { await repository?.flushPendingEvents() }
+            Task { await repository?.reconcilePeerHistory() }
         }
         self.client = client
         proximityScanner = scanner
