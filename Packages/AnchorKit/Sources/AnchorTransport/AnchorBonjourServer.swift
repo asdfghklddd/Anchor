@@ -32,6 +32,7 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
     private var pairingCodeValue: String
     private var eventApplicationTask: Task<Void, Never>?
     private var replayWindow = LinkReplayWindow()
+    private var connectionState = ConnectionState.unavailable
 
     public init(
         identityStore: PairingIdentityStore = PairingIdentityStore(),
@@ -61,13 +62,13 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
             guard let self, self.listener === listener else { return }
             switch state {
             case .ready:
-                self.onConnectionState?(.disconnected)
+                self.setConnection(.disconnected)
             case .failed:
-                self.onConnectionState?(.failed)
+                self.setConnection(.failed)
                 self.listener?.cancel()
                 self.listener = nil
             case .cancelled:
-                self.onConnectionState?(.unavailable)
+                self.setConnection(.unavailable)
                 self.listener = nil
             default: break
             }
@@ -90,6 +91,7 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
             failAllDeliveries(with: CancellationError())
             eventApplicationTask?.cancel()
             eventApplicationTask = nil
+            setConnection(.unavailable)
         }
     }
 
@@ -114,7 +116,7 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
                     do {
                         try self.startOnQueue()
                     } catch {
-                        self.onConnectionState?(.failed)
+                        self.setConnection(.failed)
                     }
                 }
                 continuation.resume()
@@ -182,15 +184,20 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
         peer.start { [weak self, weak peer] frame in
             guard let peer else { return }
             self?.handle(frame, from: peer)
-        } onState: { [weak self] state in
+        } onState: { [weak self, weak peer] state in
+            guard let self,
+                  let peer,
+                  self.peers[id] === peer else { return }
             switch state {
             case .ready:
-                peer.send(LinkFrame(kind: .hello, senderID: self?.deviceID ?? UUID()))
+                peer.send(LinkFrame(kind: .hello, senderID: self.deviceID))
             case .failed, .cancelled:
-                self?.peers[id] = nil
-                self?.peerIDs[id] = nil
-                self?.failAllDeliveries(with: AnchorLinkError.connectionLost)
-                self?.onConnectionState?(.disconnected)
+                self.peers[id] = nil
+                self.peerIDs[id] = nil
+                self.failAllDeliveries(with: AnchorLinkError.connectionLost)
+                if self.authenticatedPeer() == nil {
+                    self.setConnection(.disconnected)
+                }
             default: break
             }
         }
@@ -242,7 +249,7 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
         guard let encrypted = frame.encryptedPayload,
               let key = identityStore.sharedKey(peerID: frame.senderID),
               let payload = try? AnchorLinkCodec.open(encrypted, using: key) else { return }
-        onConnectionState?(.connected)
+        setConnection(.connected)
         guard replayWindow.accepts(payload.messageID) else {
             if payload.kind == .event,
                let event = payload.event {
@@ -314,6 +321,14 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
         for id in Array(pendingDeliveries.keys) {
             finishDelivery(id, with: .failure(error))
         }
+    }
+
+    /// Queue-isolated transitions prevent authenticated traffic from
+    /// retriggering reconnect work while the same link remains healthy.
+    private func setConnection(_ state: ConnectionState) {
+        guard connectionState != state else { return }
+        connectionState = state
+        onConnectionState?(state)
     }
 
     private func sendEncrypted(_ payload: LinkPayload, using key: Data, to peer: LineConnection) {

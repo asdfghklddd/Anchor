@@ -248,6 +248,55 @@ struct AnchorLinkCodecTests {
         #expect(await recorder.events == [firstEvent, secondEvent])
     }
 
+    @Test("Authenticated traffic publishes one connected transition")
+    func authenticatedTrafficDoesNotRepeatConnectedTransition() async throws {
+        let suffix = UUID().uuidString
+        let serviceType = isolatedServiceType()
+        let serverService = "com.andywang.anchor.tests.server.state.\(suffix)"
+        let clientService = "com.andywang.anchor.tests.client.state.\(suffix)"
+        defer {
+            deleteKeychainItems(service: serverService)
+            deleteKeychainItems(service: clientService)
+        }
+
+        try await confirmation("One connected transition", expectedCount: 1) { connected in
+            let server = AnchorBonjourServer(
+                identityStore: PairingIdentityStore(service: serverService),
+                serviceType: serviceType
+            )
+            server.onEvent = { _ in }
+            server.onConnectionState = { state in
+                if state == .connected {
+                    connected()
+                }
+            }
+            try server.start()
+            defer { server.stop() }
+
+            let client = AnchorBonjourClient(
+                identityStore: PairingIdentityStore(service: clientService),
+                serviceType: serviceType
+            )
+            client.startDiscovery()
+            defer { client.stop() }
+            try await client.pair(using: try #require(await server.currentPairingCode()))
+
+            let sessionID = UUID()
+            let sourceID = UUID()
+            for sequence in UInt64(1) ... 2 {
+                try await client.send(
+                    EventEnvelope(
+                        sessionID: sessionID,
+                        sourceID: sourceID,
+                        sequence: sequence,
+                        type: "test.connection-state",
+                        payload: Data()
+                    )
+                )
+            }
+        }
+    }
+
     @Test("The production phone-to-Mac task loop preserves status and history")
     func bidirectionalRepositoryRoundTrip() async throws {
         let suffix = UUID().uuidString
