@@ -108,45 +108,74 @@ struct ProfileView: View {
     }
 
     private var identityCard: some View {
-        HarborHeroSurface(cornerRadius: 26) {
-            HStack(spacing: 13) {
-                HarborBrandMark(size: 54)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.personalAnchor)
-                        .font(.caption2.bold())
-                        .foregroundStyle(AnchorPalette.oceanHighlight)
-                    Text(L10n.profile)
-                        .font(.title.bold())
-                        .foregroundStyle(.white)
-                    Label(L10n.contextSyncStable, systemImage: "wifi")
-                        .font(.caption.bold())
-                        .foregroundStyle(AnchorPalette.oceanHighlight)
-                }
-                Spacer()
-                VStack(spacing: 1) {
-                    Text(projection.connection == .connected ? "1" : "0")
-                        .font(.title.bold().monospacedDigit())
-                        .foregroundStyle(AnchorPalette.warmYellow)
-                    Text(L10n.macOnline)
-                        .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.62))
-                }
+        HStack(spacing: 14) {
+            HarborBrandMark(size: 56)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(L10n.personalAnchor)
+                    .font(.caption.bold())
+                    .foregroundStyle(AnchorPalette.interaction)
+                Text(L10n.profile)
+                    .font(.title.bold())
+                    .foregroundStyle(AnchorPalette.brandDeep)
+                Label(L10n.contextSyncStable, systemImage: "wifi")
+                    .font(.caption.bold())
+                    .foregroundStyle(AnchorPalette.secondaryText)
             }
-            .padding(18)
+            Spacer(minLength: 8)
+            VStack(spacing: 2) {
+                Text(projection.connection == .connected ? "1" : "0")
+                    .font(.title2.bold().monospacedDigit())
+                    .foregroundStyle(AnchorPalette.brandDeep)
+                Text(L10n.macOnline)
+                    .font(.caption2)
+                    .foregroundStyle(AnchorPalette.secondaryText)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 9)
+            .background(AnchorPalette.fluoriteSurface.opacity(0.78), in: .rect(cornerRadius: 14))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
+            }
         }
+        .padding(18)
+        .fluoriteSurface(
+            fill: AnchorPalette.softBlue.opacity(0.42),
+            border: AnchorPalette.aiBlue.opacity(0.36),
+            cornerRadius: 22,
+            elevated: true
+        )
         .padding(.top, 8)
         .accessibilityElement(children: .combine)
     }
 
     private var metricStrip: some View {
         HStack(spacing: 9) {
-            profileMetric(value: L10n.minuteCount(focusMinutes), label: L10n.guardedFocus, tint: AnchorPalette.coral, progress: min(1, Double(focusMinutes) / 60)) {
+            profileMetric(
+                value: L10n.minuteCount(focusMinutes),
+                label: L10n.guardedFocus,
+                symbol: "timer",
+                tint: AnchorPalette.coral,
+                progress: min(1, Double(focusMinutes) / 60)
+            ) {
                 onSheet(.profileDetail(.focus))
             }
-            profileMetric(value: "\(savedContextCount)", label: L10n.savedContexts, tint: AnchorPalette.periwinkle, progress: min(1, Double(savedContextCount) / 10)) {
+            profileMetric(
+                value: "\(savedContextCount)",
+                label: L10n.savedContexts,
+                symbol: "square.stack.3d.up",
+                tint: AnchorPalette.periwinkle,
+                progress: min(1, Double(savedContextCount) / 10)
+            ) {
                 onSheet(.profileDetail(.contexts))
             }
-            profileMetric(value: "\(completedCount)", label: L10n.completedAnchors, tint: AnchorPalette.seafoam, progress: min(1, Double(completedCount) / 4)) {
+            profileMetric(
+                value: "\(completedCount)",
+                label: L10n.completedAnchors,
+                symbol: "scope",
+                tint: AnchorPalette.seafoam,
+                progress: min(1, Double(completedCount) / 4)
+            ) {
                 onSheet(.profileDetail(.anchors))
             }
         }
@@ -155,40 +184,41 @@ struct ProfileView: View {
     private func profileMetric(
         value: String,
         label: String,
+        symbol: String,
         tint: Color,
         progress: Double,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(value)
-                        .font(.title3.bold().monospacedDigit())
-                        .foregroundStyle(AnchorPalette.ink)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.72)
+            VStack(alignment: .leading, spacing: 7) {
+                HStack {
+                    Image(systemName: symbol)
+                        .font(.caption.bold())
+                        .foregroundStyle(AnchorPalette.brandDeep)
+                        .frame(width: 28, height: 28)
+                        .background(tint.opacity(0.18), in: .rect(cornerRadius: 8))
                     Spacer(minLength: 2)
-                    Image(systemName: "chevron.right").font(.caption2.bold()).foregroundStyle(AnchorPalette.secondaryInk)
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.bold())
+                        .foregroundStyle(AnchorPalette.secondaryText)
                 }
+                Text(value)
+                    .font(.title3.bold().monospacedDigit())
+                    .foregroundStyle(AnchorPalette.brandDeep)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.68)
                 Text(label)
                     .font(.caption2.bold())
-                    .foregroundStyle(AnchorPalette.secondaryInk)
+                    .foregroundStyle(AnchorPalette.secondaryText)
                     .lineLimit(2)
-                GeometryReader { proxy in
-                    Capsule()
-                        .fill(tint.opacity(0.16))
-                        .overlay(alignment: .leading) {
-                            Capsule().fill(tint).frame(width: proxy.size.width * progress)
-                        }
-                }
+                AnchorProgress(value: progress, tint: tint)
                 .frame(height: 5)
             }
-            .padding(11)
-            .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
-            .background(tint.opacity(0.16), in: .rect(cornerRadius: 20, style: .continuous))
-            .shadow(color: tint.opacity(0.09), radius: 8, y: 5)
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: 118, alignment: .topLeading)
+            .fluoriteSurface(cornerRadius: 16)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AnchorPressButtonStyle())
         .accessibilityElement(children: .combine)
     }
 
@@ -229,10 +259,9 @@ struct ProfileView: View {
                 .foregroundStyle(AnchorPalette.secondaryInk)
             }
             .padding(15)
-            .background(AnchorPalette.surface, in: .rect(cornerRadius: 24, style: .continuous))
-            .shadow(color: AnchorPalette.deepSea.opacity(0.08), radius: 12, y: 7)
+            .fluoriteSurface(cornerRadius: 20, elevated: true)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AnchorPressButtonStyle())
         .accessibilityIdentifier("profile.session.card")
     }
 
@@ -303,7 +332,7 @@ struct ProfileView: View {
                 }
             }
             .padding(.horizontal, 13)
-            .background(AnchorPalette.surface, in: .rect(cornerRadius: 22, style: .continuous))
+            .fluoriteSurface(cornerRadius: 18)
         }
     }
 
@@ -333,7 +362,7 @@ struct ProfileView: View {
                 routeRow(L10n.accessibility, symbol: "accessibility", route: .accessibility)
             }
             .padding(.horizontal, 12)
-            .background(AnchorPalette.surface, in: .rect(cornerRadius: 22, style: .continuous))
+            .fluoriteSurface(cornerRadius: 18)
         }
     }
 
@@ -341,12 +370,12 @@ struct ProfileView: View {
         Button { onRoute(route) } label: {
             HStack(spacing: 12) {
                 Image(systemName: symbol)
-                    .foregroundStyle(AnchorPalette.link)
+                    .foregroundStyle(AnchorPalette.interaction)
                     .frame(width: 32, height: 32)
-                    .background(AnchorPalette.cyan.opacity(0.12), in: .rect(cornerRadius: 10, style: .continuous))
+                    .background(AnchorPalette.softBlue.opacity(0.62), in: .rect(cornerRadius: 9))
                 Text(title).font(.subheadline.bold()).foregroundStyle(AnchorPalette.ink)
                 Spacer()
-                Image(systemName: "chevron.right").font(.caption2.bold()).foregroundStyle(AnchorPalette.secondaryInk)
+                Image(systemName: "chevron.right").font(.caption2.bold()).foregroundStyle(AnchorPalette.secondaryText)
             }
             .frame(minHeight: 50)
             .contentShape(.rect)
@@ -358,12 +387,12 @@ struct ProfileView: View {
         Button { onSheet(sheet) } label: {
             HStack(spacing: 12) {
                 Image(systemName: symbol)
-                    .foregroundStyle(AnchorPalette.link)
+                    .foregroundStyle(AnchorPalette.interaction)
                     .frame(width: 32, height: 32)
-                    .background(AnchorPalette.cyan.opacity(0.12), in: .rect(cornerRadius: 10, style: .continuous))
+                    .background(AnchorPalette.softBlue.opacity(0.62), in: .rect(cornerRadius: 9))
                 Text(title).font(.subheadline.bold()).foregroundStyle(AnchorPalette.ink)
                 Spacer()
-                Image(systemName: "chevron.right").font(.caption2.bold()).foregroundStyle(AnchorPalette.secondaryInk)
+                Image(systemName: "chevron.right").font(.caption2.bold()).foregroundStyle(AnchorPalette.secondaryText)
             }
             .frame(minHeight: 50)
             .contentShape(.rect)
