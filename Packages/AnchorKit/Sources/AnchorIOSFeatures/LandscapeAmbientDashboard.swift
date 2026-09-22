@@ -644,6 +644,8 @@ private struct AmbientProcessTile: View {
     let process: AnchorProcess
     let selected: Bool
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
@@ -663,7 +665,8 @@ private struct AmbientProcessTile: View {
                 Text(process.metric)
                     .font(.title2.bold().monospacedDigit())
                     .foregroundStyle(AnchorPalette.brandDeep)
-                    .contentTransition(.numericText())
+                    .contentTransition(reduceMotion ? .opacity : .numericText())
+                    .animation(liveValueAnimation, value: process.metric)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
                 Spacer(minLength: 0)
@@ -682,9 +685,10 @@ private struct AmbientProcessTile: View {
                     Text(progress, format: .percent.precision(.fractionLength(0)))
                         .font(.caption2.bold().monospacedDigit())
                         .foregroundStyle(AnchorPalette.secondaryText)
-                        .contentTransition(.numericText(value: progress))
+                        .contentTransition(reduceMotion ? .opacity : .numericText(value: progress))
                         .frame(width: 31, alignment: .trailing)
                 }
+                .animation(liveValueAnimation, value: progress)
             }
         }
         .foregroundStyle(AnchorPalette.brandDeep)
@@ -702,6 +706,7 @@ private struct AmbientProcessTile: View {
             cornerRadius: 14,
             elevated: selected || process.status == .needsDecision
         )
+        .animation(liveValueAnimation, value: process.status)
         .accessibilityHidden(true)
     }
 
@@ -723,6 +728,7 @@ private struct AmbientProcessTile: View {
             )
             .lineLimit(1)
             .minimumScaleFactor(0.78)
+            .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
             .accessibilityIdentifier("ambient.tile.status")
     }
 
@@ -753,6 +759,10 @@ private struct AmbientProcessTile: View {
         case .failed: "xmark.octagon.fill"
         case .disconnected: "wifi.slash"
         }
+    }
+
+    private var liveValueAnimation: Animation {
+        reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.micro
     }
 }
 

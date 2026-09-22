@@ -144,6 +144,7 @@ public struct StatusBadge: View {
     private let status: ProcessStatus
     private let text: String
     private let decorative: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo: .caption) private var textSize: CGFloat = 12
     @ScaledMetric(relativeTo: .caption) private var badgeScale: CGFloat = 1
 
@@ -203,6 +204,11 @@ public struct StatusBadge: View {
                 .overlay {
                     Capsule().stroke(tint, lineWidth: 2)
                 }
+                .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
+                .animation(
+                    reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.micro,
+                    value: status
+                )
                 .accessibilityRespondsToUserInteraction(false)
         }
     }

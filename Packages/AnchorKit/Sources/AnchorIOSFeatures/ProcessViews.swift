@@ -8,6 +8,8 @@ struct ProcessDetailView: View {
     let decision: Decision?
     let onDecision: (UUID) -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AnchorSpacing.large) {
@@ -31,7 +33,8 @@ struct ProcessDetailView: View {
                                 Text(process.metric)
                                     .font(.title.bold().monospacedDigit())
                                     .foregroundStyle(AnchorPalette.brandDeep)
-                                    .contentTransition(.numericText())
+                                    .contentTransition(reduceMotion ? .opacity : .numericText())
+                                    .animation(liveValueAnimation, value: process.metric)
                                 Text(process.metricLabel)
                                     .font(.caption)
                                     .foregroundStyle(AnchorPalette.secondaryText)
@@ -47,6 +50,7 @@ struct ProcessDetailView: View {
                         }
                         if let progress = process.progress {
                             AnchorProgress(value: progress, tint: AnchorPalette.interaction)
+                                .animation(liveValueAnimation, value: progress)
                         }
                     }
                 }
@@ -78,6 +82,10 @@ struct ProcessDetailView: View {
         .background(AnchorPalette.canvas)
         .navigationTitle(process.sourceName)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var liveValueAnimation: Animation {
+        reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.micro
     }
 }
 

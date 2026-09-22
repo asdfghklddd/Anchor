@@ -37,10 +37,11 @@ struct ProcessCard: View {
                     Text(progress, format: .percent.precision(.fractionLength(0)))
                         .font(.caption.bold().monospacedDigit())
                         .foregroundStyle(AnchorPalette.secondaryText)
-                        .contentTransition(.numericText(value: progress))
+                        .contentTransition(reduceMotion ? .opacity : .numericText(value: progress))
                         .frame(width: 34, alignment: .trailing)
                         .accessibilityIdentifier("process.card.progress")
                 }
+                .animation(liveValueAnimation, value: progress)
             }
         }
         .padding(12)
@@ -59,7 +60,7 @@ struct ProcessCard: View {
             cornerRadius: 14,
             elevated: process.status == .needsDecision
         )
-        .animation(reduceMotion ? nil : AnchorMotion.micro, value: process.status)
+        .animation(liveValueAnimation, value: process.status)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(process.sourceName), \(process.title), \(statusText)")
         .accessibilityValue(process.progress?.formatted(.percent.precision(.fractionLength(0))) ?? statusText)
@@ -73,7 +74,7 @@ struct ProcessCard: View {
             .padding(.horizontal, 8)
             .frame(minHeight: 24)
             .background(statusBackground, in: .capsule)
-            .contentTransition(.symbolEffect(.replace))
+            .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
             .accessibilityIdentifier("process.card.status")
     }
 
@@ -88,7 +89,8 @@ struct ProcessCard: View {
                     .font(.title2.bold().monospacedDigit())
                     .fixedSize(horizontal: true, vertical: false)
                     .foregroundStyle(AnchorPalette.brandDeep)
-                    .contentTransition(.numericText())
+                    .contentTransition(reduceMotion ? .opacity : .numericText())
+                    .animation(liveValueAnimation, value: process.metric)
                     .accessibilityIdentifier("process.card.metric")
                 Text(process.metricLabel)
                     .font(.caption)
@@ -114,7 +116,8 @@ struct ProcessCard: View {
             Text(process.metric)
                 .font(.title2.bold().monospacedDigit())
                 .foregroundStyle(AnchorPalette.brandDeep)
-                .contentTransition(.numericText())
+                .contentTransition(reduceMotion ? .opacity : .numericText())
+                .animation(liveValueAnimation, value: process.metric)
                 .accessibilityIdentifier("process.card.metric")
             Spacer(minLength: 0)
         }
@@ -132,6 +135,10 @@ struct ProcessCard: View {
 
     private var tint: Color {
         process.status == .needsDecision ? AnchorPalette.attention : AnchorPalette.aiBlue
+    }
+
+    private var liveValueAnimation: Animation {
+        reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.micro
     }
 
     private var statusForeground: Color {

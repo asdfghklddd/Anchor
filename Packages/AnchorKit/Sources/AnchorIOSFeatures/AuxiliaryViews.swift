@@ -73,6 +73,8 @@ struct ProfileView: View {
     let onRoute: (AnchorRoute) -> Void
     let onSheet: (AnchorSheet) -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         ZStack {
             HarborBackground()
@@ -126,6 +128,8 @@ struct ProfileView: View {
                 Text(projection.connection == .connected ? "1" : "0")
                     .font(.title2.bold().monospacedDigit())
                     .foregroundStyle(AnchorPalette.brandDeep)
+                    .contentTransition(reduceMotion ? .opacity : .numericText())
+                    .animation(profileValueAnimation, value: projection.connection)
                 Text(L10n.macOnline)
                     .font(.caption2)
                     .foregroundStyle(AnchorPalette.secondaryText)
@@ -207,13 +211,16 @@ struct ProfileView: View {
                     .foregroundStyle(AnchorPalette.brandDeep)
                     .lineLimit(1)
                     .minimumScaleFactor(0.68)
+                    .contentTransition(reduceMotion ? .opacity : .numericText())
                 Text(label)
                     .font(.caption2.bold())
                     .foregroundStyle(AnchorPalette.secondaryText)
                     .lineLimit(2)
                 AnchorProgress(value: progress, tint: tint)
-                .frame(height: 5)
+                    .frame(height: 5)
             }
+            .animation(profileValueAnimation, value: value)
+            .animation(profileValueAnimation, value: progress)
             .padding(12)
             .frame(maxWidth: .infinity, minHeight: 118, alignment: .topLeading)
             .fluoriteSurface(cornerRadius: 16)
@@ -272,6 +279,8 @@ struct ProfileView: View {
                 .foregroundStyle(AnchorPalette.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.65)
+                .contentTransition(reduceMotion ? .opacity : .numericText())
+                .animation(profileValueAnimation, value: value)
             Text(label).font(.caption2).foregroundStyle(AnchorPalette.secondaryInk).lineLimit(1)
         }
         .frame(maxWidth: .infinity)
@@ -415,6 +424,10 @@ struct ProfileView: View {
     private var focusMinutes: Int {
         guard let startedAt = projection.session?.startedAt else { return 0 }
         return max(0, Int(Date.now.timeIntervalSince(startedAt) / 60))
+    }
+
+    private var profileValueAnimation: Animation {
+        reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.micro
     }
 }
 

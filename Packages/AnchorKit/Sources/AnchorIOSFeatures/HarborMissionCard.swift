@@ -9,6 +9,7 @@ struct HarborMissionCard: View {
     let onFinish: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -69,6 +70,7 @@ struct HarborMissionCard: View {
                     needsAttention ? AnchorPalette.attention.opacity(0.22) : AnchorPalette.softBlue.opacity(0.55),
                     in: .capsule
                 )
+                .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
 
             Divider().overlay(AnchorPalette.fluoriteBorder)
 
@@ -85,6 +87,10 @@ struct HarborMissionCard: View {
             border: needsAttention ? AnchorPalette.attention.opacity(0.48) : AnchorPalette.fluoriteBorder,
             cornerRadius: 18,
             elevated: true
+        )
+        .animation(
+            reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.micro,
+            value: taskStatus
         )
     }
 

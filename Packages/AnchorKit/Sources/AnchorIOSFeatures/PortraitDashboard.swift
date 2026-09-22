@@ -38,10 +38,21 @@ struct PortraitDashboard: View {
                         onFinish: { onSheet(.finish) }
                     )
 
-                    if isObservedWorkComplete {
-                        observedCompletionPrompt
-                            .padding(.top, AnchorSpacing.small)
+                    Group {
+                        if isObservedWorkComplete {
+                            observedCompletionPrompt
+                                .padding(.top, AnchorSpacing.small)
+                                .transition(
+                                    reduceMotion
+                                        ? .opacity
+                                        : .scale(scale: 0.98, anchor: .top).combined(with: .opacity)
+                                )
+                        }
                     }
+                    .animation(
+                        reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.panel,
+                        value: isObservedWorkComplete
+                    )
 
                     Color.clear.frame(height: 20)
 
@@ -100,6 +111,11 @@ struct PortraitDashboard: View {
                     .padding(.horizontal, 9)
                     .frame(minHeight: 32)
                     .background(AnchorPalette.softBlue.opacity(0.52), in: .capsule)
+                    .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
+                    .animation(
+                        reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.micro,
+                        value: projection.session == nil
+                    )
                     .accessibilityIdentifier("processes.live")
 
                 Button {

@@ -617,7 +617,11 @@ struct ReturnView: View {
             Text(value)
                 .font(.headline.bold().monospacedDigit())
                 .foregroundStyle(AnchorPalette.brandDeep)
-                .contentTransition(.numericText())
+                .contentTransition(reduceMotion ? .opacity : .numericText())
+                .animation(
+                    reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.micro,
+                    value: value
+                )
             Text(label).font(.caption2).foregroundStyle(AnchorPalette.secondaryText)
                 .accessibilityIdentifier("return.impact.metric")
         }
