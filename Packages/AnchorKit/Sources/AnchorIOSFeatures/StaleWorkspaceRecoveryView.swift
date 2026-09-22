@@ -84,7 +84,7 @@ struct StaleWorkspaceRecoveryView: View {
                         systemImage: "clock.arrow.circlepath"
                     )
                 }
-                Label(L10n.processCount(session.processes.count), systemImage: "square.grid.2x2")
+                Label(L10n.processCount(session.taskProcesses.count), systemImage: "square.grid.2x2")
             }
             .font(.subheadline)
             .foregroundStyle(AnchorPalette.secondaryText)

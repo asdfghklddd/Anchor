@@ -69,7 +69,7 @@ struct HandoffView: View {
 
     private var handoffStage: some View {
         ZStack {
-            ForEach(Array((model.projection.session?.processes ?? []).prefix(4).enumerated()), id: \.element.id) { index, process in
+            ForEach(Array((model.projection.session?.taskProcesses ?? []).prefix(4).enumerated()), id: \.element.id) { index, process in
                 handoffCard(process)
                     .offset(isGathering ? .zero : cardOffset(index))
                     .scaleEffect(isGathering ? 0.36 : 1)
@@ -261,7 +261,7 @@ struct AwayView: View {
                     columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
                     spacing: 8
                 ) {
-                    ForEach(projection.session?.processes ?? []) { process in
+                    ForEach(projection.session?.taskProcesses ?? []) { process in
                         HStack(spacing: 6) {
                             SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 20)
 
@@ -315,7 +315,7 @@ struct AwayView: View {
             Spacer()
             HStack(spacing: 6) {
                 Text(L10n.processAttentionSummary(
-                    processes: projection.session?.processes.count ?? 0,
+                    processes: projection.session?.taskProcesses.count ?? 0,
                     attention: projection.openDecisions.count
                 ))
                     .font(.caption2.bold().monospacedDigit())
@@ -349,7 +349,7 @@ struct AwayView: View {
                 : [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
             spacing: 10
         ) {
-            ForEach(projection.session?.processes ?? []) { process in
+            ForEach(projection.session?.taskProcesses ?? []) { process in
                 Button { selectedProcess = process } label: {
                     ProcessCard(process: process, isRemote: true, decorative: true)
                 }
@@ -365,7 +365,7 @@ struct AwayView: View {
     }
 
     private var runningCount: Int {
-        projection.session?.processes.filter { $0.status == .running }.count ?? 0
+        projection.session?.taskProcesses.filter { $0.status == .running }.count ?? 0
     }
 
     private func awayMinutes(at date: Date) -> Int {
@@ -751,7 +751,7 @@ struct ReturnView: View {
     }
 
     private var runningCount: Int {
-        projection.session?.processes.filter { $0.status == .running }.count ?? 0
+        projection.session?.taskProcesses.filter { $0.status == .running }.count ?? 0
     }
 
     private var awayMinutes: Int {
@@ -761,7 +761,7 @@ struct ReturnView: View {
 
     private var recommendedProcess: AnchorProcess? {
         guard let id = projection.session?.returnSummary?.recommendedProcessID else { return nil }
-        return projection.session?.processes.first { $0.id == id }
+        return projection.session?.taskProcesses.first { $0.id == id }
     }
 }
 #endif

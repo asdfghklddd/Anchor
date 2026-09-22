@@ -10,7 +10,7 @@ struct InsightsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: AnchorSpacing.large) {
                 HStack(spacing: AnchorSpacing.small) {
-                    MetricTile(value: "\(projection.session?.processes.count ?? 0)", label: L10n.processes, tint: AnchorPalette.cyan)
+                    MetricTile(value: "\(projection.session?.taskProcesses.count ?? 0)", label: L10n.processes, tint: AnchorPalette.cyan)
                     MetricTile(value: "\(projection.openDecisions.count)", label: L10n.decisions, tint: AnchorPalette.sand)
                     MetricTile(value: "\(completedCount)", label: L10n.completedWork, tint: AnchorPalette.seafoam)
                 }
@@ -43,7 +43,7 @@ struct InsightsView: View {
     }
 
     private var completedCount: Int {
-        projection.session?.processes.filter { $0.status == .completed }.count ?? 0
+        projection.session?.taskProcesses.filter { $0.status == .completed }.count ?? 0
     }
 }
 
@@ -417,9 +417,9 @@ struct ProfileView: View {
         }
     }
 
-    private var processCount: Int { projection.session?.processes.count ?? 0 }
-    private var runningCount: Int { projection.session?.processes.filter { $0.status == .running }.count ?? 0 }
-    private var completedCount: Int { projection.session?.processes.filter { $0.status == .completed }.count ?? 0 }
+    private var processCount: Int { projection.session?.taskProcesses.count ?? 0 }
+    private var runningCount: Int { projection.session?.taskProcesses.filter { $0.status == .running }.count ?? 0 }
+    private var completedCount: Int { projection.session?.taskProcesses.filter { $0.status == .completed }.count ?? 0 }
     private var savedContextCount: Int { (projection.session?.notes.count ?? 0) + (projection.session?.snapshots.count ?? 0) }
     private var focusMinutes: Int {
         guard let startedAt = projection.session?.startedAt else { return 0 }
@@ -542,7 +542,7 @@ struct TaskManagementView: View {
 
     init(model: AnchorSessionModel) {
         self.model = model
-        _processes = State(initialValue: model.projection.session?.processes ?? [])
+        _processes = State(initialValue: model.projection.session?.taskProcesses ?? [])
     }
 
     var body: some View {
@@ -614,7 +614,7 @@ struct FinishSessionView: View {
                         VStack(alignment: .leading, spacing: AnchorSpacing.small) {
                             Text(model.projection.session?.goal.title ?? "")
                                 .font(.title2.bold())
-                            Label(L10n.processCount(model.projection.session?.processes.count ?? 0), systemImage: "square.grid.2x2")
+                            Label(L10n.processCount(model.projection.session?.taskProcesses.count ?? 0), systemImage: "square.grid.2x2")
                             Label(L10n.noteCount(model.projection.session?.notes.count ?? 0), systemImage: "bookmark")
                             Label(L10n.decisionCount(model.projection.session?.decisions.filter { $0.status == .resolved }.count ?? 0), systemImage: "checkmark.bubble")
                         }

@@ -149,7 +149,7 @@ struct HarborMissionCard: View {
     }
 
     private var processes: [AnchorProcess] {
-        session?.processes ?? []
+        session?.taskProcesses ?? []
     }
 
     private var anchorCount: Int {

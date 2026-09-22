@@ -70,8 +70,8 @@ struct PortraitDashboard: View {
 
                         processHeader(availability: availability)
 
-                        if let session = projection.session, !session.processes.isEmpty {
-                            processGrid(session: session, availability: availability)
+                        if let session = projection.session {
+                            processSections(session: session, availability: availability)
                         } else {
                             WorkspaceEmptyProcessesView()
                         }
@@ -229,11 +229,62 @@ struct PortraitDashboard: View {
     /// named placeholders and app presence never become completion evidence.
     private var isObservedWorkComplete: Bool {
         guard let session = projection.session else { return false }
-        let observed = session.processes.filter { $0.sourceID != nil }
+        let observed = session.observedTaskProcesses
         return !observed.isEmpty && observed.allSatisfy { $0.status == .completed }
     }
 
+    @ViewBuilder
+    private func processSections(
+        session: AnchorSession,
+        availability: ProjectionAvailability
+    ) -> some View {
+        let planned = session.plannedProcesses
+        let observed = session.observedTaskProcesses
+        let environment = session.environmentProcesses
+
+        if planned.isEmpty && observed.isEmpty {
+            WorkspaceEmptyProcessesView()
+        }
+
+        if !planned.isEmpty {
+            WorkspaceProcessSectionHeader(
+                title: L10n.readyProcesses,
+                detail: nil,
+                count: planned.count,
+                identifier: "processes.planned.section"
+            )
+            processGrid(
+                processes: planned,
+                session: session,
+                availability: availability
+            )
+        }
+
+        if !observed.isEmpty {
+            WorkspaceProcessSectionHeader(
+                title: L10n.sourceSetupTaskObservation,
+                detail: L10n.sourceSetupTaskObservationDetail,
+                count: observed.count,
+                identifier: "processes.observed.section"
+            )
+            processGrid(
+                processes: observed,
+                session: session,
+                availability: availability
+            )
+        }
+
+        if !environment.isEmpty {
+            WorkspaceEnvironmentSummary(
+                processes: environment,
+                onOpen: { onRoute(.sources) }
+            )
+            .padding(.top, AnchorSpacing.medium)
+        }
+    }
+
     private func processGrid(
+        processes: [AnchorProcess],
         session: AnchorSession,
         availability: ProjectionAvailability
     ) -> some View {
@@ -246,7 +297,7 @@ struct PortraitDashboard: View {
                 ],
             spacing: AnchorSpacing.small
         ) {
-            ForEach(session.processes) { process in
+            ForEach(processes) { process in
                 Button {
                     if let decision = session.decisions.first(where: {
                         $0.processID == process.id && $0.status == .open
@@ -282,7 +333,7 @@ struct PortraitDashboard: View {
         }
         .animation(
             reduceMotion ? nil : AnchorMotion.continuity,
-            value: session.processes.map(\.id)
+            value: processes.map(\.id)
         )
     }
 

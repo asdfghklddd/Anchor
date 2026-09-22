@@ -4,9 +4,7 @@ import Foundation
 /// Observes regular GUI applications using public NSWorkspace lifecycle
 /// notifications, with a periodic snapshot to recover any missed signals.
 public struct MacWorkspaceProcessSource: ProcessSource, Sendable {
-    public static let defaultSourceID = UUID(
-        uuidString: "00000000-0000-4000-8000-000000000403"
-    ) ?? UUID()
+    public static let defaultSourceID = BuiltInProcessSourceID.macWorkspace
 
     public let descriptor: SourceDescriptor
 

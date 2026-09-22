@@ -31,6 +31,9 @@ final class AnchorIOSUITests: XCTestCase {
         XCTAssertTrue(element("setup.screen", in: app).waitForNonExistence(timeout: 5))
         XCTAssertEqual(element("goal.title", in: app).label, "Production UI test task")
         XCTAssertFalse(element("workspace.empty.processes", in: app).exists)
+        XCTAssertTrue(element("processes.planned.section", in: app).exists)
+        XCTAssertFalse(element("processes.observed.section", in: app).exists)
+        XCTAssertFalse(element("processes.environment.summary", in: app).exists)
 
         app.terminate()
         app.launch()
@@ -39,6 +42,7 @@ final class AnchorIOSUITests: XCTestCase {
         XCTAssertTrue(restoredGoal.waitForExistence(timeout: 8))
         XCTAssertEqual(restoredGoal.label, "Production UI test task")
         XCTAssertTrue(app.staticTexts["Build the formal experience"].exists)
+        XCTAssertTrue(element("processes.planned.section", in: app).exists)
     }
 
     @MainActor

@@ -412,8 +412,8 @@ struct AnchorNoteView: View {
 
     private var snapshotStrip: some View {
         let session = model.projection.session
-        let running = session?.processes.filter { $0.status == .running }.count ?? 0
-        let attention = session?.processes.filter { $0.status == .needsDecision }.count ?? 0
+        let running = session?.taskProcesses.filter { $0.status == .running }.count ?? 0
+        let attention = session?.taskProcesses.filter { $0.status == .needsDecision }.count ?? 0
         return HStack(spacing: 0) {
             snapshotCell(symbol: "mappin.and.ellipse", label: L10n.currentGoal, value: session?.goal.title ?? "")
             Divider().padding(.vertical, 10)

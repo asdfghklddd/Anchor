@@ -66,11 +66,11 @@ struct HarborFocusIntro: View {
     }
 
     private var runningCount: Int {
-        session?.processes.lazy.filter { $0.status == .running }.count ?? 0
+        session?.taskProcesses.lazy.filter { $0.status == .running }.count ?? 0
     }
 
     private var attentionCount: Int {
-        session?.processes.lazy.filter { $0.status == .needsDecision }.count ?? 0
+        session?.taskProcesses.lazy.filter { $0.status == .needsDecision }.count ?? 0
     }
 
     private var focusMinutes: Int {

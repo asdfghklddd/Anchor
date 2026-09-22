@@ -403,7 +403,7 @@ struct ProfileDetailSheet: View {
     }
 
     private var processes: [AnchorProcess] {
-        projection.session?.processes ?? []
+        projection.session?.taskProcesses ?? []
     }
 
     private var timeline: [ProcessEvent] {
@@ -479,10 +479,10 @@ private extension ProfileDetailKind {
         switch self {
         case .focus: L10n.minuteCount(max(0, Int(Date.now.timeIntervalSince(projection.session?.startedAt ?? .now) / 60)))
         case .contexts: "\((projection.session?.notes.count ?? 0) + (projection.session?.snapshots.count ?? 0))"
-        case .anchors: "\(projection.session?.processes.filter { $0.status == .completed }.count ?? 0)"
+        case .anchors: "\(projection.session?.taskProcesses.filter { $0.status == .completed }.count ?? 0)"
         case .session, .returnMemory: TaskStatusPresentation.text(for: projection.session)
         case .decisionTrace: projection.openDecisions.isEmpty ? "✓" : "1"
-        case .contextSnapshot: "\(projection.session?.processes.count ?? 0)/\(projection.session?.processes.count ?? 0)"
+        case .contextSnapshot: "\(projection.session?.taskProcesses.count ?? 0)/\(projection.session?.taskProcesses.count ?? 0)"
         }
     }
 
@@ -491,7 +491,7 @@ private extension ProfileDetailKind {
         case .focus: AnchorStrings.value("profile.detail.focus.subline", default: "Recent focus sessions and the judgments they protected.")
         case .contexts: AnchorStrings.value("profile.detail.contexts.subline", default: "Saved goals, process states, and notes remain available.")
         case .anchors: AnchorStrings.value("profile.detail.anchors.subline", default: "Completed work is preserved as a recoverable context.")
-        case .session: L10n.runningAndWaiting(running: projection.session?.processes.filter { $0.status == .running }.count ?? 0, attention: projection.openDecisions.count)
+        case .session: L10n.runningAndWaiting(running: projection.session?.taskProcesses.filter { $0.status == .running }.count ?? 0, attention: projection.openDecisions.count)
         case .returnMemory: L10n.returnDetail
         case .decisionTrace:
             projection.openDecisions.isEmpty

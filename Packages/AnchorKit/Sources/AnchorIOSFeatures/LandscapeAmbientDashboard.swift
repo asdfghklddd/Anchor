@@ -268,7 +268,7 @@ struct LandscapeAmbientDashboard: View {
 
     @ViewBuilder
     private var processGrid: some View {
-        if let processes = projection.session?.processes, !processes.isEmpty {
+        if let processes = projection.session?.taskProcesses, !processes.isEmpty {
             AmbientProcessGrid(
                 processes: processes,
                 inspectedProcessID: inspectedProcessID,
@@ -385,7 +385,7 @@ struct LandscapeAmbientDashboard: View {
                 AnchorPalette.secondaryInk.opacity(0.16)
             } else {
                 HStack(spacing: 0) {
-                    ForEach(projection.session?.processes ?? []) { process in
+                    ForEach(projection.session?.taskProcesses ?? []) { process in
                         ZStack(alignment: .leading) {
                             AnchorPalette.source(process.sourceTone).opacity(0.18)
                             if let progress = process.progress {
@@ -411,14 +411,14 @@ struct LandscapeAmbientDashboard: View {
         selectedDecision ?? (inspectedProcessID == nil ? openDecision : nil)
     }
     private var inspectedProcess: AnchorProcess? {
-        projection.session?.processes.first { $0.id == inspectedProcessID }
+        projection.session?.taskProcesses.first { $0.id == inspectedProcessID }
     }
-    private var processCount: Int { projection.session?.processes.count ?? 0 }
+    private var processCount: Int { projection.session?.taskProcesses.count ?? 0 }
     private var runningProcessCount: Int {
-        projection.session?.processes.filter { $0.status == .running }.count ?? 0
+        projection.session?.taskProcesses.filter { $0.status == .running }.count ?? 0
     }
     private var queuedProcessCount: Int {
-        projection.session?.processes.filter { $0.status == .queued }.count ?? 0
+        projection.session?.taskProcesses.filter { $0.status == .queued }.count ?? 0
     }
     private var ambientActiveColor: Color {
         colorScheme == .dark ? AnchorPalette.seafoam : AnchorPalette.mintInk
@@ -428,7 +428,7 @@ struct LandscapeAmbientDashboard: View {
         return session.notes.count + 1
     }
     private var tickerText: String {
-        projection.session?.processes
+        projection.session?.taskProcesses
             .prefix(4)
             .map(tickerItem(for:))
             .joined(separator: "   ·   ") ?? ""

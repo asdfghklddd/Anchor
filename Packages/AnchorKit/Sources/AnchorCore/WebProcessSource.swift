@@ -4,9 +4,7 @@ import Foundation
 /// Group inbox. Keeping the directory separate prevents the CLI and browser
 /// adapters from racing to consume each other's files.
 public struct WebProcessSource: ProcessSource, Sendable {
-    public static let defaultSourceID = UUID(
-        uuidString: "00000000-0000-4000-8000-000000000402"
-    ) ?? UUID()
+    public static let defaultSourceID = BuiltInProcessSourceID.web
 
     public let descriptor: SourceDescriptor
     private let fileSource: FileProcessSource

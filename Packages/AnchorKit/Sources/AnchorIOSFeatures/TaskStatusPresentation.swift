@@ -19,7 +19,7 @@ enum TaskStatusPresentation {
 
     static func text(for session: AnchorSession?) -> String {
         guard let session else { return "—" }
-        let processes = session.processes
+        let processes = session.taskProcesses
         let hasRunning = processes.contains { $0.status == .running }
         let needsAttention = processes.contains {
             $0.status == .needsDecision || $0.status == .blocked
@@ -45,7 +45,7 @@ enum TaskStatusPresentation {
             return L10n.stale
         }
 
-        let observed = processes.filter { $0.sourceID != nil }
+        let observed = session.observedTaskProcesses
         if !observed.isEmpty && observed.allSatisfy({ $0.status == .completed }) {
             return L10n.sourceSetupTaskAwaitingConfirmation
         }

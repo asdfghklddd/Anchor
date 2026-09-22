@@ -47,9 +47,7 @@ private actor CodexLifecycleDeliveryState {
 /// Read-only Codex lifecycle source. It observes JSONL growth and emits only
 /// sanitized lifecycle events; the source never forwards message bodies.
 public struct CodexLifecycleFileSource: ProcessSource, Sendable {
-    public static let defaultSourceID = UUID(
-        uuidString: "00000000-0000-4000-8000-000000000404"
-    )!
+    public static let defaultSourceID = BuiltInProcessSourceID.codex
 
     public let fileURL: URL
     public let pollInterval: TimeInterval

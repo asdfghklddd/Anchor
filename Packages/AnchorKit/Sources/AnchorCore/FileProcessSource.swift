@@ -10,7 +10,7 @@ public enum FileProcessSignalKind: Sendable {
 /// moves consumed files out of the inbox before yielding them to the actor.
 public struct FileProcessSource: ProcessSource, Sendable {
     public static let appGroupIdentifier = "group.com.andywang.anchor"
-    public static let defaultSourceID = UUID(uuidString: "00000000-0000-4000-8000-000000000401") ?? UUID()
+    public static let defaultSourceID = BuiltInProcessSourceID.file
 
     public let directoryURL: URL
     public let pollInterval: TimeInterval
