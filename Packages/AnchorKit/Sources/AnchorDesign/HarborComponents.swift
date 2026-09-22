@@ -207,12 +207,29 @@ public struct HarborAnchorControl: View {
             Button(action: action) {
                 ZStack {
                     Circle()
-                        .fill(AnchorPalette.interaction)
+                        .fill(AnchorPalette.brandDeep.opacity(0.82))
+                        .frame(width: 58, height: 58)
+                        .offset(y: 4)
+
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [AnchorPalette.interaction, AnchorPalette.brandDeep],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                         .frame(width: 58, height: 58)
                         .overlay {
                             Circle().stroke(.white.opacity(0.22), lineWidth: 1)
                         }
-                        .shadow(color: AnchorPalette.brandDeep.opacity(0.16), radius: 10, y: 6)
+                        .overlay(alignment: .top) {
+                            Capsule()
+                                .fill(.white.opacity(0.26))
+                                .frame(width: 25, height: 3)
+                                .padding(.top, 7)
+                        }
+                        .shadow(color: AnchorPalette.brandDeep.opacity(0.24), radius: 14, y: 9)
 
                     HarborAnchorGlyph(color: .white, lineWidth: 2.6)
                         .frame(width: 25, height: 25)
@@ -246,9 +263,26 @@ public struct HarborPrimaryButtonStyle: ButtonStyle {
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity, minHeight: 52)
             .padding(.horizontal, AnchorSpacing.medium)
-            .background(
-                isEnabled ? AnchorPalette.interaction : AnchorPalette.secondaryText.opacity(0.55),
-                in: .rect(cornerRadius: 12)
+            .background {
+                if isEnabled {
+                    LinearGradient(
+                        colors: [AnchorPalette.interaction, AnchorPalette.brandDeep],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                } else {
+                    AnchorPalette.secondaryText.opacity(0.55)
+                }
+            }
+            .clipShape(.rect(cornerRadius: 12))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(.white.opacity(isEnabled ? 0.18 : 0.08), lineWidth: 1)
+            }
+            .shadow(
+                color: AnchorPalette.brandDeep.opacity(configuration.isPressed ? 0.10 : 0.20),
+                radius: configuration.isPressed ? 4 : 10,
+                y: configuration.isPressed ? 2 : 6
             )
             .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.98)
             .opacity(configuration.isPressed ? 0.94 : 1)
@@ -340,6 +374,7 @@ private struct HarborAnchorButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.97)
+            .offset(y: reduceMotion || !configuration.isPressed ? 0 : 2)
             .opacity(configuration.isPressed ? 0.92 : 1)
             .animation(reduceMotion ? nil : AnchorMotion.press, value: configuration.isPressed)
     }

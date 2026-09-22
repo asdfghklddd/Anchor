@@ -27,12 +27,8 @@ struct HarborTopBar: View {
         .tint(AnchorPalette.brandDeep)
         .padding(.horizontal, AnchorSpacing.medium)
         .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? 8 : 4)
-        .background(AnchorPalette.canvas.opacity(0.97))
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(AnchorPalette.fluoriteBorder.opacity(0.78))
-                .frame(height: 1)
-        }
+        .background(.thinMaterial)
+        .shadow(color: AnchorPalette.brandDeep.opacity(0.05), radius: 12, y: 6)
     }
 
     private var standardContent: some View {
@@ -75,7 +71,7 @@ struct HarborTopBar: View {
             }
             .frame(width: 44, height: 44)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AnchorPressButtonStyle())
         .accessibilityLabel(L10n.profile)
         .accessibilityIdentifier("topbar.profile.button")
     }
@@ -99,10 +95,12 @@ struct HarborTopBar: View {
             Button(action: onAuxiliary) {
                 Image(systemName: "slider.horizontal.3")
                     .font(.body.bold())
-                    .frame(width: 44, height: 44)
-                    .background(AnchorPalette.fluoriteSurface, in: .circle)
-                    .overlay { Circle().stroke(AnchorPalette.fluoriteBorder, lineWidth: 1) }
+                    .frame(width: 18, height: 18)
             }
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.circle)
+            .tint(AnchorPalette.interaction)
+            .frame(width: 44, height: 44)
             .accessibilityLabel(auxiliaryLabel)
         }
     }
@@ -112,9 +110,7 @@ struct HarborTopBar: View {
             ZStack(alignment: .topTrailing) {
                 Image(systemName: "bell")
                     .font(.body.bold())
-                    .frame(width: 44, height: 44)
-                    .background(AnchorPalette.fluoriteSurface, in: .circle)
-                    .overlay { Circle().stroke(AnchorPalette.fluoriteBorder, lineWidth: 1) }
+                    .frame(width: 18, height: 18)
                 if unreadCount > 0 {
                     Circle()
                         .fill(AnchorPalette.attention)
@@ -124,6 +120,10 @@ struct HarborTopBar: View {
                 }
             }
         }
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.circle)
+        .tint(AnchorPalette.interaction)
+        .frame(width: 44, height: 44)
         .accessibilityLabel(L10n.notifications)
         .accessibilityValue(unreadCount == 0 ? "" : "\(unreadCount)")
     }

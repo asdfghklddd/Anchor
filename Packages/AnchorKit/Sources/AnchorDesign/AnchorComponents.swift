@@ -15,13 +15,10 @@ public struct AnchorCard<Content: View>: View {
 #if os(iOS)
         content
             .padding(AnchorSpacing.medium)
-            .background(AnchorPalette.fluoriteSurface)
-            .clipShape(.rect(cornerRadius: 14))
-            .overlay {
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(tint.map { $0.opacity(0.30) } ?? AnchorPalette.fluoriteBorder, lineWidth: 1)
-            }
-            .shadow(color: AnchorPalette.brandDeep.opacity(0.05), radius: 8, y: 4)
+            .fluoriteSurface(
+                border: tint.map { $0.opacity(0.32) } ?? AnchorPalette.fluoriteBorder,
+                cornerRadius: 14
+            )
 #else
         content
             .padding(AnchorSpacing.medium)
@@ -107,8 +104,16 @@ public struct SourceMark: View {
             .background(AnchorPalette.softBlue.opacity(0.72), in: .rect(cornerRadius: size * 0.26))
             .overlay {
                 RoundedRectangle(cornerRadius: size * 0.26)
-                    .stroke(AnchorPalette.aiBlue.opacity(0.28), lineWidth: 1)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [.white.opacity(0.88), AnchorPalette.aiBlue.opacity(0.36)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
             }
+            .shadow(color: AnchorPalette.brandDeep.opacity(0.06), radius: 5, y: 3)
             .accessibilityHidden(true)
 #else
         Text(symbol)
@@ -288,7 +293,23 @@ public struct AnchorPrimaryButtonStyle: ButtonStyle {
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity, minHeight: 52)
             .padding(.horizontal, AnchorSpacing.medium)
-            .background(AnchorPalette.interaction, in: .rect(cornerRadius: 12))
+            .background(
+                LinearGradient(
+                    colors: [AnchorPalette.interaction, AnchorPalette.brandDeep],
+                    startPoint: .top,
+                    endPoint: .bottom
+                ),
+                in: .rect(cornerRadius: 12)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(.white.opacity(0.18), lineWidth: 1)
+            }
+            .shadow(
+                color: AnchorPalette.brandDeep.opacity(configuration.isPressed ? 0.10 : 0.20),
+                radius: configuration.isPressed ? 4 : 10,
+                y: configuration.isPressed ? 2 : 6
+            )
             .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.98)
             .opacity(configuration.isPressed ? 0.94 : 1)
             .animation(reduceMotion ? nil : AnchorMotion.press, value: configuration.isPressed)

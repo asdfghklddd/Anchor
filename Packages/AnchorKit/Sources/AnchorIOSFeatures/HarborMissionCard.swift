@@ -20,10 +20,14 @@ struct HarborMissionCard: View {
 
                 Spacer(minLength: 8)
 
-                HStack(spacing: 2) {
+                HStack(spacing: 6) {
                     Button(action: onEdit) {
                         missionActionIcon(session == nil ? "plus" : "pencil")
                     }
+                    .buttonStyle(.bordered)
+                    .buttonBorderShape(.circle)
+                    .tint(AnchorPalette.interaction)
+                    .frame(width: 44, height: 44)
                     .accessibilityLabel(session == nil ? L10n.establishAnchor : L10n.editGoal)
                     .accessibilityIdentifier("goal.edit.button")
 
@@ -31,6 +35,10 @@ struct HarborMissionCard: View {
                         Button(action: onFinish) {
                             missionActionIcon("checkmark")
                         }
+                        .buttonStyle(.bordered)
+                        .buttonBorderShape(.circle)
+                        .tint(AnchorPalette.brandDeep)
+                        .frame(width: 44, height: 44)
                         .accessibilityLabel(L10n.finish)
                         .accessibilityIdentifier("mission.finish.button")
                     }
@@ -73,12 +81,11 @@ struct HarborMissionCard: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 18))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18)
-                .stroke(needsAttention ? AnchorPalette.attention.opacity(0.45) : AnchorPalette.fluoriteBorder, lineWidth: 1)
-        }
-        .shadow(color: AnchorPalette.brandDeep.opacity(0.06), radius: 12, y: 6)
+        .fluoriteSurface(
+            border: needsAttention ? AnchorPalette.attention.opacity(0.48) : AnchorPalette.fluoriteBorder,
+            cornerRadius: 18,
+            elevated: true
+        )
     }
 
     @ViewBuilder
@@ -94,10 +101,7 @@ struct HarborMissionCard: View {
     private func missionActionIcon(_ symbol: String) -> some View {
         Image(systemName: symbol)
             .font(.subheadline.bold())
-            .foregroundStyle(AnchorPalette.interaction)
-            .frame(width: 36, height: 36)
-            .background(AnchorPalette.softBlue.opacity(0.48), in: .rect(cornerRadius: 10))
-            .frame(width: 44, height: 44)
+            .frame(width: 18, height: 18)
     }
 
     private var runningCount: Int {

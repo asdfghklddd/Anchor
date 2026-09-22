@@ -49,27 +49,15 @@ struct ProcessCard: View {
             minHeight: dynamicTypeSize.isAccessibilitySize ? 190 : 142,
             alignment: .topLeading
         )
-        .background(
-            process.status == .needsDecision
+        .fluoriteSurface(
+            fill: process.status == .needsDecision
                 ? AnchorPalette.attention.opacity(0.12)
                 : AnchorPalette.fluoriteSurface,
-            in: .rect(cornerRadius: 14)
-        )
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(
-                    process.status == .needsDecision
-                        ? AnchorPalette.attention.opacity(0.72)
-                        : AnchorPalette.fluoriteBorder,
-                    lineWidth: process.status == .needsDecision ? 1.5 : 1
-                )
-        }
-        .shadow(
-            color: process.status == .needsDecision
-                ? AnchorPalette.attention.opacity(0.12)
-                : AnchorPalette.brandDeep.opacity(0.04),
-            radius: process.status == .needsDecision ? 10 : 6,
-            y: 4
+            border: process.status == .needsDecision
+                ? AnchorPalette.attention.opacity(0.72)
+                : AnchorPalette.fluoriteBorder,
+            cornerRadius: 14,
+            elevated: process.status == .needsDecision
         )
         .animation(reduceMotion ? nil : AnchorMotion.micro, value: process.status)
         .accessibilityElement(children: .ignore)

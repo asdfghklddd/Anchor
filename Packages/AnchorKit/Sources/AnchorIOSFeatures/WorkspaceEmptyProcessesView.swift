@@ -10,14 +10,7 @@ struct WorkspaceEmptyProcessesView: View {
             description: Text(L10n.emptyDetail)
         )
         .frame(maxWidth: .infinity, minHeight: 190)
-        .background(
-            AnchorPalette.fluoriteSurface,
-            in: .rect(cornerRadius: 14)
-        )
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
-        }
+        .fluoriteSurface(cornerRadius: 14)
         .accessibilityIdentifier("workspace.empty.processes")
     }
 }

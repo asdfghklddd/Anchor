@@ -605,11 +605,11 @@ struct ReturnView: View {
             }
         }
         .padding(16)
-        .background(AnchorPalette.softBlue.opacity(0.30), in: .rect(cornerRadius: 18))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18)
-                .stroke(AnchorPalette.aiBlue.opacity(0.24), lineWidth: 1)
-        }
+        .fluoriteSurface(
+            fill: AnchorPalette.softBlue.opacity(0.30),
+            border: AnchorPalette.aiBlue.opacity(0.28),
+            cornerRadius: 18
+        )
     }
 
     private func impactMetric(_ value: String, label: String) -> some View {
@@ -671,11 +671,7 @@ struct ReturnView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 14))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
-        }
+        .fluoriteSurface(cornerRadius: 14)
     }
 
     private func nextStepCard(_ process: AnchorProcess) -> some View {
@@ -714,11 +710,12 @@ struct ReturnView: View {
                 Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(AnchorPalette.brandDeep)
             }
             .padding(15)
-            .background(AnchorPalette.attention.opacity(0.20), in: .rect(cornerRadius: 18))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18)
-                    .stroke(AnchorPalette.attention.opacity(0.60), lineWidth: 1)
-            }
+            .fluoriteSurface(
+                fill: AnchorPalette.attention.opacity(0.20),
+                border: AnchorPalette.attention.opacity(0.60),
+                cornerRadius: 18,
+                elevated: true
+            )
         }
         .buttonStyle(AnchorPressButtonStyle())
         .disabled(projection.openDecisions.first { $0.processID == process.id } == nil)

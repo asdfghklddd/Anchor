@@ -690,23 +690,18 @@ private struct AmbientProcessTile: View {
         .foregroundStyle(AnchorPalette.brandDeep)
         .padding(9)
         .frame(maxWidth: .infinity, minHeight: 104, alignment: .topLeading)
-        .background(
-            process.status == .needsDecision
+        .fluoriteSurface(
+            fill: process.status == .needsDecision
                 ? AnchorPalette.attention.opacity(0.13)
                 : AnchorPalette.fluoriteSurface,
-            in: .rect(cornerRadius: 14)
+            border: selected
+                ? AnchorPalette.interaction
+                : process.status == .needsDecision
+                    ? AnchorPalette.attention.opacity(0.72)
+                    : AnchorPalette.fluoriteBorder,
+            cornerRadius: 14,
+            elevated: selected || process.status == .needsDecision
         )
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(
-                    selected
-                        ? AnchorPalette.interaction
-                        : process.status == .needsDecision
-                            ? AnchorPalette.attention.opacity(0.72)
-                            : AnchorPalette.fluoriteBorder,
-                    lineWidth: selected ? 2 : 1
-                )
-        }
         .accessibilityHidden(true)
     }
 
@@ -862,11 +857,12 @@ private struct AmbientDecisionInspector: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(AnchorPalette.attention.opacity(0.12), in: .rect(cornerRadius: 14))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(AnchorPalette.attention.opacity(0.60), lineWidth: 1)
-        }
+        .fluoriteSurface(
+            fill: AnchorPalette.attention.opacity(0.12),
+            border: AnchorPalette.attention.opacity(0.60),
+            cornerRadius: 14,
+            elevated: true
+        )
     }
 
     private var selectedOptionIndex: Int {

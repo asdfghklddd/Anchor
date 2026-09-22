@@ -166,11 +166,11 @@ struct DecisionView: View {
                 }
             }
             .padding(14)
-            .background(AnchorPalette.softBlue.opacity(0.34), in: .rect(cornerRadius: 14))
-            .overlay {
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(AnchorPalette.aiBlue.opacity(0.32), lineWidth: 1)
-            }
+            .fluoriteSurface(
+                fill: AnchorPalette.softBlue.opacity(0.34),
+                border: AnchorPalette.aiBlue.opacity(0.34),
+                cornerRadius: 14
+            )
         }
         .padding(.top, 8)
     }
@@ -199,11 +199,7 @@ struct DecisionView: View {
             }
         }
         .padding(14)
-        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 14))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
-        }
+        .fluoriteSurface(cornerRadius: 14)
     }
 
     private func directionButton(_ option: DecisionOption, index: Int) -> some View {

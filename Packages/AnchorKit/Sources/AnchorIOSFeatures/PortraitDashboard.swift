@@ -107,14 +107,12 @@ struct PortraitDashboard: View {
                 } label: {
                     Image(systemName: "square.grid.2x2")
                         .font(.subheadline.bold())
-                        .foregroundStyle(AnchorPalette.interaction)
-                        .frame(width: 44, height: 44)
-                        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 12))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
-                        }
+                        .frame(width: 18, height: 18)
                 }
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.circle)
+                .tint(AnchorPalette.interaction)
+                .frame(width: 44, height: 44)
                 .accessibilityLabel(L10n.layout)
             }
         }
