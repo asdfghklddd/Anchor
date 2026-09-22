@@ -5294,6 +5294,38 @@
         }
       }
     },
+    "status.presence.paused" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Departure detection paused"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开检测已暂停"
+          }
+        }
+      }
+    },
+    "status.presence.paused.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Connections to review Mac, local network, and Bluetooth status."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往“连接”查看 Mac、本地网络和蓝牙状态。"
+          }
+        }
+      }
+    },
     "status.queued" : {
       "localizations" : {
         "en" : {

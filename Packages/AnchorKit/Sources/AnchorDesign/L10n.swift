@@ -117,6 +117,14 @@ public enum L10n {
     public static let rendering = AnchorStrings.value("status.rendering", default: "Rendering")
     public static let confirmed = AnchorStrings.value("status.confirmed", default: "Confirmed")
     public static let preparing = AnchorStrings.value("status.preparing", default: "Preparing")
+    public static let presenceDetectionPaused = AnchorStrings.value(
+        "status.presence.paused",
+        default: "Departure detection paused"
+    )
+    public static let presenceDetectionPausedDetail = AnchorStrings.value(
+        "status.presence.paused.detail",
+        default: "Open Connections to review Mac, local network, and Bluetooth status."
+    )
     public static let waitingConfirmation = AnchorStrings.value("status.waiting.confirmation", default: "Waiting for you")
     public static let focusTime = AnchorStrings.value("focus.time", default: "Focus time")
     public static let focusActive = AnchorStrings.value("focus.active", default: "In focus")
