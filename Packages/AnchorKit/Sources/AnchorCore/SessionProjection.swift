@@ -80,8 +80,8 @@ public struct SessionProjection: Codable, Hashable, Sendable {
         archivedSessions.removeAll { $0.id == completedSession.id }
         archivedSessions.append(completedSession)
         archivedSessions.sort { lhs, rhs in
-            let lhsDate = lhs.completedAt ?? lhs.startedAt
-            let rhsDate = rhs.completedAt ?? rhs.startedAt
+            let lhsDate = lhs.endedAt ?? lhs.startedAt
+            let rhsDate = rhs.endedAt ?? rhs.startedAt
             if lhsDate != rhsDate { return lhsDate > rhsDate }
             return lhs.id.uuidString < rhs.id.uuidString
         }
@@ -144,5 +144,17 @@ public struct SessionProjection: Codable, Hashable, Sendable {
         case .disconnected, .unavailable, .permissionDenied, .failed:
             return .lastKnown(lastObservedAt: dataObservedAt)
         }
+    }
+
+    public func needsRecoveryReview(
+        at date: Date,
+        after interval: TimeInterval = 86_400
+    ) -> Bool {
+        guard let session,
+              session.status == .draft || session.status == .active else {
+            return false
+        }
+        let lastContinuedAt = session.lastContinuedAt ?? session.startedAt
+        return date.timeIntervalSince(lastContinuedAt) > interval
     }
 }

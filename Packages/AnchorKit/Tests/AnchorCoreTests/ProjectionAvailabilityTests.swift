@@ -88,4 +88,28 @@ struct ProjectionAvailabilityTests {
                 == .lastKnown(lastObservedAt: nil)
         )
     }
+
+    @Test("An old task requires review until the user explicitly continues")
+    func recoveryReviewAcknowledgement() throws {
+        let startedAt = Date(timeIntervalSince1970: 1_000)
+        let reviewedAt = startedAt.addingTimeInterval(90_000)
+        let projection = SessionProjection(
+            session: AnchorSession(
+                goal: AnchorGoal(title: "Long task", completionCriteria: "Reviewed"),
+                startedAt: startedAt
+            )
+        )
+
+        #expect(!projection.needsRecoveryReview(at: startedAt.addingTimeInterval(86_399)))
+        #expect(projection.needsRecoveryReview(at: reviewedAt))
+
+        let continued = try SessionReducer.reduce(
+            projection,
+            command: .resumeSession,
+            now: reviewedAt
+        )
+
+        #expect(continued.session?.lastContinuedAt == reviewedAt)
+        #expect(!continued.needsRecoveryReview(at: reviewedAt.addingTimeInterval(60)))
+    }
 }

@@ -154,6 +154,43 @@ struct LocalSessionRepositoryTests {
         #expect(await repository.currentProjection().archivedSessions.first?.notes.isEmpty == true)
     }
 
+    @Test("An unfinished archive uses the v2 envelope and converges on both peers")
+    func unfinishedArchiveReplicatesDurably() async throws {
+        let senderStorage = URL.temporaryDirectory.appending(path: "anchor-archive-sender-\(UUID().uuidString).json")
+        let receiverStorage = URL.temporaryDirectory.appending(path: "anchor-archive-receiver-\(UUID().uuidString).json")
+        defer {
+            try? FileManager.default.removeItem(at: senderStorage)
+            try? FileManager.default.removeItem(at: receiverStorage)
+        }
+        let sender = LocalSessionRepository(storageURL: senderStorage, sourceID: UUID())
+        let receiver = LocalSessionRepository(storageURL: receiverStorage, sourceID: UUID())
+
+        try await sender.send(
+            .createSession(
+                goal: AnchorGoal(title: "Unfinished", completionCriteria: "Preserve honestly"),
+                processes: []
+            )
+        )
+        let createEvent = try #require(await sender.pendingEvents().first)
+        try await receiver.applyRemote(createEvent)
+        try await sender.markDelivered(createEvent.id)
+
+        try await sender.send(.archiveSession)
+        let archiveEvent = try #require(await sender.pendingEvents().first)
+        #expect(archiveEvent.schemaVersion == 2)
+        try await receiver.applyRemote(archiveEvent)
+
+        #expect(await sender.currentProjection().session == nil)
+        #expect(await receiver.currentProjection().session == nil)
+        #expect(await sender.currentProjection().archivedSessions.first?.status == .archived)
+        #expect(await receiver.currentProjection().archivedSessions.first?.status == .archived)
+        #expect(await receiver.currentProjection().archivedSessions.first?.completedAt == nil)
+        #expect(await receiver.currentProjection().archivedSessions.first?.archivedAt != nil)
+
+        let restored = LocalSessionRepository(storageURL: senderStorage, sourceID: UUID())
+        #expect(await restored.currentProjection().archivedSessions.first?.status == .archived)
+    }
+
     @Test("A v1 projection is migrated without losing the local session")
     func migratesLegacyProjection() async throws {
         struct LegacyState: Codable {

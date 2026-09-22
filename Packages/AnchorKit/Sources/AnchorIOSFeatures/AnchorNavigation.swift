@@ -34,6 +34,7 @@ enum AnchorSheet: Hashable, Identifiable {
     case decision(UUID)
     case layout
     case finish
+    case recovery(UUID)
     case account
     case icloud
     case profileDetail(ProfileDetailKind)

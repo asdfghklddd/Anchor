@@ -4,6 +4,9 @@ import Foundation
 /// another device. UI-facing `SessionCommand` values intentionally remain
 /// ergonomic; this operation is the wire and storage representation.
 public enum SessionOperation: Codable, Hashable, Sendable {
+    // Schema 2 adds explicit unfinished archival; older peers reject it safely.
+    static let latestEnvelopeSchemaVersion = 2
+
     case createSession(AnchorSession)
     case updateGoal(AnchorGoal, at: Date)
     case addNote(AnchorNote)
@@ -23,6 +26,7 @@ public enum SessionOperation: Codable, Hashable, Sendable {
     case updatePresence(status: PresenceStatus, at: Date, eventID: UUID)
     case acknowledgeReturn(at: Date)
     case completeSession(at: Date)
+    case archiveSession(at: Date)
     case resumeSession(at: Date)
 
     public var sessionID: UUID? {
@@ -52,8 +56,14 @@ public enum SessionOperation: Codable, Hashable, Sendable {
         case let .updatePresence(_, at, _): at
         case let .acknowledgeReturn(at): at
         case let .completeSession(at): at
+        case let .archiveSession(at): at
         case let .resumeSession(at): at
         }
+    }
+
+    var envelopeSchemaVersion: Int {
+        if case .archiveSession = self { return 2 }
+        return 1
     }
 
     public var deduplicationKey: String? {
@@ -181,6 +191,8 @@ public enum SessionOperation: Codable, Hashable, Sendable {
             return .acknowledgeReturn(at: now)
         case .completeSession:
             return .completeSession(at: now)
+        case .archiveSession:
+            return .archiveSession(at: now)
         case .resumeSession:
             return .resumeSession(at: now)
         case .updateSignals, .updateSourceHealth, .updateDurableSyncState,

@@ -161,6 +161,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
                 timestamp: Self.timestamp(for: operation, fallback: now),
                 type: EventEnvelope.operationType,
                 payload: payload,
+                schemaVersion: operation.envelopeSchemaVersion,
                 deduplicationKey: operation.deduplicationKey
             )
             let nextEvents = events + [envelope]
@@ -222,7 +223,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
     }
 
     public func applyRemote(_ envelope: EventEnvelope) throws {
-        guard envelope.schemaVersion <= 1 else {
+        guard envelope.schemaVersion <= SessionOperation.latestEnvelopeSchemaVersion else {
             throw SessionRepositoryError.unsupportedEventSchema
         }
 
@@ -504,7 +505,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
             }
         case .updateGoal, .resolveDecision, .removeProcess, .reorderProcesses,
              .updateTileSize, .updatePresence, .acknowledgeReturn,
-             .completeSession, .resumeSession:
+             .completeSession, .archiveSession, .resumeSession:
             break
         }
     }
@@ -540,11 +541,21 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         merged.snapshots = mergeByID(local.snapshots, remote.snapshots, newer: { $0.createdAt >= $1.createdAt })
             .sorted { $0.createdAt > $1.createdAt }
         merged.processedEventIDs.formUnion(remote.processedEventIDs)
-        if remote.status == .completed || local.status == .archived {
+        if remote.status == .completed || remote.status == .archived {
             merged.status = remote.status
         }
-        if remote.completedAt != nil {
+        if remote.status == .completed {
             merged.completedAt = remote.completedAt
+            merged.archivedAt = nil
+        } else if remote.status == .archived {
+            merged.completedAt = nil
+            merged.archivedAt = remote.archivedAt ?? envelopeTimestamp
+        }
+        if let remoteLastContinuedAt = remote.lastContinuedAt {
+            merged.lastContinuedAt = max(
+                merged.lastContinuedAt ?? remoteLastContinuedAt,
+                remoteLastContinuedAt
+            )
         }
         if remote.presence != .unknown {
             merged.presence = remote.presence
@@ -662,6 +673,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         case let .updatePresence(_, at, _): at
         case let .acknowledgeReturn(at): at
         case let .completeSession(at): at
+        case let .archiveSession(at): at
         case let .resumeSession(at): at
         case .removeProcess, .reorderProcesses, .updateTileSize:
             fallback

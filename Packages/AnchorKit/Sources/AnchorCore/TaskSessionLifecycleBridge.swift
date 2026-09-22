@@ -2,7 +2,8 @@ import Foundation
 
 /// Keeps the task history boundary aligned with the current user-owned session.
 /// Source completion never archives a task; only the session's explicit final
-/// completion or creation of a later user task can move it into history.
+/// completion, explicit archive, or creation of a later user task can move it
+/// into history.
 public actor TaskSessionLifecycleBridge {
     private let repository: any SessionRepository
     private let taskRunStore: TaskRunStore
@@ -56,7 +57,7 @@ public actor TaskSessionLifecycleBridge {
             try await taskRunStore.activate(task: task)
             try await taskRunStore.confirmTaskEnded(
                 taskID: task.id,
-                at: session.completedAt ?? projection.generatedAt
+                at: session.endedAt ?? projection.generatedAt
             )
         }
     }
@@ -68,7 +69,7 @@ public actor TaskSessionLifecycleBridge {
         if await taskRunStore.currentTaskRecord()?.task.id == session.id {
             try await taskRunStore.confirmTaskEnded(
                 taskID: session.id,
-                at: session.completedAt ?? session.startedAt
+                at: session.endedAt ?? session.startedAt
             )
             return
         }
@@ -79,7 +80,7 @@ public actor TaskSessionLifecycleBridge {
                 completionCriteria: session.goal.completionCriteria,
                 createdAt: session.startedAt,
                 lifecycle: .archived,
-                endedAt: session.completedAt ?? session.startedAt
+                endedAt: session.endedAt ?? session.startedAt
             )
         )
     }

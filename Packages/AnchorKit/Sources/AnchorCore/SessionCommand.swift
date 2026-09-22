@@ -20,6 +20,7 @@ public enum SessionCommand: Sendable {
     case updateDurableSyncState(DurableSyncState)
     case acknowledgeReturn
     case completeSession
+    case archiveSession
     case resumeSession
     case clearError
 }

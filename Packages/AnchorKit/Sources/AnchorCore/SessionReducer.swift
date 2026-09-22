@@ -260,6 +260,18 @@ public enum SessionReducer {
             }
             session.status = .completed
             session.completedAt = now
+            session.archivedAt = nil
+            session.snapshots.insert(session.makeSnapshot(at: now), at: 0)
+            result.archive(session)
+            result.session = nil
+
+        case .archiveSession:
+            guard var session = result.session else {
+                throw SessionRepositoryError.noActiveSession
+            }
+            session.status = .archived
+            session.completedAt = nil
+            session.archivedAt = now
             session.snapshots.insert(session.makeSnapshot(at: now), at: 0)
             result.archive(session)
             result.session = nil
@@ -268,7 +280,10 @@ public enum SessionReducer {
             try result.withSession { session in
                 session.status = .active
                 session.completedAt = nil
+                session.archivedAt = nil
+                session.lastContinuedAt = now
             }
+            result.dataObservedAt = now
 
         case .clearError:
             result.errorMessage = nil
@@ -532,15 +547,30 @@ public enum SessionReducer {
             }
             session.status = .completed
             session.completedAt = at
+            session.archivedAt = nil
             session.snapshots.insert(session.makeSnapshot(at: at), at: 0)
             result.archive(session)
             result.session = nil
 
-        case .resumeSession:
+        case let .archiveSession(at):
+            guard var session = result.session else {
+                throw SessionRepositoryError.noActiveSession
+            }
+            session.status = .archived
+            session.completedAt = nil
+            session.archivedAt = at
+            session.snapshots.insert(session.makeSnapshot(at: at), at: 0)
+            result.archive(session)
+            result.session = nil
+
+        case let .resumeSession(at):
             try result.withSession { session in
                 session.status = .active
                 session.completedAt = nil
+                session.archivedAt = nil
+                session.lastContinuedAt = at
             }
+            result.dataObservedAt = at
         }
 
         return result

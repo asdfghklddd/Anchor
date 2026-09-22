@@ -10,12 +10,14 @@ struct AnchorIOSApp: App {
     private let proximityScanner: AnchorProximityScanner
     private let cloudSyncRunner: DurableSyncRunner?
     private let currentProcessProvider: AnchorBonjourClient?
+    private let recoveryReviewInterval: TimeInterval
 
     init() {
         let environment = ProcessInfo.processInfo.environment
         let isUITesting: Bool
         let uiTestStorageURL: URL?
         let pairingIdentityService: String
+        let recoveryReviewInterval: TimeInterval
 #if DEBUG
         isUITesting = environment["ANCHOR_UI_TESTING"] == "1"
         let uiTestStorageID = environment["ANCHOR_UI_TEST_STORAGE_ID"]
@@ -29,10 +31,14 @@ struct AnchorIOSApp: App {
         pairingIdentityService = isUITesting
             ? "com.andywang.anchor.ui-tests.\(uiTestStorageID.uuidString)"
             : "com.andywang.anchor.local-link"
+        recoveryReviewInterval = isUITesting
+            ? environment["ANCHOR_UI_TEST_RECOVERY_INTERVAL"].flatMap(TimeInterval.init) ?? 86_400
+            : 86_400
 #else
         isUITesting = false
         uiTestStorageURL = nil
         pairingIdentityService = "com.andywang.anchor.local-link"
+        recoveryReviewInterval = 86_400
 #endif
         if let uiTestStorageURL {
             try? FileManager.default.createDirectory(
@@ -80,6 +86,7 @@ struct AnchorIOSApp: App {
         proximityScanner = scanner
         self.cloudSyncRunner = cloudSyncRunner
         self.currentProcessProvider = currentProcessProvider
+        self.recoveryReviewInterval = recoveryReviewInterval
         model = AnchorSessionModel(
             repository: repository,
             presenceProvider: presenceProvider,
@@ -101,7 +108,8 @@ struct AnchorIOSApp: App {
             AnchorIOSRootView(
                 model: model,
                 linkController: client,
-                currentProcessProvider: currentProcessProvider
+                currentProcessProvider: currentProcessProvider,
+                recoveryReviewInterval: recoveryReviewInterval
             )
         }
     }

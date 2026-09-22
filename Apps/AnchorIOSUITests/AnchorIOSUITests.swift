@@ -123,10 +123,66 @@ final class AnchorIOSUITests: XCTestCase {
     }
 
     @MainActor
-    private func isolatedApplication() -> XCUIApplication {
+    func testOldWorkspaceCanContinueOrStartNewWorkWithoutClaimingCompletion() throws {
+        XCUIDevice.shared.orientation = .portrait
+        let storageID = UUID()
+        let app = isolatedApplication(
+            storageID: storageID,
+            recoveryReviewInterval: 0
+        )
+        defer { app.terminate() }
+        app.launch()
+
+        let anchorButton = app.buttons["anchor.note.button"]
+        XCTAssertTrue(anchorButton.waitForExistence(timeout: 8))
+        anchorButton.tap()
+        type("Long-running task", into: element("setup.goal.field", in: app))
+        type("Review before continuing", into: element("setup.criteria.field", in: app))
+        type("Preserve unfinished work", into: element("setup.process.field.0", in: app))
+        app.buttons["setup.start.button"].tap()
+
+        XCTAssertTrue(element("recovery.screen", in: app).waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["recovery.continue.button"].exists)
+        XCTAssertTrue(app.buttons["recovery.new.button"].exists)
+        XCTAssertTrue(app.buttons["recovery.complete.button"].exists)
+        app.buttons["recovery.continue.button"].tap()
+
+        XCTAssertTrue(element("recovery.screen", in: app).waitForNonExistence(timeout: 5))
+        XCTAssertEqual(element("goal.title", in: app).label, "Long-running task")
+
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(element("recovery.screen", in: app).waitForExistence(timeout: 8))
+        app.buttons["recovery.new.button"].tap()
+
+        XCTAssertTrue(element("setup.screen", in: app).waitForExistence(timeout: 5))
+        app.buttons["setup.close.button"].tap()
+        XCTAssertTrue(element("workspace.empty.processes", in: app).waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Long-running task"].exists)
+
+        app.buttons["topbar.profile.button"].tap()
+        let historyButton = app.buttons["profile.history.button"]
+        if !historyButton.waitForExistence(timeout: 2) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(historyButton.waitForExistence(timeout: 3))
+        historyButton.tap()
+        XCTAssertTrue(app.staticTexts["Long-running task"].waitForExistence(timeout: 3))
+    }
+
+    @MainActor
+    private func isolatedApplication(
+        storageID: UUID = UUID(),
+        recoveryReviewInterval: TimeInterval? = nil
+    ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["ANCHOR_UI_TESTING"] = "1"
-        app.launchEnvironment["ANCHOR_UI_TEST_STORAGE_ID"] = UUID().uuidString
+        app.launchEnvironment["ANCHOR_UI_TEST_STORAGE_ID"] = storageID.uuidString
+        if let recoveryReviewInterval {
+            app.launchEnvironment["ANCHOR_UI_TEST_RECOVERY_INTERVAL"] = String(
+                recoveryReviewInterval
+            )
+        }
         return app
     }
 

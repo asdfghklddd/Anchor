@@ -372,6 +372,10 @@ public struct AnchorSession: Identifiable, Codable, Hashable, Sendable {
     public var presence: PresenceStatus
     public var startedAt: Date
     public var completedAt: Date?
+    /// Terminal time for work preserved without a completion claim.
+    public var archivedAt: Date?
+    /// Most recent explicit choice to continue a long-running workspace.
+    public var lastContinuedAt: Date?
     public var processes: [AnchorProcess]
     public var decisions: [Decision]
     public var notes: [AnchorNote]
@@ -387,6 +391,8 @@ public struct AnchorSession: Identifiable, Codable, Hashable, Sendable {
         presence: PresenceStatus = .atDesk,
         startedAt: Date = .now,
         completedAt: Date? = nil,
+        archivedAt: Date? = nil,
+        lastContinuedAt: Date? = nil,
         processes: [AnchorProcess] = [],
         decisions: [Decision] = [],
         notes: [AnchorNote] = [],
@@ -401,6 +407,8 @@ public struct AnchorSession: Identifiable, Codable, Hashable, Sendable {
         self.presence = presence
         self.startedAt = startedAt
         self.completedAt = completedAt
+        self.archivedAt = archivedAt
+        self.lastContinuedAt = lastContinuedAt
         self.processes = processes
         self.decisions = decisions
         self.notes = notes
@@ -408,5 +416,9 @@ public struct AnchorSession: Identifiable, Codable, Hashable, Sendable {
         self.snapshots = snapshots
         self.returnSummary = returnSummary
         self.processedEventIDs = processedEventIDs
+    }
+
+    public var endedAt: Date? {
+        archivedAt ?? completedAt
     }
 }

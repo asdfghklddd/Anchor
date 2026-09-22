@@ -10,11 +10,13 @@ public struct AnchorIOSRootView: View {
     private let auxiliaryToolbarLabel: String?
     private let auxiliaryToolbarAction: (() -> Void)?
     private let onReturnFromAway: (() -> Void)?
+    private let recoveryReviewInterval: TimeInterval
 
     @State private var path: [AnchorRoute] = []
     @State private var sheet: AnchorSheet?
     @State private var fullScreen: AnchorFullScreen?
     @State private var posture = DevicePosture.unknown
+    @State private var promptedRecoverySessionID: UUID?
     @Namespace private var processTransition
 
     public init(
@@ -23,7 +25,8 @@ public struct AnchorIOSRootView: View {
         currentProcessProvider: (any CurrentProcessProviding)? = nil,
         auxiliaryToolbarLabel: String? = nil,
         auxiliaryToolbarAction: (() -> Void)? = nil,
-        onReturnFromAway: (() -> Void)? = nil
+        onReturnFromAway: (() -> Void)? = nil,
+        recoveryReviewInterval: TimeInterval = 86_400
     ) {
         self.model = model
         self.linkController = linkController
@@ -31,6 +34,7 @@ public struct AnchorIOSRootView: View {
         self.auxiliaryToolbarLabel = auxiliaryToolbarLabel
         self.auxiliaryToolbarAction = auxiliaryToolbarAction
         self.onReturnFromAway = onReturnFromAway
+        self.recoveryReviewInterval = recoveryReviewInterval
     }
 
     public var body: some View {
@@ -114,8 +118,18 @@ public struct AnchorIOSRootView: View {
             synchronizeCover(with: presence)
         }
         .onChange(of: model.projection.session?.id) { _, sessionID in
-            guard sessionID != nil else { return }
-            Task { await model.updatePosture(posture) }
+            if sessionID != nil {
+                Task { await model.updatePosture(posture) }
+            }
+            evaluateRecoveryReview(for: sessionID)
+        }
+        .onChange(of: sheet) { _, presentedSheet in
+            guard presentedSheet == nil else { return }
+            evaluateRecoveryReview(for: model.projection.session?.id)
+        }
+        .onChange(of: fullScreen) { _, presentedCover in
+            guard presentedCover == nil else { return }
+            evaluateRecoveryReview(for: model.projection.session?.id)
         }
         .alert(
             L10n.actionFailed,
@@ -221,6 +235,17 @@ public struct AnchorIOSRootView: View {
             TaskManagementView(model: model)
         case .finish:
             FinishSessionView(model: model)
+        case let .recovery(sessionID):
+            if let session = model.projection.session, session.id == sessionID {
+                StaleWorkspaceRecoveryView(
+                    session: session,
+                    lastObservedAt: model.projection.dataObservedAt,
+                    onContinue: continueRecoveredSession,
+                    onComplete: completeRecoveredSession,
+                    onNewWork: beginNewWorkFromRecovery
+                )
+                .presentationDetents([.large])
+            }
         }
     }
 
@@ -247,6 +272,44 @@ public struct AnchorIOSRootView: View {
 
     private func resolve(decision: Decision, option: DecisionOption) {
         Task { await model.resolve(decision: decision, option: option) }
+    }
+
+    private func evaluateRecoveryReview(for sessionID: UUID?) {
+        guard let sessionID,
+              promptedRecoverySessionID != sessionID,
+              sheet == nil,
+              fullScreen == nil else {
+            return
+        }
+        promptedRecoverySessionID = sessionID
+        guard model.projection.needsRecoveryReview(
+            at: .now,
+            after: recoveryReviewInterval
+        ) else {
+            return
+        }
+        sheet = .recovery(sessionID)
+    }
+
+    private func continueRecoveredSession() {
+        Task {
+            guard await model.send(.resumeSession) else { return }
+            sheet = nil
+        }
+    }
+
+    private func completeRecoveredSession() {
+        Task {
+            guard await model.send(.completeSession) else { return }
+            sheet = nil
+        }
+    }
+
+    private func beginNewWorkFromRecovery() {
+        Task {
+            guard await model.send(.archiveSession) else { return }
+            sheet = .setup
+        }
     }
 
     private var shouldShowLandscapeDashboard: Bool {

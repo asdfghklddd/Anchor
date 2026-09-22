@@ -82,6 +82,29 @@ struct SessionReducerTests {
         #expect(archived.snapshots.count == 1)
     }
 
+    @Test("Starting different work can archive an unfinished session without claiming completion")
+    func unfinishedSessionCanBeArchived() throws {
+        let archivedAt = Date(timeIntervalSince1970: 40)
+        let session = AnchorSession(
+            goal: AnchorGoal(title: "Paused work", completionCriteria: "Not completed")
+        )
+
+        let result = try SessionReducer.reduce(
+            SessionProjection(session: session),
+            command: .archiveSession,
+            now: archivedAt
+        )
+
+        #expect(result.session == nil)
+        let archived = try #require(result.archivedSessions.first)
+        #expect(archived.id == session.id)
+        #expect(archived.status == .archived)
+        #expect(archived.completedAt == nil)
+        #expect(archived.archivedAt == archivedAt)
+        #expect(archived.endedAt == archivedAt)
+        #expect(archived.snapshots.count == 1)
+    }
+
     @Test("Replayed event envelope is idempotent")
     func envelopeDeduplication() throws {
         let sessionID = UUID()
