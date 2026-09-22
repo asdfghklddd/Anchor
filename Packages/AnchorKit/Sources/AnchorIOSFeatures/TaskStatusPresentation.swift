@@ -3,6 +3,20 @@ import AnchorCore
 import AnchorDesign
 
 enum TaskStatusPresentation {
+    static func text(
+        for session: AnchorSession?,
+        availability: ProjectionAvailability
+    ) -> String {
+        switch availability {
+        case .syncing:
+            return L10n.remoteSyncing
+        case .lastKnown:
+            return L10n.stale
+        case .empty, .live:
+            return text(for: session)
+        }
+    }
+
     static func text(for session: AnchorSession?) -> String {
         guard let session else { return "—" }
         let processes = session.processes

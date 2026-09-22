@@ -7,6 +7,7 @@ struct ProcessCard: View {
     let process: AnchorProcess
     let isRemote: Bool
     var decorative = false
+    var statusContext: String? = nil
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -60,7 +61,7 @@ struct ProcessCard: View {
             cornerRadius: 14,
             elevated: process.status == .needsDecision
         )
-        .animation(liveValueAnimation, value: process.status)
+        .animation(liveValueAnimation, value: statusPresentationKey)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(process.sourceName), \(process.title), \(statusText)")
         .accessibilityValue(process.progress?.formatted(.percent.precision(.fractionLength(0))) ?? statusText)
@@ -142,18 +143,20 @@ struct ProcessCard: View {
     }
 
     private var statusForeground: Color {
-        switch process.status {
+        if showsHistoricalNonterminalStatus { return AnchorPalette.brandDeep }
+        return switch process.status {
         case .needsDecision, .blocked:
             AnchorPalette.brandDeep
         case .failed, .disconnected:
-            .red
+            Color.red
         default:
             AnchorPalette.interaction
         }
     }
 
     private var statusBackground: Color {
-        switch process.status {
+        if showsHistoricalNonterminalStatus { return AnchorPalette.attention.opacity(0.24) }
+        return switch process.status {
         case .needsDecision, .blocked:
             AnchorPalette.attention.opacity(0.24)
         case .failed, .disconnected:
@@ -164,7 +167,10 @@ struct ProcessCard: View {
     }
 
     private var statusText: String {
-        switch process.status {
+        if showsHistoricalNonterminalStatus, let statusContext {
+            return "\(statusContext) · \(L10n.compactStatus(process.status))"
+        }
+        return switch process.status {
         case .running: process.sourceTone == "cyan" ? L10n.rendering : L10n.generating
         case .needsDecision: L10n.waitingConfirmation
         case .queued: L10n.preparing
@@ -173,7 +179,8 @@ struct ProcessCard: View {
     }
 
     private var statusSymbol: String {
-        switch process.status {
+        if showsHistoricalNonterminalStatus { return "clock.badge.exclamationmark" }
+        return switch process.status {
         case .running: "waveform.path.ecg"
         case .needsDecision: "exclamationmark.circle"
         case .queued: "timer"
@@ -182,6 +189,20 @@ struct ProcessCard: View {
         case .failed: "xmark"
         case .disconnected: "wifi.slash"
         }
+    }
+
+    private var showsHistoricalNonterminalStatus: Bool {
+        guard statusContext != nil else { return false }
+        return switch process.status {
+        case .queued, .running, .needsDecision, .blocked:
+            true
+        case .completed, .failed, .disconnected:
+            false
+        }
+    }
+
+    private var statusPresentationKey: String {
+        "\(process.status.rawValue)|\(statusContext ?? "")"
     }
 }
 #endif

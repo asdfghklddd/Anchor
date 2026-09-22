@@ -16,85 +16,98 @@ struct PortraitDashboard: View {
     @State private var anchorPulse = 0
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            HarborBackground()
+        TimelineView(.periodic(from: .now, by: 60)) { context in
+            let availability = projection.availability(at: context.date)
 
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    ProjectionStatusBanners(projection: projection)
+            ZStack(alignment: .bottom) {
+                HarborBackground()
 
-                    HarborFocusIntro(session: projection.session)
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        ProjectionStatusBanners(
+                            projection: projection,
+                            availability: availability,
+                            now: context.date
+                        )
+
+                        HarborFocusIntro(
+                            session: projection.session,
+                            availability: availability,
+                            now: context.date
+                        )
                         .padding(.top, 10)
                         .padding(.bottom, 12)
 
-                    if projection.session == nil {
-                        emptyConnectionCard
-                            .padding(.bottom, AnchorSpacing.small)
-                    }
+                        if projection.session == nil {
+                            emptyConnectionCard
+                                .padding(.bottom, AnchorSpacing.small)
+                        }
 
-                    HarborMissionCard(
-                        session: projection.session,
-                        onEdit: { onSheet(projection.session == nil ? .setup : .goal) },
-                        onFinish: { onSheet(.finish) }
-                    )
+                        HarborMissionCard(
+                            session: projection.session,
+                            availability: availability,
+                            onEdit: { onSheet(projection.session == nil ? .setup : .goal) },
+                            onFinish: { onSheet(.finish) }
+                        )
 
-                    Group {
-                        if isObservedWorkComplete {
-                            observedCompletionPrompt
-                                .padding(.top, AnchorSpacing.small)
-                                .transition(
-                                    reduceMotion
-                                        ? .opacity
-                                        : .scale(scale: 0.98, anchor: .top).combined(with: .opacity)
-                                )
+                        Group {
+                            if isObservedWorkComplete {
+                                observedCompletionPrompt
+                                    .padding(.top, AnchorSpacing.small)
+                                    .transition(
+                                        reduceMotion
+                                            ? .opacity
+                                            : .scale(scale: 0.98, anchor: .top).combined(with: .opacity)
+                                    )
+                            }
+                        }
+                        .animation(
+                            reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.panel,
+                            value: isObservedWorkComplete
+                        )
+
+                        Color.clear.frame(height: 20)
+
+                        processHeader(availability: availability)
+
+                        if let session = projection.session, !session.processes.isEmpty {
+                            processGrid(session: session, availability: availability)
+                        } else {
+                            WorkspaceEmptyProcessesView()
                         }
                     }
-                    .animation(
-                        reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.panel,
-                        value: isObservedWorkComplete
-                    )
-
-                    Color.clear.frame(height: 20)
-
-                    processHeader
-
-                    if let session = projection.session, !session.processes.isEmpty {
-                        processGrid(session: session)
-                    } else {
-                        WorkspaceEmptyProcessesView()
-                    }
+                    .padding(.horizontal, AnchorSpacing.medium)
+                    .padding(.bottom, 138)
+                    .frame(maxWidth: 760)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(.horizontal, AnchorSpacing.medium)
-                .padding(.bottom, 138)
-                .frame(maxWidth: 760)
-                .frame(maxWidth: .infinity)
-            }
-            .scrollIndicators(.hidden)
+                .scrollIndicators(.hidden)
 
-            anchorFooter
+                anchorFooter
+            }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                HarborTopBar(
+                    connection: projection.connection,
+                    unreadCount: projection.unreadNotificationsCount,
+                    auxiliaryLabel: auxiliaryToolbarLabel,
+                    onProfile: { onRoute(.profile) },
+                    onNotifications: { onSheet(.notifications) },
+                    onAuxiliary: auxiliaryToolbarAction
+                )
+            }
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationBarHidden(true)
         }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            HarborTopBar(
-                connection: projection.connection,
-                unreadCount: projection.unreadNotificationsCount,
-                auxiliaryLabel: auxiliaryToolbarLabel,
-                onProfile: { onRoute(.profile) },
-                onNotifications: { onSheet(.notifications) },
-                onAuxiliary: auxiliaryToolbarAction
-            )
-        }
-        .toolbar(.hidden, for: .navigationBar)
-        .navigationBarHidden(true)
     }
 
-    private var processHeader: some View {
+    private func processHeader(availability: ProjectionAvailability) -> some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(L10n.liveProcesses)
+                Text(availability.isLive ? L10n.liveProcesses : L10n.currentSnapshot)
                     .font(.caption.bold())
                     .foregroundStyle(AnchorPalette.interaction)
                     .accessibilityIdentifier("processes.kicker")
-                Text(L10n.happeningNow)
+                Text(processHeading(availability: availability))
                     .font(.title3.bold())
                     .foregroundStyle(AnchorPalette.brandDeep)
                     .accessibilityIdentifier("processes.title")
@@ -102,8 +115,8 @@ struct PortraitDashboard: View {
             Spacer()
             HStack(spacing: 7) {
                 Label(
-                    projection.session == nil ? L10n.preparing : L10n.live,
-                    systemImage: projection.session == nil ? "circle.dotted" : "circle.fill"
+                    processBadgeText(availability: availability),
+                    systemImage: processBadgeSymbol(availability: availability)
                 )
                     .labelStyle(.titleAndIcon)
                     .font(.caption2.bold())
@@ -114,7 +127,7 @@ struct PortraitDashboard: View {
                     .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
                     .animation(
                         reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.micro,
-                        value: projection.session == nil
+                        value: availability
                     )
                     .accessibilityIdentifier("processes.live")
 
@@ -220,7 +233,10 @@ struct PortraitDashboard: View {
         return !observed.isEmpty && observed.allSatisfy { $0.status == .completed }
     }
 
-    private func processGrid(session: AnchorSession) -> some View {
+    private func processGrid(
+        session: AnchorSession,
+        availability: ProjectionAvailability
+    ) -> some View {
         LazyVGrid(
             columns: dynamicTypeSize.isAccessibilitySize
                 ? [GridItem(.flexible(), spacing: AnchorSpacing.small)]
@@ -240,16 +256,21 @@ struct PortraitDashboard: View {
                         onRoute(.process(process.id))
                     }
                 } label: {
-                    ProcessCard(process: process, isRemote: session.presence == .away, decorative: true)
+                    ProcessCard(
+                        process: process,
+                        isRemote: session.presence == .away,
+                        decorative: true,
+                        statusContext: processStatusContext(availability: availability)
+                    )
                         .matchedTransitionSource(id: process.id, in: transitionNamespace)
                 }
                 .buttonStyle(AnchorPressButtonStyle())
                 .accessibilityLabel(
-                    "\(process.sourceName), \(process.title), \(L10n.status(process.status)), \(process.metric) \(process.metricLabel)"
+                    "\(process.sourceName), \(process.title), \(processStatusText(process, availability: availability)), \(process.metric) \(process.metricLabel)"
                 )
                 .accessibilityValue(
                     process.progress?.formatted(.percent.precision(.fractionLength(0)))
-                        ?? L10n.status(process.status)
+                        ?? processStatusText(process, availability: availability)
                 )
                 .accessibilityIdentifier(
                     process.status == .needsDecision
@@ -263,6 +284,77 @@ struct PortraitDashboard: View {
             reduceMotion ? nil : AnchorMotion.continuity,
             value: session.processes.map(\.id)
         )
+    }
+
+    private func processHeading(availability: ProjectionAvailability) -> String {
+        switch availability {
+        case .empty, .live:
+            L10n.happeningNow
+        case .syncing:
+            L10n.remoteSyncing
+        case .lastKnown:
+            L10n.stale
+        }
+    }
+
+    private func processBadgeText(availability: ProjectionAvailability) -> String {
+        switch availability {
+        case .empty:
+            L10n.preparing
+        case .syncing:
+            L10n.remoteSyncing
+        case .live:
+            L10n.live
+        case .lastKnown:
+            L10n.stale
+        }
+    }
+
+    private func processBadgeSymbol(availability: ProjectionAvailability) -> String {
+        switch availability {
+        case .empty:
+            "circle.dotted"
+        case .syncing:
+            "arrow.triangle.2.circlepath"
+        case .live:
+            "circle.fill"
+        case .lastKnown:
+            "clock.badge.exclamationmark"
+        }
+    }
+
+    private func processStatusText(
+        _ process: AnchorProcess,
+        availability: ProjectionAvailability
+    ) -> String {
+        let status = L10n.status(process.status)
+        guard isNonterminal(process.status),
+              let context = processStatusContext(availability: availability) else {
+            return status
+        }
+        return "\(context), \(status)"
+    }
+
+    private func processStatusContext(
+        availability: ProjectionAvailability
+    ) -> String? {
+        switch availability {
+        case .empty, .live:
+            nil
+        case .syncing:
+            L10n.remoteSyncing
+        case .lastKnown:
+            L10n.currentSnapshot
+        }
+    }
+
+    private func isNonterminal(_ status: ProcessStatus) -> Bool {
+        switch status {
+        case .queued, .running, .needsDecision, .blocked:
+            true
+        case .completed, .failed, .disconnected:
+            false
+        }
     }
 
     private var anchorFooter: some View {

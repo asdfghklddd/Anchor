@@ -110,7 +110,39 @@ public struct SessionProjection: Codable, Hashable, Sendable {
     }
 
     public var isStale: Bool {
+        isStale(at: generatedAt)
+    }
+
+    public func isStale(
+        at date: Date,
+        staleAfter interval: TimeInterval = 300
+    ) -> Bool {
         guard let dataObservedAt else { return false }
-        return generatedAt.timeIntervalSince(dataObservedAt) > 300
+        return date.timeIntervalSince(dataObservedAt) > interval
+    }
+
+    /// A connection is necessary but not sufficient for live presentation:
+    /// data must also have been observed recently. Missing observation time is
+    /// intentionally treated as last-known rather than current.
+    public func availability(
+        at date: Date,
+        staleAfter interval: TimeInterval = 300
+    ) -> ProjectionAvailability {
+        guard session != nil else { return .empty }
+
+        switch connection {
+        case .pairing:
+            return .syncing(lastObservedAt: dataObservedAt)
+        case .connected:
+            guard let dataObservedAt else {
+                return .lastKnown(lastObservedAt: nil)
+            }
+            if isStale(at: date, staleAfter: interval) {
+                return .lastKnown(lastObservedAt: dataObservedAt)
+            }
+            return .live(lastObservedAt: dataObservedAt)
+        case .disconnected, .unavailable, .permissionDenied, .failed:
+            return .lastKnown(lastObservedAt: dataObservedAt)
+        }
     }
 }

@@ -5,6 +5,7 @@ import SwiftUI
 
 struct HarborMissionCard: View {
     let session: AnchorSession?
+    let availability: ProjectionAvailability
     let onEdit: () -> Void
     let onFinish: () -> Void
 
@@ -61,7 +62,7 @@ struct HarborMissionCard: View {
                     .accessibilityIdentifier("goal.note")
             }
 
-            Label(taskStatus, systemImage: needsAttention ? "exclamationmark.bubble.fill" : "circle.fill")
+            Label(taskStatus, systemImage: taskStatusSymbol)
                 .font(.caption.bold())
                 .foregroundStyle(AnchorPalette.brandDeep)
                 .padding(.horizontal, 10)
@@ -96,7 +97,7 @@ struct HarborMissionCard: View {
 
     @ViewBuilder
     private var missionMetadata: some View {
-        Label(L10n.routesRunning(runningCount), systemImage: "waveform.path.ecg")
+        Label(routesSummary, systemImage: availability.isLive ? "waveform.path.ecg" : "clock")
             .accessibilityIdentifier("mission.flow.summary")
         Label(L10n.startedAt(startTime), systemImage: "timer")
             .accessibilityIdentifier("mission.metadata")
@@ -115,7 +116,23 @@ struct HarborMissionCard: View {
     }
 
     private var taskStatus: String {
-        TaskStatusPresentation.text(for: session)
+        TaskStatusPresentation.text(for: session, availability: availability)
+    }
+
+    private var taskStatusSymbol: String {
+        switch availability {
+        case .syncing:
+            "arrow.triangle.2.circlepath"
+        case .lastKnown:
+            "clock.badge.exclamationmark"
+        case .empty, .live:
+            needsAttention ? "exclamationmark.bubble.fill" : "circle.fill"
+        }
+    }
+
+    private var routesSummary: String {
+        let summary = L10n.routesRunning(runningCount)
+        return availability.isLive ? summary : "\(L10n.currentSnapshot) · \(summary)"
     }
 
     private var needsAttention: Bool {

@@ -6,6 +6,8 @@ import SwiftUI
 
 struct ProjectionStatusBanners: View {
     let projection: SessionProjection
+    let availability: ProjectionAvailability
+    let now: Date
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -61,18 +63,19 @@ struct ProjectionStatusBanners: View {
     }
 
     private var freshnessText: String? {
-        guard projection.isStale, let dataObservedAt = projection.dataObservedAt else { return nil }
+        guard case let .lastKnown(lastObservedAt) = availability else { return nil }
+        guard let lastObservedAt else { return L10n.stale }
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
         let relativeDate = formatter.localizedString(
-            for: dataObservedAt,
-            relativeTo: projection.generatedAt
+            for: lastObservedAt,
+            relativeTo: now
         )
         return "\(L10n.lastUpdated) \(relativeDate)"
     }
 
     private var motionKey: String {
-        "\(projection.errorMessage ?? "")|\(hasPermissionIssue)|\(projection.isStale)|\(projection.session?.presence == .unknown)"
+        "\(projection.errorMessage ?? "")|\(hasPermissionIssue)|\(availability)|\(projection.session?.presence == .unknown)"
     }
 
     private var statusTransition: AnyTransition {
