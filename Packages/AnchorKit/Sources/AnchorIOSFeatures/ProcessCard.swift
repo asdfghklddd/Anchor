@@ -8,23 +8,21 @@ struct ProcessCard: View {
     let isRemote: Bool
     var decorative = false
 
-    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var hasAppeared = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
-                SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 29)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 32)
                 Spacer(minLength: 4)
                 statusPill
             }
 
             Text(process.title)
-                .font(.footnote.bold())
-                .foregroundStyle(AnchorPalette.ink)
-                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
+                .font(.subheadline.bold())
+                .foregroundStyle(AnchorPalette.brandDeep)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 2)
                 .accessibilityIdentifier("process.card.title")
 
             if process.status == .needsDecision {
@@ -35,60 +33,45 @@ struct ProcessCard: View {
 
             if process.status != .needsDecision, let progress = process.progress {
                 HStack(spacing: 7) {
-                    AnchorProgress(value: progress, tint: tint, isRemote: isRemote)
+                    AnchorProgress(value: progress, tint: AnchorPalette.interaction, isRemote: isRemote)
                     Text(progress, format: .percent.precision(.fractionLength(0)))
-                        .font(.caption2.bold().monospacedDigit())
-                        .foregroundStyle(AnchorPalette.secondaryInk)
-                        .frame(width: 30, alignment: .trailing)
+                        .font(.caption.bold().monospacedDigit())
+                        .foregroundStyle(AnchorPalette.secondaryText)
+                        .contentTransition(.numericText(value: progress))
+                        .frame(width: 34, alignment: .trailing)
                         .accessibilityIdentifier("process.card.progress")
                 }
             }
         }
-        .padding(8)
+        .padding(12)
         .frame(
             maxWidth: .infinity,
-            minHeight: dynamicTypeSize.isAccessibilitySize ? 190 : 122,
+            minHeight: dynamicTypeSize.isAccessibilitySize ? 190 : 142,
             alignment: .topLeading
         )
         .background(
-            LinearGradient(
-                colors: AnchorPalette.sourceSurface(process.sourceTone, dark: colorScheme == .dark),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            in: .rect(cornerRadius: 24, style: .continuous)
-        )
-        .overlay(alignment: .top) {
-            Capsule()
-                .fill(.white.opacity(colorScheme == .dark ? 0.14 : 0.66))
-                .frame(height: 2)
-                .padding(.horizontal, 20)
-        }
-        .overlay(alignment: .topTrailing) {
-            if process.status == .needsDecision {
-                Circle()
-                    .fill(AnchorPalette.sand)
-                    .frame(width: 7, height: 7)
-                    .shadow(color: AnchorPalette.sand.opacity(0.42), radius: 6)
-                    .padding(15)
-            }
-        }
-        .shadow(
-            color: process.status == .needsDecision ? AnchorPalette.sand.opacity(0.20) : tint.opacity(0.17),
-            radius: process.status == .needsDecision ? 15 : 12,
-            y: 8
+            process.status == .needsDecision
+                ? AnchorPalette.attention.opacity(0.12)
+                : AnchorPalette.fluoriteSurface,
+            in: .rect(cornerRadius: 14)
         )
         .overlay {
-            if process.status == .needsDecision {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(AnchorPalette.sand.opacity(0.14), lineWidth: 4)
-            }
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(
+                    process.status == .needsDecision
+                        ? AnchorPalette.attention.opacity(0.72)
+                        : AnchorPalette.fluoriteBorder,
+                    lineWidth: process.status == .needsDecision ? 1.5 : 1
+                )
         }
-        .opacity(hasAppeared ? 1 : 0)
-        .scaleEffect(hasAppeared ? 1 : 0.96)
-        .offset(y: hasAppeared ? 0 : 12)
-        .animation(reduceMotion ? nil : .spring(duration: 0.55), value: hasAppeared)
-        .task { hasAppeared = true }
+        .shadow(
+            color: process.status == .needsDecision
+                ? AnchorPalette.attention.opacity(0.12)
+                : AnchorPalette.brandDeep.opacity(0.04),
+            radius: process.status == .needsDecision ? 10 : 6,
+            y: 4
+        )
+        .animation(reduceMotion ? nil : AnchorMotion.micro, value: process.status)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(process.sourceName), \(process.title), \(statusText)")
         .accessibilityValue(process.progress?.formatted(.percent.precision(.fractionLength(0))) ?? statusText)
@@ -98,17 +81,11 @@ struct ProcessCard: View {
     private var statusPill: some View {
         Label(statusText, systemImage: statusSymbol)
             .font(.caption2.bold())
-            .foregroundStyle(
-                process.status == .needsDecision
-                    ? Color(red: 0.47, green: 0.32, blue: 0)
-                    : AnchorPalette.sourceInk(process.sourceTone)
-            )
+            .foregroundStyle(statusForeground)
             .padding(.horizontal, 8)
             .frame(minHeight: 24)
-            .background(
-                process.status == .needsDecision ? AnchorPalette.warmYellow : .white.opacity(0.55),
-                in: .capsule
-            )
+            .background(statusBackground, in: .capsule)
+            .contentTransition(.symbolEffect(.replace))
             .accessibilityIdentifier("process.card.status")
     }
 
@@ -120,13 +97,14 @@ struct ProcessCard: View {
             }
             VStack(alignment: .trailing, spacing: 0) {
                 Text(process.metric)
-                    .font(.title.bold().monospacedDigit())
+                    .font(.title2.bold().monospacedDigit())
                     .fixedSize(horizontal: true, vertical: false)
-                    .foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
+                    .foregroundStyle(AnchorPalette.brandDeep)
+                    .contentTransition(.numericText())
                     .accessibilityIdentifier("process.card.metric")
                 Text(process.metricLabel)
-                    .font(.caption2)
-                    .foregroundStyle(AnchorPalette.secondaryInk)
+                    .font(.caption)
+                    .foregroundStyle(AnchorPalette.secondaryText)
                     .accessibilityIdentifier("process.card.metric.label")
             }
         }
@@ -138,7 +116,7 @@ struct ProcessCard: View {
             ZStack(alignment: .leading) {
                 ForEach(0 ..< 3, id: \.self) { index in
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(.white.opacity(0.72))
+                        .fill(AnchorPalette.softBlue.opacity(0.76))
                         .frame(width: 34, height: 26)
                         .offset(x: CGFloat(index) * 7)
                 }
@@ -146,8 +124,9 @@ struct ProcessCard: View {
             .frame(width: 50, height: 30)
 
             Text(process.metric)
-                .font(.title.bold().monospacedDigit())
-                .foregroundStyle(tint)
+                .font(.title2.bold().monospacedDigit())
+                .foregroundStyle(AnchorPalette.brandDeep)
+                .contentTransition(.numericText())
                 .accessibilityIdentifier("process.card.metric")
             Spacer(minLength: 0)
         }
@@ -156,7 +135,7 @@ struct ProcessCard: View {
                 .font(.caption2.bold())
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity, minHeight: 30)
-                .background(AnchorPalette.deepSea, in: .capsule)
+                .background(AnchorPalette.interaction, in: .rect(cornerRadius: 10))
                 .offset(y: 24)
                 .accessibilityIdentifier("process.card.action")
         }
@@ -164,7 +143,29 @@ struct ProcessCard: View {
     }
 
     private var tint: Color {
-        AnchorPalette.source(process.sourceTone)
+        process.status == .needsDecision ? AnchorPalette.attention : AnchorPalette.aiBlue
+    }
+
+    private var statusForeground: Color {
+        switch process.status {
+        case .needsDecision, .blocked:
+            AnchorPalette.brandDeep
+        case .failed, .disconnected:
+            .red
+        default:
+            AnchorPalette.interaction
+        }
+    }
+
+    private var statusBackground: Color {
+        switch process.status {
+        case .needsDecision, .blocked:
+            AnchorPalette.attention.opacity(0.24)
+        case .failed, .disconnected:
+            Color.red.opacity(0.10)
+        default:
+            AnchorPalette.softBlue.opacity(0.52)
+        }
     }
 
     private var statusText: String {

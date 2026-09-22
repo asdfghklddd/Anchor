@@ -15,6 +15,7 @@ public struct AnchorIOSRootView: View {
     @State private var sheet: AnchorSheet?
     @State private var fullScreen: AnchorFullScreen?
     @State private var posture = DevicePosture.unknown
+    @Namespace private var processTransition
 
     public init(
         model: AnchorSessionModel,
@@ -72,6 +73,7 @@ public struct AnchorIOSRootView: View {
                             projection: model.projection,
                             auxiliaryToolbarLabel: auxiliaryToolbarLabel,
                             auxiliaryToolbarAction: auxiliaryToolbarAction,
+                            transitionNamespace: processTransition,
                             onRoute: { path.append($0) },
                             onSheet: { sheet = $0 }
                         )
@@ -82,8 +84,8 @@ public struct AnchorIOSRootView: View {
                 }
             }
         }
-        .tint(AnchorPalette.link)
-        .background(AnchorPalette.paper.ignoresSafeArea())
+        .tint(AnchorPalette.interaction)
+        .background(AnchorPalette.canvas.ignoresSafeArea())
         .sheet(item: $sheet) { item in
             sheetDestination(for: item)
         }
@@ -143,6 +145,7 @@ public struct AnchorIOSRootView: View {
                     },
                     onDecision: { sheet = .decision($0) }
                 )
+                .navigationTransition(.zoom(sourceID: process.id, in: processTransition))
             } else {
                 ContentUnavailableView(L10n.emptyTitle, systemImage: "square.dashed")
             }
@@ -282,7 +285,7 @@ private struct AnchorFullScreenHost: View {
                 .id(item)
                 .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
         }
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.34), value: item)
+        .animation(reduceMotion ? nil : AnchorMotion.panel, value: item)
     }
 
     @ViewBuilder

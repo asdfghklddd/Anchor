@@ -6,6 +6,17 @@ public struct HarborBackground: View {
     public init() {}
 
     public var body: some View {
+#if os(iOS)
+        ZStack {
+            AnchorPalette.canvas
+            LinearGradient(
+                colors: [AnchorPalette.softBlue.opacity(0.16), .clear],
+                startPoint: .top,
+                endPoint: .center
+            )
+        }
+        .accessibilityHidden(true)
+#else
         GeometryReader { proxy in
             ZStack {
                 AnchorPalette.paper
@@ -35,6 +46,7 @@ public struct HarborBackground: View {
             }
         }
         .accessibilityHidden(true)
+#endif
     }
 }
 
@@ -181,7 +193,6 @@ public struct HarborClayAvatar: View {
 
 public struct HarborAnchorControl: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var isRippling = false
 
     private let label: String
     private let action: () -> Void
@@ -192,37 +203,21 @@ public struct HarborAnchorControl: View {
     }
 
     public var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 6) {
             Button(action: action) {
                 ZStack {
                     Circle()
-                        .stroke(AnchorPalette.cyan.opacity(0.25), lineWidth: 2)
-                        .frame(width: 76, height: 76)
-                        .scaleEffect(isRippling ? 1.18 : 0.82)
-                        .opacity(isRippling ? 0 : 0.55)
-
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(red: 0.79, green: 0.97, blue: 0.91), AnchorPalette.seafoam, AnchorPalette.cyan],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 62, height: 62)
+                        .fill(AnchorPalette.interaction)
+                        .frame(width: 58, height: 58)
                         .overlay {
-                            Circle().stroke(AnchorPalette.cyan.opacity(0.30), lineWidth: 4).padding(-7)
+                            Circle().stroke(.white.opacity(0.22), lineWidth: 1)
                         }
-                        .overlay(alignment: .top) {
-                            Capsule().fill(.white.opacity(0.45)).frame(width: 32, height: 9).padding(.top, 8)
-                        }
-                        .shadow(color: Color(red: 0.18, green: 0.51, blue: 0.57), radius: 0, y: 7)
-                        .shadow(color: AnchorPalette.deepSea.opacity(0.24), radius: 14, y: 12)
+                        .shadow(color: AnchorPalette.brandDeep.opacity(0.16), radius: 10, y: 6)
 
-                    HarborAnchorGlyph(lineWidth: 2.8)
-                        .frame(width: 27, height: 27)
+                    HarborAnchorGlyph(color: .white, lineWidth: 2.6)
+                        .frame(width: 25, height: 25)
                 }
-                .frame(width: 78, height: 68)
+                .frame(width: 64, height: 64)
             }
             .buttonStyle(HarborAnchorButtonStyle())
             .accessibilityIdentifier("anchor.note.button")
@@ -230,16 +225,10 @@ public struct HarborAnchorControl: View {
             .accessibilityInputLabels([Text(label)])
 
             Text(label)
-                .font(.caption2.bold())
-                .foregroundStyle(AnchorPalette.ink)
+                .font(.caption.bold())
+                .foregroundStyle(AnchorPalette.brandDeep)
                 .accessibilityHidden(true)
                 .accessibilityIdentifier("anchor.note.label")
-        }
-        .task {
-            guard !reduceMotion else { return }
-            withAnimation(.easeOut(duration: 2.8).repeatForever(autoreverses: false)) {
-                isRippling = true
-            }
         }
     }
 }
@@ -251,6 +240,20 @@ public struct HarborPrimaryButtonStyle: ButtonStyle {
     public init() {}
 
     public func makeBody(configuration: Configuration) -> some View {
+#if os(iOS)
+        configuration.label
+            .font(.headline.bold())
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .padding(.horizontal, AnchorSpacing.medium)
+            .background(
+                isEnabled ? AnchorPalette.interaction : AnchorPalette.secondaryText.opacity(0.55),
+                in: .rect(cornerRadius: 12)
+            )
+            .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.98)
+            .opacity(configuration.isPressed ? 0.94 : 1)
+            .animation(reduceMotion ? nil : AnchorMotion.press, value: configuration.isPressed)
+#else
         configuration.label
             .font(.headline.bold())
             .foregroundStyle(.white)
@@ -276,6 +279,7 @@ public struct HarborPrimaryButtonStyle: ButtonStyle {
             .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.98)
             .offset(y: reduceMotion || !configuration.isPressed ? 0 : 2)
             .animation(reduceMotion ? nil : .snappy(duration: 0.18), value: configuration.isPressed)
+#endif
     }
 }
 
@@ -301,6 +305,19 @@ public struct HarborInputSurface: ViewModifier {
     public init() {}
 
     public func body(content: Content) -> some View {
+#if os(iOS)
+        content
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 10))
+            .overlay {
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(
+                        contrast == .increased ? AnchorPalette.brandDeep.opacity(0.55) : AnchorPalette.fluoriteBorder,
+                        lineWidth: contrast == .increased ? 2 : 1
+                    )
+            }
+#else
         content
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
@@ -313,6 +330,7 @@ public struct HarborInputSurface: ViewModifier {
             }
             .shadow(color: AnchorPalette.ink.opacity(0.07), radius: 3, y: 2)
             .shadow(color: AnchorPalette.ink.opacity(0.06), radius: 10, y: 7)
+#endif
     }
 }
 
@@ -322,8 +340,8 @@ private struct HarborAnchorButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.97)
-            .offset(y: reduceMotion || !configuration.isPressed ? 0 : 5)
-            .animation(reduceMotion ? nil : .snappy(duration: 0.2), value: configuration.isPressed)
+            .opacity(configuration.isPressed ? 0.92 : 1)
+            .animation(reduceMotion ? nil : AnchorMotion.press, value: configuration.isPressed)
     }
 }
 

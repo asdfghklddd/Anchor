@@ -11,45 +11,16 @@ struct HarborMissionCard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HarborHeroSurface(cornerRadius: 26) {
-            VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-                Group {
-                    if dynamicTypeSize.isAccessibilitySize {
-                        VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
-                            missionCopy
-                            HarborMissionOrbit(processes: processes)
-                                .frame(maxWidth: .infinity)
-                        }
-                    } else {
-                        HStack(alignment: .top, spacing: AnchorSpacing.small) {
-                            missionCopy
-                            HarborMissionOrbit(processes: processes)
-                        }
-                    }
-                }
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .center, spacing: 10) {
+                Label(L10n.currentAnchorMap, systemImage: "scope")
+                    .font(.caption.bold())
+                    .foregroundStyle(AnchorPalette.interaction)
+                    .lineLimit(1)
 
-                missionFlow
-            }
-            .padding(14)
-        }
-        .frame(minHeight: dynamicTypeSize.isAccessibilitySize ? 390 : 230)
-    }
+                Spacer(minLength: 8)
 
-    private var missionCopy: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack(alignment: .top, spacing: 8) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(L10n.currentAnchorMap)
-                        .font(.caption2.bold())
-                        .foregroundStyle(AnchorPalette.oceanHighlight)
-                    Text(session?.goal.title ?? L10n.emptyTitle)
-                        .font(.headline.bold())
-                        .foregroundStyle(.white)
-                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
-                        .accessibilityIdentifier("goal.title")
-                }
-                Spacer(minLength: 0)
-                HStack(spacing: 0) {
+                HStack(spacing: 2) {
                     Button(action: onEdit) {
                         missionActionIcon(session == nil ? "plus" : "pencil")
                     }
@@ -66,102 +37,66 @@ struct HarborMissionCard: View {
                 }
             }
 
-            Text(goalNote)
-                .font(.caption2)
-                .foregroundStyle(.white.opacity(0.90))
-                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
-                .accessibilityIdentifier("goal.note")
+            VStack(alignment: .leading, spacing: 6) {
+                Text(session?.goal.title ?? L10n.emptyTitle)
+                    .font(.title2.bold())
+                    .foregroundStyle(AnchorPalette.brandDeep)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                    .accessibilityIdentifier("goal.title")
 
-            HStack(alignment: .firstTextBaseline) {
-                Label(L10n.routesRunning(runningCount), systemImage: "circle.fill")
-                    .font(.caption.bold())
-                    .foregroundStyle(AnchorPalette.oceanHighlight)
-                Spacer(minLength: 6)
-                Text(taskStatus)
-                    .font(.headline.bold())
-                    .foregroundStyle(AnchorPalette.warmYellow)
-                    .multilineTextAlignment(.trailing)
+                Text(goalNote)
+                    .font(.subheadline)
+                    .foregroundStyle(AnchorPalette.secondaryText)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("goal.note")
             }
 
-            HStack(spacing: AnchorSpacing.medium) {
-                Label(L10n.startedAt(startTime), systemImage: "timer")
-                    .accessibilityIdentifier("mission.metadata")
-                Label(L10n.anchoredCount(anchorCount), systemImage: "mappin")
-                    .accessibilityIdentifier("mission.metadata")
+            Label(taskStatus, systemImage: needsAttention ? "exclamationmark.bubble.fill" : "circle.fill")
+                .font(.caption.bold())
+                .foregroundStyle(AnchorPalette.brandDeep)
+                .padding(.horizontal, 10)
+                .frame(minHeight: 30)
+                .background(
+                    needsAttention ? AnchorPalette.attention.opacity(0.22) : AnchorPalette.softBlue.opacity(0.55),
+                    in: .capsule
+                )
+
+            Divider().overlay(AnchorPalette.fluoriteBorder)
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 16) { missionMetadata }
+                VStack(alignment: .leading, spacing: 8) { missionMetadata }
             }
-            .font(.caption2)
-            .foregroundStyle(.white.opacity(0.90))
+            .font(.caption)
+            .foregroundStyle(AnchorPalette.secondaryText)
         }
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 18))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(needsAttention ? AnchorPalette.attention.opacity(0.45) : AnchorPalette.fluoriteBorder, lineWidth: 1)
+        }
+        .shadow(color: AnchorPalette.brandDeep.opacity(0.06), radius: 12, y: 6)
     }
 
-    private var missionFlow: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack {
-                Text(L10n.processFlow)
-                    .accessibilityIdentifier("mission.flow.label")
-                Spacer()
-                Text(session == nil ? "—" : L10n.parallelEfficiency)
-                    .bold()
-                    .accessibilityIdentifier("mission.flow.efficiency")
-            }
-            .font(.caption2)
-            .foregroundStyle(.white.opacity(0.90))
-
-            LazyVGrid(
-                columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
-                spacing: 5
-            ) {
-                ForEach(processes.prefix(4)) { process in
-                    HStack(spacing: 5) {
-                        SourceMark(
-                            symbol: process.sourceSymbol,
-                            tone: process.sourceTone,
-                            size: 19
-                        )
-                        .accessibilityIdentifier("mission.flow.source")
-                        if let progress = process.progress {
-                            GeometryReader { proxy in
-                                Capsule()
-                                    .fill(.white.opacity(0.08))
-                                    .overlay(alignment: .leading) {
-                                        Capsule()
-                                            .fill(AnchorPalette.source(process.sourceTone))
-                                            .frame(width: proxy.size.width * progress)
-                                    }
-                            }
-                            .frame(height: 8)
-                            Text(progress, format: .percent.precision(.fractionLength(0)))
-                                .font(.caption2.monospacedDigit())
-                                .foregroundStyle(.white.opacity(0.92))
-                                .frame(width: 29, alignment: .trailing)
-                                .accessibilityIdentifier("mission.flow.progress")
-                        } else {
-                            Text(L10n.compactStatus(process.status))
-                                .font(.caption2.bold())
-                                .foregroundStyle(.white.opacity(0.92))
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.75)
-                                .frame(maxWidth: .infinity, alignment: .trailing)
-                                .accessibilityIdentifier("mission.flow.status")
-                        }
-                    }
-                }
-            }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityRespondsToUserInteraction(false)
-        .accessibilityLabel(L10n.currentStatus)
-        .accessibilityValue(taskStatus)
-        .accessibilityIdentifier("mission.flow.summary")
+    @ViewBuilder
+    private var missionMetadata: some View {
+        Label(L10n.routesRunning(runningCount), systemImage: "waveform.path.ecg")
+            .accessibilityIdentifier("mission.flow.summary")
+        Label(L10n.startedAt(startTime), systemImage: "timer")
+            .accessibilityIdentifier("mission.metadata")
+        Label(L10n.anchoredCount(anchorCount), systemImage: "mappin")
+            .accessibilityIdentifier("mission.metadata")
     }
 
     private func missionActionIcon(_ symbol: String) -> some View {
         Image(systemName: symbol)
             .font(.subheadline.bold())
-            .foregroundStyle(.white)
-            .frame(width: 32, height: 32)
-            .background(.white.opacity(0.12), in: .rect(cornerRadius: 14, style: .continuous))
+            .foregroundStyle(AnchorPalette.interaction)
+            .frame(width: 36, height: 36)
+            .background(AnchorPalette.softBlue.opacity(0.48), in: .rect(cornerRadius: 10))
             .frame(width: 44, height: 44)
     }
 
@@ -171,6 +106,10 @@ struct HarborMissionCard: View {
 
     private var taskStatus: String {
         TaskStatusPresentation.text(for: session)
+    }
+
+    private var needsAttention: Bool {
+        processes.contains { $0.status == .needsDecision || $0.status == .blocked }
     }
 
     private var goalNote: String {

@@ -11,9 +11,13 @@ struct WorkspaceEmptyProcessesView: View {
         )
         .frame(maxWidth: .infinity, minHeight: 190)
         .background(
-            AnchorPalette.surface.opacity(0.72),
-            in: .rect(cornerRadius: 24, style: .continuous)
+            AnchorPalette.fluoriteSurface,
+            in: .rect(cornerRadius: 14)
         )
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
+        }
         .accessibilityIdentifier("workspace.empty.processes")
     }
 }

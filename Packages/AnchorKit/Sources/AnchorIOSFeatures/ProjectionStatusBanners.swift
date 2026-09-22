@@ -12,13 +12,13 @@ struct ProjectionStatusBanners: View {
                 statusBanner(
                     title: errorMessage,
                     symbol: "wifi.exclamationmark",
-                    tint: AnchorPalette.coral
+                    tint: .red
                 )
             } else if projection.isStale {
                 statusBanner(
                     title: L10n.stale,
                     symbol: "clock.badge.exclamationmark",
-                    tint: AnchorPalette.sand
+                    tint: AnchorPalette.attention
                 )
             }
 
@@ -26,7 +26,7 @@ struct ProjectionStatusBanners: View {
                 statusBanner(
                     title: L10n.connectionUnknownDetail,
                     symbol: "location.slash.fill",
-                    tint: AnchorPalette.sand
+                    tint: AnchorPalette.attention
                 )
             }
         }
@@ -35,10 +35,14 @@ struct ProjectionStatusBanners: View {
     private func statusBanner(title: String, symbol: String, tint: Color) -> some View {
         Label(title, systemImage: symbol)
             .font(.subheadline.bold())
-            .foregroundStyle(AnchorPalette.ink)
+            .foregroundStyle(AnchorPalette.brandDeep)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             .padding(.horizontal, AnchorSpacing.medium)
-            .background(tint.opacity(0.22), in: .rect(cornerRadius: 18, style: .continuous))
+            .background(tint.opacity(0.14), in: .rect(cornerRadius: 12))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(tint.opacity(0.34), lineWidth: 1)
+            }
     }
 }
 #endif

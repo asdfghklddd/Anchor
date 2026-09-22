@@ -15,12 +15,11 @@ struct LandscapeAmbientDashboard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var inspectedProcessID: UUID?
     @State private var selectedOptionID: UUID?
-    @State private var attentionEdgePulse = false
 
     var body: some View {
         AnyView(
             dashboardContent
-            .background(AnchorPalette.paper)
+            .background(AnchorPalette.canvas)
             // The ticker is a non-interactive status rail. Let its background
             // occupy the bottom home-indicator inset while keeping controls
             // above it in the workspace grid.
@@ -90,10 +89,9 @@ struct LandscapeAmbientDashboard: View {
     private var attentionEdge: some View {
             if openDecision != nil {
                 Rectangle()
-                    .fill(AnchorPalette.sand)
+                    .fill(AnchorPalette.attention)
                     .frame(minWidth: 3, idealWidth: 3, maxWidth: 3, maxHeight: .infinity)
-                    .opacity(reduceMotion || attentionEdgePulse ? 1 : 0.78)
-                    .shadow(color: AnchorPalette.sand.opacity(0.5), radius: 8)
+                    .opacity(1)
                     .ignoresSafeArea(.container, edges: [.horizontal, .bottom])
                     .accessibilityHidden(true)
             }
@@ -104,10 +102,6 @@ struct LandscapeAmbientDashboard: View {
         // otherwise the workspace starts on the clear panel instead of silently
         // selecting the first process.
         resetSelectionForSession()
-        guard !reduceMotion else { return }
-        withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-            attentionEdgePulse = true
-        }
     }
 
     private func resetSelectionForSession() {
@@ -577,8 +571,6 @@ private struct AmbientProcessGrid: View {
     let inspectedProcessID: UUID?
     let onSelect: (AnchorProcess) -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
     var body: some View {
         Grid(horizontalSpacing: 8, verticalSpacing: 8) {
             ForEach(Array(processRows.enumerated()), id: \.offset) { _, row in
@@ -595,7 +587,6 @@ private struct AmbientProcessGrid: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .animation(reduceMotion ? nil : .spring(duration: 0.45), value: inspectedProcessID)
     }
 
     private var processRows: [[AnchorProcess]] {
@@ -653,10 +644,7 @@ private struct AmbientProcessTile: View {
     let process: AnchorProcess
     let selected: Bool
 
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
-        let tint = AnchorPalette.source(process.sourceTone)
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 29)
@@ -666,7 +654,7 @@ private struct AmbientProcessTile: View {
 
             Text(process.title)
                 .font(.caption.bold())
-                .foregroundStyle(AnchorPalette.ink)
+                .foregroundStyle(AnchorPalette.brandDeep)
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)
                 .accessibilityIdentifier("ambient.tile.title")
@@ -674,13 +662,14 @@ private struct AmbientProcessTile: View {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(process.metric)
                     .font(.title2.bold().monospacedDigit())
-                    .foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
+                    .foregroundStyle(AnchorPalette.brandDeep)
+                    .contentTransition(.numericText())
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
                 Spacer(minLength: 0)
                 Text(process.metricLabel)
                     .font(.caption2)
-                    .foregroundStyle(AnchorPalette.secondaryInk)
+                    .foregroundStyle(AnchorPalette.secondaryText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             }
@@ -689,30 +678,35 @@ private struct AmbientProcessTile: View {
 
             if let progress = process.progress {
                 HStack(spacing: 7) {
-                    AnchorProgress(value: progress, tint: tint)
+                    AnchorProgress(value: progress, tint: AnchorPalette.interaction)
                     Text(progress, format: .percent.precision(.fractionLength(0)))
                         .font(.caption2.bold().monospacedDigit())
-                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .foregroundStyle(AnchorPalette.secondaryText)
+                        .contentTransition(.numericText(value: progress))
                         .frame(width: 31, alignment: .trailing)
                 }
             }
         }
-        .foregroundStyle(AnchorPalette.ink)
+        .foregroundStyle(AnchorPalette.brandDeep)
         .padding(9)
         .frame(maxWidth: .infinity, minHeight: 104, alignment: .topLeading)
         .background(
-            LinearGradient(
-                colors: AnchorPalette.sourceSurface(process.sourceTone, dark: colorScheme == .dark),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            in: .rect(cornerRadius: 24, style: .continuous)
+            process.status == .needsDecision
+                ? AnchorPalette.attention.opacity(0.13)
+                : AnchorPalette.fluoriteSurface,
+            in: .rect(cornerRadius: 14)
         )
-        .shadow(
-            color: process.status == .needsDecision ? AnchorPalette.sand.opacity(0.20) : tint.opacity(0.12),
-            radius: process.status == .needsDecision ? 10 : 7,
-            y: 4
-        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(
+                    selected
+                        ? AnchorPalette.interaction
+                        : process.status == .needsDecision
+                            ? AnchorPalette.attention.opacity(0.72)
+                            : AnchorPalette.fluoriteBorder,
+                    lineWidth: selected ? 2 : 1
+                )
+        }
         .accessibilityHidden(true)
     }
 
@@ -721,13 +715,15 @@ private struct AmbientProcessTile: View {
             .font(.caption2.bold())
             .foregroundStyle(
                 process.status == .needsDecision
-                    ? Color(red: 0.47, green: 0.32, blue: 0)
-                    : AnchorPalette.sourceInk(process.sourceTone)
+                    ? AnchorPalette.brandDeep
+                    : AnchorPalette.interaction
             )
             .padding(.horizontal, 7)
             .frame(minHeight: 23)
             .background(
-                process.status == .needsDecision ? AnchorPalette.warmYellow : .white.opacity(0.56),
+                process.status == .needsDecision
+                    ? AnchorPalette.attention.opacity(0.24)
+                    : AnchorPalette.softBlue.opacity(0.52),
                 in: .capsule
             )
             .lineLimit(1)
@@ -771,7 +767,8 @@ private struct AmbientDecisionInspector: View {
     @Binding var selectedOptionID: UUID?
     let onResolve: (Decision, DecisionOption) -> Void
 
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Namespace private var selectionMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -779,7 +776,7 @@ private struct AmbientDecisionInspector: View {
 
             HStack(spacing: 9) {
                 StoryboardPreview(
-                    tint: AnchorPalette.source(process.sourceTone),
+                    tint: AnchorPalette.aiBlue,
                     compact: true,
                     direction: directionID(for: selectedOptionIndex)
                 )
@@ -787,7 +784,7 @@ private struct AmbientDecisionInspector: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(process.metric + " " + process.metricLabel)
                         .font(.caption.bold())
-                        .foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
+                        .foregroundStyle(AnchorPalette.brandDeep)
                         .accessibilityIdentifier("ambient.inspector.metric")
                     Text(process.title)
                         .font(.headline.bold())
@@ -795,7 +792,7 @@ private struct AmbientDecisionInspector: View {
                         .accessibilityIdentifier("ambient.inspector.title")
                     Text(process.detail)
                         .font(.caption2)
-                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .foregroundStyle(AnchorPalette.secondaryText)
                         .lineLimit(3)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -816,17 +813,24 @@ private struct AmbientDecisionInspector: View {
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.70)
                         }
-                        .foregroundStyle(AnchorPalette.ink)
+                        .foregroundStyle(AnchorPalette.brandDeep)
                         .padding(5)
                         .frame(maxWidth: .infinity)
-                        .background(
-                            selectedOptionID == option.id ? AnchorPalette.seafoam.opacity(0.28) : AnchorPalette.paper,
-                            in: .rect(cornerRadius: 12, style: .continuous)
-                        )
+                        .background {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(AnchorPalette.canvas)
+                                if selectedOptionID == option.id {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(AnchorPalette.attention.opacity(0.20))
+                                        .matchedGeometryEffect(id: "ambient.selection", in: selectionMotion)
+                                }
+                            }
+                        }
                         .overlay {
                             if selectedOptionID == option.id {
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(AnchorPalette.mintInk, lineWidth: 2)
+                                    .stroke(AnchorPalette.attention, lineWidth: 1.5)
                             }
                         }
                     }
@@ -837,6 +841,7 @@ private struct AmbientDecisionInspector: View {
                     .accessibilityIdentifier(index == 0 ? "ambient.decision.option.first" : "ambient.decision.option.\(option.id.uuidString)")
                 }
             }
+            .animation(reduceMotion ? nil : AnchorMotion.micro, value: selectedOptionID)
 
             Button {
                 guard let selectedOptionID,
@@ -857,15 +862,11 @@ private struct AmbientDecisionInspector: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(
-            LinearGradient(
-                colors: AnchorPalette.sourceSurface(process.sourceTone, dark: colorScheme == .dark),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            in: .rect(cornerRadius: 24, style: .continuous)
-        )
-        .shadow(color: AnchorPalette.sand.opacity(0.16), radius: 12, y: 7)
+        .background(AnchorPalette.attention.opacity(0.12), in: .rect(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(AnchorPalette.attention.opacity(0.60), lineWidth: 1)
+        }
     }
 
     private var selectedOptionIndex: Int {
@@ -879,11 +880,7 @@ private struct AmbientDecisionInspector: View {
     }
 
     private func decisionTint(for index: Int) -> Color {
-        switch index {
-        case 0: AnchorPalette.coral
-        case 1: AnchorPalette.periwinkle
-        default: AnchorPalette.cyan
-        }
+        index == selectedOptionIndex ? AnchorPalette.interaction : AnchorPalette.aiBlue
     }
 
     private var inspectorHeader: some View {
@@ -892,10 +889,10 @@ private struct AmbientDecisionInspector: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(process.sourceName)
                     .font(.caption.bold())
-                    .foregroundStyle(colorScheme == .dark ? AnchorPalette.harborWhite : AnchorPalette.deepSea)
+                    .foregroundStyle(AnchorPalette.brandDeep)
                 Label(L10n.attentionNeeded, systemImage: "exclamationmark.circle.fill")
                     .font(.caption2.bold())
-                    .foregroundStyle(Color(red: 0.48, green: 0.33, blue: 0))
+                    .foregroundStyle(AnchorPalette.brandDeep)
             }
             Spacer()
         }

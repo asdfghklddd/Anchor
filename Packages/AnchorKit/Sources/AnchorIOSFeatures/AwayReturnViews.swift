@@ -12,10 +12,10 @@ struct HandoffView: View {
 
     var body: some View {
         ZStack {
-            AnchorPalette.deepSea.ignoresSafeArea()
+            AnchorPalette.brandDeep.ignoresSafeArea()
 
             Circle()
-                .fill(AnchorPalette.cyan.opacity(0.17))
+                .fill(AnchorPalette.aiBlue.opacity(0.17))
                 .frame(width: 360, height: 360)
                 .blur(radius: 34)
                 .offset(y: -90)
@@ -54,16 +54,16 @@ struct HandoffView: View {
                 return
             }
 
-            withAnimation(.spring(duration: 0.72)) {
+            withAnimation(AnchorMotion.continuity) {
                 isGathering = true
             }
             do {
-                try await Task.sleep(for: .milliseconds(980))
+                try await Task.sleep(for: .milliseconds(540))
             } catch {
                 return
             }
             guard !Task.isCancelled else { return }
-            withAnimation(.spring(duration: 0.38)) { secured = true }
+            withAnimation(AnchorMotion.micro) { secured = true }
         }
     }
 
@@ -78,7 +78,7 @@ struct HandoffView: View {
 
             ForEach([138.0, 188.0], id: \.self) { diameter in
                 Circle()
-                    .stroke(AnchorPalette.cyan.opacity(secured ? 0.12 : 0.38), lineWidth: 2)
+                    .stroke(AnchorPalette.aiBlue.opacity(secured ? 0.12 : 0.38), lineWidth: 2)
                     .frame(width: diameter, height: diameter)
                     .scaleEffect(isGathering ? 1 : 0.68)
             }
@@ -86,7 +86,7 @@ struct HandoffView: View {
             Circle()
                 .fill(
                     LinearGradient(
-                        colors: [AnchorPalette.oceanHighlight, AnchorPalette.seafoam, AnchorPalette.cyan],
+                        colors: [AnchorPalette.softBlue, AnchorPalette.aiBlue],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -96,17 +96,17 @@ struct HandoffView: View {
                     if secured {
                         Image(systemName: "checkmark")
                             .font(.system(size: 34, weight: .bold))
-                            .foregroundStyle(AnchorPalette.deepSea)
+                            .foregroundStyle(AnchorPalette.brandDeep)
                     } else {
                         HarborAnchorGlyph(lineWidth: 3.2)
                             .frame(width: 38, height: 38)
                     }
                 }
-                .shadow(color: AnchorPalette.cyan.opacity(0.46), radius: 24)
+                    .shadow(color: AnchorPalette.aiBlue.opacity(0.30), radius: 20)
         }
         .frame(width: 300, height: 270)
-        .animation(reduceMotion ? nil : .spring(duration: 0.72), value: isGathering)
-        .animation(reduceMotion ? nil : .spring(duration: 0.52), value: secured)
+        .animation(reduceMotion ? nil : AnchorMotion.continuity, value: isGathering)
+        .animation(reduceMotion ? nil : AnchorMotion.micro, value: secured)
         .accessibilityHidden(true)
     }
 
@@ -162,7 +162,7 @@ struct AwayView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AnchorPalette.returnCanvas
+                AnchorPalette.canvas
                     .ignoresSafeArea()
 
                 ScrollView {
@@ -224,19 +224,19 @@ struct AwayView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Label(L10n.awayDuration(awayMinutes(at: context.date)), systemImage: "circle.fill")
                     .font(.caption2.bold())
-                    .foregroundStyle(AnchorPalette.mintInk)
+                .foregroundStyle(AnchorPalette.interaction)
                     .padding(.horizontal, 10)
                     .frame(minHeight: 30)
-                    .background(AnchorPalette.seafoam.opacity(0.22), in: .capsule)
+                .background(AnchorPalette.softBlue.opacity(0.55), in: .capsule)
                     .accessibilityIdentifier("away.duration")
 
                 Text(L10n.away)
                     .font(.title.bold())
-                    .foregroundStyle(AnchorPalette.ink)
+                    .foregroundStyle(AnchorPalette.brandDeep)
                     .accessibilityIdentifier("away.screen")
                 Text(L10n.awayDetail)
                     .font(.footnote)
-                    .foregroundStyle(AnchorPalette.secondaryInk)
+                    .foregroundStyle(AnchorPalette.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("away.detail")
             }
@@ -306,11 +306,11 @@ struct AwayView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(L10n.remoteProcesses)
                     .font(.caption2.bold())
-                    .foregroundStyle(AnchorPalette.link)
+                    .foregroundStyle(AnchorPalette.interaction)
                     .accessibilityIdentifier("processes.kicker")
                 Text(L10n.synchronizedWork)
                     .font(.headline.bold())
-                    .foregroundStyle(AnchorPalette.ink)
+                    .foregroundStyle(AnchorPalette.brandDeep)
             }
             Spacer()
             HStack(spacing: 6) {
@@ -319,20 +319,24 @@ struct AwayView: View {
                     attention: projection.openDecisions.count
                 ))
                     .font(.caption2.bold().monospacedDigit())
-                    .foregroundStyle(AnchorPalette.ink)
+                    .foregroundStyle(AnchorPalette.brandDeep)
                     .padding(.horizontal, 8)
                     .frame(minHeight: 30)
-                    .background(AnchorPalette.paper, in: .capsule)
+                    .background(AnchorPalette.fluoriteSurface, in: .capsule)
                     .accessibilityIdentifier("away.process.summary")
 
                 Button(action: onLayout) {
                     Image(systemName: "square.grid.2x2")
                         .font(.subheadline.bold())
-                        .foregroundStyle(AnchorPalette.link)
+                        .foregroundStyle(AnchorPalette.interaction)
                         .frame(width: 44, height: 44)
-                        .background(AnchorPalette.cyan.opacity(0.12), in: .rect(cornerRadius: 14, style: .continuous))
+                        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 12))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
+                        }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(AnchorPressButtonStyle())
                 .accessibilityLabel(L10n.layout)
             }
         }
@@ -382,7 +386,7 @@ struct ReturnView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AnchorPalette.returnCanvas
+                AnchorPalette.canvas
                     .ignoresSafeArea()
 
                 ScrollView {
@@ -420,7 +424,7 @@ struct ReturnView: View {
                     }
                     Text(L10n.returnNavigationTitle)
                         .font(.headline.bold())
-                        .foregroundStyle(AnchorPalette.ink)
+                        .foregroundStyle(AnchorPalette.brandDeep)
                         .frame(maxWidth: .infinity)
                         .accessibilityIdentifier("return.nav")
                 }
@@ -434,14 +438,17 @@ struct ReturnView: View {
 
                     Text(L10n.returnNavigationTitle)
                         .font(.headline.bold())
-                        .foregroundStyle(AnchorPalette.ink)
+                        .foregroundStyle(AnchorPalette.brandDeep)
                         .accessibilityIdentifier("return.nav")
                 }
             }
         }
         .padding(.horizontal, AnchorSpacing.medium)
         .frame(minHeight: 50)
-        .background(AnchorPalette.returnCanvas.opacity(0.96))
+        .background(AnchorPalette.canvas.opacity(0.97))
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(AnchorPalette.fluoriteBorder).frame(height: 1)
+        }
     }
 
     private var returnCloseButton: some View {
@@ -466,7 +473,7 @@ struct ReturnView: View {
     private var returnConnection: some View {
         Label(L10n.connected, systemImage: "circle.fill")
             .font(.caption.bold())
-            .foregroundStyle(AnchorPalette.mintInk)
+            .foregroundStyle(AnchorPalette.interaction)
             .accessibilityIdentifier("return.nav.connection")
     }
 
@@ -492,7 +499,7 @@ struct ReturnView: View {
     private var returnVisual: some View {
         ZStack {
             Circle()
-                .stroke(AnchorPalette.cyan.opacity(0.28), lineWidth: 1)
+                .stroke(AnchorPalette.aiBlue.opacity(0.34), lineWidth: 1)
                 .frame(width: 82, height: 82)
 
             Circle()
@@ -502,28 +509,28 @@ struct ReturnView: View {
             Circle()
                 .fill(
                     LinearGradient(
-                        colors: [AnchorPalette.oceanHighlight, AnchorPalette.seafoam],
+                        colors: [AnchorPalette.softBlue, AnchorPalette.aiBlue],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
                 .frame(width: 42, height: 42)
                 .overlay {
-                    HarborAnchorGlyph(color: AnchorPalette.deepSea, lineWidth: 2.1)
+                    HarborAnchorGlyph(color: AnchorPalette.brandDeep, lineWidth: 2.1)
                         .frame(width: 24, height: 24)
                 }
-                .shadow(color: AnchorPalette.deepSea.opacity(0.25), radius: 8, y: 5)
+                .shadow(color: AnchorPalette.brandDeep.opacity(0.18), radius: 8, y: 5)
 
             Circle()
-                .fill(AnchorPalette.sand)
+                .fill(AnchorPalette.attention)
                 .frame(width: 6, height: 6)
                 .offset(y: -35)
             Circle()
-                .fill(AnchorPalette.seafoam)
+                .fill(AnchorPalette.aiBlue)
                 .frame(width: 6, height: 6)
                 .offset(x: 33, y: 17)
             Circle()
-                .fill(AnchorPalette.coral)
+                .fill(AnchorPalette.interaction)
                 .frame(width: 6, height: 6)
                 .offset(x: -28, y: 25)
         }
@@ -535,7 +542,7 @@ struct ReturnView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("\(L10n.returning) · \(L10n.awayDuration(awayMinutes))")
                 .font(.caption2.bold())
-                .foregroundStyle(AnchorPalette.oceanHighlight)
+                .foregroundStyle(AnchorPalette.softBlue)
                 .accessibilityIdentifier("return.hero.eyebrow")
 
             Text("\(L10n.returning),")
@@ -562,21 +569,21 @@ struct ReturnView: View {
             HStack {
                 Text(L10n.returnChanges)
                     .font(.caption.bold())
-                    .foregroundStyle(AnchorPalette.mintInk)
+                    .foregroundStyle(AnchorPalette.interaction)
                 Spacer()
                 Text("\(changes.count)")
                     .font(.caption.bold().monospacedDigit())
                     .foregroundStyle(.white)
                     .padding(.horizontal, 7)
                     .padding(.vertical, 3)
-                    .background(AnchorPalette.mintInk, in: .capsule)
+                    .background(AnchorPalette.interaction, in: .capsule)
             }
             Text(L10n.returnChangesSummary(changes.count))
                 .font(.headline.bold())
-                .foregroundStyle(AnchorPalette.ink)
+                .foregroundStyle(AnchorPalette.brandDeep)
             Text(recommendedProcess?.detail ?? L10n.returnDetail)
                 .font(.body)
-                .foregroundStyle(AnchorPalette.secondaryInk)
+                .foregroundStyle(AnchorPalette.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
 
             Group {
@@ -598,14 +605,20 @@ struct ReturnView: View {
             }
         }
         .padding(16)
-        .background(AnchorPalette.seafoam.opacity(0.23), in: .rect(cornerRadius: 24, style: .continuous))
-        .shadow(color: AnchorPalette.mintInk.opacity(0.12), radius: 14, y: 8)
+        .background(AnchorPalette.softBlue.opacity(0.30), in: .rect(cornerRadius: 18))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(AnchorPalette.aiBlue.opacity(0.24), lineWidth: 1)
+        }
     }
 
     private func impactMetric(_ value: String, label: String) -> some View {
         VStack(spacing: 2) {
-            Text(value).font(.headline.bold().monospacedDigit()).foregroundStyle(AnchorPalette.ink)
-            Text(label).font(.caption2).foregroundStyle(AnchorPalette.secondaryInk)
+            Text(value)
+                .font(.headline.bold().monospacedDigit())
+                .foregroundStyle(AnchorPalette.brandDeep)
+                .contentTransition(.numericText())
+            Text(label).font(.caption2).foregroundStyle(AnchorPalette.secondaryText)
                 .accessibilityIdentifier("return.impact.metric")
         }
         .frame(maxWidth: .infinity)
@@ -615,7 +628,7 @@ struct ReturnView: View {
     private var changesDisclosure: some View {
         VStack(spacing: 0) {
             Button {
-                withAnimation(reduceMotion ? nil : .spring(duration: 0.36)) { showChanges.toggle() }
+                withAnimation(reduceMotion ? nil : AnchorMotion.continuity) { showChanges.toggle() }
             } label: {
                 HStack {
                     Label(L10n.returnChangesSummary(changes.count), systemImage: "clock.arrow.circlepath")
@@ -625,7 +638,7 @@ struct ReturnView: View {
                         .font(.caption.bold())
                         .rotationEffect(.degrees(showChanges ? 180 : 0))
                 }
-                .foregroundStyle(AnchorPalette.ink)
+                .foregroundStyle(AnchorPalette.brandDeep)
                 .padding(.horizontal, 14)
                 .frame(maxWidth: .infinity, minHeight: 48)
                 .contentShape(.rect)
@@ -639,15 +652,15 @@ struct ReturnView: View {
                         HStack(alignment: .top, spacing: 10) {
                             Text(change.occurredAt, style: .time)
                                 .font(.caption2.monospacedDigit())
-                                .foregroundStyle(AnchorPalette.secondaryInk)
+                                .foregroundStyle(AnchorPalette.secondaryText)
                                 .frame(width: 42, alignment: .leading)
                             Circle()
-                                .fill(AnchorPalette.coral)
+                                .fill(AnchorPalette.aiBlue)
                                 .frame(width: 8, height: 8)
                                 .padding(.top, 4)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(change.title).font(.subheadline.bold()).foregroundStyle(AnchorPalette.ink)
-                                Text(change.detail).font(.caption).foregroundStyle(AnchorPalette.secondaryInk)
+                                Text(change.title).font(.subheadline.bold()).foregroundStyle(AnchorPalette.brandDeep)
+                                Text(change.detail).font(.caption).foregroundStyle(AnchorPalette.secondaryText)
                             }
                             Spacer(minLength: 0)
                         }
@@ -655,9 +668,14 @@ struct ReturnView: View {
                     }
                 }
                 .padding(14)
+                .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .background(AnchorPalette.surface, in: .rect(cornerRadius: 20, style: .continuous))
+        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
+        }
     }
 
     private func nextStepCard(_ process: AnchorProcess) -> some View {
@@ -667,39 +685,42 @@ struct ReturnView: View {
             HStack(spacing: 12) {
                 Image(systemName: "exclamationmark")
                     .font(.body.bold())
-                    .foregroundStyle(AnchorPalette.sourceInk("sand"))
+                    .foregroundStyle(AnchorPalette.brandDeep)
                     .frame(width: 36, height: 36)
-                    .background(AnchorPalette.sand.opacity(0.24), in: .circle)
+                    .background(AnchorPalette.attention.opacity(0.24), in: .circle)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(L10n.yourNextStep)
                         .font(.caption2.bold())
-                        .foregroundStyle(AnchorPalette.ink)
+                        .foregroundStyle(AnchorPalette.brandDeep)
                         .accessibilityIdentifier("return.next.content")
                     Text(process.title)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(AnchorPalette.ink)
+                        .foregroundStyle(AnchorPalette.brandDeep)
                         .accessibilityIdentifier("return.next.content")
                     Text(process.detail)
                         .font(.caption)
-                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .foregroundStyle(AnchorPalette.secondaryText)
                         .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("return.next.content")
                     Text(L10n.returnContinueHint)
                         .font(.caption2.weight(.semibold))
-                        .foregroundStyle(AnchorPalette.link)
+                        .foregroundStyle(AnchorPalette.interaction)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("return.next.content")
                 }
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(AnchorPalette.ink)
+                Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(AnchorPalette.brandDeep)
             }
             .padding(15)
-            .background(AnchorPalette.warmYellow, in: .rect(cornerRadius: 22, style: .continuous))
-            .shadow(color: AnchorPalette.sand.opacity(0.20), radius: 12, y: 7)
+            .background(AnchorPalette.attention.opacity(0.20), in: .rect(cornerRadius: 18))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(AnchorPalette.attention.opacity(0.60), lineWidth: 1)
+            }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AnchorPressButtonStyle())
         .disabled(projection.openDecisions.first { $0.processID == process.id } == nil)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("return.next.step")
@@ -721,7 +742,7 @@ struct ReturnView: View {
         .padding(.horizontal, AnchorSpacing.medium)
         .padding(.top, 10)
         .padding(.bottom, 5)
-        .background(AnchorPalette.returnCanvas.opacity(0.97))
+        .background(AnchorPalette.canvas.opacity(0.97))
     }
 
     private var changes: [ReturnChange] {

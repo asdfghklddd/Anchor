@@ -24,11 +24,15 @@ struct HarborTopBar: View {
                 }
             }
         }
-        .tint(AnchorPalette.ink)
+        .tint(AnchorPalette.brandDeep)
         .padding(.horizontal, AnchorSpacing.medium)
-        .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? 8 : 5)
-        .background(AnchorPalette.paper)
-        .shadow(color: AnchorPalette.ink.opacity(0.045), radius: 11, y: 7)
+        .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? 8 : 4)
+        .background(AnchorPalette.canvas.opacity(0.97))
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(AnchorPalette.fluoriteBorder.opacity(0.78))
+                .frame(height: 1)
+        }
     }
 
     private var standardContent: some View {
@@ -60,8 +64,16 @@ struct HarborTopBar: View {
 
     private var profileButton: some View {
         Button(action: onProfile) {
-            HarborClayAvatar()
-                .frame(width: 44, height: 44)
+            ZStack {
+                Circle().fill(AnchorPalette.softBlue.opacity(0.78))
+                HarborAnchorGlyph(color: AnchorPalette.brandDeep, lineWidth: 2.2)
+                    .frame(width: 21, height: 21)
+            }
+            .frame(width: 40, height: 40)
+            .overlay {
+                Circle().stroke(AnchorPalette.aiBlue.opacity(0.28), lineWidth: 1)
+            }
+            .frame(width: 44, height: 44)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(L10n.profile)
@@ -72,9 +84,9 @@ struct HarborTopBar: View {
         VStack(alignment: .leading, spacing: 0) {
             Text(L10n.appName)
                 .font(.headline.bold())
-                .foregroundStyle(AnchorPalette.ink)
+                .foregroundStyle(AnchorPalette.brandDeep)
             Label(connectionLabel, systemImage: connectionSymbol)
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(connectionColor)
                 .accessibilityIdentifier("topbar.connection")
         }
@@ -86,7 +98,10 @@ struct HarborTopBar: View {
         if let auxiliaryLabel, let onAuxiliary {
             Button(action: onAuxiliary) {
                 Image(systemName: "slider.horizontal.3")
+                    .font(.body.bold())
                     .frame(width: 44, height: 44)
+                    .background(AnchorPalette.fluoriteSurface, in: .circle)
+                    .overlay { Circle().stroke(AnchorPalette.fluoriteBorder, lineWidth: 1) }
             }
             .accessibilityLabel(auxiliaryLabel)
         }
@@ -96,13 +111,15 @@ struct HarborTopBar: View {
         Button(action: onNotifications) {
             ZStack(alignment: .topTrailing) {
                 Image(systemName: "bell")
-                    .font(.title3)
+                    .font(.body.bold())
                     .frame(width: 44, height: 44)
+                    .background(AnchorPalette.fluoriteSurface, in: .circle)
+                    .overlay { Circle().stroke(AnchorPalette.fluoriteBorder, lineWidth: 1) }
                 if unreadCount > 0 {
                     Circle()
-                        .fill(AnchorPalette.sand)
+                        .fill(AnchorPalette.attention)
                         .frame(width: 8, height: 8)
-                        .overlay { Circle().stroke(AnchorPalette.paper, lineWidth: 2) }
+                        .overlay { Circle().stroke(AnchorPalette.canvas, lineWidth: 2) }
                         .offset(x: -4, y: 4)
                 }
             }
@@ -133,9 +150,9 @@ struct HarborTopBar: View {
 
     private var connectionColor: Color {
         switch connection {
-        case .connected: AnchorPalette.mintInk
-        case .pairing: AnchorPalette.link
-        case .disconnected, .unavailable, .permissionDenied, .failed: AnchorPalette.coral
+        case .connected: Color.green
+        case .pairing: AnchorPalette.interaction
+        case .disconnected, .unavailable, .permissionDenied, .failed: Color.red
         }
     }
 }

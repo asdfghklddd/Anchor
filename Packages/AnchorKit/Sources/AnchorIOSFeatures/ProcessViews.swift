@@ -11,7 +11,7 @@ struct ProcessDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AnchorSpacing.large) {
-                AnchorCard(tint: AnchorPalette.source(process.sourceTone)) {
+                AnchorCard(tint: AnchorPalette.aiBlue) {
                     VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
                         HStack {
                             SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 48)
@@ -22,26 +22,31 @@ struct ProcessDetailView: View {
                         }
                         Text(process.title)
                             .font(.largeTitle.bold())
+                            .foregroundStyle(AnchorPalette.brandDeep)
                         Text(process.detail)
                             .font(.title3)
-                            .foregroundStyle(AnchorPalette.secondaryInk)
+                            .foregroundStyle(AnchorPalette.secondaryText)
                         HStack(alignment: .firstTextBaseline) {
                             VStack(alignment: .leading) {
                                 Text(process.metric)
                                     .font(.title.bold().monospacedDigit())
+                                    .foregroundStyle(AnchorPalette.brandDeep)
+                                    .contentTransition(.numericText())
                                 Text(process.metricLabel)
                                     .font(.caption)
-                                    .foregroundStyle(AnchorPalette.secondaryInk)
+                                    .foregroundStyle(AnchorPalette.secondaryText)
                             }
                             Spacer()
-                            VStack(alignment: .trailing) {
-                                Text(L10n.estimated).font(.caption)
-                                Text(process.estimatedCompletion)
-                                    .font(.subheadline.bold())
+                            if !process.estimatedCompletion.isEmpty, process.estimatedCompletion != "—" {
+                                VStack(alignment: .trailing) {
+                                    Text(L10n.estimated).font(.caption)
+                                    Text(process.estimatedCompletion)
+                                        .font(.subheadline.bold())
+                                }
                             }
                         }
                         if let progress = process.progress {
-                            AnchorProgress(value: progress, tint: AnchorPalette.source(process.sourceTone))
+                            AnchorProgress(value: progress, tint: AnchorPalette.interaction)
                         }
                     }
                 }
@@ -57,6 +62,7 @@ struct ProcessDetailView: View {
 
                 Text(L10n.activity)
                     .font(.title2.bold())
+                    .foregroundStyle(AnchorPalette.brandDeep)
                 if process.events.isEmpty {
                     ContentUnavailableView(L10n.noEvents, systemImage: "waveform.path.ecg")
                 } else {
@@ -69,7 +75,7 @@ struct ProcessDetailView: View {
             .frame(maxWidth: 720)
             .frame(maxWidth: .infinity)
         }
-        .background(AnchorPalette.paper)
+        .background(AnchorPalette.canvas)
         .navigationTitle(process.sourceName)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -81,8 +87,10 @@ struct DecisionView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedOptionID: UUID?
     @State private var feedbackTrigger = 0
+    @Namespace private var selectionMotion
 
     var body: some View {
         NavigationStack {
@@ -126,40 +134,43 @@ struct DecisionView: View {
                     size: 48
                 )
                 VStack(alignment: .leading, spacing: 5) {
-                    StatusBadge(status: .needsDecision, text: L10n.attentionNeeded)
+                    Label(L10n.attentionNeeded, systemImage: "exclamationmark.bubble.fill")
+                        .font(.caption.bold())
+                        .foregroundStyle(AnchorPalette.brandDeep)
+                        .padding(.horizontal, 10)
+                        .frame(minHeight: 28)
+                        .background(AnchorPalette.attention.opacity(0.24), in: .capsule)
                     Text(process?.title ?? decision.title)
                         .font(.title2.bold())
-                        .foregroundStyle(AnchorPalette.ink)
+                        .foregroundStyle(AnchorPalette.brandDeep)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
             HStack(spacing: 16) {
-                StoryboardPreview(tint: AnchorPalette.source(process?.sourceTone ?? "periwinkle"))
+                StoryboardPreview(tint: AnchorPalette.aiBlue)
                     .frame(width: 118, height: 86)
                 VStack(alignment: .leading, spacing: 5) {
                     Text(process?.metric ?? "")
                         .font(.largeTitle.bold().monospacedDigit())
-                        .foregroundStyle(AnchorPalette.sourceInk(process?.sourceTone ?? "periwinkle"))
+                        .foregroundStyle(AnchorPalette.brandDeep)
+                        .contentTransition(.numericText())
                     Text(process?.metricLabel ?? decision.prompt)
                         .font(.subheadline)
-                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .foregroundStyle(AnchorPalette.secondaryText)
                     Text(decision.prompt)
                         .font(.caption)
-                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .foregroundStyle(AnchorPalette.secondaryText)
                         .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 3)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .padding(14)
-            .background(
-                LinearGradient(
-                    colors: AnchorPalette.sourceSurface(process?.sourceTone ?? "periwinkle"),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ),
-                in: .rect(cornerRadius: 24, style: .continuous)
-            )
+            .background(AnchorPalette.softBlue.opacity(0.34), in: .rect(cornerRadius: 14))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(AnchorPalette.aiBlue.opacity(0.32), lineWidth: 1)
+            }
         }
         .padding(.top, 8)
     }
@@ -170,17 +181,17 @@ struct DecisionView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L10n.attentionNeeded.uppercased())
                         .font(.caption2.bold())
-                        .foregroundStyle(AnchorPalette.link)
+                        .foregroundStyle(AnchorPalette.interaction)
                         .accessibilityHidden(true)
                     Text(L10n.chooseVisualDirection)
                         .font(.title3.bold())
-                        .foregroundStyle(AnchorPalette.ink)
+                        .foregroundStyle(AnchorPalette.brandDeep)
                         .accessibilityIdentifier("decision.screen")
                 }
                 Spacer()
                 Text("\((decision.options.firstIndex { $0.id == selectedOptionID } ?? 0) + 1) / \(decision.options.count)")
                     .font(.caption.bold().monospacedDigit())
-                    .foregroundStyle(AnchorPalette.secondaryInk)
+                    .foregroundStyle(AnchorPalette.secondaryText)
             }
 
             ForEach(Array(decision.options.enumerated()), id: \.element.id) { index, option in
@@ -188,8 +199,11 @@ struct DecisionView: View {
             }
         }
         .padding(14)
-        .background(AnchorPalette.surface, in: .rect(cornerRadius: 24, style: .continuous))
-        .shadow(color: AnchorPalette.deepSea.opacity(0.08), radius: 14, y: 8)
+        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
+        }
     }
 
     private func directionButton(_ option: DecisionOption, index: Int) -> some View {
@@ -199,7 +213,7 @@ struct DecisionView: View {
         } label: {
             HStack(spacing: 12) {
                 StoryboardPreview(
-                    tint: index == 0 ? AnchorPalette.coral : index == 1 ? AnchorPalette.periwinkle : AnchorPalette.cyan,
+                        tint: AnchorPalette.aiBlue,
                     compact: true
                 )
                 .frame(width: 72, height: 54)
@@ -207,11 +221,11 @@ struct DecisionView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("\(Character(UnicodeScalar(65 + index)!)) · \(option.title)")
                         .font(.subheadline.bold())
-                        .foregroundStyle(AnchorPalette.ink)
+                        .foregroundStyle(AnchorPalette.brandDeep)
                         .accessibilityIdentifier("decision.option.title")
                     Text(option.detail)
                         .font(.caption)
-                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .foregroundStyle(AnchorPalette.secondaryText)
                         .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("decision.option.detail")
@@ -219,23 +233,29 @@ struct DecisionView: View {
                 Spacer(minLength: 0)
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(selected ? AnchorPalette.deepSea : AnchorPalette.secondaryInk.opacity(0.55))
+                    .foregroundStyle(selected ? AnchorPalette.brandDeep : AnchorPalette.secondaryText.opacity(0.55))
                     .accessibilityHidden(true)
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                selected ? AnchorPalette.warmYellow.opacity(0.72) : AnchorPalette.paper,
-                in: .rect(cornerRadius: 18, style: .continuous)
-            )
-            .overlay {
-                if selected {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(AnchorPalette.sand, lineWidth: 2)
+            .background {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(AnchorPalette.canvas)
+                    if selected {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(AnchorPalette.attention.opacity(0.22))
+                            .matchedGeometryEffect(id: "decision.selection", in: selectionMotion)
+                    }
                 }
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(selected ? AnchorPalette.attention : AnchorPalette.fluoriteBorder, lineWidth: selected ? 1.5 : 1)
             }
         }
         .buttonStyle(.plain)
+        .animation(reduceMotion ? nil : AnchorMotion.micro, value: selectedOptionID)
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityHint(option.detail)
     }

@@ -7,6 +7,7 @@ struct PortraitDashboard: View {
     let projection: SessionProjection
     let auxiliaryToolbarLabel: String?
     let auxiliaryToolbarAction: (() -> Void)?
+    let transitionNamespace: Namespace.ID
     let onRoute: (AnchorRoute) -> Void
     let onSheet: (AnchorSheet) -> Void
 
@@ -42,7 +43,7 @@ struct PortraitDashboard: View {
                             .padding(.top, AnchorSpacing.small)
                     }
 
-                    HarborWaveDivider()
+                    Color.clear.frame(height: 20)
 
                     processHeader
 
@@ -79,12 +80,12 @@ struct PortraitDashboard: View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(L10n.liveProcesses)
-                    .font(.caption2.bold())
-                    .foregroundStyle(AnchorPalette.link)
+                    .font(.caption.bold())
+                    .foregroundStyle(AnchorPalette.interaction)
                     .accessibilityIdentifier("processes.kicker")
                 Text(L10n.happeningNow)
-                    .font(.headline.bold())
-                    .foregroundStyle(AnchorPalette.ink)
+                    .font(.title3.bold())
+                    .foregroundStyle(AnchorPalette.brandDeep)
                     .accessibilityIdentifier("processes.title")
             }
             Spacer()
@@ -95,10 +96,10 @@ struct PortraitDashboard: View {
                 )
                     .labelStyle(.titleAndIcon)
                     .font(.caption2.bold())
-                    .foregroundStyle(AnchorPalette.mintInk)
+                    .foregroundStyle(AnchorPalette.interaction)
                     .padding(.horizontal, 9)
                     .frame(minHeight: 32)
-                    .background(AnchorPalette.seafoam.opacity(0.24), in: .capsule)
+                    .background(AnchorPalette.softBlue.opacity(0.52), in: .capsule)
                     .accessibilityIdentifier("processes.live")
 
                 Button {
@@ -106,9 +107,13 @@ struct PortraitDashboard: View {
                 } label: {
                     Image(systemName: "square.grid.2x2")
                         .font(.subheadline.bold())
-                        .foregroundStyle(AnchorPalette.link)
+                        .foregroundStyle(AnchorPalette.interaction)
                         .frame(width: 44, height: 44)
-                        .background(AnchorPalette.cyan.opacity(0.12), in: .rect(cornerRadius: 14, style: .continuous))
+                        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 12))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
+                        }
                 }
                 .accessibilityLabel(L10n.layout)
             }
@@ -117,7 +122,7 @@ struct PortraitDashboard: View {
     }
 
     private var emptyConnectionCard: some View {
-        AnchorCard(tint: projection.connection == .connected ? AnchorPalette.seafoam : AnchorPalette.cyan) {
+        AnchorCard(tint: projection.connection == .connected ? AnchorPalette.aiBlue : AnchorPalette.attention) {
             VStack(alignment: .leading, spacing: AnchorSpacing.small) {
                 Label(
                     connectionTitle,
@@ -126,12 +131,12 @@ struct PortraitDashboard: View {
                         : "wifi.slash"
                 )
                 .font(.headline)
-                .foregroundStyle(AnchorPalette.ink)
+                .foregroundStyle(AnchorPalette.brandDeep)
                 .accessibilityIdentifier("workspace.connection.status")
 
                 Text(connectionDetail)
                     .font(.subheadline)
-                    .foregroundStyle(AnchorPalette.secondaryInk)
+                    .foregroundStyle(AnchorPalette.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Button {
@@ -141,7 +146,7 @@ struct PortraitDashboard: View {
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(AnchorPalette.link)
+                .tint(AnchorPalette.interaction)
                 .accessibilityIdentifier("workspace.connection.action")
             }
         }
@@ -168,25 +173,25 @@ struct PortraitDashboard: View {
     }
 
     private var observedCompletionPrompt: some View {
-        AnchorCard(tint: AnchorPalette.seafoam) {
+        AnchorCard(tint: AnchorPalette.aiBlue) {
             HStack(alignment: .center, spacing: AnchorSpacing.small) {
                 Image(systemName: "checkmark.seal.fill")
                     .font(.title2)
-                    .foregroundStyle(AnchorPalette.mintInk)
+                    .foregroundStyle(AnchorPalette.interaction)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(L10n.finishConfirmTitle)
                         .font(.headline)
-                        .foregroundStyle(AnchorPalette.ink)
+                        .foregroundStyle(AnchorPalette.brandDeep)
                     Text(L10n.finishConfirmDetail)
                         .font(.caption)
-                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .foregroundStyle(AnchorPalette.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: AnchorSpacing.xSmall)
                 Button(L10n.finish) { onSheet(.finish) }
                     .buttonStyle(.borderedProminent)
-                    .tint(AnchorPalette.link)
+                    .tint(AnchorPalette.interaction)
                     .accessibilityIdentifier("session.review-finish.button")
             }
         }
@@ -222,8 +227,9 @@ struct PortraitDashboard: View {
                     }
                 } label: {
                     ProcessCard(process: process, isRemote: session.presence == .away, decorative: true)
+                        .matchedTransitionSource(id: process.id, in: transitionNamespace)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(AnchorPressButtonStyle())
                 .accessibilityLabel(
                     "\(process.sourceName), \(process.title), \(L10n.status(process.status)), \(process.metric) \(process.metricLabel)"
                 )
@@ -239,7 +245,10 @@ struct PortraitDashboard: View {
                 .accessibilityHint(process.status == .needsDecision ? L10n.chooseDirection : L10n.activity)
             }
         }
-        .animation(reduceMotion ? nil : .spring(duration: 0.48), value: session.processes)
+        .animation(
+            reduceMotion ? nil : AnchorMotion.continuity,
+            value: session.processes.map(\.id)
+        )
     }
 
     private var anchorFooter: some View {
@@ -257,7 +266,7 @@ struct PortraitDashboard: View {
         .frame(maxWidth: .infinity)
         .background {
             LinearGradient(
-                colors: [AnchorPalette.paper.opacity(0), AnchorPalette.paper.opacity(0.82)],
+                colors: [AnchorPalette.canvas.opacity(0), AnchorPalette.canvas.opacity(0.96)],
                 startPoint: .top,
                 endPoint: .bottom
             )

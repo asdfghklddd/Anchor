@@ -12,6 +12,17 @@ public struct AnchorCard<Content: View>: View {
     }
 
     public var body: some View {
+#if os(iOS)
+        content
+            .padding(AnchorSpacing.medium)
+            .background(AnchorPalette.fluoriteSurface)
+            .clipShape(.rect(cornerRadius: 14))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(tint.map { $0.opacity(0.30) } ?? AnchorPalette.fluoriteBorder, lineWidth: 1)
+            }
+            .shadow(color: AnchorPalette.brandDeep.opacity(0.05), radius: 8, y: 4)
+#else
         content
             .padding(AnchorSpacing.medium)
             .background {
@@ -29,6 +40,7 @@ public struct AnchorCard<Content: View>: View {
             }
             .clipShape(.rect(cornerRadius: 26, style: .continuous))
             .shadow(color: (tint ?? AnchorPalette.ink).opacity(0.12), radius: 18, y: 9)
+#endif
     }
 }
 
@@ -87,6 +99,18 @@ public struct SourceMark: View {
 
     public var body: some View {
         let size = baseSize * scale
+#if os(iOS)
+        Text(symbol)
+            .font(.subheadline.bold())
+            .foregroundStyle(AnchorPalette.brandDeep)
+            .frame(width: size, height: size)
+            .background(AnchorPalette.softBlue.opacity(0.72), in: .rect(cornerRadius: size * 0.26))
+            .overlay {
+                RoundedRectangle(cornerRadius: size * 0.26)
+                    .stroke(AnchorPalette.aiBlue.opacity(0.28), lineWidth: 1)
+            }
+            .accessibilityHidden(true)
+#else
         Text(symbol)
             .font(.subheadline.bold())
             .foregroundStyle(AnchorPalette.deepSea)
@@ -107,6 +131,7 @@ public struct SourceMark: View {
         .accessibilityRepresentation {
             EmptyView()
         }
+#endif
     }
 }
 
@@ -257,6 +282,17 @@ public struct AnchorPrimaryButtonStyle: ButtonStyle {
     public init() {}
 
     public func makeBody(configuration: Configuration) -> some View {
+#if os(iOS)
+        configuration.label
+            .font(.headline)
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .padding(.horizontal, AnchorSpacing.medium)
+            .background(AnchorPalette.interaction, in: .rect(cornerRadius: 12))
+            .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.98)
+            .opacity(configuration.isPressed ? 0.94 : 1)
+            .animation(reduceMotion ? nil : AnchorMotion.press, value: configuration.isPressed)
+#else
         configuration.label
             .font(.headline)
             .foregroundStyle(.white)
@@ -270,5 +306,6 @@ public struct AnchorPrimaryButtonStyle: ButtonStyle {
             )
             .offset(y: reduceMotion ? 0 : (configuration.isPressed ? 3 : 0))
             .animation(reduceMotion ? nil : .snappy(duration: 0.18), value: configuration.isPressed)
+#endif
     }
 }
