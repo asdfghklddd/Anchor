@@ -6,6 +6,26 @@ final class AnchorIOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testWorkspaceFollowsLandscapeRotation() throws {
+        XCUIDevice.shared.orientation = .portrait
+        let app = isolatedApplication()
+        defer {
+            XCUIDevice.shared.orientation = .portrait
+            app.terminate()
+        }
+        app.launch()
+
+        XCTAssertTrue(element("workspace.screen", in: app).waitForExistence(timeout: 8))
+
+        // The ambient workspace is the primary landscape experience.
+        XCUIDevice.shared.orientation = .landscapeRight
+        XCTAssertTrue(element("ambient.screen", in: app).waitForExistence(timeout: 8))
+
+        XCUIDevice.shared.orientation = .portrait
+        XCTAssertTrue(element("workspace.screen", in: app).waitForExistence(timeout: 8))
+    }
+
+    @MainActor
     func testCreatesAndRestoresAFormalTask() throws {
         XCUIDevice.shared.orientation = .portrait
         let app = isolatedApplication()
