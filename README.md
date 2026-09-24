@@ -6,6 +6,13 @@ human decisions, and the context needed to return after an interruption.
 
 ![Anchor iPhone workspace](Product/Prototype/output/playwright/01-home-portrait.png)
 
+## Active development mainline
+
+As of 2026-09-24, `codex/anchor-rollback-260918` is the designated mainline
+for ongoing Anchor development. Base new iOS design and interaction work on
+this branch. GitHub's default `main` branch remains unchanged until a separate
+integration decision.
+
 ## Current implementation
 
 - Dedicated iOS and macOS production apps with the shared bundle identifier
