@@ -320,11 +320,9 @@ struct AnchorMacApp: App {
             Label {
                 Text("Anchor")
             } icon: {
+                // MenuBarExtra renders this asset at its intrinsic 18-point size.
                 Image("AnchorMenuBarIcon")
                     .renderingMode(.template)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 18, height: 18)
             }
         }
         .menuBarExtraStyle(.window)
