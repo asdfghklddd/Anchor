@@ -91,7 +91,22 @@ enum LinkFrameKind: String, Codable, Sendable {
     case hello
     case pairRequest
     case pairAccepted
+    case fallbackRequested
     case encrypted
+}
+
+enum PairingBootstrapMethod: String, Codable, CaseIterable, Hashable, Sendable {
+    case iCloud
+    case bluetooth
+    case verificationCode
+
+    var route: DevicePairingRoute {
+        switch self {
+        case .iCloud: .iCloud
+        case .bluetooth: .bluetooth
+        case .verificationCode: .verificationCode
+        }
+    }
 }
 
 struct LinkFrame: Codable, Sendable {
@@ -100,6 +115,9 @@ struct LinkFrame: Codable, Sendable {
     let senderID: UUID
     let publicKey: Data?
     let pairingCode: String?
+    let pairingMethod: PairingBootstrapMethod?
+    let pairingProof: Data?
+    let challenge: Data?
     let encryptedPayload: Data?
 
     init(
@@ -107,6 +125,9 @@ struct LinkFrame: Codable, Sendable {
         senderID: UUID,
         publicKey: Data? = nil,
         pairingCode: String? = nil,
+        pairingMethod: PairingBootstrapMethod? = nil,
+        pairingProof: Data? = nil,
+        challenge: Data? = nil,
         encryptedPayload: Data? = nil
     ) {
         version = 1
@@ -114,6 +135,9 @@ struct LinkFrame: Codable, Sendable {
         self.senderID = senderID
         self.publicKey = publicKey
         self.pairingCode = pairingCode
+        self.pairingMethod = pairingMethod
+        self.pairingProof = pairingProof
+        self.challenge = challenge
         self.encryptedPayload = encryptedPayload
     }
 }
@@ -233,6 +257,23 @@ enum AnchorLinkCodec {
               pairingCode.utf8.allSatisfy({ (48...57).contains($0) }) else {
             throw AnchorLinkError.invalidPairingCode
         }
+        return try deriveKey(
+            privateKey: privateKey,
+            peerPublicKey: peerPublicKey,
+            pairingSecret: Data(pairingCode.utf8),
+            clientID: clientID,
+            serverID: serverID
+        )
+    }
+
+    static func deriveKey(
+        privateKey: Curve25519.KeyAgreement.PrivateKey,
+        peerPublicKey: Data,
+        pairingSecret: Data,
+        clientID: UUID,
+        serverID: UUID
+    ) throws -> Data {
+        guard !pairingSecret.isEmpty else { throw AnchorLinkError.invalidPairingCode }
         let peerKey: Curve25519.KeyAgreement.PublicKey
         do {
             peerKey = try Curve25519.KeyAgreement.PublicKey(rawRepresentation: peerPublicKey)
@@ -244,10 +285,86 @@ enum AnchorLinkCodec {
         context.append(contentsOf: serverID.uuidString.utf8)
         let key = secret.hkdfDerivedSymmetricKey(
             using: SHA256.self,
-            salt: Data(pairingCode.utf8),
+            salt: pairingSecret,
             sharedInfo: context,
             outputByteCount: 32
         )
         return key.withUnsafeBytes { Data($0) }
+    }
+
+    static func pairingProof(
+        secret: Data,
+        method: PairingBootstrapMethod,
+        role: String,
+        clientID: UUID,
+        serverID: UUID,
+        clientPublicKey: Data,
+        serverPublicKey: Data? = nil,
+        challenge: Data
+    ) -> Data {
+        let transcript = pairingTranscript(
+            method: method,
+            role: role,
+            clientID: clientID,
+            serverID: serverID,
+            clientPublicKey: clientPublicKey,
+            serverPublicKey: serverPublicKey,
+            challenge: challenge
+        )
+        return Data(HMAC<SHA256>.authenticationCode(
+            for: transcript,
+            using: SymmetricKey(data: secret)
+        ))
+    }
+
+    static func validatesPairingProof(
+        _ proof: Data,
+        secret: Data,
+        method: PairingBootstrapMethod,
+        role: String,
+        clientID: UUID,
+        serverID: UUID,
+        clientPublicKey: Data,
+        serverPublicKey: Data? = nil,
+        challenge: Data
+    ) -> Bool {
+        let transcript = pairingTranscript(
+            method: method,
+            role: role,
+            clientID: clientID,
+            serverID: serverID,
+            clientPublicKey: clientPublicKey,
+            serverPublicKey: serverPublicKey,
+            challenge: challenge
+        )
+        return HMAC<SHA256>.isValidAuthenticationCode(
+            proof,
+            authenticating: transcript,
+            using: SymmetricKey(data: secret)
+        )
+    }
+
+    private static func pairingTranscript(
+        method: PairingBootstrapMethod,
+        role: String,
+        clientID: UUID,
+        serverID: UUID,
+        clientPublicKey: Data,
+        serverPublicKey: Data?,
+        challenge: Data
+    ) -> Data {
+        var transcript = Data("anchor-pairing-v2\u{0}".utf8)
+        transcript.append(Data(role.utf8))
+        transcript.append(0)
+        transcript.append(Data(method.rawValue.utf8))
+        transcript.append(0)
+        transcript.append(Data(clientID.uuidString.utf8))
+        transcript.append(0)
+        transcript.append(Data(serverID.uuidString.utf8))
+        transcript.append(0)
+        transcript.append(clientPublicKey)
+        if let serverPublicKey { transcript.append(serverPublicKey) }
+        transcript.append(challenge)
+        return transcript
     }
 }

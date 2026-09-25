@@ -27,6 +27,7 @@ public enum SessionCommand: Sendable {
 
 public protocol LocalLinkControlling: Sendable {
     func currentPairingCode() async -> String?
+    func pairingStatusUpdates() -> AsyncStream<DevicePairingStatus>
     func pair(using code: String) async throws
     func retryConnection() async
 }

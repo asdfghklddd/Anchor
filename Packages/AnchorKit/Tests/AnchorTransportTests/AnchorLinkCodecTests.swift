@@ -30,6 +30,46 @@ struct AnchorLinkCodecTests {
         #expect(clientKey == serverKey)
     }
 
+    @Test("Automatic pairing proof binds the credential to one peer transcript")
+    func automaticPairingProof() {
+        let secret = Data(repeating: 0x2A, count: 32)
+        let wrongSecret = Data(repeating: 0x3B, count: 32)
+        let clientID = UUID()
+        let serverID = UUID()
+        let clientKey = Curve25519.KeyAgreement.PrivateKey().publicKey.rawRepresentation
+        let challenge = Data(repeating: 0x4C, count: 32)
+        let proof = AnchorLinkCodec.pairingProof(
+            secret: secret,
+            method: .iCloud,
+            role: "client",
+            clientID: clientID,
+            serverID: serverID,
+            clientPublicKey: clientKey,
+            challenge: challenge
+        )
+
+        #expect(AnchorLinkCodec.validatesPairingProof(
+            proof,
+            secret: secret,
+            method: .iCloud,
+            role: "client",
+            clientID: clientID,
+            serverID: serverID,
+            clientPublicKey: clientKey,
+            challenge: challenge
+        ))
+        #expect(!AnchorLinkCodec.validatesPairingProof(
+            proof,
+            secret: wrongSecret,
+            method: .iCloud,
+            role: "client",
+            clientID: clientID,
+            serverID: serverID,
+            clientPublicKey: clientKey,
+            challenge: challenge
+        ))
+    }
+
     @Test("Authenticated payload round-trips and rejects the wrong key")
     func sealedPayload() throws {
         let key = SymmetricKey(size: .bits256).withUnsafeBytes { Data($0) }
@@ -94,7 +134,8 @@ struct AnchorLinkCodecTests {
     @Test("Sending without an authenticated peer reports failure")
     func unauthenticatedSendFails() async {
         let client = AnchorBonjourClient(
-            identityStore: PairingIdentityStore(service: "com.andywang.anchor.tests.\(UUID().uuidString)")
+            identityStore: PairingIdentityStore(service: "com.andywang.anchor.tests.\(UUID().uuidString)"),
+            automaticPairing: .manualOnly
         )
         let event = EventEnvelope(
             sessionID: UUID(),
@@ -114,7 +155,8 @@ struct AnchorLinkCodecTests {
         let service = "com.andywang.anchor.tests.offline.\(UUID().uuidString)"
         defer { deleteKeychainItems(service: service) }
         let client = AnchorBonjourClient(
-            identityStore: PairingIdentityStore(service: service)
+            identityStore: PairingIdentityStore(service: service),
+            automaticPairing: .manualOnly
         )
         let repository = LinkedSessionRepository(
             base: InMemorySessionRepository(),
@@ -202,6 +244,7 @@ struct AnchorLinkCodecTests {
 
         let server = AnchorBonjourServer(
             identityStore: PairingIdentityStore(service: serverService),
+            automaticPairing: .manualOnly,
             serviceType: serviceType
         )
         let recorder = EventRecorder()
@@ -216,6 +259,7 @@ struct AnchorLinkCodecTests {
 
         let client = AnchorBonjourClient(
             identityStore: PairingIdentityStore(service: clientService),
+            automaticPairing: .manualOnly,
             serviceType: serviceType
         )
         defer { client.stop() }
@@ -262,6 +306,7 @@ struct AnchorLinkCodecTests {
         try await confirmation("One connected transition", expectedCount: 1) { connected in
             let server = AnchorBonjourServer(
                 identityStore: PairingIdentityStore(service: serverService),
+                automaticPairing: .manualOnly,
                 serviceType: serviceType
             )
             server.onEvent = { _ in }
@@ -275,6 +320,7 @@ struct AnchorLinkCodecTests {
 
             let client = AnchorBonjourClient(
                 identityStore: PairingIdentityStore(service: clientService),
+                automaticPairing: .manualOnly,
                 serviceType: serviceType
             )
             client.startDiscovery()
@@ -314,10 +360,12 @@ struct AnchorLinkCodecTests {
 
         let server = AnchorBonjourServer(
             identityStore: PairingIdentityStore(service: serverService),
+            automaticPairing: .manualOnly,
             serviceType: serviceType
         )
         let client = AnchorBonjourClient(
             identityStore: PairingIdentityStore(service: clientService),
+            automaticPairing: .manualOnly,
             serviceType: serviceType
         )
         let serverBase = LocalSessionRepository(
@@ -462,10 +510,12 @@ struct AnchorLinkCodecTests {
 
         let server = AnchorBonjourServer(
             identityStore: PairingIdentityStore(service: serverService),
+            automaticPairing: .manualOnly,
             serviceType: serviceType
         )
         let client = AnchorBonjourClient(
             identityStore: PairingIdentityStore(service: clientService),
+            automaticPairing: .manualOnly,
             serviceType: serviceType
         )
         let serverBase = LocalSessionRepository(
@@ -625,6 +675,7 @@ struct AnchorLinkCodecTests {
 
         let server = AnchorBonjourServer(
             identityStore: PairingIdentityStore(service: serverService),
+            automaticPairing: .manualOnly,
             serviceType: serviceType
         )
         server.onCurrentProcessSnapshot = {
@@ -635,6 +686,7 @@ struct AnchorLinkCodecTests {
 
         let client = AnchorBonjourClient(
             identityStore: PairingIdentityStore(service: clientService),
+            automaticPairing: .manualOnly,
             serviceType: serviceType
         )
         defer { client.stop() }
@@ -645,6 +697,150 @@ struct AnchorLinkCodecTests {
 
         let snapshot = try await client.currentProcessSnapshot()
         #expect(snapshot.processNames == ["Claude", "Gemini"])
+    }
+
+    @Test("iCloud identity is preferred over an available Bluetooth credential")
+    func iCloudPairingHasPriority() async throws {
+        let suffix = UUID().uuidString
+        let serviceType = isolatedServiceType()
+        let serverService = "com.andywang.anchor.tests.server.automatic.\(suffix)"
+        let clientService = "com.andywang.anchor.tests.client.automatic.\(suffix)"
+        let serverID = UUID()
+        let iCloudSecret = Data(repeating: 0x41, count: 32)
+        let bluetoothToken = AnchorBluetoothPairingToken()
+        defer {
+            deleteKeychainItems(service: serverService)
+            deleteKeychainItems(service: clientService)
+        }
+
+        let server = AnchorBonjourServer(
+            identityStore: PairingIdentityStore(service: serverService),
+            deviceID: serverID,
+            automaticPairing: AutomaticPairingConfiguration { iCloudSecret },
+            bluetoothPairingToken: bluetoothToken,
+            serviceType: serviceType
+        )
+        try server.start()
+        defer { server.stop() }
+
+        let client = AnchorBonjourClient(
+            identityStore: PairingIdentityStore(service: clientService),
+            automaticPairing: AutomaticPairingConfiguration { iCloudSecret },
+            serviceType: serviceType
+        )
+        client.offerBluetoothPairingSecret(bluetoothToken.current(), for: serverID)
+        defer { client.stop() }
+        let statuses = client.pairingStatusUpdates()
+        client.startDiscovery()
+
+        try await waitForPairingRoute(.iCloud, in: statuses)
+    }
+
+    @Test("Bluetooth proximity pairs automatically when iCloud identity is unavailable")
+    func bluetoothPairingIsSecondChoice() async throws {
+        let suffix = UUID().uuidString
+        let serviceType = isolatedServiceType()
+        let serverService = "com.andywang.anchor.tests.server.bluetooth.\(suffix)"
+        let clientService = "com.andywang.anchor.tests.client.bluetooth.\(suffix)"
+        let serverID = UUID()
+        let bluetoothToken = AnchorBluetoothPairingToken()
+        defer {
+            deleteKeychainItems(service: serverService)
+            deleteKeychainItems(service: clientService)
+        }
+
+        let server = AnchorBonjourServer(
+            identityStore: PairingIdentityStore(service: serverService),
+            deviceID: serverID,
+            automaticPairing: .manualOnly,
+            bluetoothPairingToken: bluetoothToken,
+            serviceType: serviceType
+        )
+        try server.start()
+        defer { server.stop() }
+
+        let client = AnchorBonjourClient(
+            identityStore: PairingIdentityStore(service: clientService),
+            automaticPairing: .manualOnly,
+            serviceType: serviceType
+        )
+        client.offerBluetoothPairingSecret(bluetoothToken.current(), for: serverID)
+        defer { client.stop() }
+        let statuses = client.pairingStatusUpdates()
+        client.startDiscovery()
+
+        try await waitForPairingRoute(.bluetooth, in: statuses)
+    }
+
+    @Test("Nearby TCP enables Apple peer-to-peer Wi-Fi")
+    func nearbyTCPIncludesPeerToPeerLinks() {
+        #expect(AnchorNearbyNetwork.tcpParameters().includePeerToPeer)
+    }
+
+    @Test("Bluetooth transfer chunks restore one encrypted payload out of order")
+    func bluetoothChunkRoundTrip() throws {
+        let payload = Data((0 ..< 1_024).map { UInt8($0 % 251) })
+        let chunks = try AnchorBluetoothTransferFramer.chunks(
+            for: payload,
+            maximumValueLength: 96
+        )
+        var assembler = AnchorBluetoothTransferAssembler()
+        var restored: Data?
+
+        for chunk in chunks.reversed() {
+            restored = try assembler.accept(chunk) ?? restored
+        }
+
+        #expect(chunks.count > 1)
+        #expect(restored == payload)
+    }
+
+    @Test("Bluetooth pairing credentials remain compatible before challenges")
+    func legacyBluetoothCredentialDecoding() throws {
+        let legacy = LegacyBluetoothPairingCredential(
+            deviceID: UUID(),
+            secret: Data(repeating: 0x4A, count: 32)
+        )
+        let decoded = try JSONDecoder().decode(
+            BluetoothPairingCredential.self,
+            from: JSONEncoder().encode(legacy)
+        )
+
+        #expect(decoded.deviceID == legacy.deviceID)
+        #expect(decoded.secret == legacy.secret)
+        #expect(decoded.challenge == nil)
+    }
+
+    @Test("Task events use Bluetooth only when the network path fails")
+    func adaptiveTransportFallbackOrder() async throws {
+        let event = EventEnvelope(
+            sessionID: UUID(),
+            sourceID: UUID(),
+            sequence: 1,
+            type: "test.adaptive",
+            payload: Data("status".utf8)
+        )
+        let workingNetwork = RecordingEventTransport()
+        let unusedBluetooth = RecordingEventTransport()
+        let preferred = AnchorAdaptiveEventTransport(
+            network: workingNetwork,
+            bluetooth: unusedBluetooth
+        )
+        try await preferred.send(event)
+
+        #expect(await workingNetwork.events == [event])
+        #expect(await unusedBluetooth.events.isEmpty)
+
+        let failedNetwork = RecordingEventTransport(error: AnchorLinkError.connectionLost)
+        let fallbackBluetooth = RecordingEventTransport()
+        let fallback = AnchorAdaptiveEventTransport(
+            network: failedNetwork,
+            bluetooth: fallbackBluetooth
+        )
+        try await fallback.send(event)
+
+        #expect(await failedNetwork.events == [event])
+        #expect(await fallbackBluetooth.events == [event])
     }
 
 }
@@ -667,6 +863,25 @@ private actor ApplyingEventTransport: AnchorEventTransport {
     func send(_ event: EventEnvelope) async throws {
         try await receiver.applyRemote(event)
     }
+}
+
+private actor RecordingEventTransport: AnchorEventTransport {
+    private(set) var events: [EventEnvelope] = []
+    private let error: (any Error)?
+
+    init(error: (any Error)? = nil) {
+        self.error = error
+    }
+
+    func send(_ event: EventEnvelope) throws {
+        events.append(event)
+        if let error { throw error }
+    }
+}
+
+private struct LegacyBluetoothPairingCredential: Codable {
+    let deviceID: UUID
+    let secret: Data
 }
 
 private func deleteKeychainItems(service: String) {
@@ -749,9 +964,32 @@ private func waitForSourceEventCount(
     }
 }
 
+private func waitForPairingRoute(
+    _ route: DevicePairingRoute,
+    in statuses: AsyncStream<DevicePairingStatus>
+) async throws {
+    try await withThrowingTaskGroup(of: Void.self) { group in
+        group.addTask {
+            for await status in statuses where status.phase == .connected {
+                #expect(status.route == route)
+                return
+            }
+            throw AnchorLinkTestError.pairingStatusStreamEnded
+        }
+        group.addTask {
+            try await Task.sleep(for: .seconds(5))
+            throw AnchorLinkTestError.timedOutWaitingForPairing
+        }
+        _ = try await group.next()
+        group.cancelAll()
+    }
+}
+
 private enum AnchorLinkTestError: Error {
     case projectionStreamEnded
     case timedOutWaitingForProcess
     case healthStreamEnded
     case timedOutWaitingForSource
+    case pairingStatusStreamEnded
+    case timedOutWaitingForPairing
 }

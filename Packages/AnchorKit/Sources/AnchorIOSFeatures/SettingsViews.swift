@@ -6,9 +6,6 @@ import SwiftUI
 struct ConnectionSettingsView: View {
     let projection: SessionProjection
     let controller: (any LocalLinkControlling)?
-    @State private var pairingCode = ""
-    @State private var displayedCode: String?
-    @State private var errorMessage: String?
 
     var body: some View {
         Form {
@@ -21,43 +18,13 @@ struct ConnectionSettingsView: View {
                 }
             }
             if let controller {
-                Section(L10n.pairDevice) {
-                    if let displayedCode {
-                        LabeledContent(L10n.pairingCode) {
-                            Text(displayedCode)
-                                .font(.title2.bold().monospacedDigit())
-                                .textSelection(.enabled)
-                        }
-                    } else {
-                        TextField(L10n.pairingCode, text: $pairingCode)
-                            .keyboardType(.numberPad)
-                            .textContentType(.oneTimeCode)
-                        Button(L10n.pairDevice) {
-                            Task {
-                                do {
-                                    try await controller.pair(using: pairingCode)
-                                    errorMessage = nil
-                                } catch {
-                                    errorMessage = error.localizedDescription
-                                }
-                            }
-                        }
-                        .disabled(pairingCode.count != 6)
-                    }
-                    Button(L10n.retry) {
-                        Task { await controller.retryConnection() }
-                    }
-                    if let errorMessage {
-                        Text(errorMessage).foregroundStyle(.red)
-                    }
-                }
+                ConnectionPairingSection(controller: controller)
             }
             Section {
                 Text(L10n.connectionUnknownDetail)
             }
         }
         .navigationTitle(L10n.connections)
-        .task { displayedCode = await controller?.currentPairingCode() }
         .accessibilityIdentifier("connections.screen")
     }
 

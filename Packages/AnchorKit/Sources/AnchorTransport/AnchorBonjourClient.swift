@@ -17,23 +17,38 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         let timeoutWorkItem: DispatchWorkItem
     }
 
+    private struct PairingAttempt {
+        let method: PairingBootstrapMethod
+        let secret: Data
+        let privateKey: Curve25519.KeyAgreement.PrivateKey
+    }
+
     private static let heartbeatInterval: TimeInterval = 10
     private static let heartbeatResponseTimeout: TimeInterval = 5
     private static let operationTimeout: TimeInterval = 10
     private static let reconnectDelay: TimeInterval = 1
+    private static let automaticCredentialWait: TimeInterval = 1
+    private static let automaticCredentialCheckLimit = 12
+    private static let automaticAttemptTimeout: TimeInterval = 2
 
     private let queue = DispatchQueue(label: "com.andywang.anchor.bonjour.client")
     private let identityStore: PairingIdentityStore
+    private let automaticPairing: AutomaticPairingConfiguration
     private let deviceID: UUID
     private let serviceType: String
     private var browser: NWBrowser?
     private var discoveredEndpoint: NWEndpoint?
     private var peer: LineConnection?
     private var peerID: UUID?
-    private var pendingCode: String?
-    private var pendingPrivateKey: Curve25519.KeyAgreement.PrivateKey?
+    private var peerChallenge: Data?
+    private var bluetoothPairingSecrets: [UUID: Data] = [:]
+    private var pairingAttempt: PairingAttempt?
+    private var attemptedAutomaticMethods: Set<PairingBootstrapMethod> = []
+    private var authenticatedRoute: DevicePairingRoute = .trustedDevice
     private var pairingContinuation: OperationContinuation?
     private var pairingTimeoutWorkItem: DispatchWorkItem?
+    private var automaticPairingWorkItem: DispatchWorkItem?
+    private var automaticCredentialChecksRemaining = 0
     private var pendingDeliveries: [UUID: PendingDelivery] = [:]
     private var pendingSnapshotRequests: [UUID: PendingSnapshotRequest] = [:]
     private var eventApplicationTask: Task<Void, Never>?
@@ -43,8 +58,12 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     private var reconnectWorkItem: DispatchWorkItem?
     private var replayWindow = LinkReplayWindow()
     private var connectionState = ConnectionState.unavailable
+    private var fallbackConnectionState = ConnectionState.unavailable
+    private var publishedConnectionState = ConnectionState.unavailable
     private var proximityState = ProximityState.unknown
     private var continuations: [UUID: AsyncStream<PresenceSignals>.Continuation] = [:]
+    private var pairingStatus = DevicePairingStatus.automatic
+    private var pairingStatusContinuations: [UUID: AsyncStream<DevicePairingStatus>.Continuation] = [:]
 
     /// These callbacks are invoked on the client's serial queue. The queue is
     /// the isolation boundary for all mutable Network.framework state.
@@ -53,9 +72,11 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
 
     public init(
         identityStore: PairingIdentityStore = PairingIdentityStore(),
+        automaticPairing: AutomaticPairingConfiguration = .iOSProduction(),
         serviceType: String = AnchorBonjourServer.serviceType
     ) {
         self.identityStore = identityStore
+        self.automaticPairing = automaticPairing
         self.serviceType = serviceType
         deviceID = identityStore.localDeviceID()
     }
@@ -73,9 +94,11 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
             self.peer?.cancel()
             self.peer = nil
             self.peerID = nil
+            self.peerChallenge = nil
             self.reconnectWorkItem?.cancel()
             self.reconnectWorkItem = nil
             self.cancelHeartbeatTimers()
+            self.cancelAutomaticPairingWork()
             self.eventApplicationTask?.cancel()
             self.eventApplicationTask = nil
             self.finishPairing(with: .failure(CancellationError()))
@@ -106,6 +129,25 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
 
     public func currentPairingCode() async -> String? { nil }
 
+    public func pairingStatusUpdates() -> AsyncStream<DevicePairingStatus> {
+        let id = UUID()
+        return AsyncStream { continuation in
+            queue.async { [weak self] in
+                guard let self else {
+                    continuation.finish()
+                    return
+                }
+                pairingStatusContinuations[id] = continuation
+                continuation.yield(pairingStatus)
+            }
+            continuation.onTermination = { [weak self] _ in
+                self?.queue.async { [weak self] in
+                    self?.pairingStatusContinuations[id] = nil
+                }
+            }
+        }
+    }
+
     public func pair(using code: String) async throws {
         guard code.utf8.count == 6,
               code.utf8.allSatisfy({ (48...57).contains($0) }) else {
@@ -121,14 +163,19 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
                     continuation.resume(throwing: AnchorLinkError.operationInProgress)
                     return
                 }
-                if self.connectionState == .connected {
+                if self.effectiveConnectionState == .connected {
                     continuation.resume(returning: ())
                     return
                 }
 
                 self.pairingContinuation = continuation
-                self.pendingCode = code
-                self.pendingPrivateKey = Curve25519.KeyAgreement.PrivateKey()
+                self.cancelAutomaticPairingWork()
+                self.pairingAttempt = PairingAttempt(
+                    method: .verificationCode,
+                    secret: Data(code.utf8),
+                    privateKey: Curve25519.KeyAgreement.PrivateKey()
+                )
+                self.setPairingStatus(.verificationCodeRequired)
                 self.setConnection(.pairing)
                 self.schedulePairingTimeout()
                 self.sendPairRequestIfPossible()
@@ -147,14 +194,17 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
                 self.failAllDeliveries(with: AnchorLinkError.connectionLost)
                 self.failAllSnapshotRequests(with: AnchorLinkError.connectionLost)
                 self.cancelHeartbeatTimers()
+                self.cancelAutomaticPairingWork()
                 self.reconnectWorkItem?.cancel()
                 self.reconnectWorkItem = nil
                 self.peer?.cancel()
                 self.peer = nil
                 self.peerID = nil
+                self.peerChallenge = nil
                 self.browser?.cancel()
                 self.browser = nil
                 self.discoveredEndpoint = nil
+                self.setPairingStatus(.automatic)
                 self.startDiscoveryOnQueue()
                 continuation.resume()
             }
@@ -165,6 +215,37 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         queue.async { [weak self] in
             self?.proximityState = state
             self?.broadcastSignals()
+        }
+    }
+
+    /// Reports the authenticated BLE data channel without changing the TCP
+    /// state used by the primary sender. UI and presence observe the effective
+    /// state across both transports.
+    public func updateFallbackConnection(_ state: ConnectionState) {
+        queue.async { [weak self] in
+            guard let self, fallbackConnectionState != state else { return }
+            fallbackConnectionState = state
+            if state == .connected, connectionState != .connected {
+                setPairingStatus(DevicePairingStatus(phase: .connected, route: .bluetooth))
+            } else if connectionState != .connected, pairingStatus.phase == .connected {
+                setPairingStatus(.automatic)
+            }
+            publishEffectiveConnection()
+        }
+    }
+
+    public func offerBluetoothPairingSecret(_ secret: Data, for peerID: UUID) {
+        guard secret.count == 32 else { return }
+        queue.async { [weak self] in
+            guard let self else { return }
+            bluetoothPairingSecrets[peerID] = secret
+            guard self.peerID == peerID,
+                  connectionState != .connected,
+                  pairingContinuation == nil,
+                  pairingAttempt == nil,
+                  !attemptedAutomaticMethods.contains(.bluetooth) else { return }
+            cancelAutomaticPairingWork()
+            beginPairing(method: .bluetooth, secret: secret)
         }
     }
 
@@ -283,12 +364,16 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
 
     private func startDiscoveryOnQueue() {
         guard browser == nil else { return }
+        let parameters = AnchorNearbyNetwork.tcpParameters()
         let browser = NWBrowser(
             for: .bonjour(type: serviceType, domain: nil),
-            using: .tcp
+            using: parameters
         )
         browser.stateUpdateHandler = { [weak self, weak browser] state in
             guard let self, self.browser === browser else { return }
+            #if DEBUG
+            print("[AnchorPairing] Bonjour browser state \(String(describing: state))")
+            #endif
             switch state {
             case .ready:
                 if self.connectionState != .connected { self.setConnection(.disconnected) }
@@ -304,6 +389,9 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         }
         browser.browseResultsChangedHandler = { [weak self] results, _ in
             guard let self else { return }
+            #if DEBUG
+            print("[AnchorPairing] Bonjour results \(results.count)")
+            #endif
             self.discoveredEndpoint = results.first?.endpoint
             if let endpoint = self.discoveredEndpoint, self.peer == nil {
                 self.connect(to: endpoint)
@@ -317,7 +405,13 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         guard peer == nil else { return }
         reconnectWorkItem?.cancel()
         reconnectWorkItem = nil
-        let peer = LineConnection(connection: NWConnection(to: endpoint, using: .tcp), queue: queue)
+        let peer = LineConnection(
+            connection: NWConnection(
+                to: endpoint,
+                using: AnchorNearbyNetwork.tcpParameters()
+            ),
+            queue: queue
+        )
         self.peer = peer
         peer.start { [weak self, weak peer] frame in
             guard let self, let peer, self.peer === peer else { return }
@@ -330,11 +424,14 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
             case .failed, .cancelled:
                 self.peer = nil
                 self.peerID = nil
+                self.peerChallenge = nil
                 self.cancelHeartbeatTimers()
+                self.cancelAutomaticPairingWork()
                 self.finishPairing(with: .failure(AnchorLinkError.connectionLost))
                 self.failAllDeliveries(with: AnchorLinkError.connectionLost)
                 self.failAllSnapshotRequests(with: AnchorLinkError.connectionLost)
                 self.setConnection(.disconnected)
+                self.setPairingStatus(.automatic)
                 self.scheduleReconnect()
             default:
                 break
@@ -356,17 +453,22 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     private func handle(_ frame: LinkFrame) {
         switch frame.kind {
         case .hello:
-            peerID = frame.senderID
+            self.peerID = frame.senderID
+            peerChallenge = frame.challenge
             if identityStore.sharedKey(peerID: frame.senderID) != nil {
-                pendingCode = nil
-                pendingPrivateKey = nil
+                pairingAttempt = nil
+                authenticatedRoute = .trustedDevice
                 setConnection(.pairing)
                 sendHeartbeat()
-            } else {
+            } else if pairingAttempt != nil {
                 sendPairRequestIfPossible()
+            } else {
+                beginAutomaticPairing()
             }
         case .pairAccepted:
             handlePairAccepted(frame)
+        case .fallbackRequested:
+            break
         case .encrypted:
             handleEncrypted(frame)
         case .pairRequest:
@@ -374,21 +476,145 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         }
     }
 
+    private func beginAutomaticPairing() {
+        cancelAutomaticPairingWork()
+        attemptedAutomaticMethods.removeAll()
+        automaticCredentialChecksRemaining = Self.automaticCredentialCheckLimit
+        setPairingStatus(.automatic)
+        setConnection(.pairing)
+        attemptNextAutomaticMethodOrScheduleFallback()
+    }
+
+    private func beginPairing(method: PairingBootstrapMethod, secret: Data) {
+        #if DEBUG
+        print("[AnchorPairing] attempting \(method.rawValue)")
+        #endif
+        attemptedAutomaticMethods.insert(method)
+        pairingAttempt = PairingAttempt(
+            method: method,
+            secret: secret,
+            privateKey: Curve25519.KeyAgreement.PrivateKey()
+        )
+        setConnection(.pairing)
+        sendPairRequestIfPossible()
+        scheduleAutomaticAttemptTimeout(for: method)
+    }
+
+    private func scheduleAutomaticAttemptTimeout(for method: PairingBootstrapMethod) {
+        automaticPairingWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self,
+                  pairingContinuation == nil,
+                  pairingAttempt?.method == method else { return }
+            pairingAttempt = nil
+            if method == .iCloud {
+                scheduleVerificationCodeFallback(after: Self.automaticCredentialWait)
+            } else {
+                exposeVerificationCodeFallback()
+            }
+        }
+        automaticPairingWorkItem = workItem
+        queue.asyncAfter(deadline: .now() + Self.automaticAttemptTimeout, execute: workItem)
+    }
+
+    private func scheduleVerificationCodeFallback(after delay: TimeInterval) {
+        automaticPairingWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self,
+                  pairingContinuation == nil,
+                  pairingAttempt == nil else { return }
+            attemptNextAutomaticMethodOrExposeFallback()
+        }
+        automaticPairingWorkItem = workItem
+        queue.asyncAfter(deadline: .now() + delay, execute: workItem)
+    }
+
+    private func attemptNextAutomaticMethodOrScheduleFallback() {
+        if let secret = automaticPairing.iCloudSecretProvider(),
+           secret.count == 32,
+           !attemptedAutomaticMethods.contains(.iCloud) {
+            beginPairing(method: .iCloud, secret: secret)
+            return
+        }
+        if let peerID,
+           let secret = bluetoothPairingSecrets[peerID],
+           !attemptedAutomaticMethods.contains(.bluetooth) {
+            beginPairing(method: .bluetooth, secret: secret)
+            return
+        }
+        scheduleVerificationCodeFallback(after: Self.automaticCredentialWait)
+    }
+
+    private func attemptNextAutomaticMethodOrExposeFallback() {
+        if let secret = automaticPairing.iCloudSecretProvider(),
+           secret.count == 32,
+           !attemptedAutomaticMethods.contains(.iCloud) {
+            beginPairing(method: .iCloud, secret: secret)
+            return
+        }
+        if let peerID,
+           let secret = bluetoothPairingSecrets[peerID],
+           !attemptedAutomaticMethods.contains(.bluetooth) {
+            beginPairing(method: .bluetooth, secret: secret)
+            return
+        }
+        if automaticCredentialChecksRemaining > 0 {
+            automaticCredentialChecksRemaining -= 1
+            scheduleVerificationCodeFallback(after: Self.automaticCredentialWait)
+            return
+        }
+        exposeVerificationCodeFallback()
+    }
+
+    private func exposeVerificationCodeFallback() {
+        #if DEBUG
+        let attempted = attemptedAutomaticMethods.map(\.rawValue).sorted().joined(separator: ",")
+        print("[AnchorPairing] fallback after [\(attempted)]")
+        #endif
+        automaticPairingWorkItem?.cancel()
+        automaticPairingWorkItem = nil
+        automaticCredentialChecksRemaining = 0
+        pairingAttempt = nil
+        peer?.send(LinkFrame(kind: .fallbackRequested, senderID: deviceID))
+        setPairingStatus(.verificationCodeRequired)
+        setConnection(.disconnected)
+    }
+
+    private func cancelAutomaticPairingWork() {
+        automaticPairingWorkItem?.cancel()
+        automaticPairingWorkItem = nil
+        automaticCredentialChecksRemaining = 0
+        if pairingContinuation == nil {
+            pairingAttempt = nil
+        }
+    }
+
     private func sendPairRequestIfPossible() {
         guard let peer,
-              peerID != nil,
-              let pendingCode,
-              let pendingPrivateKey else { return }
+              let peerID,
+              let challenge = peerChallenge,
+              let pairingAttempt else { return }
+        let publicKey = pairingAttempt.privateKey.publicKey.rawRepresentation
+        let proof = AnchorLinkCodec.pairingProof(
+            secret: pairingAttempt.secret,
+            method: pairingAttempt.method,
+            role: "client",
+            clientID: deviceID,
+            serverID: peerID,
+            clientPublicKey: publicKey,
+            challenge: challenge
+        )
         peer.send(
             LinkFrame(
                 kind: .pairRequest,
                 senderID: deviceID,
-                publicKey: pendingPrivateKey.publicKey.rawRepresentation,
-                pairingCode: pendingCode
+                publicKey: publicKey,
+                pairingMethod: pairingAttempt.method,
+                pairingProof: proof
             )
         ) { [weak self] result in
             if case let .failure(error) = result {
-                self?.failPairing(with: error)
+                self?.handlePairingRequestFailure(error)
             }
         }
     }
@@ -396,18 +622,35 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     private func handlePairAccepted(_ frame: LinkFrame) {
         guard frame.senderID == peerID,
               let publicKey = frame.publicKey,
-              let pendingCode,
-              let pendingPrivateKey else { return }
+              let peerID,
+              let challenge = peerChallenge,
+              let proof = frame.pairingProof,
+              let pairingAttempt,
+              frame.pairingMethod == pairingAttempt.method,
+              AnchorLinkCodec.validatesPairingProof(
+                  proof,
+                  secret: pairingAttempt.secret,
+                  method: pairingAttempt.method,
+                  role: "server",
+                  clientID: deviceID,
+                  serverID: peerID,
+                  clientPublicKey: pairingAttempt.privateKey.publicKey.rawRepresentation,
+                  serverPublicKey: publicKey,
+                  challenge: challenge
+              ) else { return }
         do {
             let key = try AnchorLinkCodec.deriveKey(
-                privateKey: pendingPrivateKey,
+                privateKey: pairingAttempt.privateKey,
                 peerPublicKey: publicKey,
-                pairingCode: pendingCode,
+                pairingSecret: pairingAttempt.secret,
                 clientID: deviceID,
                 serverID: frame.senderID
             )
             try identityStore.saveSharedKey(key, peerID: frame.senderID)
-            peerID = frame.senderID
+            authenticatedRoute = pairingAttempt.method.route
+            automaticPairingWorkItem?.cancel()
+            automaticPairingWorkItem = nil
+            self.peerID = frame.senderID
             setConnection(.pairing)
             sendHeartbeat()
         } catch {
@@ -517,7 +760,9 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     }
 
     private func didAuthenticatePeer() {
+        cancelAutomaticPairingWork()
         setConnection(.connected)
+        setPairingStatus(DevicePairingStatus(phase: .connected, route: authenticatedRoute))
         finishPairing(with: .success(()))
         scheduleHeartbeat()
     }
@@ -560,14 +805,22 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         finishPairing(with: .failure(error))
     }
 
+    private func handlePairingRequestFailure(_ error: any Error) {
+        if pairingContinuation != nil {
+            failPairing(with: error)
+        } else {
+            pairingAttempt = nil
+            exposeVerificationCodeFallback()
+        }
+    }
+
     private func finishPairing(with result: Result<Void, any Error>) {
-        guard let continuation = pairingContinuation else { return }
+        let continuation = pairingContinuation
         pairingContinuation = nil
         pairingTimeoutWorkItem?.cancel()
         pairingTimeoutWorkItem = nil
-        pendingCode = nil
-        pendingPrivateKey = nil
-        continuation.resume(with: result)
+        pairingAttempt = nil
+        continuation?.resume(with: result)
     }
 
     private func finishDelivery(_ id: UUID, with result: Result<Void, any Error>) {
@@ -600,8 +853,44 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     private func setConnection(_ state: ConnectionState) {
         guard connectionState != state else { return }
         connectionState = state
+        if state != .connected, fallbackConnectionState == .connected {
+            setPairingStatus(DevicePairingStatus(phase: .connected, route: .bluetooth))
+        } else if effectiveConnectionState != .connected, pairingStatus.phase == .connected {
+            setPairingStatus(.automatic)
+        }
+        publishEffectiveConnection()
+    }
+
+    private var effectiveConnectionState: ConnectionState {
+        if connectionState == .connected || fallbackConnectionState == .connected {
+            return .connected
+        }
+        if connectionState == .pairing { return .pairing }
+        if connectionState == .failed, fallbackConnectionState == .failed { return .failed }
+        if connectionState == .permissionDenied,
+           fallbackConnectionState == .permissionDenied {
+            return .permissionDenied
+        }
+        if connectionState == .disconnected || fallbackConnectionState == .disconnected {
+            return .disconnected
+        }
+        return connectionState
+    }
+
+    private func publishEffectiveConnection() {
+        let state = effectiveConnectionState
+        guard publishedConnectionState != state else { return }
+        publishedConnectionState = state
         onConnectionState?(state)
         broadcastSignals()
+    }
+
+    private func setPairingStatus(_ status: DevicePairingStatus) {
+        guard pairingStatus != status else { return }
+        pairingStatus = status
+        for continuation in pairingStatusContinuations.values {
+            continuation.yield(status)
+        }
     }
 
     private func sendEncryptedAcknowledgement(
@@ -620,7 +909,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     private func signals() -> PresenceSignals {
         PresenceSignals(
             posture: .portrait,
-            connection: connectionState,
+            connection: effectiveConnectionState,
             proximity: proximityState,
             observedAt: .now
         )

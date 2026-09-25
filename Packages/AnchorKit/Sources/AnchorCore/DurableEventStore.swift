@@ -4,6 +4,7 @@ import Foundation
 /// can exercise the same retry and merge behavior without network access.
 public protocol DurableEventStore: Sendable {
     func save(_ envelope: EventEnvelope) async throws
+    func currentSessionID() async throws -> UUID?
     func events(for sessionID: UUID, onOrAfter date: Date?) async throws -> [EventEnvelope]
 }
 
@@ -49,7 +50,23 @@ public actor DurableEventSynchronizer {
     }
 
     public func sync() async throws -> DurableSyncReport {
-        guard let sessionID = await local.currentProjection().session?.id else {
+        let localSessionID = await local.currentProjection().session?.id
+        if localSessionID != nil {
+            var uploaded = 0
+            for event in await local.pendingEvents() {
+                try Task.checkCancellation()
+                try await remote.save(event)
+                try await local.markDelivered(event.id)
+                uploaded += 1
+            }
+
+            return try await download(
+                sessionID: localSessionID,
+                uploadedCount: uploaded
+            )
+        }
+
+        guard let remoteSessionID = try await remote.currentSessionID() else {
             return DurableSyncReport(
                 uploadedCount: 0,
                 downloadedCount: 0,
@@ -57,14 +74,20 @@ public actor DurableEventSynchronizer {
             )
         }
 
-        var uploaded = 0
-        for event in await local.pendingEvents() {
-            try Task.checkCancellation()
-            try await remote.save(event)
-            try await local.markDelivered(event.id)
-            uploaded += 1
-        }
+        return try await download(sessionID: remoteSessionID, uploadedCount: 0)
+    }
 
+    private func download(
+        sessionID: UUID?,
+        uploadedCount: Int
+    ) async throws -> DurableSyncReport {
+        guard let sessionID else {
+            return DurableSyncReport(
+                uploadedCount: uploadedCount,
+                downloadedCount: 0,
+                watermark: watermark
+            )
+        }
         let remoteEvents = try await remote.events(
             for: sessionID,
             onOrAfter: watermark
@@ -78,7 +101,7 @@ public actor DurableEventSynchronizer {
         }
 
         return DurableSyncReport(
-            uploadedCount: uploaded,
+            uploadedCount: uploadedCount,
             downloadedCount: downloaded,
             watermark: watermark
         )
@@ -143,12 +166,21 @@ public actor DurableSyncRunner: DurableSyncStatusProviding {
         setState(.syncing)
         do {
             let report = try await synchronizer.sync()
+            #if DEBUG
+            print(
+                "[AnchorCloudKit] sync uploaded \(report.uploadedCount) "
+                    + "downloaded \(report.downloadedCount)"
+            )
+            #endif
             setState(.available)
             return report
         } catch is CancellationError {
             setState(.offline)
             return nil
         } catch {
+            #if DEBUG
+            print("[AnchorCloudKit] sync failed \(String(reflecting: error))")
+            #endif
             setState(.failed)
             return nil
         }

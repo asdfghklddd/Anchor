@@ -20,7 +20,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Anchor iOS"
+            "value" : "Anchor macOS"
           }
         }
       }
@@ -31,30 +31,31 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anchor uses a private service identifier and signal strength to estimate proximity between your paired devices."
+            "value" : "Anchor uses Bluetooth to pair your nearby iPhone and Mac, detect proximity, and securely sync task status when network links are unavailable."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anchor 使用不含用户数据的服务标识和信号强度来估算已配对设备之间的近场状态。"
+            "value" : "Anchor 使用蓝牙配对附近的 iPhone 与 Mac、检测距离，并在网络连接不可用时安全同步任务状态。"
           }
         }
       }
     },
     "NSLocalNetworkUsageDescription" : {
       "comment" : "Privacy - Local Network Usage Description",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anchor uses the local network to connect your paired iPhone and Mac."
+            "value" : "Anchor uses local and peer-to-peer network connections to securely sync your paired iPhone and Mac."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anchor 使用本地网络连接已配对的 iPhone 与 Mac。"
+            "value" : "Anchor 使用本地网络和点对点连接，在已配对的 iPhone 与 Mac 之间安全同步。"
           }
         }
       }

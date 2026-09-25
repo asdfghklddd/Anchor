@@ -340,8 +340,6 @@ struct MacSettingsView: View {
     let controller: (any LocalLinkControlling)?
     @State private var launchAtLogin = MacLaunchAtLogin.isEnabled
     @AppStorage("anchor.mac.notifications.decisions") private var decisionAlerts = false
-    @State private var pairingCode: String?
-    @State private var pairingCodeCopied = false
     @State private var notificationAuthorization: UNAuthorizationStatus = .notDetermined
     @State private var settingsMessage: String?
     @State private var isLoadingSettings = true
@@ -385,46 +383,8 @@ struct MacSettingsView: View {
                         }
                     }
                 }
-                Button(L10n.pairDevice, systemImage: "link") {
-                    Task { pairingCode = await controller?.currentPairingCode() }
-                }
-                .disabled(controller == nil)
-                .accessibilityIdentifier("mac.settings.pair")
-                if controller == nil {
-                    Text(L10n.pairingUnavailable)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                if let pairingCode {
-                    VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
-                        HStack(alignment: .center, spacing: AnchorSpacing.small) {
-                            Label(L10n.pairingCode, systemImage: "number")
-                                .font(.callout.weight(.semibold))
-                            Spacer(minLength: AnchorSpacing.small)
-                            Text(pairingCode)
-                                .font(.title2.bold().monospacedDigit())
-                                .textSelection(.enabled)
-                                .accessibilityLabel(L10n.pairingCode)
-                                .accessibilityValue(Text(pairingCode))
-                            Button(L10n.copyPairingCode, systemImage: "doc.on.doc") {
-                                copyPairingCode(pairingCode)
-                            }
-                            .controlSize(.small)
-                            .accessibilityIdentifier("mac.pairing.copy")
-                        }
-                        .accessibilityElement(children: .contain)
-                        Text(L10n.pairingHint)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        if pairingCodeCopied {
-                            Label(L10n.pairingCodeCopied, systemImage: "checkmark.circle.fill")
-                                .font(.caption)
-                                .foregroundStyle(AnchorPalette.mintInk)
-                                .accessibilityIdentifier("mac.pairing.copied")
-                        }
-                    }
-                }
+                MacPairingControls(controller: controller)
+                    .accessibilityIdentifier("mac.settings.pair")
             }
             Section(L10n.settings) {
                 Toggle(L10n.startAtLogin, isOn: $launchAtLogin)
@@ -488,7 +448,6 @@ struct MacSettingsView: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("mac.settings.screen")
         .task {
-            pairingCode = await controller?.currentPairingCode()
             notificationAuthorization = await MacDecisionNotificationService.authorizationStatus()
             launchAtLogin = MacLaunchAtLogin.isEnabled
             isLoadingSettings = false
@@ -506,12 +465,6 @@ struct MacSettingsView: View {
             launchAtLogin = MacLaunchAtLogin.isEnabled
             settingsMessage = error.localizedDescription
         }
-    }
-
-    private func copyPairingCode(_ code: String) {
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(code, forType: .string)
-        pairingCodeCopied = true
     }
 
     private func applyDecisionAlerts(_ enabled: Bool) async {

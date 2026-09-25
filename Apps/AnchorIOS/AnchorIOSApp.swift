@@ -9,7 +9,7 @@ struct AnchorIOSApp: App {
     private let client: AnchorBonjourClient
     private let proximityScanner: AnchorProximityScanner
     private let cloudSyncRunner: DurableSyncRunner?
-    private let currentProcessProvider: AnchorBonjourClient?
+    private let currentProcessProvider: (any CurrentProcessProviding)?
     private let recoveryReviewInterval: TimeInterval
 
     init() {
@@ -17,6 +17,7 @@ struct AnchorIOSApp: App {
         let isUITesting: Bool
         let uiTestStorageURL: URL?
         let pairingIdentityService: String
+        let usesAutomaticICloudPairing: Bool
         let recoveryReviewInterval: TimeInterval
 #if DEBUG
         isUITesting = environment["ANCHOR_UI_TESTING"] == "1"
@@ -28,9 +29,12 @@ struct AnchorIOSApp: App {
                 .appending(path: uiTestStorageID.uuidString, directoryHint: .isDirectory)
                 .appending(path: "session-repository.json")
             : nil
-        pairingIdentityService = isUITesting
-            ? "com.andywang.anchor.ui-tests.\(uiTestStorageID.uuidString)"
-            : "com.andywang.anchor.local-link"
+        pairingIdentityService = environment["ANCHOR_PAIRING_IDENTITY_SERVICE"]
+            ?? (isUITesting
+                ? "com.andywang.anchor.ui-tests.\(uiTestStorageID.uuidString)"
+                : "com.andywang.anchor.local-link")
+        usesAutomaticICloudPairing = !isUITesting
+            && environment["ANCHOR_DISABLE_ICLOUD_PAIRING"] != "1"
         recoveryReviewInterval = isUITesting
             ? environment["ANCHOR_UI_TEST_RECOVERY_INTERVAL"].flatMap(TimeInterval.init) ?? 86_400
             : 86_400
@@ -38,6 +42,7 @@ struct AnchorIOSApp: App {
         isUITesting = false
         uiTestStorageURL = nil
         pairingIdentityService = "com.andywang.anchor.local-link"
+        usesAutomaticICloudPairing = true
         recoveryReviewInterval = 86_400
 #endif
         if let uiTestStorageURL {
@@ -47,17 +52,26 @@ struct AnchorIOSApp: App {
             )
         }
         let identityStore = PairingIdentityStore(service: pairingIdentityService)
-        let client = AnchorBonjourClient(identityStore: identityStore)
-        let scanner = AnchorProximityScanner { proximity in
-            client.updateProximity(proximity)
-        }
+        let client = AnchorBonjourClient(
+            identityStore: identityStore,
+            automaticPairing: usesAutomaticICloudPairing ? .iOSProduction() : .manualOnly
+        )
+        let scanner = AnchorProximityScanner(
+            identityStore: identityStore,
+            onUpdate: { proximity in
+                client.updateProximity(proximity)
+            },
+            onPairingCredential: { deviceID, secret in
+                client.offerBluetoothPairingSecret(secret, for: deviceID)
+            }
+        )
         let localRepository = LocalSessionRepository(
             storageURL: uiTestStorageURL,
             sourceID: identityStore.localDeviceID()
         )
         let cloudSyncRunner: DurableSyncRunner?
         let presenceProvider: (any PresenceSignalProviding)?
-        let currentProcessProvider: AnchorBonjourClient?
+        let currentProcessProvider: (any CurrentProcessProviding)?
 #if DEBUG
         if isUITesting {
             cloudSyncRunner = nil
@@ -66,19 +80,37 @@ struct AnchorIOSApp: App {
         } else {
             cloudSyncRunner = AnchorCloudSyncFactory.makeRunner(local: localRepository)
             presenceProvider = client
-            currentProcessProvider = client
+            currentProcessProvider = AnchorAdaptiveCurrentProcessProvider(
+                network: client,
+                bluetooth: scanner
+            )
         }
 #else
         cloudSyncRunner = AnchorCloudSyncFactory.makeRunner(local: localRepository)
         presenceProvider = client
-        currentProcessProvider = client
+        currentProcessProvider = AnchorAdaptiveCurrentProcessProvider(
+            network: client,
+            bluetooth: scanner
+        )
 #endif
-        let repository = LinkedSessionRepository(base: localRepository, transport: client)
-        client.onEvent = { [weak repository] event in
+        let transport = AnchorAdaptiveEventTransport(
+            network: client,
+            bluetooth: scanner
+        )
+        let repository = LinkedSessionRepository(base: localRepository, transport: transport)
+        let applyEvent: @Sendable (EventEnvelope) async throws -> Void = { [weak repository] event in
             guard let repository else { throw CancellationError() }
             try await repository.applyRemote(event)
         }
-        client.onConnectionState = { [weak repository] state in
+        client.onEvent = applyEvent
+        scanner.setEventHandler(applyEvent)
+        client.onConnectionState = { [weak repository, weak scanner] state in
+            guard state == .connected else { return }
+            scanner?.refreshDataLink()
+            Task { await repository?.reconcilePeerHistory() }
+        }
+        scanner.setConnectionStateHandler { [weak repository] state in
+            client.updateFallbackConnection(state)
             guard state == .connected else { return }
             Task { await repository?.reconcilePeerHistory() }
         }

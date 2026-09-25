@@ -22,6 +22,7 @@ struct AnchorMacApp: App {
         let validationDefaults: UserDefaults?
         let isUITesting: Bool
         let pairingIdentityService: String
+        let usesAutomaticICloudPairing: Bool
 #if DEBUG
         isUITesting = environment["ANCHOR_UI_TESTING"] == "1"
         let uiTestStorageID = environment["ANCHOR_UI_TEST_STORAGE_ID"]
@@ -43,9 +44,12 @@ struct AnchorMacApp: App {
             ?? (isUITesting
                 ? UserDefaults(suiteName: "com.andywang.anchor.ui-tests.\(uiTestStorageID.uuidString)")
                 : nil)
-        pairingIdentityService = isUITesting
-            ? "com.andywang.anchor.ui-tests.\(uiTestStorageID.uuidString)"
-            : "com.andywang.anchor.local-link"
+        pairingIdentityService = environment["ANCHOR_PAIRING_IDENTITY_SERVICE"]
+            ?? (isUITesting
+                ? "com.andywang.anchor.ui-tests.\(uiTestStorageID.uuidString)"
+                : "com.andywang.anchor.local-link")
+        usesAutomaticICloudPairing = !isUITesting
+            && environment["ANCHOR_DISABLE_ICLOUD_PAIRING"] != "1"
 #else
         isUITesting = false
         validationRootURL = nil
@@ -53,6 +57,7 @@ struct AnchorMacApp: App {
         validationShouldSeedSession = false
         validationDefaults = nil
         pairingIdentityService = "com.andywang.anchor.local-link"
+        usesAutomaticICloudPairing = true
 #endif
 #if DEBUG
         if let validationRootURL {
@@ -70,7 +75,18 @@ struct AnchorMacApp: App {
         let deviceID = validationRootURL == nil
             ? identityStore.localDeviceID()
             : UUID(uuidString: "00000000-0000-4000-8000-0000000004F0")!
-        let server = AnchorBonjourServer(identityStore: identityStore, deviceID: deviceID)
+        let bluetoothPairingToken = AnchorBluetoothPairingToken()
+        let advertiser = AnchorProximityAdvertiser(
+            deviceID: deviceID,
+            pairingToken: bluetoothPairingToken,
+            identityStore: identityStore
+        )
+        let server = AnchorBonjourServer(
+            identityStore: identityStore,
+            deviceID: deviceID,
+            automaticPairing: usesAutomaticICloudPairing ? .macProduction() : .manualOnly,
+            bluetoothPairingToken: bluetoothPairingToken
+        )
         let localRepository = LocalSessionRepository(
             storageURL: validationRootURL?.appending(path: "session-repository.json"),
             sourceID: deviceID
@@ -89,7 +105,11 @@ struct AnchorMacApp: App {
 #else
         cloudSyncRunner = AnchorCloudSyncFactory.makeRunner(local: localRepository)
 #endif
-        let repository = LinkedSessionRepository(base: localRepository, transport: server)
+        let transport = AnchorAdaptiveEventTransport(
+            network: server,
+            bluetooth: advertiser
+        )
+        let repository = LinkedSessionRepository(base: localRepository, transport: transport)
         let taskLifecycleBridge = TaskSessionLifecycleBridge(
             repository: repository,
             taskRunStore: taskRunStore
@@ -120,7 +140,7 @@ struct AnchorMacApp: App {
             sources: sources,
             taskRunStore: taskRunStore
         )
-        server.onCurrentProcessSnapshot = {
+        let currentProcessSnapshot: @Sendable () async throws -> CurrentProcessSnapshot = {
             let projection = await repository.currentProjection()
             if let session = projection.session {
                 return CurrentProcessSnapshot(
@@ -133,8 +153,9 @@ struct AnchorMacApp: App {
                 .compactMap(\ .localizedName)
             return CurrentProcessSnapshot(processNames: runningApplications)
         }
-        let advertiser = AnchorProximityAdvertiser()
-        server.onEvent = { envelope in
+        server.onCurrentProcessSnapshot = currentProcessSnapshot
+        advertiser.onCurrentProcessSnapshot = currentProcessSnapshot
+        let applyInboundEvent: @Sendable (EventEnvelope) async throws -> Void = { envelope in
             let wasAlreadyApplied = await repository.currentProjection().session?.processedEventIDs.contains(envelope.id) == true
             try await repository.applyRemote(envelope)
             guard !wasAlreadyApplied,
@@ -154,7 +175,12 @@ struct AnchorMacApp: App {
             // The local event is already durable. A source action is best
             // effort and is reported through source health without blocking
             // the transport acknowledgement or causing a retry storm.
-            try? await sourceCoordinator.perform(action, on: sourceID)
+            _ = try? await sourceCoordinator.perform(action, on: sourceID)
+        }
+        server.onEvent = applyInboundEvent
+        advertiser.onEvent = applyInboundEvent
+        advertiser.onConnectionState = { state in
+            server.updateFallbackConnection(state)
         }
         server.onConnectionState = { state in
             Task {

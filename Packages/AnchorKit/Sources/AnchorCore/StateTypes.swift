@@ -51,6 +51,35 @@ public enum ConnectionState: String, Codable, CaseIterable, Sendable {
     }
 }
 
+public enum DevicePairingRoute: String, Codable, CaseIterable, Sendable {
+    case trustedDevice
+    case iCloud
+    case bluetooth
+    case verificationCode
+}
+
+public enum DevicePairingPhase: String, Codable, CaseIterable, Sendable {
+    case automatic
+    case verificationCodeRequired
+    case connected
+}
+
+public struct DevicePairingStatus: Codable, Hashable, Sendable {
+    public let phase: DevicePairingPhase
+    public let route: DevicePairingRoute?
+
+    public init(phase: DevicePairingPhase, route: DevicePairingRoute? = nil) {
+        self.phase = phase
+        self.route = route
+    }
+
+    public static let automatic = DevicePairingStatus(phase: .automatic)
+    public static let verificationCodeRequired = DevicePairingStatus(
+        phase: .verificationCodeRequired,
+        route: .verificationCode
+    )
+}
+
 public enum ProximityState: String, Codable, CaseIterable, Sendable {
     case near
     case far

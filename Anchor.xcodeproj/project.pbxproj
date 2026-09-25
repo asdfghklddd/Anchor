@@ -615,6 +615,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ANCHOR_IOS_CODE_SIGN_ENTITLEMENTS = Apps/AnchorIOS/AnchorIOS.entitlements;
 				ANCHOR_IOS_DEVELOPMENT_TEAM = DZPUSA6232;
 				ANCHOR_IOS_INFOPLIST_FILE = "Configuration/AnchorIOS-Info.plist";
 				CODE_SIGN_ENTITLEMENTS = "$(ANCHOR_IOS_CODE_SIGN_ENTITLEMENTS)";
@@ -644,6 +645,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ANCHOR_IOS_CODE_SIGN_ENTITLEMENTS = Apps/AnchorIOS/AnchorIOS.entitlements;
 				ANCHOR_IOS_DEVELOPMENT_TEAM = DZPUSA6232;
 				ANCHOR_IOS_INFOPLIST_FILE = "Configuration/AnchorIOS-Info.plist";
 				CODE_SIGN_ENTITLEMENTS = "$(ANCHOR_IOS_CODE_SIGN_ENTITLEMENTS)";
@@ -676,7 +678,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ANCHOR_MAC_CODE_SIGN_ENTITLEMENTS = "";
 				ANCHOR_MAC_DEVELOPMENT_TEAM = "";
-				ANCHOR_MAC_GENERATE_INFOPLIST_FILE = YES;
+				ANCHOR_MAC_GENERATE_INFOPLIST_FILE = NO;
+				ANCHOR_MAC_INFOPLIST_FILE = "Configuration/AnchorMac-Info.plist";
 				CODE_SIGN_ENTITLEMENTS = "$(ANCHOR_MAC_CODE_SIGN_ENTITLEMENTS)";
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
@@ -690,7 +693,9 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Anchor;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Anchor advertises a private service identifier so your paired iPhone can estimate proximity.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Anchor uses Bluetooth to pair your nearby iPhone and Mac, detect proximity, and securely sync task status when network links are unavailable.";
+				INFOPLIST_KEY_NSBonjourServices = "_anchor._tcp";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Anchor uses local and peer-to-peer network connections to securely sync your paired iPhone and Mac.";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor;
@@ -711,7 +716,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ANCHOR_MAC_CODE_SIGN_ENTITLEMENTS = Apps/AnchorMac/AnchorMac.entitlements;
 				ANCHOR_MAC_DEVELOPMENT_TEAM = DZPUSA6232;
-				ANCHOR_MAC_GENERATE_INFOPLIST_FILE = YES;
+				ANCHOR_MAC_GENERATE_INFOPLIST_FILE = NO;
+				ANCHOR_MAC_INFOPLIST_FILE = "Configuration/AnchorMac-Info.plist";
 				CODE_SIGN_ENTITLEMENTS = "$(ANCHOR_MAC_CODE_SIGN_ENTITLEMENTS)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -724,7 +730,9 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Anchor;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Anchor advertises a private service identifier so your paired iPhone can estimate proximity.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Anchor uses Bluetooth to pair your nearby iPhone and Mac, detect proximity, and securely sync task status when network links are unavailable.";
+				INFOPLIST_KEY_NSBonjourServices = "_anchor._tcp";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Anchor uses local and peer-to-peer network connections to securely sync your paired iPhone and Mac.";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor;

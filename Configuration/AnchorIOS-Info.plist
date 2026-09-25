@@ -24,17 +24,21 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Anchor uses a private service identifier and signal strength to estimate proximity between your paired devices.</string>
+	<string>Anchor uses Bluetooth to pair your nearby iPhone and Mac, detect proximity, and securely sync task status when network links are unavailable.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_anchor._tcp</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Anchor uses the local network to connect your paired iPhone and Mac.</string>
+	<string>Anchor uses local and peer-to-peer network connections to securely sync your paired iPhone and Mac.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Anchor uses the microphone to turn your spoken completion standard into editable text.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Anchor uses Speech Recognition to transcribe your spoken completion standard on the New Work screen.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

@@ -75,6 +75,8 @@ final class AnchorIOSUITests: XCTestCase {
         XCTAssertTrue(element("workspace.connection.status", in: app).waitForExistence(timeout: 8))
         app.buttons["workspace.connection.action"].tap()
         XCTAssertTrue(element("connections.screen", in: app).waitForExistence(timeout: 3))
+        XCTAssertTrue(element("connections.pairing.automatic", in: app).exists)
+        XCTAssertFalse(element("connections.pairing.code", in: app).exists)
         app.navigationBars.buttons.firstMatch.tap()
 
         let anchorButton = app.buttons["anchor.note.button"]

@@ -597,6 +597,44 @@ struct ProcessSourceTests {
         #expect(await runner.currentState() == .idle)
     }
 
+    @Test("A second device discovers and restores the current iCloud session")
+    func durableSyncDiscoversCurrentSession() async throws {
+        let sourceURL = URL.temporaryDirectory.appending(
+            path: "anchor-cloud-source-\(UUID().uuidString).json"
+        )
+        let targetURL = URL.temporaryDirectory.appending(
+            path: "anchor-cloud-target-\(UUID().uuidString).json"
+        )
+        defer {
+            try? FileManager.default.removeItem(at: sourceURL)
+            try? FileManager.default.removeItem(at: targetURL)
+        }
+        let source = LocalSessionRepository(storageURL: sourceURL, sourceID: UUID())
+        let target = LocalSessionRepository(storageURL: targetURL, sourceID: UUID())
+        let remote = FakeDurableEventStore()
+        try await source.send(
+            .createSession(
+                goal: AnchorGoal(
+                    title: "Cloud discovery",
+                    completionCriteria: "The second device restores it"
+                ),
+                processes: []
+            )
+        )
+
+        let upload = DurableEventSynchronizer(local: source, remote: remote)
+        let download = DurableEventSynchronizer(local: target, remote: remote)
+        #expect(try await upload.sync().uploadedCount == 1)
+        #expect(await target.currentProjection().session == nil)
+
+        let report = try await download.sync()
+        #expect(report.downloadedCount == 1)
+        #expect(await target.currentProjection().session?.goal.title == "Cloud discovery")
+        let targetSessionID = await target.currentProjection().session?.id
+        let sourceSessionID = await source.currentProjection().session?.id
+        #expect(targetSessionID == sourceSessionID)
+    }
+
     private func waitForHealthEvent(
         in stream: AsyncStream<[SourceHealth]>
     ) async throws {
@@ -689,6 +727,7 @@ private actor ActionRecorder {
 private actor FakeDurableEventStore: DurableEventStore {
     private var stored: [UUID: EventEnvelope] = [:]
     private var failNextSave: Bool
+    private var activeSessionID: UUID?
 
     init(failNextSave: Bool = false) {
         self.failNextSave = failNextSave
@@ -700,7 +739,15 @@ private actor FakeDurableEventStore: DurableEventStore {
             throw TestTimeout.expired
         }
         stored[envelope.id] = envelope
+        if let operation = try? JSONDecoder.anchor.decode(
+            SessionOperation.self,
+            from: envelope.payload
+        ), case .createSession = operation {
+            activeSessionID = envelope.sessionID
+        }
     }
+
+    func currentSessionID() -> UUID? { activeSessionID }
 
     func events(for sessionID: UUID, onOrAfter date: Date?) -> [EventEnvelope] {
         stored.values.filter {

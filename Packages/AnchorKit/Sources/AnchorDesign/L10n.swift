@@ -493,6 +493,34 @@ public enum L10n {
     )
     public static let pairDevice = AnchorStrings.value("pair.device", default: "Pair device")
     public static let pairingCode = AnchorStrings.value("pair.code", default: "Pairing code")
+    public static let pairingAutomatically = AnchorStrings.value(
+        "pair.automatic.title",
+        default: "Connecting automatically"
+    )
+    public static let pairingAutomaticDetail = AnchorStrings.value(
+        "pair.automatic.detail",
+        default: "Anchor first checks your iCloud identity, then a nearby Bluetooth device."
+    )
+    public static let pairingFallbackDetail = AnchorStrings.value(
+        "pair.fallback.detail",
+        default: "Automatic pairing is unavailable. Enter the six-digit code shown on your Mac."
+    )
+    public static let pairingConnectedTrusted = AnchorStrings.value(
+        "pair.connected.trusted",
+        default: "Trusted device connected"
+    )
+    public static let pairingConnectedICloud = AnchorStrings.value(
+        "pair.connected.icloud",
+        default: "Connected with iCloud identity"
+    )
+    public static let pairingConnectedBluetooth = AnchorStrings.value(
+        "pair.connected.bluetooth",
+        default: "Connected with nearby Bluetooth"
+    )
+    public static let pairingConnectedCode = AnchorStrings.value(
+        "pair.connected.code",
+        default: "Connected with pairing code"
+    )
     public static let pairingHint = AnchorStrings.value(
         "pair.hint",
         default: "Enter this six-digit code in Anchor on your iPhone."
