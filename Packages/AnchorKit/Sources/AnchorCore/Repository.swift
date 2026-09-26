@@ -408,17 +408,6 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         }
     }
 
-    private func replayPreservingSignals() throws -> SessionProjection {
-        Self.replay(
-            baseProjection: baseProjection,
-            events: events,
-            connection: projection.connection,
-            proximity: projection.proximity,
-            sourceHealth: projection.sourceHealth,
-            durableSyncState: projection.durableSyncState
-        )
-    }
-
     private static func replay(
         baseProjection: SessionProjection,
         events: [EventEnvelope],
