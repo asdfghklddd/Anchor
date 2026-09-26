@@ -6,12 +6,11 @@ human decisions, and the context needed to return after an interruption.
 
 ![Anchor iPhone workspace](Product/Prototype/output/playwright/01-home-portrait.png)
 
-## Active development mainline
+## Development branches
 
-As of 2026-09-24, `codex/anchor-rollback-260918` is the designated mainline
-for ongoing Anchor development. Base new iOS design and interaction work on
-this branch. GitHub's default `main` branch remains unchanged until a separate
-integration decision.
+`codex/anchor-rollback-260918` is the designated branch for ongoing iOS design
+and interaction work. GitHub's default branch is `main`. Check both remote
+branch tips and open pull requests before starting work.
 
 ## Current implementation
 
@@ -46,6 +45,8 @@ already has a crash-safe local event store, an authenticated same-network link,
 an optional CloudKit event adapter, and a supported CLI contract.
 
 ## Repository map
+
+See [the project map](docs/project-map.md) for source, documentation, and archive entry points.
 
 ```text
 Anchor.xcodeproj
@@ -89,6 +90,16 @@ Run package tests without booting a simulator:
 cd Packages/AnchorKit
 swift test
 ```
+
+If a Desktop/File Provider build cache fails code signing with `resource fork,
+Finder information, or similar detritus not allowed`, keep generated products
+outside that folder. From `Packages/AnchorKit`, run:
+
+```sh
+swift test --scratch-path /tmp/anchor-swift-build
+```
+
+This changes only the build location; signing settings and source resources stay intact.
 
 The `Anchor iOS` and `Anchor macOS` schemes also contain the formal UI-test
 targets. Their launch environments create a private temporary repository and

@@ -1,0 +1,94 @@
+{
+  "target_path": ".",
+  "mode": "safe-clean",
+  "permission_level": "autonomous-safe",
+  "git": {
+    "branch": "main",
+    "dirty_before": true,
+    "head": "8d7570424f7cb0e6de7201737df6626229ff5de5",
+    "remote": "Fetched origin/main equals HEAD; no open PRs"
+  },
+  "baseline": [
+    {
+      "command": "swift test --scratch-path /tmp/anchor-janitor-swift-20260925",
+      "result": "passed",
+      "tests": 147,
+      "breakdown": [
+        123,
+        21,
+        3
+      ],
+      "log": "/tmp/anchor-janitor-isolated.log"
+    }
+  ],
+  "candidates": [
+    {
+      "path": "Packages/AnchorKit/Sources/AnchorCore/Repository.swift",
+      "symbol": "replayPreservingSignals",
+      "evidence": "E2",
+      "planned_action": "delete private unused wrapper",
+      "reason": "Only declaration exists across tracked Swift and full repository search; four active callers directly invoke private static replay; no dynamic dispatch or selector attributes; wrapper has no side effects beyond forwarding.",
+      "risk": "low; narrow private implementation only"
+    },
+    {
+      "path": "Packages/AnchorKit/.build/out/Products/Debug/AnchorKit_AnchorDesign.bundle",
+      "evidence": "E0",
+      "planned_action": "remove only com.apple.FinderInfo xattr",
+      "reason": "codesign rejects Finder metadata on generated bundle; isolated scratch build passes",
+      "risk": "low; no source or signing configuration change"
+    }
+  ],
+  "duplicate_candidates": [],
+  "actions_taken": [
+    "Removed 11-line private unused replayPreservingSignals wrapper; four existing call sites continue to use static replay directly.",
+    "Attempted removal of only FinderInfo on generated AnchorDesign bundle; attribute reappeared and default swift test still failed. No source or global metadata changes.",
+    "Documented isolated scratch build command in README; verified with scratch path /tmp/anchor-janitor-swift-20260925."
+  ],
+  "deferred": [
+    {
+      "symbols": [
+        "CodexLifecycleScanner",
+        "AnchorNotification",
+        "HarborClayAvatar",
+        "HarborWaveDivider"
+      ],
+      "evidence": "E3",
+      "reason": "No in-repository consumers found, but public package surface is not safe to remove on reference counts alone."
+    }
+  ],
+  "protected": [
+    "All previous cleanup changes and untracked video/screenshots",
+    "Public APIs, active SwiftUI views and accessibility behavior",
+    "Signing config, source resource xattrs, caches other than the named generated bundle attribute",
+    "CI, manifests, tests, prototypes, frozen Demo, Git branches and stashes"
+  ],
+  "verification_after": [
+    {
+      "command": "swift test --scratch-path /tmp/anchor-janitor-swift-20260925",
+      "result": "passed",
+      "tests": 147,
+      "breakdown": [
+        21,
+        3,
+        123
+      ],
+      "log": "/tmp/anchor-janitor-after.log"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "check": "SHA-256 duplicate scan across tracked Apps/Packages/scripts source and scripts",
+      "result": "No byte-identical source/script duplicates"
+    },
+    {
+      "check": "Private function reference and declaration scan across tracked Swift, then full non-generated repository",
+      "result": "Removed only confirmed uncalled private wrapper; public candidates retained"
+    }
+  ],
+  "limitations": [
+    "Default Desktop .build remains affected by regenerating FinderInfo; isolated scratch path is a verified workaround, not a system-level repair.",
+    "No iPhone simulator/device UI validation or complete Xcode app build performed; no UI code changed."
+  ]
+}

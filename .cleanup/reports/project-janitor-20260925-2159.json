@@ -1,0 +1,424 @@
+{
+  "target_path": ".",
+  "mode": "safe-clean",
+  "permission_level": "autonomous-safe",
+  "git": {
+    "is_repo": true,
+    "branch": "main",
+    "head": "8d7570424f7cb0e6de7201737df6626229ff5de5",
+    "dirty_before": true,
+    "status_before": "?? .cleanup/reports/project-janitor-20260811-0644.json\n?? .cleanup/reports/project-janitor-20260811-0644.md\n?? .cleanup/reports/project-janitor-20260811-1312.json\n?? .cleanup/reports/project-janitor-20260811-1312.md\n?? .cleanup/reports/project-janitor-20260914-1151.json\n?? .cleanup/reports/project-janitor-20260914-1151.md\n?? Documentation/anchor-demo-screenshots/\n?? video/\n",
+    "remote": "HEAD equals fetched origin/main; no open PRs"
+  },
+  "detected_stack": [
+    "Swift 6.2",
+    "SwiftUI iOS/macOS",
+    "React prototype",
+    "Remotion video"
+  ],
+  "baseline": [
+    {
+      "command": "cd Packages/AnchorKit && swift test",
+      "result": "failed before cleanup",
+      "notes": "CodeSign AnchorKit_AnchorDesign.bundle: resource fork, Finder information, or similar detritus not allowed",
+      "log": "/tmp/anchor-janitor-baseline.log"
+    }
+  ],
+  "knowledge_hygiene": [
+    {
+      "path": "README.md",
+      "bytes": 5724,
+      "status": "updated",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "Documentation/ANCHOR_IMPLEMENTATION_PLAN.md",
+      "bytes": 85387,
+      "status": "updated",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "Documentation/ANCHOR_PRODUCT_VIDEO_RESEARCH.md",
+      "bytes": 32863,
+      "status": "updated",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "Documentation/VALIDATION.md",
+      "bytes": 10125,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "Documentation/PRODUCT_BASELINE.md",
+      "bytes": 11299,
+      "status": "updated",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "Documentation/CLOUDKIT_MVP.md",
+      "bytes": 4308,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "Documentation/P0_SOURCE_CAPABILITY_AUDIT.md",
+      "bytes": 32610,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "Documentation/CLI_EVENT_CONTRACT.md",
+      "bytes": 3529,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "Documentation/DEVELOPMENT_BLUEPRINT.md",
+      "bytes": 21122,
+      "status": "updated",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "Documentation/WEB_OBSERVATION_CONTRACT.md",
+      "bytes": 4690,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/README.md",
+      "bytes": 8567,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/AGENTS.md",
+      "bytes": 3709,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/CLAUDE.md",
+      "bytes": 1066,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/archive/README.md",
+      "bytes": 608,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/references/README.md",
+      "bytes": 1340,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/docs/README.md",
+      "bytes": 4018,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/docs/project-map.md",
+      "bytes": 6275,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/docs/research/ANCHOR_PRODUCT_VIDEO_RESEARCH.md",
+      "bytes": 35755,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/docs/research/ANCHOR_REFERENCE_STYLE_ANALYSIS.md",
+      "bytes": 18109,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/docs/retrospective/VIDEO_PRODUCTION_LESSONS.md",
+      "bytes": 7235,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/docs/workflow/DELIVERY_QA_TOOLKIT.md",
+      "bytes": 2193,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/docs/workflow/HYBRID_ASSEMBLY_PIPELINE.md",
+      "bytes": 5499,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/docs/workflow/SINGLE_TRACK_CAPTIONS.md",
+      "bytes": 2867,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/docs/workflow/VIDEO_PRODUCTION_WORKFLOW.md",
+      "bytes": 7815,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/docs/scripts/ANCHOR_TEACHER_CUT_SCRIPT.md",
+      "bytes": 4907,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/docs/scripts/ANCHOR_3M15_SCRIPT_DRAFT.md",
+      "bytes": 30484,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/docs/blueprint/MEDIA_REACQUISITION_BLUEPRINT.md",
+      "bytes": 8657,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/deliverables/README.md",
+      "bytes": 458,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/deliverables/2026-competition/README.md",
+      "bytes": 2329,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/public/screenshots/README.md",
+      "bytes": 377,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/public/audio/ATTRIBUTION.md",
+      "bytes": 1403,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/public/audio/README.md",
+      "bytes": 509,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/public/media/README.md",
+      "bytes": 778,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/public/media/anchor-ios-demo-recordings.md",
+      "bytes": 3903,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/public/media/external/README.md",
+      "bytes": 2887,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "video/public/media/competition/README.md",
+      "bytes": 929,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "Archive/Competition/SemifinalDemo/README.md",
+      "bytes": 2129,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "Product/README.md",
+      "bytes": 1309,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "Product/Prototype/README.md",
+      "bytes": 5772,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    },
+    {
+      "path": "Apps/AnchorSafariExtension/Resources/README.md",
+      "bytes": 800,
+      "status": "assessed-no-change",
+      "notes": "Retained; video is pre-existing untracked work, historic evidence/contracts remain valuable."
+    }
+  ],
+  "candidates": [
+    {
+      "path": "Documentation/PRODUCT_BASELINE.md",
+      "evidence": "E1",
+      "planned_action": "archive",
+      "reason": "Historical product/design sequencing superseded by implementation plan; video research superseded by local video knowledge index. Keep tracked historical copy and compatibility pointer.",
+      "risk": "low"
+    },
+    {
+      "path": "Documentation/DEVELOPMENT_BLUEPRINT.md",
+      "evidence": "E1",
+      "planned_action": "archive",
+      "reason": "Historical product/design sequencing superseded by implementation plan; video research superseded by local video knowledge index. Keep tracked historical copy and compatibility pointer.",
+      "risk": "low"
+    },
+    {
+      "path": "Documentation/ANCHOR_PRODUCT_VIDEO_RESEARCH.md",
+      "evidence": "E1",
+      "planned_action": "archive",
+      "reason": "Historical product/design sequencing superseded by implementation plan; video research superseded by local video knowledge index. Keep tracked historical copy and compatibility pointer.",
+      "risk": "low"
+    },
+    {
+      "path": "Anchor/Assets.xcassets/AppIcon.appiconset",
+      "evidence": "E0",
+      "planned_action": "delete",
+      "reason": "Empty leftover; not tracked and absent from project/package/CI references.",
+      "risk": "low"
+    },
+    {
+      "path": "Anchor/Assets.xcassets/AccentColor.colorset",
+      "evidence": "E0",
+      "planned_action": "delete",
+      "reason": "Empty leftover; not tracked and absent from project/package/CI references.",
+      "risk": "low"
+    },
+    {
+      "path": "Anchor/Assets.xcassets",
+      "evidence": "E0",
+      "planned_action": "delete",
+      "reason": "Empty leftover; not tracked and absent from project/package/CI references.",
+      "risk": "low"
+    },
+    {
+      "path": "Anchor",
+      "evidence": "E0",
+      "planned_action": "delete",
+      "reason": "Empty leftover; not tracked and absent from project/package/CI references.",
+      "risk": "low"
+    },
+    {
+      "path": "AnchorTests",
+      "evidence": "E0",
+      "planned_action": "delete",
+      "reason": "Empty leftover; not tracked and absent from project/package/CI references.",
+      "risk": "low"
+    },
+    {
+      "path": "AnchorUITests",
+      "evidence": "E0",
+      "planned_action": "delete",
+      "reason": "Empty leftover; not tracked and absent from project/package/CI references.",
+      "risk": "low"
+    },
+    {
+      "path": "Figma/Anchor-20-2/assets/svg",
+      "evidence": "E0",
+      "planned_action": "delete",
+      "reason": "Empty leftover; not tracked and absent from project/package/CI references.",
+      "risk": "low"
+    },
+    {
+      "path": "Figma/Anchor-20-2/assets/raw",
+      "evidence": "E0",
+      "planned_action": "delete",
+      "reason": "Empty leftover; not tracked and absent from project/package/CI references.",
+      "risk": "low"
+    },
+    {
+      "path": "Figma/Anchor-20-2/assets",
+      "evidence": "E0",
+      "planned_action": "delete",
+      "reason": "Empty leftover; not tracked and absent from project/package/CI references.",
+      "risk": "low"
+    },
+    {
+      "path": "Figma/Anchor-20-2",
+      "evidence": "E0",
+      "planned_action": "delete",
+      "reason": "Empty leftover; not tracked and absent from project/package/CI references.",
+      "risk": "low"
+    },
+    {
+      "path": "Figma",
+      "evidence": "E0",
+      "planned_action": "delete",
+      "reason": "Empty leftover; not tracked and absent from project/package/CI references.",
+      "risk": "low"
+    },
+    {
+      "path": "Packages/AnchorKit/Tests/AnchorDemoSupportTests",
+      "evidence": "E0",
+      "planned_action": "delete",
+      "reason": "Empty leftover; not tracked and absent from project/package/CI references.",
+      "risk": "low"
+    },
+    {
+      "path": ".DS_Store",
+      "evidence": "E0",
+      "planned_action": "delete",
+      "reason": "Finder metadata",
+      "risk": "low"
+    }
+  ],
+  "duplicate_candidates": [
+    {
+      "group": "video research",
+      "canonical_path": "video/docs/README.md",
+      "duplicate_path": "Documentation/ANCHOR_PRODUCT_VIDEO_RESEARCH.md",
+      "recommendation": "Archive tracked historical version; video copy differs and is untracked, do not remove either."
+    }
+  ],
+  "actions_taken": [
+    "Archived Documentation/PRODUCT_BASELINE.md -> Documentation/archive/PRODUCT_BASELINE.md; retained original-path pointer.",
+    "Archived Documentation/DEVELOPMENT_BLUEPRINT.md -> Documentation/archive/DEVELOPMENT_BLUEPRINT.md; retained original-path pointer.",
+    "Archived Documentation/ANCHOR_PRODUCT_VIDEO_RESEARCH.md -> Documentation/archive/ANCHOR_PRODUCT_VIDEO_RESEARCH.md; retained original-path pointer.",
+    "Removed empty directory Anchor/Assets.xcassets/AppIcon.appiconset",
+    "Removed empty directory Anchor/Assets.xcassets/AccentColor.colorset",
+    "Removed empty directory Anchor/Assets.xcassets",
+    "Removed empty directory Anchor",
+    "Removed empty directory AnchorTests",
+    "Removed empty directory AnchorUITests",
+    "Removed empty directory Figma/Anchor-20-2/assets/svg",
+    "Removed empty directory Figma/Anchor-20-2/assets/raw",
+    "Removed empty directory Figma/Anchor-20-2/assets",
+    "Removed empty directory Figma/Anchor-20-2",
+    "Removed empty directory Figma",
+    "Removed empty directory Packages/AnchorKit/Tests/AnchorDemoSupportTests",
+    "Deleted .DS_Store (8196 bytes).",
+    "Replaced stale current push authorization with explicitly task-scoped historical record.",
+    "Added concise docs/project-map.md and README entry link."
+  ],
+  "deferred": [
+    "Production implementation pruning requires passing baseline and symbol/call-site proof; no production code deletion approved by this evidence.",
+    "README mainline policy retained despite checkout being main; changing designated branch is a separate decision.",
+    "Ignored build/.build/node_modules/tmp caches excluded; no space reclamation claim.",
+    "Video subtree, screenshot evidence, prototype assets, frozen semifinal project, signing/CI/manifests, stashes and branches preserved."
+  ],
+  "verification_after": [
+    "PASS: git diff --check.",
+    "PASS: local Markdown links in README, project map, archived documents and compatibility pointers resolve.",
+    "PASS: all 3 archive copies preserve original text except required relative link adjustments.",
+    "PASS: production code, tests, project, configuration, CI, scripts, prototype and Demo archive have no tracked changes.",
+    "Baseline swift test failed before cleanup due to resource-fork/Finder-metadata signing error; not rerun for documentation-only changes. Native app behavior/builds remain unverified."
+  ]
+}

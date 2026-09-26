@@ -9,7 +9,7 @@
 - 工程状态：Mac 读取真实 Codex 并通过生产 Bonjour 协议同步到 iPhone Repository 的代码级 MVP 已闭环；正式 iOS/macOS Debug 与 AnchorKit 125 项测试通过。真实 iPhone↔Mac 硬件验收、CloudKit、蓝牙后台与 Claude 仍未完成，不能把代码级证据表述为真机交付。
 - 用途：之后每轮施工开始前阅读，结束后更新状态、证据、偏差和下一步。
 - 范围：正式版 Anchor iOS、Anchor macOS、共享包、Safari 扩展及必要 CLI 集成；不是 Demo 改造计划。
-- 当前授权：用户于 2026-09-14 将 MVP 明确定义为“Mac Anchor 主动读取并跟进真实 Codex 任务并同步给 iPhone”，并已授权只纳入本轮 MVP 文件、直接提交并推送到 `main`，不创建 PR。
+- 历史授权记录（2026-09-14，仅限当次 MVP 任务）：当时允许只提交本轮 MVP 文件并直接推送 `main`。这不构成后续任务的提交、推送或发布授权；后续操作按各次任务的明确授权执行。
 
 ## 0. 如何使用这份计划
 
