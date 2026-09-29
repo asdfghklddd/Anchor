@@ -133,7 +133,21 @@ public final class AnchorSessionModel {
     @discardableResult
     public func send(_ command: SessionCommand) async -> Bool {
         do {
-            try await repository.send(command)
+            // Bind UI mutations to the task displayed when the action began.
+            // A peer changing selection cannot redirect an in-flight edit.
+            let scoped: SessionCommand
+            switch command {
+            case .updateGoal, .addNote, .resolveDecision, .addProcess, .updateProcess,
+                 .removeProcess, .reorderProcesses, .updateTileSize, .recordEvent,
+                 .completeSession, .archiveSession:
+                let id: UUID?
+                if let visibleID = projection.session?.id { id = visibleID }
+                else { id = await repository.currentProjection().session?.id }
+                guard let id else { throw SessionRepositoryError.noActiveSession }
+                scoped = .forSession(id, command)
+            default: scoped = command
+            }
+            try await repository.send(scoped)
             lastError = nil
             return true
         } catch {
@@ -148,16 +162,39 @@ public final class AnchorSessionModel {
     }
 
     @discardableResult
+    public func selectHostedTask(_ id: UUID) async -> Bool {
+        guard await send(.selectSession(id)) else { return false }
+        projection = await repository.currentProjection()
+        return true
+    }
+
+    @discardableResult
+    public func hostTask(id: UUID, goal: AnchorGoal, processes: [AnchorProcess]) async -> Bool {
+        let normalized = processes.map { process in
+            var copy = process
+            copy.sessionID = id
+            return copy
+        }
+        let current = await repository.currentProjection()
+        if current.hostedSessions.contains(where: { $0.id == id }) { return true }
+        let nextColor = (current.hostedSessions.map { $0.taskColorIndex ?? 0 }.max() ?? -1) + 1
+        guard await send(.hostSession(AnchorSession(id: id, goal: goal, processes: normalized, taskColorIndex: nextColor))) else { return false }
+        projection = await repository.currentProjection()
+        return true
+    }
+
+    @discardableResult
     public func addNote(_ text: String) async -> Bool {
         await send(.addNote(text))
     }
 
     @discardableResult
     public func resolve(decision: Decision, option: DecisionOption) async -> Bool {
-        let sourceID = projection.session?.processes.first {
-            $0.id == decision.processID
-        }?.sourceID
-        let succeeded = await send(.resolveDecision(decisionID: decision.id, optionID: option.id))
+        guard let owner = projection.hostedSessions.first(where: { task in
+            task.decisions.contains(where: { $0.id == decision.id })
+        }) else { return false }
+        let sourceID = owner.processes.first { $0.id == decision.processID }?.sourceID
+        let succeeded = await send(.forSession(owner.id, .resolveDecision(decisionID: decision.id, optionID: option.id)))
         guard succeeded, let sourceID, let sourceActionProvider else {
             return succeeded
         }

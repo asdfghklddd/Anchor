@@ -6,6 +6,8 @@ public struct SessionProjection: Codable, Hashable, Sendable {
     /// foreground session. Older saved projections decode this as an empty
     /// history, so the addition remains wire- and storage-compatible.
     public var archivedSessions: [AnchorSession]
+    /// Other concurrently hosted tasks; `session` remains the selected task.
+    public var additionalSessions: [AnchorSession]
     public var connection: ConnectionState
     public var proximity: ProximityState
     public var generatedAt: Date
@@ -19,6 +21,7 @@ public struct SessionProjection: Codable, Hashable, Sendable {
     public init(
         session: AnchorSession? = nil,
         archivedSessions: [AnchorSession] = [],
+        additionalSessions: [AnchorSession] = [],
         connection: ConnectionState = .unavailable,
         proximity: ProximityState = .unknown,
         generatedAt: Date = .now,
@@ -29,6 +32,7 @@ public struct SessionProjection: Codable, Hashable, Sendable {
     ) {
         self.session = session
         self.archivedSessions = archivedSessions
+        self.additionalSessions = additionalSessions
         self.connection = connection
         self.proximity = proximity
         self.generatedAt = generatedAt
@@ -41,6 +45,7 @@ public struct SessionProjection: Codable, Hashable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case session
         case archivedSessions
+        case additionalSessions
         case connection
         case proximity
         case generatedAt
@@ -57,6 +62,7 @@ public struct SessionProjection: Codable, Hashable, Sendable {
             [AnchorSession].self,
             forKey: .archivedSessions
         ) ?? []
+        additionalSessions = try container.decodeIfPresent([AnchorSession].self, forKey: .additionalSessions) ?? []
         connection = try container.decodeIfPresent(ConnectionState.self, forKey: .connection) ?? .unavailable
         proximity = try container.decodeIfPresent(ProximityState.self, forKey: .proximity) ?? .unknown
         generatedAt = try container.decodeIfPresent(Date.self, forKey: .generatedAt) ?? .now

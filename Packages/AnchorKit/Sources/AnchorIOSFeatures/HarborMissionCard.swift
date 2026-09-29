@@ -10,89 +10,62 @@ struct HarborMissionCard: View {
     let onFinish: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .center, spacing: 10) {
-                Label(L10n.currentAnchorMap, systemImage: "scope")
-                    .font(.caption.bold())
-                    .foregroundStyle(AnchorPalette.interaction)
-                    .lineLimit(1)
-
-                Spacer(minLength: 8)
-
-                HStack(spacing: 6) {
-                    Button(action: onEdit) {
-                        missionActionIcon(session == nil ? "plus" : "pencil")
-                    }
-                    .buttonStyle(.bordered)
-                    .buttonBorderShape(.circle)
-                    .tint(AnchorPalette.interaction)
-                    .frame(width: 44, height: 44)
-                    .accessibilityLabel(session == nil ? L10n.establishAnchor : L10n.editGoal)
-                    .accessibilityIdentifier("goal.edit.button")
-
-                    if session != nil {
-                        Button(action: onFinish) {
-                            missionActionIcon("checkmark")
-                        }
-                        .buttonStyle(.bordered)
-                        .buttonBorderShape(.circle)
-                        .tint(AnchorPalette.brandDeep)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Text("Anchors")
+                    .font(.headline.bold())
+                    .foregroundStyle(AnchorPalette.ink)
+                    .accessibilityIdentifier("workspace.screen")
+                Spacer(minLength: 0)
+                Button(action: onEdit) {
+                    Image(systemName: session == nil ? "plus" : "pencil")
                         .frame(width: 44, height: 44)
-                        .accessibilityLabel(L10n.finish)
-                        .accessibilityIdentifier("mission.finish.button")
+                }
+                .accessibilityLabel(session == nil ? L10n.establishAnchor : L10n.editGoal)
+                .accessibilityIdentifier("goal.edit.button")
+                if session != nil {
+                    Button(action: onFinish) {
+                        Image(systemName: "checkmark")
+                            .frame(width: 44, height: 44)
                     }
+                    .accessibilityLabel(L10n.finish)
+                    .accessibilityIdentifier("mission.finish.button")
                 }
             }
+            .font(.subheadline)
+            .tint(AnchorIOSStyle.heading)
+            .buttonStyle(AnchorPressButtonStyle())
 
-            VStack(alignment: .leading, spacing: 6) {
+            if !processes.isEmpty {
+                HomeAnchorChart(tasks: session.map { [$0] } ?? [])
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
                 Text(session?.goal.title ?? L10n.emptyTitle)
-                    .font(.title2.bold())
-                    .foregroundStyle(AnchorPalette.brandDeep)
+                    .font(.subheadline.bold())
+                    .foregroundStyle(AnchorIOSStyle.heading)
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                     .accessibilityIdentifier("goal.title")
-
                 Text(goalNote)
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundStyle(AnchorPalette.secondaryText)
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
-                    .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("goal.note")
             }
-
-            Label(taskStatus, systemImage: taskStatusSymbol)
-                .font(.caption.bold())
-                .foregroundStyle(AnchorPalette.brandDeep)
-                .padding(.horizontal, 10)
-                .frame(minHeight: 30)
-                .background(
-                    needsAttention ? AnchorPalette.attention.opacity(0.22) : AnchorPalette.softBlue.opacity(0.55),
-                    in: .capsule
-                )
-                .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
-
-            Divider().overlay(AnchorPalette.fluoriteBorder)
-
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 16) { missionMetadata }
-                VStack(alignment: .leading, spacing: 8) { missionMetadata }
+                HStack(spacing: 10) { missionMetadata }
+                VStack(alignment: .leading, spacing: 6) { missionMetadata }
             }
-            .font(.caption)
+            .font(.caption2)
             .foregroundStyle(AnchorPalette.secondaryText)
         }
-        .padding(18)
+        .padding(.horizontal, 14)
+        .padding(.bottom, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .fluoriteSurface(
-            border: needsAttention ? AnchorPalette.attention.opacity(0.48) : AnchorPalette.fluoriteBorder,
-            cornerRadius: 18,
-            elevated: true
-        )
-        .animation(
-            reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.micro,
-            value: taskStatus
-        )
+        .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: 16))
+        .shadow(color: AnchorIOSStyle.heading.opacity(0.06), radius: 14, y: 6)
     }
 
     @ViewBuilder
@@ -105,38 +78,13 @@ struct HarborMissionCard: View {
             .accessibilityIdentifier("mission.metadata")
     }
 
-    private func missionActionIcon(_ symbol: String) -> some View {
-        Image(systemName: symbol)
-            .font(.subheadline.bold())
-            .frame(width: 18, height: 18)
-    }
-
     private var runningCount: Int {
         processes.lazy.filter { $0.status == .running }.count
-    }
-
-    private var taskStatus: String {
-        TaskStatusPresentation.text(for: session, availability: availability)
-    }
-
-    private var taskStatusSymbol: String {
-        switch availability {
-        case .syncing:
-            "arrow.triangle.2.circlepath"
-        case .lastKnown:
-            "clock.badge.exclamationmark"
-        case .empty, .live:
-            needsAttention ? "exclamationmark.bubble.fill" : "circle.fill"
-        }
     }
 
     private var routesSummary: String {
         let summary = L10n.routesRunning(runningCount)
         return availability.isLive ? summary : "\(L10n.currentSnapshot) · \(summary)"
-    }
-
-    private var needsAttention: Bool {
-        processes.contains { $0.status == .needsDecision || $0.status == .blocked }
     }
 
     private var goalNote: String {

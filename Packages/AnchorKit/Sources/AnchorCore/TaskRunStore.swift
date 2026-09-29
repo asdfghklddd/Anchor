@@ -93,6 +93,22 @@ public actor TaskRunStore {
         )
     }
 
+    /// Registers a concurrently hosted task without closing another task's history.
+    public func host(task: AnchorTask) throws {
+        guard task.lifecycle != .archived, task.endedAt == nil else { throw TaskRunStoreError.invalidArchive }
+        if state.tasks.contains(where: { $0.id == task.id && $0.lifecycle == .archived }) {
+            throw TaskRunStoreError.taskArchived
+        }
+        var next = state
+        next.tasks.removeAll { $0.id == task.id }
+        next.tasks.append(task)
+        try persist(next)
+    }
+
+    public func taskRecord(id: UUID) -> AnchorTaskRecord? {
+        state.tasks.first(where: { $0.id == id }).map(taskRecord)
+    }
+
     /// Returns the one non-archived task. Ambiguous legacy data is not guessed.
     public func currentTaskRecord() -> AnchorTaskRecord? {
         let current = state.tasks.filter { $0.lifecycle != .archived }

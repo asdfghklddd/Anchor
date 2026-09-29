@@ -1,12 +1,15 @@
 import SwiftUI
 
+/// Keeps the iPhone and Mac content canvas consistent while navigation remains platform-native.
 public struct HarborBackground: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     public init() {}
 
     public var body: some View {
 #if os(iOS)
+        AnchorIOSStyle.background
+            .ignoresSafeArea()
+            .accessibilityHidden(true)
+#else
         ZStack {
             AnchorPalette.canvas
             LinearGradient(
@@ -14,36 +17,6 @@ public struct HarborBackground: View {
                 startPoint: .top,
                 endPoint: .center
             )
-        }
-        .accessibilityHidden(true)
-#else
-        GeometryReader { proxy in
-            ZStack {
-                AnchorPalette.paper
-
-                Circle()
-                    .fill(AnchorPalette.cyan.opacity(colorScheme == .dark ? 0.10 : 0.08))
-                    .frame(width: 130, height: 130)
-                    .blur(radius: 34)
-                    .position(x: 20, y: proxy.size.height * 0.18)
-
-                Circle()
-                    .fill(AnchorPalette.coral.opacity(colorScheme == .dark ? 0.09 : 0.06))
-                    .frame(width: 150, height: 150)
-                    .blur(radius: 42)
-                    .position(x: proxy.size.width - 12, y: proxy.size.height * 0.42)
-
-                Circle()
-                    .stroke(AnchorPalette.cyan.opacity(0.08), lineWidth: 2)
-                    .frame(width: 22, height: 22)
-                    .position(x: 22, y: proxy.size.height * 0.62)
-
-                Image(systemName: "sailboat")
-                    .font(.title2)
-                    .foregroundStyle(AnchorPalette.ink.opacity(0.045))
-                    .rotationEffect(.degrees(5))
-                    .position(x: proxy.size.width - 32, y: proxy.size.height * 0.74)
-            }
         }
         .accessibilityHidden(true)
 #endif
@@ -60,6 +33,15 @@ public struct HarborHeroSurface<Content: View>: View {
     }
 
     public var body: some View {
+#if os(iOS)
+        content
+            .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: AnchorIOSStyle.heroRadius))
+            .overlay {
+                RoundedRectangle(cornerRadius: AnchorIOSStyle.heroRadius)
+                    .strokeBorder(AnchorIOSStyle.border.opacity(0.5), lineWidth: 1)
+            }
+            .shadow(color: AnchorIOSStyle.heading.opacity(0.06), radius: 12, y: 5)
+#else
         content
             .background {
                 ZStack {
@@ -96,6 +78,7 @@ public struct HarborHeroSurface<Content: View>: View {
                     }
             }
             .shadow(color: AnchorPalette.deepSea.opacity(0.22), radius: 18, y: 12)
+#endif
     }
 }
 
@@ -107,6 +90,13 @@ public struct HarborBrandMark: View {
     }
 
     public var body: some View {
+#if os(iOS)
+        HarborAnchorGlyph(color: AnchorIOSStyle.heading, lineWidth: max(2, size * 0.055))
+            .frame(width: size * 0.52, height: size * 0.52)
+            .frame(width: size, height: size)
+            .background(AnchorIOSStyle.cyan.opacity(0.28), in: .circle)
+            .accessibilityHidden(true)
+#else
         HarborAnchorGlyph(lineWidth: max(2, size * 0.055))
             .frame(width: size * 0.52, height: size * 0.52)
             .frame(width: size, height: size)
@@ -126,6 +116,7 @@ public struct HarborBrandMark: View {
             }
             .shadow(color: AnchorPalette.cyan.opacity(0.24), radius: 10, y: 6)
             .accessibilityHidden(true)
+#endif
     }
 }
 
@@ -133,6 +124,14 @@ public struct HarborClayAvatar: View {
     public init() {}
 
     public var body: some View {
+#if os(iOS)
+        Image(systemName: "person.fill")
+            .font(.body)
+            .foregroundStyle(AnchorIOSStyle.heading)
+            .frame(width: 32, height: 32)
+            .background(AnchorIOSStyle.cyan.opacity(0.22), in: .circle)
+            .accessibilityHidden(true)
+#else
         ZStack {
             LinearGradient(
                 colors: [Color(red: 0.61, green: 0.89, blue: 0.88), Color(red: 0.36, green: 0.77, blue: 0.78)],
@@ -188,6 +187,7 @@ public struct HarborClayAvatar: View {
         }
         .shadow(color: AnchorPalette.coral.opacity(0.18), radius: 8, y: 5)
         .accessibilityHidden(true)
+#endif
     }
 }
 
@@ -203,6 +203,25 @@ public struct HarborAnchorControl: View {
     }
 
     public var body: some View {
+#if os(iOS)
+        VStack(spacing: 6) {
+            Button(action: action) {
+                HarborAnchorGlyph(color: AnchorIOSStyle.onAccent, lineWidth: 2.8)
+                    .frame(width: 32, height: 32)
+                    .frame(width: 68, height: 68)
+                    .background(AnchorIOSStyle.cyan, in: .circle)
+            }
+            .buttonStyle(AnchorPressButtonStyle())
+            .accessibilityIdentifier("anchor.note.button")
+            .accessibilityLabel(label)
+            .accessibilityInputLabels([Text(label)])
+            Text(label)
+                .font(.caption.bold())
+                .foregroundStyle(AnchorIOSStyle.heading)
+                .accessibilityHidden(true)
+                .accessibilityIdentifier("anchor.note.label")
+        }
+#else
         VStack(spacing: 6) {
             Button(action: action) {
                 ZStack {
@@ -247,6 +266,7 @@ public struct HarborAnchorControl: View {
                 .accessibilityHidden(true)
                 .accessibilityIdentifier("anchor.note.label")
         }
+#endif
     }
 }
 
@@ -258,6 +278,8 @@ public struct HarborPrimaryButtonStyle: ButtonStyle {
 
     public func makeBody(configuration: Configuration) -> some View {
 #if os(iOS)
+        AnchorIOSPrimaryButtonStyle().makeBody(configuration: configuration)
+#else
         configuration.label
             .font(.headline.bold())
             .foregroundStyle(.white)
@@ -287,32 +309,6 @@ public struct HarborPrimaryButtonStyle: ButtonStyle {
             .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.98)
             .opacity(configuration.isPressed ? 0.94 : 1)
             .animation(reduceMotion ? nil : AnchorMotion.press, value: configuration.isPressed)
-#else
-        configuration.label
-            .font(.headline.bold())
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity, minHeight: 52)
-            .padding(.horizontal, AnchorSpacing.medium)
-            .background(
-                LinearGradient(
-                    colors: isEnabled
-                        ? [Color(red: 0.11, green: 0.32, blue: 0.42), AnchorPalette.deepSea]
-                        : [
-                            Color(red: 0.31, green: 0.37, blue: 0.39),
-                            Color(red: 0.23, green: 0.30, blue: 0.33),
-                        ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                ),
-                in: .capsule
-            )
-            .overlay(alignment: .top) {
-                Capsule().fill(.white.opacity(0.18)).frame(height: 2)
-            }
-            .shadow(color: AnchorPalette.deepSea.opacity(0.24), radius: 10, y: configuration.isPressed ? 3 : 7)
-            .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.98)
-            .offset(y: reduceMotion || !configuration.isPressed ? 0 : 2)
-            .animation(reduceMotion ? nil : .snappy(duration: 0.18), value: configuration.isPressed)
 #endif
     }
 }
@@ -339,7 +335,6 @@ public struct HarborInputSurface: ViewModifier {
     public init() {}
 
     public func body(content: Content) -> some View {
-#if os(iOS)
         content
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
@@ -351,20 +346,6 @@ public struct HarborInputSurface: ViewModifier {
                         lineWidth: contrast == .increased ? 2 : 1
                     )
             }
-#else
-        content
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(AnchorPalette.surface, in: .rect(cornerRadius: 18, style: .continuous))
-            .overlay {
-                if contrast == .increased {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(AnchorPalette.ink.opacity(0.45), lineWidth: 2)
-                }
-            }
-            .shadow(color: AnchorPalette.ink.opacity(0.07), radius: 3, y: 2)
-            .shadow(color: AnchorPalette.ink.opacity(0.06), radius: 10, y: 7)
-#endif
     }
 }
 

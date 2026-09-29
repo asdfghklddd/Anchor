@@ -40,13 +40,15 @@ struct MacFreshnessBanner: View {
         }
         .padding(.horizontal, AnchorSpacing.large)
         .padding(.vertical, AnchorSpacing.small)
-        .frame(maxWidth: 900)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(AnchorPalette.sand.opacity(0.14), in: .rect(cornerRadius: 12))
+        // Tint sits over an opaque adaptive surface, never over page content.
+        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 12))
         .overlay {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(AnchorPalette.sand.opacity(0.36), lineWidth: 1)
         }
-        .padding(.horizontal, AnchorSpacing.large)
+        .padding(.horizontal, AnchorSpacing.xLarge)
         .padding(.top, AnchorSpacing.small)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("mac.freshness.banner")

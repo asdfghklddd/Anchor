@@ -30,11 +30,11 @@ struct ProfileInfoSheet: View {
 
                                 Text(headline)
                                     .font(.title2.bold())
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(AnchorIOSStyle.heading)
 
                                 Text(copy)
                                     .font(.body)
-                                    .foregroundStyle(.white.opacity(0.78))
+                                    .foregroundStyle(AnchorIOSStyle.secondaryText)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                             .padding(AnchorSpacing.medium)
@@ -159,6 +159,11 @@ struct ProfileDetailSheet: View {
                         detailHero
 
                         if kind == .session {
+                            if let goal = projection.session?.goal, goal.userPlan != nil {
+                                AnchorSavedPlan(goal: goal)
+                                    .padding(16)
+                                    .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: 18))
+                            }
                             sessionMetrics
                             processPulse
                         } else {

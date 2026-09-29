@@ -23,10 +23,10 @@ struct MacTimelineView: View {
                         let process = process(for: event)
                         timelineRow(event, process: process)
                         .padding(AnchorSpacing.medium)
-                        .background(AnchorPalette.surface, in: .rect(cornerRadius: 16, style: .continuous))
+                        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 16, style: .continuous))
                         .overlay {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(AnchorPalette.ink.opacity(0.08), lineWidth: 1)
+                                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
                         }
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel(eventAccessibilityLabel(event, process: process))
@@ -38,7 +38,7 @@ struct MacTimelineView: View {
             .frame(maxWidth: 980, alignment: .leading)
             .padding(AnchorSpacing.xLarge)
         }
-        .background(HarborBackground())
+        .background(.clear)
         .navigationTitle(L10n.timeline)
         .accessibilityIdentifier("mac.timeline.screen")
     }
@@ -47,7 +47,7 @@ struct MacTimelineView: View {
         HStack(alignment: .top, spacing: AnchorSpacing.medium) {
             Image(systemName: macEventSymbol(event.kind))
                 .font(.body.weight(.semibold))
-                .foregroundStyle(process.map { AnchorPalette.sourceInk($0.sourceTone) } ?? AnchorPalette.deepSea)
+                .foregroundStyle(process.map { AnchorPalette.sourceInk($0.sourceTone) } ?? AnchorPalette.deepSeaInk)
                 .frame(width: 36, height: 36)
                 .background(
                     (process.map { AnchorPalette.source($0.sourceTone) } ?? AnchorPalette.cyan).opacity(0.20),
@@ -66,7 +66,7 @@ struct MacTimelineView: View {
                 } else {
                     Text(L10n.appName)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(AnchorPalette.deepSea)
+                        .foregroundStyle(AnchorPalette.brandDeep)
                 }
 
                 Text(event.title)
@@ -112,14 +112,14 @@ struct MacTimelineView: View {
             if projection.session == nil {
                 Button(L10n.pairDevice, systemImage: "link", action: onOpenSettings)
                     .buttonStyle(.borderedProminent)
-                    .tint(AnchorPalette.deepSea)
+                    .tint(AnchorPalette.interaction)
                     .controlSize(.large)
                     .accessibilityIdentifier("mac.timeline.pair.button")
             }
         }
         .frame(maxWidth: .infinity, minHeight: 360)
         .padding(.horizontal, AnchorSpacing.large)
-        .background(AnchorPalette.surface.opacity(0.72), in: .rect(cornerRadius: 20, style: .continuous))
+        .background(AnchorPalette.fluoriteSurface.opacity(0.72), in: .rect(cornerRadius: 20, style: .continuous))
         .accessibilityIdentifier("mac.timeline.empty")
     }
 }
@@ -138,7 +138,7 @@ struct MacHistoryView: View {
                         VStack(alignment: .leading, spacing: AnchorSpacing.small) {
                             Text(L10n.currentWork)
                                 .font(.caption.weight(.bold))
-                                .foregroundStyle(AnchorPalette.deepSea)
+                                .foregroundStyle(AnchorPalette.brandDeep)
                                 .textCase(.uppercase)
                             Text(session.goal.title)
                                 .font(.title2.bold())
@@ -156,7 +156,7 @@ struct MacHistoryView: View {
                     VStack(alignment: .leading, spacing: AnchorSpacing.small) {
                         Text(L10n.history)
                             .font(.caption.weight(.bold))
-                            .foregroundStyle(AnchorPalette.deepSea)
+                            .foregroundStyle(AnchorPalette.brandDeep)
                             .textCase(.uppercase)
                         if session.snapshots.isEmpty {
                             historyEmptyState
@@ -193,7 +193,7 @@ struct MacHistoryView: View {
                                                     systemImage: "arrow.up.right"
                                                 )
                                                 .font(.caption.weight(.semibold))
-                                                .foregroundStyle(AnchorPalette.deepSea)
+                                                .foregroundStyle(AnchorPalette.brandDeep)
                                             }
                                             Spacer(minLength: 0)
                                             Image(systemName: "chevron.right")
@@ -222,13 +222,13 @@ struct MacHistoryView: View {
                             .accessibilityIdentifier("mac.history.current.button")
                     }
                     .frame(maxWidth: .infinity, minHeight: 260)
-                    .background(AnchorPalette.surface.opacity(0.72), in: .rect(cornerRadius: 18))
+                    .background(AnchorPalette.fluoriteSurface.opacity(0.72), in: .rect(cornerRadius: 18))
                 }
             }
             .frame(maxWidth: 980, alignment: .leading)
             .padding(AnchorSpacing.xLarge)
         }
-        .background(HarborBackground())
+        .background(.clear)
         .navigationTitle(L10n.history)
         .accessibilityIdentifier("mac.history.screen")
         .sheet(item: $selectedSnapshot) { snapshot in
@@ -249,7 +249,7 @@ struct MacHistoryView: View {
                 .accessibilityIdentifier("mac.history.current.button")
         }
         .frame(maxWidth: .infinity, minHeight: 210)
-        .background(AnchorPalette.surface.opacity(0.72), in: .rect(cornerRadius: 18))
+        .background(AnchorPalette.fluoriteSurface.opacity(0.72), in: .rect(cornerRadius: 18))
     }
 }
 
@@ -291,13 +291,13 @@ struct MacSourcesView: View {
                         if projection.session == nil {
                             Button(L10n.pairDevice, systemImage: "link", action: onOpenSettings)
                                 .buttonStyle(.borderedProminent)
-                                .tint(AnchorPalette.deepSea)
+                                .tint(AnchorPalette.interaction)
                                 .controlSize(.large)
                                 .accessibilityIdentifier("mac.sources.pair.button")
                         }
                     }
                     .frame(maxWidth: .infinity, minHeight: 300)
-                    .background(AnchorPalette.surface.opacity(0.72), in: .rect(cornerRadius: 20, style: .continuous))
+                    .background(AnchorPalette.fluoriteSurface.opacity(0.72), in: .rect(cornerRadius: 20, style: .continuous))
                     .accessibilityIdentifier("mac.sources.empty")
                 } else {
                     LazyVGrid(
@@ -338,15 +338,52 @@ struct MacSourcesView: View {
 struct MacSettingsView: View {
     let projection: SessionProjection
     let controller: (any LocalLinkControlling)?
+    let sourceSetupModel: MacSourceSetupModel?
     @State private var launchAtLogin = MacLaunchAtLogin.isEnabled
     @AppStorage("anchor.mac.notifications.decisions") private var decisionAlerts = false
+    @AppStorage(AnchorEdgeSoundCue.enabledDefaultsKey) private var edgeSoundEffects = true
     @State private var notificationAuthorization: UNAuthorizationStatus = .notDetermined
     @State private var settingsMessage: String?
     @State private var isLoadingSettings = true
     @State private var isApplyingSettings = false
+    @State private var selectedSource: MacSourceGroup?
+
+    private var sourceGroups: [MacSourceGroup] {
+        MacSourceGroup.groups(from: projection.session?.processes ?? [])
+    }
 
     var body: some View {
         Form {
+            Section(L10n.sources) {
+                if let sourceSetupModel {
+                    MacSourceSetupView(model: sourceSetupModel)
+                        .accessibilityIdentifier("mac.sources.setup")
+                }
+
+                MacSourceHealthSummary(projection: projection)
+
+                if sourceGroups.isEmpty {
+                    ContentUnavailableView(
+                        L10n.connectedSources,
+                        systemImage: "point.3.filled.connected.trianglepath.dotted",
+                        description: Text(L10n.noEvents)
+                    )
+                    .frame(maxWidth: .infinity, minHeight: 180)
+                } else {
+                    LazyVGrid(
+                        columns: [GridItem(.adaptive(minimum: 280), spacing: AnchorSpacing.medium)],
+                        alignment: .leading,
+                        spacing: AnchorSpacing.medium
+                    ) {
+                        ForEach(sourceGroups) { source in
+                            MacSourceCard(source: source) {
+                                selectedSource = source
+                            }
+                        }
+                    }
+                }
+            }
+
             Section(L10n.connections) {
                 LabeledContent(L10n.macConnection) {
                     Label(
@@ -399,6 +436,7 @@ struct MacSettingsView: View {
                         guard !isLoadingSettings else { return }
                         Task { await applyDecisionAlerts(enabled) }
                     }
+                Toggle(L10n.edgeSoundEffects, isOn: $edgeSoundEffects)
                 if notificationAuthorization == .denied {
                     VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
                         Label(
@@ -442,16 +480,29 @@ struct MacSettingsView: View {
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
-        .background(HarborBackground())
+        .background(.clear)
         .padding(AnchorSpacing.large)
         .navigationTitle(L10n.settings)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("mac.settings.screen")
+        .sheet(item: $selectedSource) { source in
+            MacSourceDetailView(
+                source: source,
+                connection: projection.connection,
+                dataObservedAt: projection.dataObservedAt,
+                openDecisions: openDecisions(for: source)
+            )
+        }
         .task {
             notificationAuthorization = await MacDecisionNotificationService.authorizationStatus()
             launchAtLogin = MacLaunchAtLogin.isEnabled
             isLoadingSettings = false
         }
+    }
+
+    private func openDecisions(for source: MacSourceGroup) -> [Decision] {
+        let processIDs = Set(source.processes.map(\.id))
+        return projection.openDecisions.filter { processIDs.contains($0.processID) }
     }
 
     private func applyLaunchAtLogin(_ enabled: Bool) {

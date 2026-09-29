@@ -3,6 +3,7 @@ import SwiftUI
 /// A solid information surface with one light-catching edge and one ambient shadow.
 public struct FluoriteSurfaceStyle: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorSchemeContrast) private var contrast
 
     private let fill: Color
     private let border: Color
@@ -22,6 +23,18 @@ public struct FluoriteSurfaceStyle: ViewModifier {
     }
 
     public func body(content: Content) -> some View {
+#if os(iOS)
+        content
+            .background(fill, in: .rect(cornerRadius: min(cornerRadius, AnchorIOSStyle.heroRadius)))
+            .overlay {
+                RoundedRectangle(cornerRadius: min(cornerRadius, AnchorIOSStyle.heroRadius))
+                    .strokeBorder(
+                        contrast == .increased ? AnchorIOSStyle.heading : border.opacity(0.45),
+                        lineWidth: contrast == .increased ? 2 : 0.5
+                    )
+            }
+            .shadow(color: AnchorIOSStyle.heading.opacity(elevated ? 0.08 : 0.05), radius: 12, y: 5)
+#else
         content
             .background(fill, in: .rect(cornerRadius: cornerRadius))
             .overlay {
@@ -30,13 +43,13 @@ public struct FluoriteSurfaceStyle: ViewModifier {
                         LinearGradient(
                             colors: [
                                 Color.white.opacity(colorScheme == .dark ? 0.10 : 0.92),
-                                border,
-                                border.opacity(0.82),
+                                contrast == .increased ? AnchorPalette.brandDeep.opacity(0.72) : border,
+                                contrast == .increased ? AnchorPalette.brandDeep.opacity(0.58) : border.opacity(0.82),
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
-                        lineWidth: 1
+                        lineWidth: contrast == .increased ? 2 : 1
                     )
             }
             .shadow(
@@ -44,6 +57,7 @@ public struct FluoriteSurfaceStyle: ViewModifier {
                 radius: elevated ? 16 : 9,
                 y: elevated ? 8 : 5
             )
+#endif
     }
 }
 

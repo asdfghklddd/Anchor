@@ -39,7 +39,7 @@ struct MacCompletionBanner: View {
 
             Button(L10n.resume, systemImage: "arrow.counterclockwise", action: onResume)
                 .buttonStyle(.borderedProminent)
-                .tint(AnchorPalette.deepSea)
+                .tint(AnchorPalette.interaction)
                 .accessibilityIdentifier("mac.completion.resume")
         }
         .padding(AnchorSpacing.medium)

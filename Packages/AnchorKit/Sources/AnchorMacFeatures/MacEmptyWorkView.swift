@@ -20,7 +20,7 @@ struct MacEmptyWorkView: View {
             .padding(.vertical, 56)
             .frame(maxWidth: .infinity)
         }
-        .background(AnchorPalette.paper)
+        .background(.clear)
         .navigationTitle(L10n.currentWork)
         .accessibilityIdentifier("mac.empty.screen")
     }
@@ -32,11 +32,11 @@ struct MacEmptyWorkView: View {
             VStack(spacing: AnchorSpacing.small) {
                 Text(L10n.focusSession)
                     .font(.caption.bold())
-                    .foregroundStyle(AnchorPalette.deepSea)
+                    .foregroundStyle(AnchorPalette.interaction)
                     .textCase(.uppercase)
                 Text(L10n.emptyTitle)
                     .font(.largeTitle.bold())
-                    .foregroundStyle(AnchorPalette.ink)
+                    .foregroundStyle(AnchorPalette.brandDeep)
                     .multilineTextAlignment(.center)
                 Text(L10n.emptyDetail)
                     .font(.title3)
@@ -80,11 +80,7 @@ struct MacEmptyWorkView: View {
             }
         }
         .padding(.vertical, AnchorSpacing.small)
-        .background(AnchorPalette.surface, in: .rect(cornerRadius: 8))
-        .overlay {
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(AnchorPalette.ink.opacity(0.08), lineWidth: 1)
-        }
+        .fluoriteSurface(cornerRadius: 14)
     }
 
     private var privacyFooter: some View {
@@ -132,17 +128,16 @@ struct MacEmptyWorkView: View {
         switch projection.connection {
         case .connected: AnchorPalette.mintInk
         case .pairing: AnchorPalette.sourceInk("sand")
-        case .disconnected, .permissionDenied, .failed: AnchorPalette.coral
-        case .unavailable: AnchorPalette.secondaryInk
+        case .permissionDenied, .failed: AnchorPalette.coral
+        case .disconnected, .unavailable: AnchorPalette.secondaryInk
         }
     }
 
     private var pairButton: some View {
         Button(L10n.pairDevice, systemImage: "link", action: onOpenSettings)
             .buttonStyle(.borderedProminent)
-            .tint(AnchorPalette.deepSea)
+            .tint(AnchorPalette.interaction)
             .controlSize(.large)
-            .keyboardShortcut(",")
             .accessibilityIdentifier("mac.empty.pair.button")
     }
 

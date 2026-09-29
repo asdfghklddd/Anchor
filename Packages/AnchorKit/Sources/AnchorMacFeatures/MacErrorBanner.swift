@@ -10,9 +10,9 @@ struct MacErrorBanner: View {
     var body: some View {
         HStack(alignment: .top, spacing: AnchorSpacing.small) {
             Label {
-                Text(message)
+                Text(displayMessage)
                     .font(.callout.weight(.semibold))
-                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             } icon: {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(AnchorPalette.coral)
@@ -35,15 +35,27 @@ struct MacErrorBanner: View {
         }
         .padding(.horizontal, AnchorSpacing.large)
         .padding(.vertical, AnchorSpacing.small)
-        .frame(maxWidth: 900)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(AnchorPalette.coral.opacity(0.12), in: .rect(cornerRadius: 12))
+        // Tint sits over an opaque adaptive surface, never over page content.
+        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 12))
         .overlay {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(AnchorPalette.coral.opacity(0.32), lineWidth: 1)
         }
-        .padding(.horizontal, AnchorSpacing.large)
+        .padding(.horizontal, AnchorSpacing.xLarge)
         .padding(.top, AnchorSpacing.small)
         .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("mac.error.banner")
+    }
+
+    private var displayMessage: String {
+        // Translate this recovery condition at the UI boundary without changing persisted state.
+        if message.localizedCaseInsensitiveContains("could not be decoded"),
+           message.localizedCaseInsensitiveContains("retained for recovery") {
+            return L10n.recoveryReadError
+        }
+        return message
     }
 }
 #endif

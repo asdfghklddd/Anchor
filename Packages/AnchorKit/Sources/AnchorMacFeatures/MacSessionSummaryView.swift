@@ -37,7 +37,7 @@ struct MacSessionSummaryView: View {
                                 : "scope"
                         )
                         .font(.headline)
-                        .foregroundStyle(session.status == .completed ? AnchorPalette.mintInk : AnchorPalette.deepSea)
+                        .foregroundStyle(session.status == .completed ? AnchorPalette.mintInk : AnchorPalette.deepSeaInk)
 
                         Divider()
 
@@ -84,7 +84,7 @@ struct MacSessionSummaryView: View {
                 if session.status == .completed {
                     Button(L10n.resume, action: resumeSession)
                         .buttonStyle(.borderedProminent)
-                        .tint(AnchorPalette.deepSea)
+                        .tint(AnchorPalette.interaction)
                         .frame(maxWidth: .infinity)
                         .accessibilityIdentifier("mac.session.summary.action")
                 } else {
@@ -92,7 +92,7 @@ struct MacSessionSummaryView: View {
                         showingCompletionConfirmation = true
                     }
                         .buttonStyle(.borderedProminent)
-                        .tint(AnchorPalette.deepSea)
+                        .tint(AnchorPalette.interaction)
                         .frame(maxWidth: .infinity)
                         .accessibilityIdentifier("mac.session.summary.action")
                 }

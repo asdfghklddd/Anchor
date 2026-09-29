@@ -98,7 +98,7 @@ struct StaleWorkspaceRecoveryView: View {
                 Label(L10n.continueWorking, systemImage: "play.fill")
                     .frame(maxWidth: .infinity, minHeight: 50)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(HarborPrimaryButtonStyle())
             .tint(AnchorPalette.interaction)
             .accessibilityIdentifier("recovery.continue.button")
 
@@ -132,7 +132,7 @@ struct StaleWorkspaceRecoveryView: View {
         }
         .padding(.horizontal, AnchorSpacing.medium)
         .padding(.vertical, AnchorSpacing.small)
-        .background(AnchorPalette.paper.opacity(0.97))
+        .background(AnchorIOSStyle.canvasBottom)
     }
 }
 #endif

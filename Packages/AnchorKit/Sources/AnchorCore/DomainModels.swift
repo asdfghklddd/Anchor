@@ -5,6 +5,7 @@ public struct AnchorGoal: Identifiable, Codable, Hashable, Sendable {
     public var title: String
     public var completionCriteria: String
     public var note: String
+    public var userPlan: AnchorUserPlan?
     public let createdAt: Date
 
     public init(
@@ -12,12 +13,14 @@ public struct AnchorGoal: Identifiable, Codable, Hashable, Sendable {
         title: String,
         completionCriteria: String,
         note: String = "",
+        userPlan: AnchorUserPlan? = nil,
         createdAt: Date = .now
     ) {
         self.id = id
         self.title = title
         self.completionCriteria = completionCriteria
         self.note = note
+        self.userPlan = userPlan
         self.createdAt = createdAt
     }
 }
@@ -366,6 +369,9 @@ public struct AnchorNotification: Identifiable, Codable, Hashable, Sendable {
 }
 
 public struct AnchorSession: Identifiable, Codable, Hashable, Sendable {
+    /// Immutable joining order keeps the main conversation stable after visual reordering.
+    public var processJoinOrder: [UUID]?
+    public var taskColorIndex: Int?
     public let id: UUID
     public var goal: AnchorGoal
     public var status: SessionStatus
@@ -399,7 +405,8 @@ public struct AnchorSession: Identifiable, Codable, Hashable, Sendable {
         timeline: [ProcessEvent] = [],
         snapshots: [ContextSnapshot] = [],
         returnSummary: ReturnSummary? = nil,
-        processedEventIDs: Set<UUID> = []
+        processedEventIDs: Set<UUID> = [],
+        taskColorIndex: Int? = nil
     ) {
         self.id = id
         self.goal = goal
@@ -410,6 +417,8 @@ public struct AnchorSession: Identifiable, Codable, Hashable, Sendable {
         self.archivedAt = archivedAt
         self.lastContinuedAt = lastContinuedAt
         self.processes = processes
+        self.processJoinOrder = processes.map(\.id)
+        self.taskColorIndex = taskColorIndex
         self.decisions = decisions
         self.notes = notes
         self.timeline = timeline

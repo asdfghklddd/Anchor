@@ -260,6 +260,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
             var nextProjection = SessionProjection(
                 session: mergedSession,
                 archivedSessions: projection.archivedSessions,
+                additionalSessions: projection.additionalSessions,
                 connection: projection.connection,
                 proximity: projection.proximity,
                 generatedAt: .now,
@@ -325,8 +326,12 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
             // consumed but can no longer mutate foreground or archived state.
             return
         }
-        if let currentSessionID, currentSessionID != operationSessionID {
-            throw SessionRepositoryError.eventSessionMismatch
+        if let currentSessionID, currentSessionID != operationSessionID,
+           !projection.hostedSessions.contains(where: { $0.id == operationSessionID }) {
+            // Only explicit hosting may introduce another concurrent task.
+            if case .hostSession = operation { } else {
+                throw SessionRepositoryError.eventSessionMismatch
+            }
         }
         guard operation.sessionID == nil || operation.sessionID == envelope.sessionID else {
             throw SessionRepositoryError.eventSessionMismatch
@@ -431,6 +436,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
                 result = try SessionReducer.reduce(
                     result,
                     operation: operation,
+                    targetSessionID: envelope.sessionID,
                     now: envelope.timestamp
                 )
             } catch {
@@ -454,13 +460,22 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         operation: SessionOperation,
         against envelope: EventEnvelope
     ) throws {
+        guard envelope.schemaVersion >= operation.envelopeSchemaVersion else {
+            throw SessionRepositoryError.unsupportedEventSchema
+        }
         if let operationSessionID = operation.sessionID,
            operationSessionID != envelope.sessionID {
             throw SessionRepositoryError.eventSessionMismatch
         }
 
         switch operation {
-        case let .createSession(session):
+        case let .scoped(_, nested):
+            try validate(operation: nested, against: envelope)
+        case let .syncTaskStructure(task, workItems, _):
+            guard workItems.allSatisfy({ $0.taskID == task.id }) else {
+                throw SessionRepositoryError.eventSessionMismatch
+            }
+        case let .createSession(session), let .hostSession(session):
             guard session.id == envelope.sessionID else {
                 throw SessionRepositoryError.eventSessionMismatch
             }
@@ -500,7 +515,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
                decision.processID != observation.process.id {
                 throw SessionRepositoryError.eventSessionMismatch
             }
-        case .updateGoal, .resolveDecision, .removeProcess, .reorderProcesses,
+        case .selectSession, .updateGoal, .resolveDecision, .removeProcess, .reorderProcesses,
              .updateTileSize, .updatePresence, .acknowledgeReturn,
              .completeSession, .archiveSession, .resumeSession:
             break
@@ -659,7 +674,10 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         fallback: Date
     ) -> Date {
         switch operation {
-        case let .createSession(session): session.startedAt
+        case let .scoped(_, nested): timestamp(for: nested, fallback: fallback)
+        case let .createSession(session), let .hostSession(session): session.startedAt
+        case let .syncTaskStructure(_, _, at): at
+        case let .selectSession(_, at): at
         case let .updateGoal(_, at): at
         case let .addNote(note): note.createdAt
         case let .resolveDecision(_, _, resolvedAt, _): resolvedAt

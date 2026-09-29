@@ -12,8 +12,12 @@ public struct AnchorIOSRootView: View {
     private let onReturnFromAway: (() -> Void)?
     private let recoveryReviewInterval: TimeInterval
 
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var path: [AnchorRoute] = []
     @State private var sheet: AnchorSheet?
+    @State private var setupDraft = AnchorSetupDraft()
+    @State private var suspendedSetup = false
     @State private var fullScreen: AnchorFullScreen?
     @State private var posture = DevicePosture.unknown
     @State private var promptedRecoverySessionID: UUID?
@@ -44,33 +48,8 @@ public struct AnchorIOSRootView: View {
                     if shouldShowLandscapeDashboard {
                         LandscapeAmbientDashboard(
                             projection: model.projection,
-                            onGoal: {
-                                sheet = model.projection.session == nil ? .setup : .goal
-                            },
-                            onAnchor: {
-                                sheet = model.projection.session == nil ? .setup : .note
-                            },
-                            onResolve: resolve,
-                            onProcessAction: { process in
-                                Task {
-                                    if process.status == .queued {
-                                        var updated = process
-                                        updated.status = .running
-                                        updated.updatedAt = .now
-                                        _ = await model.send(.updateProcess(updated))
-                                    }
-
-                                    _ = await model.send(
-                                        .recordEvent(
-                                            ProcessEvent(
-                                                processID: process.id,
-                                                kind: .note,
-                                                title: L10n.openCurrentProcess
-                                            )
-                                        )
-                                    )
-                                }
-                            }
+                            onTask: openHostedTask,
+                            onManage: { sheet = .hostedTasks }
                         )
                     } else {
                         PortraitDashboard(
@@ -79,7 +58,8 @@ public struct AnchorIOSRootView: View {
                             auxiliaryToolbarAction: auxiliaryToolbarAction,
                             transitionNamespace: processTransition,
                             onRoute: { path.append($0) },
-                            onSheet: { sheet = $0 }
+                            onSheet: { sheet = $0 },
+                            onTask: openHostedTask
                         )
                     }
                 }
@@ -88,10 +68,14 @@ public struct AnchorIOSRootView: View {
                 }
             }
         }
-        .tint(AnchorPalette.interaction)
-        .background(AnchorPalette.canvas.ignoresSafeArea())
+        .environment(\.openConnectionCard, { sheet = .connections })
+        .tint(AnchorIOSStyle.action)
+        .background { HarborBackground() }
         .sheet(item: $sheet) { item in
             sheetDestination(for: item)
+                .tint(AnchorIOSStyle.action)
+                .presentationBackground(item == .connections ? AnchorIOSStyle.surface : AnchorIOSStyle.canvasTop)
+                .presentationCornerRadius(item == .connections ? 32 : (item == .setup ? 36 : 24))
         }
         .fullScreenCover(
             isPresented: Binding(
@@ -104,11 +88,23 @@ public struct AnchorIOSRootView: View {
             fullScreenDestination(for: fullScreen ?? .away)
         }
         .onGeometryChange(for: DevicePosture.self) { geometry in
-            guard geometry.size.width > 0, geometry.size.height > 0 else { return .unknown }
-            return geometry.size.width > geometry.size.height ? .landscape : .portrait
+            // Keyboard insets are part of the screen, not a change in device posture.
+            let insets = geometry.safeAreaInsets
+            let width = geometry.size.width + insets.leading + insets.trailing
+            let height = geometry.size.height + insets.top + insets.bottom
+            guard width > 0, height > 0 else { return .unknown }
+            return width > height ? .landscape : .portrait
         } action: { newPosture in
             guard newPosture != posture else { return }
             posture = newPosture
+            // A rotation pauses setup without discarding its input or task identity.
+            if newPosture == .landscape, sheet == .setup {
+                suspendedSetup = true
+                sheet = nil
+            } else if newPosture == .portrait, suspendedSetup, sheet == nil {
+                suspendedSetup = false
+                sheet = .setup
+            }
             // The empty workspace has no session to reduce a presence update into.
             // Remember the posture now and apply it once an anchor exists.
             guard model.projection.session != nil else { return }
@@ -123,8 +119,15 @@ public struct AnchorIOSRootView: View {
             }
             evaluateRecoveryReview(for: sessionID)
         }
-        .onChange(of: sheet) { _, presentedSheet in
+        .onChange(of: sheet) { previousSheet, presentedSheet in
+            if presentedSheet == .setup { suspendedSetup = false }
             guard presentedSheet == nil else { return }
+            if suspendedSetup, posture == .portrait {
+                suspendedSetup = false
+                sheet = .setup
+                return
+            }
+            if previousSheet == .setup, !suspendedSetup { setupDraft = AnchorSetupDraft() }
             evaluateRecoveryReview(for: model.projection.session?.id)
         }
         .onChange(of: fullScreen) { _, presentedCover in
@@ -151,10 +154,11 @@ public struct AnchorIOSRootView: View {
     private func destination(for route: AnchorRoute) -> some View {
         switch route {
         case let .process(id):
-            if let process = model.projection.session?.processes.first(where: { $0.id == id }) {
+            if let owner = model.projection.hostedSessions.first(where: { $0.processes.contains(where: { $0.id == id }) }),
+               let process = owner.processes.first(where: { $0.id == id }) {
                 ProcessDetailView(
                     process: process,
-                    decision: model.projection.session?.decisions.first {
+                    decision: owner.decisions.first {
                         $0.processID == id && $0.status == .open
                     },
                     onDecision: { sheet = .decision($0) }
@@ -193,8 +197,15 @@ public struct AnchorIOSRootView: View {
     @ViewBuilder
     private func sheetDestination(for item: AnchorSheet) -> some View {
         switch item {
+        case .connections:
+            ConnectionSettingsView(projection: model.projection, controller: linkController)
+                .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.height(verticalSizeClass == .compact ? 260 : 400)])
+                .presentationDragIndicator(.hidden)
+                .presentationCompactAdaptation(.none)
+        case .hostedTasks:
+            HostedTasksView(model: model, onCreate: { sheet = .setup }, onEdit: { sheet = .goal }, onNote: { sheet = .note }, onFinish: { sheet = .finish })
         case .account:
-            ProfileInfoSheet(kind: .account)
+            ProfileEditorView()
                 .presentationDetents([.large])
         case .icloud:
             ProfileInfoSheet(kind: .icloud)
@@ -211,7 +222,7 @@ public struct AnchorIOSRootView: View {
             NavigationStack {
                 AnchorSetupView(
                     model: model,
-                    currentProcessProvider: currentProcessProvider
+                    draft: setupDraft
                 )
             }
             .presentationDetents([.large])
@@ -228,7 +239,7 @@ public struct AnchorIOSRootView: View {
                 path.append(.process(id))
             }
         case let .decision(id):
-            if let decision = model.projection.session?.decisions.first(where: { $0.id == id }) {
+            if let decision = model.projection.hostedSessions.flatMap(\.decisions).first(where: { $0.id == id }) {
                 DecisionView(model: model, decision: decision)
             }
         case .layout:
@@ -240,9 +251,9 @@ public struct AnchorIOSRootView: View {
                 StaleWorkspaceRecoveryView(
                     session: session,
                     lastObservedAt: model.projection.dataObservedAt,
-                    onContinue: continueRecoveredSession,
-                    onComplete: completeRecoveredSession,
-                    onNewWork: beginNewWorkFromRecovery
+                    onContinue: { continueRecoveredSession(sessionID) },
+                    onComplete: { completeRecoveredSession(sessionID) },
+                    onNewWork: { beginNewWorkFromRecovery(sessionID) }
                 )
                 .presentationDetents([.large])
             }
@@ -270,14 +281,17 @@ public struct AnchorIOSRootView: View {
         )
     }
 
-    private func resolve(decision: Decision, option: DecisionOption) {
-        Task { await model.resolve(decision: decision, option: option) }
+    private func openHostedTask(_ id: UUID) {
+        Task {
+            if await model.selectHostedTask(id) { sheet = .profileDetail(.session) }
+        }
     }
 
     private func evaluateRecoveryReview(for sessionID: UUID?) {
         guard let sessionID,
               promptedRecoverySessionID != sessionID,
               sheet == nil,
+              !suspendedSetup,
               fullScreen == nil else {
             return
         }
@@ -291,23 +305,23 @@ public struct AnchorIOSRootView: View {
         sheet = .recovery(sessionID)
     }
 
-    private func continueRecoveredSession() {
+    private func continueRecoveredSession(_ sessionID: UUID) {
         Task {
-            guard await model.send(.resumeSession) else { return }
+            guard await model.send(.forSession(sessionID, .resumeSession)) else { return }
             sheet = nil
         }
     }
 
-    private func completeRecoveredSession() {
+    private func completeRecoveredSession(_ sessionID: UUID) {
         Task {
-            guard await model.send(.completeSession) else { return }
+            guard await model.send(.forSession(sessionID, .completeSession)) else { return }
             sheet = nil
         }
     }
 
-    private func beginNewWorkFromRecovery() {
+    private func beginNewWorkFromRecovery(_ sessionID: UUID) {
         Task {
-            guard await model.send(.archiveSession) else { return }
+            guard await model.send(.forSession(sessionID, .archiveSession)) else { return }
             sheet = .setup
         }
     }

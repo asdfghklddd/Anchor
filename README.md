@@ -4,7 +4,7 @@ Anchor is a native iPhone and macOS attention companion for people coordinating
 several AI-assisted processes at once. It preserves the goal, live process state,
 human decisions, and the context needed to return after an interruption.
 
-![Anchor iPhone workspace](Product/Prototype/output/playwright/01-home-portrait.png)
+![Historical Anchor iPhone prototype](Product/Prototype/output/playwright/01-home-portrait.png)
 
 ## Development branches
 
@@ -18,14 +18,16 @@ branch tips and open pull requests before starting work.
   `com.andywang.anchor` for universal purchase.
 - `AnchorCore`: immutable projections, typed commands, reducers, repository
   contracts, presence inference, return summaries, and event deduplication.
-- `AnchorDesign`: adaptive Candy Harbor semantic colors, accessible shared
-  components, and a complete English/Simplified Chinese String Catalog.
+- `AnchorDesign`: adaptive iOS colors from the approved Figma homepage,
+  platform-aware components, and an English/Simplified Chinese String Catalog.
+  See [DESIGN.md](DESIGN.md) for the current iOS visual contract.
 - `AnchorIOSFeatures`: setup, portrait dashboard, landscape Ambient workspace,
   decisions, anchor notes, handoff/away/return, history, management, and settings.
 - The production iPhone loop has an explicit final confirmation boundary:
-  completing a task clears the foreground while retaining detailed local task
-  history across relaunches. Task-level UI uses observable states instead of an
-  averaged progress percentage.
+  completing a task retains its detailed history across relaunches. Concurrent
+  hosted tasks keep independent conversations and histories; completing one task
+  preserves the others. The homepage uses the main conversation for its progress
+  capsule and shows individual conversation progress in the anchor chart.
 - `AnchorMacFeatures`: menu bar status plus a native detail window using
   `NavigationSplitView`.
 - `AnchorTransport`: Bonjour discovery, one-time-code key agreement, Keychain

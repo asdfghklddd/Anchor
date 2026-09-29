@@ -24,7 +24,7 @@ struct MacProcessWorkspace: View {
                 VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
                     Text(L10n.liveProcesses)
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(AnchorPalette.deepSea)
+                        .foregroundStyle(AnchorPalette.brandDeep)
                         .textCase(.uppercase)
                     Text(L10n.happeningNow)
                         .font(.title2.bold())
@@ -115,7 +115,7 @@ private struct MacProcessCard: View {
                             .foregroundStyle(AnchorPalette.secondaryInk.opacity(0.78))
                     }
                     Spacer(minLength: AnchorSpacing.small)
-                    MacStatusChip(status: process.status)
+                    MacStatusChip(process: process)
                 }
 
                 VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
@@ -194,7 +194,7 @@ private struct MacProcessCard: View {
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(process.sourceName), \(process.title)")
-        .accessibilityValue("\(L10n.status(process.status)), \(progressDescription)")
+        .accessibilityValue("\(L10n.processStatus(process)), \(progressDescription)")
         .accessibilityHint(L10n.openCurrentProcess)
         .accessibilityAddTraits(.isButton)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -223,10 +223,11 @@ private struct MacProcessCard: View {
 }
 
 private struct MacStatusChip: View {
-    let status: ProcessStatus
+    let process: AnchorProcess
+    private var status: ProcessStatus { process.status }
 
     var body: some View {
-        Label(L10n.compactStatus(status), systemImage: symbol)
+        Label(L10n.compactProcessStatus(process), systemImage: symbol)
             .font(.caption.weight(.semibold))
             .foregroundStyle(tint)
             .padding(.horizontal, 9)
@@ -239,7 +240,8 @@ private struct MacStatusChip: View {
     }
 
     private var symbol: String {
-        switch status {
+        if process.isInterrupted { return "stop.circle" }
+        return switch status {
         case .queued: "clock"
         case .running: "play.fill"
         case .needsDecision: "exclamationmark.bubble.fill"
@@ -251,7 +253,8 @@ private struct MacStatusChip: View {
     }
 
     private var tint: Color {
-        switch status {
+        if process.isInterrupted { return AnchorPalette.secondaryInk }
+        return switch status {
         case .needsDecision, .blocked: AnchorPalette.sourceInk("sand")
         case .completed: AnchorPalette.mintInk
         case .failed, .disconnected: AnchorPalette.sourceInk("coral")
@@ -276,10 +279,10 @@ private struct MacProcessInspector: View {
         }
         .padding(AnchorSpacing.large)
         .frame(maxWidth: .infinity, minHeight: 300, alignment: .topLeading)
-        .background(AnchorPalette.surface, in: .rect(cornerRadius: 22, style: .continuous))
+        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 22, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(AnchorPalette.ink.opacity(0.08), lineWidth: 1)
+                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
         }
         .shadow(color: AnchorPalette.ink.opacity(0.08), radius: 16, y: 8)
         .accessibilityElement(children: .contain)
@@ -292,7 +295,7 @@ private struct MacProcessInspector: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(L10n.selectedProcess)
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(AnchorPalette.deepSea)
+                    .foregroundStyle(AnchorPalette.brandDeep)
                     .textCase(.uppercase)
                 Text(process.sourceName)
                     .font(.title3.bold())
@@ -341,7 +344,7 @@ private struct MacProcessInspector: View {
             VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
                 Text(L10n.recentEvent)
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(AnchorPalette.deepSea)
+                    .foregroundStyle(AnchorPalette.brandDeep)
                     .textCase(.uppercase)
                 Label(latestEvent.title, systemImage: eventSymbol(latestEvent.kind))
                     .font(.callout)
@@ -452,7 +455,7 @@ private struct MacClearInspector: View {
     }
 }
 
-private struct MacDecisionPanel: View {
+struct MacDecisionPanel: View {
     let decision: Decision
     @Binding var selectedOptionID: UUID?
     let onResolve: (Decision, DecisionOption) -> Void
@@ -476,7 +479,7 @@ private struct MacDecisionPanel: View {
                             Image(systemName: selectedOptionID == option.id ? "checkmark.circle.fill" : "circle")
                                 .foregroundStyle(
                                     selectedOptionID == option.id
-                                        ? AnchorPalette.deepSea
+                                        ? AnchorPalette.deepSeaInk
                                         : AnchorPalette.secondaryInk
                                 )
                             VStack(alignment: .leading, spacing: 2) {
@@ -496,14 +499,14 @@ private struct MacDecisionPanel: View {
                         .background(
                             selectedOptionID == option.id
                                 ? AnchorPalette.seafoam.opacity(0.20)
-                                : AnchorPalette.paper.opacity(0.70),
+                                : AnchorPalette.fluoriteSurface.opacity(0.70),
                             in: .rect(cornerRadius: 12, style: .continuous)
                         )
                         .overlay {
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
                                 .stroke(
                                     selectedOptionID == option.id
-                                        ? AnchorPalette.deepSea.opacity(0.45)
+                                        ? AnchorPalette.deepSeaInk.opacity(0.45)
                                         : AnchorPalette.ink.opacity(0.08),
                                     lineWidth: selectedOptionID == option.id ? 1.5 : 1
                                 )
@@ -523,7 +526,7 @@ private struct MacDecisionPanel: View {
                 onResolve(decision, option)
             }
             .buttonStyle(.borderedProminent)
-            .tint(AnchorPalette.deepSea)
+            .tint(AnchorPalette.interaction)
             .disabled(selectedOptionID == nil)
             .keyboardShortcut(.defaultAction)
             .accessibilityIdentifier("mac.decision.confirm")

@@ -60,7 +60,7 @@ struct MacCodexCandidateList: View {
             .accessibilityIdentifier("mac.sources.setup.codex.track.\(candidate.id)")
         }
         .padding(AnchorSpacing.small)
-        .background(AnchorPalette.surface, in: .rect(cornerRadius: 14, style: .continuous))
+        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 14, style: .continuous))
     }
 
     private func activityLabel(_ activity: CodexTaskActivity) -> String {
@@ -84,7 +84,7 @@ struct MacCodexCandidateList: View {
     private func activityTint(_ activity: CodexTaskActivity) -> Color {
         switch activity {
         case .running: AnchorPalette.mintInk
-        case .completed: AnchorPalette.link
+        case .completed: AnchorPalette.interaction
         case .interrupted: AnchorPalette.sourceInk("coral")
         case .unknown: AnchorPalette.secondaryInk
         }

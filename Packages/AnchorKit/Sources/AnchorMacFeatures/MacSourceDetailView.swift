@@ -58,7 +58,7 @@ struct MacSourceDetailView: View {
             VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
                 Text(L10n.sourceDetails)
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(AnchorPalette.deepSea)
+                    .foregroundStyle(AnchorPalette.brandDeep)
                     .textCase(.uppercase)
                 Text(source.sourceName)
                     .font(.largeTitle.bold())
@@ -124,7 +124,7 @@ struct MacSourceDetailView: View {
                             .foregroundStyle(AnchorPalette.ink)
                     } icon: {
                         Image(systemName: "clock")
-                            .foregroundStyle(AnchorPalette.deepSea)
+                            .foregroundStyle(AnchorPalette.brandDeep)
                             .accessibilityHidden(true)
                     }
                     .accessibilityElement(children: .combine)
@@ -219,7 +219,7 @@ struct MacSourceDetailView: View {
             if recentEvents.isEmpty {
                 ContentUnavailableView(L10n.noEvents, systemImage: "waveform.path.ecg")
                     .frame(maxWidth: .infinity, minHeight: 130)
-                    .background(AnchorPalette.surface.opacity(0.72), in: .rect(cornerRadius: 18))
+                    .background(AnchorPalette.fluoriteSurface.opacity(0.72), in: .rect(cornerRadius: 18))
             } else {
                 VStack(spacing: AnchorSpacing.small) {
                     ForEach(recentEvents) { event in
@@ -284,7 +284,7 @@ private struct MacSourceProcessRow: View {
                 Spacer(minLength: AnchorSpacing.small)
 
                 VStack(alignment: .trailing, spacing: AnchorSpacing.xSmall) {
-                    StatusBadge(status: process.status, text: L10n.status(process.status))
+                    StatusBadge(status: process.status, text: L10n.processStatus(process), interrupted: process.isInterrupted)
                     if let progress = process.progress {
                         Text(progress, format: .percent.precision(.fractionLength(0)))
                             .font(.caption.monospacedDigit())
@@ -318,10 +318,10 @@ private struct MacSourceProcessRow: View {
             .foregroundStyle(AnchorPalette.secondaryInk)
         }
         .padding(AnchorSpacing.medium)
-        .background(AnchorPalette.surface, in: .rect(cornerRadius: 16))
+        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 16))
         .overlay {
             RoundedRectangle(cornerRadius: 16)
-                .stroke(AnchorPalette.ink.opacity(0.08), lineWidth: 1)
+                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
         }
         .accessibilityElement(children: .combine)
     }
@@ -358,10 +358,10 @@ private struct MacSourceEventRow: View {
             Spacer(minLength: 0)
         }
         .padding(AnchorSpacing.medium)
-        .background(AnchorPalette.surface, in: .rect(cornerRadius: 16))
+        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 16))
         .overlay {
             RoundedRectangle(cornerRadius: 16)
-                .stroke(AnchorPalette.ink.opacity(0.08), lineWidth: 1)
+                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
         }
         .accessibilityElement(children: .combine)
     }
@@ -372,7 +372,7 @@ private struct MacSourceEventRow: View {
         case .completed, .decisionResolved: AnchorPalette.mintInk
         case .outputReady: AnchorPalette.periwinkle
         case .presence, .connection: AnchorPalette.cyan
-        case .created, .progress, .note: AnchorPalette.deepSea
+        case .created, .progress, .note: AnchorPalette.deepSeaInk
         }
     }
 }

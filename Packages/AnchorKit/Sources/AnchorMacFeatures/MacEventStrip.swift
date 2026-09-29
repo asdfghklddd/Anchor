@@ -18,7 +18,7 @@ struct MacEventStrip: View {
                 VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
                     Text(L10n.activityLog)
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(AnchorPalette.deepSea)
+                        .foregroundStyle(AnchorPalette.brandDeep)
                         .textCase(.uppercase)
                     Text(L10n.recentActivity)
                         .font(.title2.bold())
@@ -34,7 +34,7 @@ struct MacEventStrip: View {
             if events.isEmpty {
                 ContentUnavailableView(L10n.noEvents, systemImage: "waveform.path.ecg", description: nil)
                     .frame(maxWidth: .infinity, minHeight: 110)
-                    .background(AnchorPalette.surface.opacity(0.72), in: .rect(cornerRadius: 18, style: .continuous))
+                    .background(AnchorPalette.fluoriteSurface.opacity(0.72), in: .rect(cornerRadius: 18, style: .continuous))
             } else {
                 ScrollView(.horizontal) {
                     HStack(alignment: .top, spacing: AnchorSpacing.medium) {
@@ -79,9 +79,9 @@ private struct MacEventCard: View {
                         .foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
                 } else {
                     Image(systemName: "scope")
-                        .foregroundStyle(AnchorPalette.deepSea)
+                        .foregroundStyle(AnchorPalette.brandDeep)
                     Text(L10n.appName)
-                        .foregroundStyle(AnchorPalette.deepSea)
+                        .foregroundStyle(AnchorPalette.brandDeep)
                 }
             }
             .font(.caption.weight(.semibold))
@@ -98,10 +98,10 @@ private struct MacEventCard: View {
         }
         .padding(AnchorSpacing.medium)
         .frame(minHeight: 156, alignment: .topLeading)
-        .background(AnchorPalette.surface, in: .rect(cornerRadius: 18, style: .continuous))
+        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 18, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AnchorPalette.ink.opacity(0.08), lineWidth: 1)
+                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
@@ -136,7 +136,7 @@ private struct MacEventCard: View {
         case .completed, .decisionResolved: AnchorPalette.seafoam
         case .outputReady: AnchorPalette.periwinkle
         case .presence, .connection: AnchorPalette.cyan
-        case .created, .progress, .note: AnchorPalette.deepSea
+        case .created, .progress, .note: AnchorPalette.deepSeaInk
         }
     }
 }

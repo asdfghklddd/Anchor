@@ -12,7 +12,7 @@ struct HandoffView: View {
 
     var body: some View {
         ZStack {
-            AnchorPalette.brandDeep.ignoresSafeArea()
+            HarborBackground()
 
             Circle()
                 .fill(AnchorPalette.aiBlue.opacity(0.17))
@@ -27,12 +27,12 @@ struct HandoffView: View {
                 VStack(spacing: 10) {
                     Text(secured ? L10n.handoffSecured : L10n.handoff)
                         .font(.title.bold())
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AnchorIOSStyle.heading)
                         .multilineTextAlignment(.center)
                         .accessibilityIdentifier("handoff.screen")
                     Text(L10n.handoffDetail)
                         .font(.body)
-                        .foregroundStyle(.white.opacity(0.70))
+                        .foregroundStyle(AnchorIOSStyle.secondaryText)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: 300)
                 }
@@ -41,7 +41,7 @@ struct HandoffView: View {
                     Task { await model.correctPresence(to: .atDesk) }
                 }
                 .buttonStyle(.bordered)
-                .tint(.white)
+                .tint(AnchorIOSStyle.action)
                 .controlSize(.large)
             }
             .padding(AnchorSpacing.large)
@@ -162,8 +162,7 @@ struct AwayView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AnchorPalette.canvas
-                    .ignoresSafeArea()
+                HarborBackground()
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
@@ -179,12 +178,7 @@ struct AwayView: View {
                                 Task { await model.correctPresence(to: .atDesk) }
                             }
                         }
-                        .font(.headline.bold())
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, AnchorSpacing.large)
-                        .frame(minHeight: 50)
-                        .background(Color.black, in: .capsule)
-                        .buttonStyle(.plain)
+                        .buttonStyle(HarborPrimaryButtonStyle())
                         .frame(maxWidth: .infinity)
                         .padding(.top, AnchorSpacing.large)
                     }
@@ -215,7 +209,7 @@ struct AwayView: View {
                     onDecision: { _ in }
                 )
             }
-            .presentationCornerRadius(30)
+            .presentationCornerRadius(24)
         }
     }
 
@@ -248,14 +242,14 @@ struct AwayView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(L10n.currentAnchor)
                     .font(.caption2.bold())
-                    .foregroundStyle(AnchorPalette.oceanHighlight)
+                    .foregroundStyle(AnchorIOSStyle.action)
                 Text(projection.session?.goal.title ?? "")
                     .font(.headline.bold())
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AnchorIOSStyle.heading)
                     .accessibilityIdentifier("goal.title")
                 Text(L10n.routesRunning(runningCount))
                     .font(.footnote)
-                    .foregroundStyle(.white.opacity(0.86))
+                    .foregroundStyle(AnchorIOSStyle.secondaryText)
 
                 LazyVGrid(
                     columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
@@ -268,7 +262,7 @@ struct AwayView: View {
                             if let progress = process.progress {
                                 GeometryReader { proxy in
                                     Capsule()
-                                        .fill(.white.opacity(0.11))
+                                        .fill(AnchorIOSStyle.border)
                                         .overlay(alignment: .leading) {
                                             Capsule()
                                                 .fill(AnchorPalette.cyan)
@@ -279,7 +273,7 @@ struct AwayView: View {
                             } else {
                                 Text(L10n.compactStatus(process.status))
                                     .font(.caption2.bold())
-                                    .foregroundStyle(.white.opacity(0.86))
+                                    .foregroundStyle(AnchorIOSStyle.secondaryText)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.75)
                                     .frame(maxWidth: .infinity, alignment: .trailing)
@@ -386,8 +380,7 @@ struct ReturnView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AnchorPalette.canvas
-                    .ignoresSafeArea()
+                HarborBackground()
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
@@ -445,7 +438,7 @@ struct ReturnView: View {
         }
         .padding(.horizontal, AnchorSpacing.medium)
         .frame(minHeight: 50)
-        .background(AnchorPalette.canvas.opacity(0.97))
+        .background(AnchorIOSStyle.canvasBottom)
         .overlay(alignment: .bottom) {
             Rectangle().fill(AnchorPalette.fluoriteBorder).frame(height: 1)
         }
@@ -542,22 +535,22 @@ struct ReturnView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("\(L10n.returning) · \(L10n.awayDuration(awayMinutes))")
                 .font(.caption2.bold())
-                .foregroundStyle(AnchorPalette.softBlue)
+                .foregroundStyle(AnchorIOSStyle.action)
                 .accessibilityIdentifier("return.hero.eyebrow")
 
             Text("\(L10n.returning),")
                 .font(.title2.bold())
-                .foregroundStyle(.white)
+                .foregroundStyle(AnchorIOSStyle.heading)
                 .accessibilityIdentifier("return.screen")
 
             Text(L10n.returnHeadline)
                 .font(.title2.bold())
-                .foregroundStyle(.white)
+                .foregroundStyle(AnchorIOSStyle.heading)
                 .accessibilityIdentifier("return.hero.headline")
 
             Text(projection.session?.goal.title ?? "")
                 .font(.caption)
-                .foregroundStyle(.white.opacity(0.78))
+                .foregroundStyle(AnchorIOSStyle.secondaryText)
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("return.goal.title")
@@ -573,7 +566,7 @@ struct ReturnView: View {
                 Spacer()
                 Text("\(changes.count)")
                     .font(.caption.bold().monospacedDigit())
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AnchorIOSStyle.onAction)
                     .padding(.horizontal, 7)
                     .padding(.vertical, 3)
                     .background(AnchorPalette.interaction, in: .capsule)
@@ -743,7 +736,7 @@ struct ReturnView: View {
         .padding(.horizontal, AnchorSpacing.medium)
         .padding(.top, 10)
         .padding(.bottom, 5)
-        .background(AnchorPalette.canvas.opacity(0.97))
+        .background(AnchorIOSStyle.canvasBottom)
     }
 
     private var changes: [ReturnChange] {

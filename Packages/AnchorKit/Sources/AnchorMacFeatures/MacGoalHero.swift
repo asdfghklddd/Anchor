@@ -224,7 +224,7 @@ private struct MacAnchorMap: View {
             AnchorMark(size: 62)
             progressText
                 .font(.caption.weight(.bold).monospacedDigit())
-                .foregroundStyle(AnchorPalette.deepSea)
+                .foregroundStyle(AnchorPalette.brandDeep)
                 .offset(y: 21)
         }
         .frame(width: 250, height: 190)

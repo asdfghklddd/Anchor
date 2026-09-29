@@ -38,7 +38,8 @@ struct InsightsView: View {
             .frame(maxWidth: 720)
             .frame(maxWidth: .infinity)
         }
-        .background(AnchorPalette.paper)
+        .background { HarborBackground() }
+        .anchorIOSListSurface()
         .navigationTitle(L10n.insights)
     }
 
@@ -69,6 +70,7 @@ private struct MetricTile: View {
 }
 
 struct ProfileView: View {
+    @AppStorage("anchor.profile.name", store: ProfilePreferences.store) private var displayName = "ANDY"
     let projection: SessionProjection
     let onRoute: (AnchorRoute) -> Void
     let onSheet: (AnchorSheet) -> Void
@@ -93,6 +95,7 @@ struct ProfileView: View {
             }
             .scrollIndicators(.hidden)
         }
+        .anchorIOSListSurface()
         .navigationTitle(L10n.profile)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
@@ -111,12 +114,12 @@ struct ProfileView: View {
 
     private var identityCard: some View {
         HStack(spacing: 14) {
-            HarborBrandMark(size: 56)
+            ProfileAvatar(size: 56)
             VStack(alignment: .leading, spacing: 4) {
                 Text(L10n.personalAnchor)
                     .font(.caption.bold())
                     .foregroundStyle(AnchorPalette.interaction)
-                Text(L10n.profile)
+                Text(displayName)
                     .font(.title.bold())
                     .foregroundStyle(AnchorPalette.brandDeep)
                 Label(L10n.contextSyncStable, systemImage: "wifi")
@@ -360,7 +363,7 @@ struct ProfileView: View {
                     sheet: .icloud
                 )
                 Divider().padding(.leading, 48)
-                routeRow(L10n.connections, symbol: "macbook.and.iphone", route: .connections)
+                sheetRow(L10n.connections, symbol: "macbook.and.iphone", sheet: .connections)
                 Divider().padding(.leading, 48)
                 routeRow(L10n.sources, symbol: "point.3.connected.trianglepath.dotted", route: .sources)
                 Divider().padding(.leading, 48)
@@ -443,6 +446,7 @@ struct HistoryView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("history.row.\(session.id.uuidString)")
+                .listRowBackground(AnchorIOSStyle.surface)
             }
         }
         .overlay {
@@ -454,6 +458,7 @@ struct HistoryView: View {
                 )
             }
         }
+        .anchorIOSListSurface()
         .navigationTitle(L10n.history)
         .accessibilityIdentifier("history.screen")
     }
@@ -502,6 +507,7 @@ struct HistoryDetailView: View {
                         }
                     }
                 }
+                if let session { AnchorSavedPlan(goal: session.goal) }
                 if let session, !session.processes.isEmpty {
                     Text(L10n.processes).font(.title2.bold())
                     ForEach(session.processes) { process in
@@ -528,7 +534,8 @@ struct HistoryDetailView: View {
             .frame(maxWidth: 720)
             .frame(maxWidth: .infinity)
         }
-        .background(AnchorPalette.paper)
+        .background { HarborBackground() }
+        .anchorIOSListSurface()
         .navigationTitle(L10n.sessionSummary)
         .accessibilityIdentifier("history.detail.screen")
     }
@@ -538,10 +545,12 @@ struct HistoryDetailView: View {
 
 struct TaskManagementView: View {
     let model: AnchorSessionModel
+    private let taskID: UUID?
     @State private var processes: [AnchorProcess]
 
     init(model: AnchorSessionModel) {
         self.model = model
+        taskID = model.projection.session?.id
         _processes = State(initialValue: model.projection.session?.taskProcesses ?? [])
     }
 
@@ -552,6 +561,7 @@ struct TaskManagementView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
+            .listRowBackground(AnchorIOSStyle.surface)
             Section(L10n.processes) {
                 ForEach(processes) { process in
                     HStack {
@@ -584,10 +594,12 @@ struct TaskManagementView: View {
                 }
                 .onMove { source, destination in
                     processes.move(fromOffsets: source, toOffset: destination)
-                    Task { await model.send(.reorderProcesses(processes.map(\.id))) }
+                    Task { await sendOwned(.reorderProcesses(processes.map(\.id))) }
                 }
             }
+            .listRowBackground(AnchorIOSStyle.surface)
         }
+        .anchorIOSListSurface()
         .navigationTitle(L10n.taskManagement)
         .toolbar { EditButton() }
     }
@@ -595,12 +607,27 @@ struct TaskManagementView: View {
     private func updateSize(_ processID: UUID, size: ProcessTileSize) {
         guard let index = processes.firstIndex(where: { $0.id == processID }) else { return }
         processes[index].tileSize = size
-        Task { await model.send(.updateTileSize(processID: processID, size: size)) }
+        Task { await sendOwned(.updateTileSize(processID: processID, size: size)) }
     }
+    private func sendOwned(_ command: SessionCommand) async -> Bool {
+        guard let taskID else { return false }
+        return await model.send(.forSession(taskID, command))
+    }
+
 }
 
 struct FinishSessionView: View {
     let model: AnchorSessionModel
+    private let taskID: UUID?
+
+    init(model: AnchorSessionModel) {
+        self.model = model
+        taskID = model.projection.session?.id
+    }
+
+    private var session: AnchorSession? {
+        model.projection.hostedSessions.first { $0.id == taskID }
+    }
     @Environment(\.dismiss) private var dismiss
     @State private var showingCompletionConfirmation = false
 
@@ -612,11 +639,11 @@ struct FinishSessionView: View {
                     Text(L10n.sessionSummary).font(.largeTitle.bold())
                     AnchorCard(tint: AnchorPalette.seafoam) {
                         VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-                            Text(model.projection.session?.goal.title ?? "")
+                            Text(session?.goal.title ?? "")
                                 .font(.title2.bold())
-                            Label(L10n.processCount(model.projection.session?.taskProcesses.count ?? 0), systemImage: "square.grid.2x2")
-                            Label(L10n.noteCount(model.projection.session?.notes.count ?? 0), systemImage: "bookmark")
-                            Label(L10n.decisionCount(model.projection.session?.decisions.filter { $0.status == .resolved }.count ?? 0), systemImage: "checkmark.bubble")
+                            Label(L10n.processCount(session?.taskProcesses.count ?? 0), systemImage: "square.grid.2x2")
+                            Label(L10n.noteCount(session?.notes.count ?? 0), systemImage: "bookmark")
+                            Label(L10n.decisionCount(session?.decisions.filter { $0.status == .resolved }.count ?? 0), systemImage: "checkmark.bubble")
                         }
                     }
                     Text(L10n.finishConfirmDetail)
@@ -633,7 +660,7 @@ struct FinishSessionView: View {
                 .frame(maxWidth: 680)
                 .frame(maxWidth: .infinity)
             }
-            .background(AnchorPalette.paper)
+            .background { HarborBackground() }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.close) { dismiss() }
@@ -647,7 +674,7 @@ struct FinishSessionView: View {
         ) {
             Button(L10n.completeSession) {
                 Task {
-                    guard await model.send(.completeSession) else { return }
+                    guard let taskID, await model.send(.forSession(taskID, .completeSession)) else { return }
                     dismiss()
                 }
             }

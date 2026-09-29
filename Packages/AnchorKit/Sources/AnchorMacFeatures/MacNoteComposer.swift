@@ -43,7 +43,7 @@ struct MacNoteComposer: View {
                 Spacer()
                 Button(L10n.dropAnchor, action: onSave)
                     .buttonStyle(.borderedProminent)
-                    .tint(AnchorPalette.deepSea)
+                    .tint(AnchorPalette.interaction)
                     .disabled(note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     .keyboardShortcut(.defaultAction)
                     .accessibilityIdentifier("mac.note.save")

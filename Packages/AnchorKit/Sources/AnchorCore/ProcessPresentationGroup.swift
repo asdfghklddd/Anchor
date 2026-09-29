@@ -8,6 +8,19 @@ public enum ProcessPresentationGroup: Hashable, Sendable {
 }
 
 public extension AnchorProcess {
+    /// Older peers encode aborted Codex turns as failed. Interpret the explicit
+    /// lifecycle fact at presentation time without rewriting the wire history.
+    var isInterrupted: Bool {
+        guard status == .failed, sourceName == "Codex",
+              let latest = events.max(by: { $0.occurredAt < $1.occurredAt }) else { return false }
+        return latest.kind == .failed && latest.title == "Codex turn_aborted"
+            && latest.occurredAt >= updatedAt
+    }
+
+    var requiresAttention: Bool {
+        status == .needsDecision || status == .blocked || (status == .failed && !isInterrupted)
+    }
+
     var presentationGroup: ProcessPresentationGroup {
         guard let sourceID else { return .planned }
         if sourceID == BuiltInProcessSourceID.macWorkspace {

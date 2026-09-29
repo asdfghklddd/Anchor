@@ -9,10 +9,22 @@ struct ProcessCard: View {
     var decorative = false
     var statusContext: String? = nil
 
+    var homeCardHeight: CGFloat? = nil
+
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        Group {
+            if let homeCardHeight {
+                homeContent(height: homeCardHeight)
+            } else {
+                standardContent
+            }
+        }
+    }
+
+    private var standardContent: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 32)
@@ -39,7 +51,8 @@ struct ProcessCard: View {
                         .font(.caption.bold().monospacedDigit())
                         .foregroundStyle(AnchorPalette.secondaryText)
                         .contentTransition(reduceMotion ? .opacity : .numericText(value: progress))
-                        .frame(width: 34, alignment: .trailing)
+                        .fixedSize(horizontal: true, vertical: false)
+                        .frame(minWidth: 34, alignment: .trailing)
                         .accessibilityIdentifier("process.card.progress")
                 }
                 .animation(liveValueAnimation, value: progress)
@@ -62,6 +75,65 @@ struct ProcessCard: View {
             elevated: process.status == .needsDecision
         )
         .animation(liveValueAnimation, value: statusPresentationKey)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(process.sourceName), \(process.title), \(statusText)")
+        .accessibilityValue(process.progress?.formatted(.percent.precision(.fractionLength(0))) ?? statusText)
+        .accessibilityHidden(decorative)
+    }
+
+    private func homeContent(height: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 6) {
+                Text(process.title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AnchorPalette.ink)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                    .accessibilityIdentifier("process.card.title")
+                Spacer(minLength: 0)
+                Image(systemName: statusSymbol)
+                    .font(.caption2.bold())
+                    .foregroundStyle(statusForeground)
+                    .frame(width: 18, height: 18)
+                    .background(statusBackground, in: .circle)
+                    .accessibilityHidden(true)
+            }
+            Text("\(process.sourceName) · \(statusText)")
+                .font(.caption2)
+                .foregroundStyle(AnchorPalette.secondaryText)
+                .accessibilityIdentifier("process.card.status")
+            Spacer(minLength: 4)
+            HStack(alignment: .bottom, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(process.metric)
+                        .font(.headline.monospacedDigit())
+                        .foregroundStyle(AnchorIOSStyle.heading)
+                        .accessibilityIdentifier("process.card.metric")
+                    Text(process.metricLabel)
+                        .font(.caption2)
+                        .foregroundStyle(AnchorPalette.secondaryText)
+                        .accessibilityIdentifier("process.card.metric.label")
+                }
+                Spacer(minLength: 0)
+                if let progress = process.progress {
+                    ProgressView(value: min(1, max(0, progress)))
+                        .tint(AnchorIOSStyle.tint(for: process))
+                        .frame(width: 42)
+                        .padding(5)
+                        .background(AnchorIOSStyle.tint(for: process).opacity(0.14), in: .capsule)
+                        .accessibilityIdentifier("process.card.progress")
+                } else {
+                    Image(systemName: process.status == .needsDecision ? "arrow.right.circle" : "ellipsis")
+                        .foregroundStyle(AnchorIOSStyle.tint(for: process))
+                        .frame(width: 38, height: 20)
+                        .background(AnchorIOSStyle.tint(for: process).opacity(0.14), in: .capsule)
+                        .accessibilityHidden(true)
+                }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, minHeight: height, alignment: .topLeading)
+        .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: 16))
+        .shadow(color: AnchorIOSStyle.heading.opacity(0.07), radius: 12, y: 5)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(process.sourceName), \(process.title), \(statusText)")
         .accessibilityValue(process.progress?.formatted(.percent.precision(.fractionLength(0))) ?? statusText)
@@ -125,7 +197,7 @@ struct ProcessCard: View {
         .overlay(alignment: .bottom) {
             Label(L10n.goChooseDirection, systemImage: "arrow.right.circle")
                 .font(.caption2.bold())
-                .foregroundStyle(.white)
+                .foregroundStyle(AnchorIOSStyle.onAction)
                 .frame(maxWidth: .infinity, minHeight: 30)
                 .background(AnchorPalette.interaction, in: .rect(cornerRadius: 10))
                 .offset(y: 24)

@@ -18,6 +18,13 @@ public struct HarborCompanion: View {
     }
 
     public var body: some View {
+#if os(iOS)
+        HarborAnchorGlyph(color: AnchorIOSStyle.heading, lineWidth: max(1.8, size * 0.05))
+            .frame(width: size * 0.5, height: size * 0.5)
+            .frame(width: size, height: size)
+            .background(AnchorIOSStyle.cyan.opacity(0.25), in: .circle)
+            .accessibilityHidden(true)
+#else
         ZStack {
             HarborAnchorGlyph(lineWidth: max(1.8, size * 0.05))
                 .frame(width: size * 0.48, height: size * 0.48)
@@ -58,5 +65,6 @@ public struct HarborCompanion: View {
         }
         .shadow(color: AnchorPalette.cyan.opacity(0.24), radius: size * 0.22, y: size * 0.13)
         .accessibilityHidden(true)
+#endif
     }
 }

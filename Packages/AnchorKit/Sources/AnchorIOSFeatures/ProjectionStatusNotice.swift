@@ -3,6 +3,7 @@ import AnchorDesign
 import SwiftUI
 
 struct ProjectionStatusNotice: View {
+    @Environment(\.openConnectionCard) private var openConnectionCard
     let title: String
     let detail: String?
     let freshness: String?
@@ -10,7 +11,7 @@ struct ProjectionStatusNotice: View {
     let tint: Color
 
     var body: some View {
-        NavigationLink(value: AnchorRoute.connections) {
+        Button(action: openConnectionCard) {
             HStack(alignment: .center, spacing: AnchorSpacing.small) {
                 Image(systemName: symbol)
                     .font(.body.bold())

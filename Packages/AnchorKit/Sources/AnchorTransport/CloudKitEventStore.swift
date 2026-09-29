@@ -208,6 +208,7 @@ public actor CloudKitEventStore: DurableEventStore {
             return false
         }
         if case .createSession = operation { return true }
+        if case .hostSession = operation { return true }
         return false
     }
 

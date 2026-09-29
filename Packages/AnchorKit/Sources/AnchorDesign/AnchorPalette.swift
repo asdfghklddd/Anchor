@@ -1,6 +1,21 @@
 import SwiftUI
 
 public enum AnchorPalette {
+#if os(iOS)
+    public static let paper = AnchorIOSStyle.canvasTop
+    public static let surface = AnchorIOSStyle.surface
+    public static let ink = AnchorIOSStyle.text
+    public static let secondaryInk = AnchorIOSStyle.secondaryText
+    public static let canvas = AnchorIOSStyle.canvasTop
+    public static let fluoriteSurface = AnchorIOSStyle.surface
+    public static let brandDeep = AnchorIOSStyle.heading
+    public static let interaction = AnchorIOSStyle.action
+    public static let softBlue = AnchorIOSStyle.canvasBottom
+    public static let aiBlue = AnchorIOSStyle.cyan
+    public static let attention = AnchorIOSStyle.yellow
+    public static let fluoriteBorder = AnchorIOSStyle.border
+    public static let secondaryText = AnchorIOSStyle.secondaryText
+#else
     public static let paper = Color("Paper", bundle: .module)
     public static let surface = Color("Surface", bundle: .module)
     public static let ink = Color("Ink", bundle: .module)
@@ -14,15 +29,48 @@ public enum AnchorPalette {
     public static let attention = Color("Attention", bundle: .module)
     public static let fluoriteBorder = Color("FluoriteBorder", bundle: .module)
     public static let secondaryText = Color("SecondaryText", bundle: .module)
+#endif
     public static let seafoam = Color(red: 0.57, green: 0.87, blue: 0.77)
+#if os(iOS)
+    public static let coral = AnchorIOSStyle.pink
+#else
     public static let coral = Color(red: 1.00, green: 0.48, blue: 0.38)
+#endif
+#if os(iOS)
+    public static let sand = AnchorIOSStyle.yellow
+#else
     public static let sand = Color(red: 0.97, green: 0.74, blue: 0.24)
+#endif
+#if os(iOS)
+    public static let cyan = AnchorIOSStyle.cyan
+#else
     public static let cyan = Color(red: 0.35, green: 0.80, blue: 0.82)
+#endif
+#if os(iOS)
+    public static let periwinkle = AnchorIOSStyle.pink
+#else
     public static let periwinkle = Color(red: 0.55, green: 0.52, blue: 0.97)
+#endif
+    // Keep artwork and fixed dark surfaces independent of adaptive foreground colors.
     public static let deepSea = Color(red: 0.07, green: 0.23, blue: 0.33)
+#if os(macOS)
+    public static let deepSeaInk = Color("DeepSeaInk", bundle: .module)
+#endif
+#if os(iOS)
+    public static let link = AnchorIOSStyle.action
+#else
     public static let link = Color(red: 0.13, green: 0.38, blue: 0.62)
+#endif
+#if os(iOS)
+    public static let harborWhite = AnchorIOSStyle.surface
+#else
     public static let harborWhite = Color(red: 1.00, green: 0.99, blue: 0.97)
-    public static let mintInk = Color(red: 0.08, green: 0.36, blue: 0.28)
+#endif
+#if os(iOS)
+    public static let mintInk = AnchorIOSStyle.success
+#else
+    public static let mintInk = Color("MintInk", bundle: .module)
+#endif
     public static let warmYellow = Color(red: 1.00, green: 0.96, blue: 0.71)
     public static let oceanHighlight = Color(red: 0.66, green: 0.93, blue: 0.89)
     public static let returnCanvas = Color("ReturnCanvas", bundle: .module)
@@ -38,16 +86,20 @@ public enum AnchorPalette {
         }
     }
 
-    /// Dark companion colors for text placed on the light clay surfaces.
+    /// Source text colors adapt to the appearance of information surfaces.
     public static func sourceInk(_ tone: String) -> Color {
+#if os(iOS)
+        AnchorIOSStyle.heading
+#else
         switch tone {
-        case "coral": Color(red: 0.65, green: 0.20, blue: 0.14)
-        case "cyan": Color(red: 0.05, green: 0.40, blue: 0.43)
-        case "periwinkle", "blue": Color(red: 0.27, green: 0.24, blue: 0.61)
-        case "sand": Color(red: 0.46, green: 0.31, blue: 0.00)
-        case "seafoam": Color(red: 0.08, green: 0.38, blue: 0.29)
-        default: deepSea
+        case "coral": Color("SourceCoralInk", bundle: .module)
+        case "cyan": Color("SourceCyanInk", bundle: .module)
+        case "periwinkle", "blue": Color("SourcePeriwinkleInk", bundle: .module)
+        case "sand": Color("SourceSandInk", bundle: .module)
+        case "seafoam": Color("SourceSeafoamInk", bundle: .module)
+        default: deepSeaInk
         }
+#endif
     }
 
     /// Opaque pastel surfaces that keep black source initials above WCAG AA in both appearances.

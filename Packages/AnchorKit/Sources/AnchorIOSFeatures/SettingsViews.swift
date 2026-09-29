@@ -3,53 +3,6 @@ import AnchorCore
 import AnchorDesign
 import SwiftUI
 
-struct ConnectionSettingsView: View {
-    let projection: SessionProjection
-    let controller: (any LocalLinkControlling)?
-
-    var body: some View {
-        Form {
-            Section(L10n.connections) {
-                LabeledContent(L10n.macConnection) {
-                    Label(connectionLabel, systemImage: connectionSymbol)
-                }
-                LabeledContent(L10n.bluetoothProximity) {
-                    Label(proximityLabel, systemImage: "dot.radiowaves.left.and.right")
-                }
-            }
-            if let controller {
-                ConnectionPairingSection(controller: controller)
-            }
-            Section {
-                Text(L10n.connectionUnknownDetail)
-            }
-        }
-        .navigationTitle(L10n.connections)
-        .accessibilityIdentifier("connections.screen")
-    }
-
-    private var connectionLabel: String {
-        switch projection.connection {
-        case .connected: L10n.connected
-        case .permissionDenied: L10n.permissionDenied
-        case .disconnected: L10n.disconnected
-        case .pairing: L10n.continueAction
-        case .unavailable, .failed: L10n.unknown
-        }
-    }
-    private var connectionSymbol: String {
-        projection.connection == .connected ? "checkmark.circle.fill" : "wifi.exclamationmark"
-    }
-    private var proximityLabel: String {
-        switch projection.proximity {
-        case .near: L10n.connected
-        case .permissionDenied: L10n.permissionDenied
-        case .far: L10n.away
-        case .unknown, .unavailable: L10n.unknown
-        }
-    }
-}
-
 struct SourceSettingsView: View {
     let projection: SessionProjection
 
@@ -78,7 +31,9 @@ struct SourceSettingsView: View {
                     .frame(minHeight: 52)
                 }
             }
+            .listRowBackground(AnchorIOSStyle.surface)
         }
+        .anchorIOSListSurface()
         .navigationTitle(L10n.sources)
     }
 }
@@ -93,7 +48,9 @@ struct NotificationSettingsView: View {
                 Toggle(L10n.notificationDecisions, isOn: $decisions)
                 Toggle(L10n.notificationMeaningful, isOn: $meaningfulChanges)
             }
+            .listRowBackground(AnchorIOSStyle.surface)
         }
+        .anchorIOSListSurface()
         .navigationTitle(L10n.notificationsSettings)
     }
 }
@@ -106,11 +63,14 @@ struct PrivacySettingsView: View {
                     .font(.headline)
                 Text(L10n.localOnlyDetail)
             }
+            .listRowBackground(AnchorIOSStyle.surface)
             Section(L10n.sources) {
                 Label(L10n.connections, systemImage: "network")
                 Label(L10n.bluetoothProximity, systemImage: "dot.radiowaves.left.and.right")
             }
+            .listRowBackground(AnchorIOSStyle.surface)
         }
+        .anchorIOSListSurface()
         .navigationTitle(L10n.privacy)
     }
 }
@@ -123,6 +83,7 @@ struct AccessibilitySettingsView: View {
                     .font(.headline)
                 Text(L10n.displaySupportDetail)
             }
+            .listRowBackground(AnchorIOSStyle.surface)
             Section {
                 Label(L10n.voiceOver, systemImage: "speaker.wave.3")
                 Label(L10n.dynamicType, systemImage: "textformat.size")
@@ -130,7 +91,9 @@ struct AccessibilitySettingsView: View {
                 Label(L10n.increaseContrast, systemImage: "circle.lefthalf.filled")
                 Label(L10n.reduceTransparency, systemImage: "square.on.square")
             }
+            .listRowBackground(AnchorIOSStyle.surface)
         }
+        .anchorIOSListSurface()
         .navigationTitle(L10n.accessibility)
     }
 }

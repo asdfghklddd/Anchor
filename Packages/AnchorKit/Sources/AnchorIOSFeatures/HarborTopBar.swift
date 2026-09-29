@@ -11,6 +11,10 @@ struct HarborTopBar: View {
     let onNotifications: () -> Void
     let onAuxiliary: (() -> Void)?
 
+
+    var onConnection: (() -> Void)? = nil
+    @AppStorage("anchor.profile.name", store: ProfilePreferences.store) private var displayName = "ANDY"
+
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
@@ -27,8 +31,7 @@ struct HarborTopBar: View {
         .tint(AnchorPalette.brandDeep)
         .padding(.horizontal, AnchorSpacing.medium)
         .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? 8 : 4)
-        .background(.thinMaterial)
-        .shadow(color: AnchorPalette.brandDeep.opacity(0.05), radius: 12, y: 6)
+
     }
 
     private var standardContent: some View {
@@ -60,16 +63,7 @@ struct HarborTopBar: View {
 
     private var profileButton: some View {
         Button(action: onProfile) {
-            ZStack {
-                Circle().fill(AnchorPalette.softBlue.opacity(0.78))
-                HarborAnchorGlyph(color: AnchorPalette.brandDeep, lineWidth: 2.2)
-                    .frame(width: 21, height: 21)
-            }
-            .frame(width: 40, height: 40)
-            .overlay {
-                Circle().stroke(AnchorPalette.aiBlue.opacity(0.28), lineWidth: 1)
-            }
-            .frame(width: 44, height: 44)
+            ProfileAvatar(size: 48)
         }
         .buttonStyle(AnchorPressButtonStyle())
         .accessibilityLabel(L10n.profile)
@@ -77,16 +71,16 @@ struct HarborTopBar: View {
     }
 
     private var brandBlock: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(L10n.appName)
-                .font(.headline.bold())
-                .foregroundStyle(AnchorPalette.brandDeep)
-            Label(connectionLabel, systemImage: connectionSymbol)
-                .font(.caption)
-                .foregroundStyle(connectionColor)
-                .accessibilityIdentifier("topbar.connection")
+        Button { onConnection?() } label: {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(displayName).font(.headline.bold()).foregroundStyle(AnchorPalette.brandDeep)
+                Label(connectionLabel, systemImage: connectionSymbol)
+                    .font(.caption).foregroundStyle(connectionColor)
+            }
+            .frame(minWidth: 44, minHeight: 44, alignment: .leading)
         }
-        .accessibilityElement(children: .combine)
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("workspace.connection.action")
     }
 
     @ViewBuilder
@@ -120,10 +114,10 @@ struct HarborTopBar: View {
                 }
             }
         }
-        .buttonStyle(.bordered)
-        .buttonBorderShape(.circle)
-        .tint(AnchorPalette.interaction)
+        .foregroundStyle(.white)
         .frame(width: 44, height: 44)
+        .background(AnchorIOSStyle.cyan.opacity(0.45), in: .circle)
+        .buttonStyle(AnchorPressButtonStyle())
         .accessibilityLabel(L10n.notifications)
         .accessibilityValue(unreadCount == 0 ? "" : "\(unreadCount)")
     }
@@ -140,7 +134,7 @@ struct HarborTopBar: View {
 
     private var connectionSymbol: String {
         switch connection {
-        case .connected: "circle.fill"
+        case .connected: "wifi"
         case .pairing: "arrow.triangle.2.circlepath"
         case .disconnected, .unavailable: "wifi.slash"
         case .permissionDenied: "hand.raised.fill"
@@ -150,7 +144,7 @@ struct HarborTopBar: View {
 
     private var connectionColor: Color {
         switch connection {
-        case .connected: Color.green
+        case .connected: AnchorIOSStyle.success
         case .pairing: AnchorPalette.interaction
         case .disconnected, .unavailable, .permissionDenied, .failed: Color.red
         }

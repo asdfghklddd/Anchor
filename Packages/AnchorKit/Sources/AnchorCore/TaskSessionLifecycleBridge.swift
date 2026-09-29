@@ -39,6 +39,15 @@ public actor TaskSessionLifecycleBridge {
             try await synchronizeArchived(archivedSession)
         }
 
+        if !projection.additionalSessions.isEmpty {
+            for session in projection.hostedSessions {
+                try await taskRunStore.host(task: AnchorTask(
+                    id: session.id, title: session.goal.title,
+                    completionCriteria: session.goal.completionCriteria, createdAt: session.startedAt
+                ))
+            }
+            return
+        }
         guard let session = projection.session else { return }
         let task = AnchorTask(
             id: session.id,
@@ -66,7 +75,8 @@ public actor TaskSessionLifecycleBridge {
         if await taskRunStore.taskState(id: session.id)?.lifecycle == .archived {
             return
         }
-        if await taskRunStore.currentTaskRecord()?.task.id == session.id {
+        if await taskRunStore.taskRecord(id: session.id)?.task.lifecycle != nil,
+           await taskRunStore.taskRecord(id: session.id)?.task.lifecycle != .archived {
             try await taskRunStore.confirmTaskEnded(
                 taskID: session.id,
                 at: session.endedAt ?? session.startedAt

@@ -31,7 +31,7 @@ struct MacSourceSetupRow<Actions: View>: View {
             HStack(alignment: .top, spacing: AnchorSpacing.medium) {
                 Image(systemName: symbol)
                     .font(.title3.weight(.semibold))
-                    .foregroundStyle(AnchorPalette.deepSea)
+                    .foregroundStyle(AnchorPalette.brandDeep)
                     .frame(width: 36, height: 36)
                     .background(AnchorPalette.cyan.opacity(0.14), in: .circle)
                     .accessibilityHidden(true)

@@ -44,7 +44,7 @@ struct MacSnapshotDetailView: View {
         VStack(alignment: .leading, spacing: AnchorSpacing.small) {
             Label(L10n.currentSnapshot, systemImage: "camera.metering.center.weighted")
                 .font(.caption.weight(.bold))
-                .foregroundStyle(AnchorPalette.deepSea)
+                .foregroundStyle(AnchorPalette.brandDeep)
                 .textCase(.uppercase)
             Text(snapshot.goalTitle)
                 .font(.largeTitle.bold())
@@ -110,7 +110,7 @@ struct MacSnapshotDetailView: View {
                         }
                         Spacer(minLength: AnchorSpacing.small)
                         VStack(alignment: .trailing, spacing: 3) {
-                            Text(L10n.status(process.status))
+                            Text(L10n.processStatus(process))
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
                             if let progress = process.progress {
@@ -125,10 +125,10 @@ struct MacSnapshotDetailView: View {
                         }
                     }
                     .padding(AnchorSpacing.medium)
-                    .background(AnchorPalette.surface, in: .rect(cornerRadius: 16, style: .continuous))
+                    .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 16, style: .continuous))
                     .overlay {
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(AnchorPalette.ink.opacity(0.08), lineWidth: 1)
+                            .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
                     }
                     .accessibilityElement(children: .combine)
                 }

@@ -10,9 +10,14 @@ public struct AnchorMacRootView: View {
     private let showsCompletedSessionInCurrentWork: Bool
     private let auxiliaryToolbarLabel: String?
     private let auxiliaryToolbarAction: (() -> Void)?
-    @AppStorage("anchor.mac.selected-section") private var selection = MacSection.current
-    @AppStorage("anchor.mac.notifications.decisions") private var decisionAlerts = false
-    @State private var notificationService = MacDecisionNotificationService()
+
+    @AppStorage("anchor.mac.selected-section") private var storedSection = MacSection.current.rawValue
+    @State private var workPath: [MacWorkRoute] = []
+    @State private var isSidebarExpanded = false
+    @State private var requestsSidebarToggleFocus = false
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.controlActiveState) private var controlActiveState
 
     public init(
         model: AnchorSessionModel,
@@ -31,35 +36,79 @@ public struct AnchorMacRootView: View {
     }
 
     public var body: some View {
-        NavigationSplitView {
-            MacSidebar(selection: $selection, projection: model.projection)
-        } detail: {
-            detail
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(AnchorPalette.paper)
-                .safeAreaInset(edge: .top, spacing: 0) {
-                    VStack(spacing: 0) {
-                        if let errorMessage {
-                            MacErrorBanner(
-                                message: errorMessage,
-                                onRetry: linkController.map { controller in
-                                    { Task { await controller.retryConnection() } }
-                                },
-                                onDismiss: { Task { await model.clearError() } }
-                            )
+        ZStack(alignment: .topLeading) {
+            MacWorkspaceBackground()
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // Reserve real layout space for notices; scrolling content must never pass beneath them.
+                VStack(alignment: .leading, spacing: AnchorSpacing.small) {
+                    if !workPath.isEmpty {
+                        Button(L10n.currentWork, systemImage: "chevron.left") {
+                            workPath.removeAll()
                         }
-                        if model.projection.isStale {
-                            MacFreshnessBanner(
-                                observedAt: model.projection.dataObservedAt,
-                                onRetry: linkController.map { controller in
-                                    { Task { await controller.retryConnection() } }
-                                }
-                            )
-                        }
+                        .buttonStyle(.borderless)
+                        .padding(.horizontal, AnchorSpacing.xLarge)
+                        .padding(.top, AnchorSpacing.small)
+                        .accessibilityIdentifier("mac.navigation.current")
                     }
+                    MacRootStatusBanners(
+                        model: model,
+                        linkController: linkController
+                    )
                 }
+                .fixedSize(horizontal: false, vertical: true)
+
+                NavigationStack(path: $workPath) {
+                    detail
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .navigationDestination(for: MacWorkRoute.self) { route in
+                            workDestination(route)
+                        }
+                }
+                .toolbar(.hidden, for: .windowToolbar)
+            }
+            .padding(.top, 48)
+            .zIndex(0)
+
+            HStack(alignment: .top, spacing: AnchorSpacing.small) {
+                MacSidebarRail(
+                    isExpanded: isSidebarExpanded,
+                    requestsToggleFocus: $requestsSidebarToggleFocus,
+                    onToggle: expandSidebar,
+                    onCollapse: collapseSidebar
+                )
+                .onHover { hovering in
+                    if hovering { expandSidebar() }
+                }
+
+                if isSidebarExpanded {
+                    MacSidebar(
+                        selection: selection,
+                        projection: model.projection,
+                        onSelect: selectSection,
+                        onCollapse: collapseSidebar
+                    )
+                    .transition(sidebarTransition)
+                }
+            }
+            .padding(.leading, AnchorSpacing.small)
+            .padding(.top, 2)
+            .onHover { hovering in
+                // The trigger and menu share one hit region, including the gap between them.
+                if !hovering { collapseSidebar() }
+            }
+            .zIndex(3)
         }
-        .navigationSplitViewStyle(.balanced)
+        .animation(reduceMotion ? nil : AnchorMotion.panel, value: isSidebarExpanded)
+        .onExitCommand(perform: collapseSidebar)
+        .onChange(of: controlActiveState) { _, state in
+            if state == .inactive {
+                collapseSidebar()
+            }
+        }
+        .onAppear(perform: migrateStoredSection)
+        .tint(AnchorPalette.interaction)
         .frame(minWidth: 900, minHeight: 620)
         .toolbar {
             if let auxiliaryToolbarLabel, let auxiliaryToolbarAction {
@@ -72,15 +121,17 @@ public struct AnchorMacRootView: View {
         }
         .task {
             model.start()
-            notificationService.observe(model.projection, enabled: decisionAlerts)
-        }
-        .onChange(of: model.projection) { _, projection in
-            notificationService.observe(projection, enabled: decisionAlerts)
         }
     }
 
-    private var errorMessage: String? {
-        model.lastError ?? model.projection.errorMessage
+    private var selection: MacSection {
+        MacSection(storedValue: storedSection)
+    }
+
+    private var sidebarTransition: AnyTransition {
+        reduceMotion
+            ? .opacity
+            : .move(edge: .leading).combined(with: .opacity)
     }
 
     @ViewBuilder
@@ -90,28 +141,97 @@ public struct AnchorMacRootView: View {
             MacFocusDashboard(
                 model: model,
                 showsCompletedSessionInCurrentWork: showsCompletedSessionInCurrentWork,
-                onOpenTimeline: { selection = .timeline },
-                onOpenSettings: { selection = .settings }
+                onOpenProcess: openProcess,
+                onOpenTimeline: openTimeline,
+                onOpenSettings: { selectSection(.settings) }
+            )
+        case .history:
+            MacHistoryTrackView(
+                projection: model.projection,
+                onOpenCurrentWork: { selectSection(.current) }
+            )
+        case .settings:
+            MacSettingsView(
+                projection: model.projection,
+                controller: linkController,
+                sourceSetupModel: sourceSetupModel
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func workDestination(_ route: MacWorkRoute) -> some View {
+        switch route {
+        case let .process(processID):
+            MacProcessDetailView(
+                model: model,
+                processID: processID,
+                onOpenTimeline: openTimeline
             )
         case .timeline:
             MacTimelineView(
                 projection: model.projection,
-                onOpenSettings: { selection = .settings }
+                onOpenSettings: { selectSection(.settings) }
             )
-        case .history:
-            MacHistoryView(
-                projection: model.projection,
-                onOpenCurrentWork: { selection = .current }
-            )
-        case .sources:
-            MacSourcesView(
-                projection: model.projection,
-                sourceSetupModel: sourceSetupModel,
-                onOpenSettings: { selection = .settings }
-            )
-        case .settings:
-            MacSettingsView(projection: model.projection, controller: linkController)
         }
+    }
+
+    private func migrateStoredSection() {
+        storedSection = selection.rawValue
+    }
+
+    private func selectSection(_ section: MacSection) {
+        storedSection = section.rawValue
+        workPath.removeAll()
+        collapseSidebar()
+    }
+
+    private func openProcess(_ processID: UUID) {
+        workPath.append(.process(processID))
+    }
+
+    private func openTimeline() {
+        workPath.append(.timeline)
+    }
+
+    private func expandSidebar() {
+        isSidebarExpanded = true
+    }
+
+    private func collapseSidebar() {
+        guard isSidebarExpanded else { return }
+        isSidebarExpanded = false
+        requestsSidebarToggleFocus = true
+    }
+}
+
+private struct MacRootStatusBanners: View {
+    let model: AnchorSessionModel
+    let linkController: (any LocalLinkControlling)?
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if let errorMessage {
+                MacErrorBanner(
+                    message: errorMessage,
+                    // A transport retry cannot repair a repository or command error.
+                    onRetry: nil,
+                    onDismiss: { Task { await model.clearError() } }
+                )
+            }
+            if model.projection.isStale {
+                MacFreshnessBanner(
+                    observedAt: model.projection.dataObservedAt,
+                    onRetry: linkController.map { controller in
+                        { Task { await controller.retryConnection() } }
+                    }
+                )
+            }
+        }
+    }
+
+    private var errorMessage: String? {
+        model.lastError ?? model.projection.errorMessage
     }
 }
 #endif

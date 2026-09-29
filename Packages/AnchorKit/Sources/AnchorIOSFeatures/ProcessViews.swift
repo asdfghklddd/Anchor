@@ -79,7 +79,8 @@ struct ProcessDetailView: View {
             .frame(maxWidth: 720)
             .frame(maxWidth: .infinity)
         }
-        .background(AnchorPalette.canvas)
+        .background { HarborBackground() }
+        .anchorIOSListSurface()
         .navigationTitle(process.sourceName)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -117,6 +118,7 @@ struct DecisionView: View {
                 }
                 .scrollIndicators(.hidden)
             }
+            .anchorIOSListSurface()
             .navigationTitle(process?.sourceName ?? L10n.chooseDirection)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -129,7 +131,7 @@ struct DecisionView: View {
             }
         }
         .presentationDetents([.large])
-        .presentationCornerRadius(30)
+        .presentationCornerRadius(24)
         .onAppear { selectedOptionID = decision.options.dropFirst().first?.id ?? decision.options.first?.id }
     }
 
@@ -293,6 +295,16 @@ struct DecisionView: View {
 
 struct AnchorNoteView: View {
     let model: AnchorSessionModel
+    private let taskID: UUID?
+
+    init(model: AnchorSessionModel) {
+        self.model = model
+        taskID = model.projection.session?.id
+    }
+
+    private var session: AnchorSession? {
+        model.projection.hostedSessions.first { $0.id == taskID }
+    }
 
     @Environment(\.dismiss) private var dismiss
     @State private var note = ""
@@ -364,7 +376,7 @@ struct AnchorNoteView: View {
                             }
                         }
 
-                        if let recent = model.projection.session?.notes.first {
+                        if let recent = session?.notes.first {
                             VStack(alignment: .leading, spacing: 6) {
                                 Label(L10n.recentAnchor, systemImage: "checkmark.circle.fill")
                                     .font(.caption.bold())
@@ -381,7 +393,7 @@ struct AnchorNoteView: View {
                         Button {
                             savedTrigger += 1
                             Task {
-                                await model.addNote(note)
+                                guard let taskID, await model.send(.forSession(taskID, .addNote(note))) else { return }
                                 dismiss()
                             }
                         } label: {
@@ -397,6 +409,7 @@ struct AnchorNoteView: View {
                     .frame(maxWidth: .infinity)
                 }
             }
+            .anchorIOSListSurface()
             .navigationTitle(L10n.anchorNote)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -407,7 +420,7 @@ struct AnchorNoteView: View {
             }
             .onAppear { isFocused = true }
         }
-        .presentationCornerRadius(30)
+        .presentationCornerRadius(24)
     }
 
     private var snapshotStrip: some View {
@@ -443,6 +456,7 @@ struct AnchorNoteView: View {
 struct GoalEditorView: View {
     let model: AnchorSessionModel
     let goal: AnchorGoal
+    private let taskID: UUID?
 
     @Environment(\.dismiss) private var dismiss
     @State private var title: String
@@ -452,6 +466,7 @@ struct GoalEditorView: View {
     init(model: AnchorSessionModel, goal: AnchorGoal) {
         self.model = model
         self.goal = goal
+        taskID = model.projection.hostedSessions.first { $0.goal.id == goal.id }?.id
         _title = State(initialValue: goal.title)
         _criteria = State(initialValue: goal.completionCriteria)
         _note = State(initialValue: goal.note)
@@ -465,10 +480,17 @@ struct GoalEditorView: View {
                     TextField(L10n.completionCriteria, text: $criteria, axis: .vertical)
                     TextField(L10n.contextNote, text: $note, axis: .vertical)
                 }
+            .listRowBackground(AnchorIOSStyle.surface)
+                if goal.userPlan != nil {
+                    Section { AnchorSavedPlan(goal: goal) }
+                        .listRowBackground(AnchorIOSStyle.surface)
+                }
                 Section {
                     Label(L10n.setupHint, systemImage: "mic.fill")
                 }
+            .listRowBackground(AnchorIOSStyle.surface)
             }
+            .anchorIOSListSurface()
             .navigationTitle(L10n.editGoal)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -477,7 +499,7 @@ struct GoalEditorView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(L10n.save) {
                         Task {
-                            await model.send(.updateGoal(title: title, completionCriteria: criteria, note: note))
+                            guard let taskID, await model.send(.forSession(taskID, .updateGoal(title: title, completionCriteria: criteria, note: note))) else { return }
                             dismiss()
                         }
                     }
@@ -503,12 +525,14 @@ struct NotificationsView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(event.processID == nil)
+                .listRowBackground(AnchorIOSStyle.surface)
             }
             .overlay {
                 if projection.session?.timeline.isEmpty != false {
                     ContentUnavailableView(L10n.noEvents, systemImage: "bell.slash")
                 }
             }
+            .anchorIOSListSurface()
             .navigationTitle(L10n.notifications)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

@@ -18,6 +18,7 @@ Anchor is a native iPhone/macOS attention companion with shared event-driven sta
 
 ## Documentation entry points
 
+- [Design](../DESIGN.md): current iOS visual tokens, components, page rules, and verification boundaries.
 - [README](../README.md): setup and designated development branch policy.
 - [Implementation plan](../Documentation/ANCHOR_IMPLEMENTATION_PLAN.md): confirmed requirements and dated delivery ledger. Historical authorizations do not carry forward.
 - [Validation](../Documentation/VALIDATION.md): dated verification evidence; not proof of subsequent builds.

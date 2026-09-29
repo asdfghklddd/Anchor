@@ -81,7 +81,7 @@ struct MacMenuPresenceCard: View {
                 Text("\(changes.count)")
                     .font(.caption.weight(.bold).monospacedDigit())
             }
-            .foregroundStyle(AnchorPalette.deepSea)
+            .foregroundStyle(AnchorPalette.brandDeep)
 
             ForEach(changes.prefix(2)) { change in
                 HStack(alignment: .top, spacing: AnchorSpacing.xSmall) {
@@ -98,7 +98,7 @@ struct MacMenuPresenceCard: View {
             }
         }
         .padding(AnchorSpacing.small)
-        .background(AnchorPalette.paper.opacity(0.72), in: .rect(cornerRadius: 10, style: .continuous))
+        .background(AnchorPalette.fluoriteSurface.opacity(0.72), in: .rect(cornerRadius: 10, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("mac.menu.return.changes")
     }
@@ -168,7 +168,7 @@ struct MacMenuPresenceCard: View {
         case .decisionRequired, .failed: AnchorPalette.coral
         case .completed, .decisionResolved: AnchorPalette.mintInk
         case .outputReady: AnchorPalette.periwinkle
-        default: AnchorPalette.deepSea
+        default: AnchorPalette.deepSeaInk
         }
     }
 }

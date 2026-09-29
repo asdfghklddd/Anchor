@@ -61,7 +61,7 @@ public struct AnchorMacMenuView: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .tint(AnchorPalette.deepSea)
+            .tint(AnchorPalette.interaction)
             .controlSize(.large)
             .keyboardShortcut("o")
             .accessibilityIdentifier("mac.menu.primary")
@@ -93,7 +93,7 @@ public struct AnchorMacMenuView: View {
         }
         .padding(AnchorSpacing.medium)
         .frame(width: 370)
-        .background(AnchorPalette.paper)
+        .background(AnchorPalette.canvas)
         .task { model.start() }
     }
 
@@ -117,7 +117,7 @@ public struct AnchorMacMenuView: View {
         VStack(alignment: .leading, spacing: AnchorSpacing.small) {
             Text(L10n.currentWork)
                 .font(.caption.bold())
-                .foregroundStyle(AnchorPalette.deepSea)
+                .foregroundStyle(AnchorPalette.brandDeep)
                 .textCase(.uppercase)
             Text(session.goal.title)
                 .font(.title3.bold())
@@ -156,10 +156,10 @@ public struct AnchorMacMenuView: View {
                 menuMetric(value: "0", label: L10n.notes, symbol: "bookmark")
             }
             .padding(.vertical, AnchorSpacing.xSmall)
-            .background(AnchorPalette.surface, in: .rect(cornerRadius: 8))
+            .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 8))
             .overlay {
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(AnchorPalette.ink.opacity(0.08), lineWidth: 1)
+                    .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
             }
         }
     }
@@ -193,7 +193,7 @@ public struct AnchorMacMenuView: View {
         Button(action: onOpenDetails) {
             HStack(alignment: .top, spacing: AnchorSpacing.small) {
                 Image(systemName: "exclamationmark.bubble.fill")
-                    .foregroundStyle(AnchorPalette.deepSea)
+                    .foregroundStyle(AnchorPalette.brandDeep)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L10n.attentionNeeded).font(.caption.bold())

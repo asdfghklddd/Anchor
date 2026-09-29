@@ -27,6 +27,8 @@ enum ProfileDetailKind: Hashable {
 }
 
 enum AnchorSheet: Hashable, Identifiable {
+    case connections
+    case hostedTasks
     case setup
     case note
     case goal

@@ -13,21 +13,28 @@
 		AA1000000000000000000007 /* AnchorMacFeatures in Frameworks */ = {isa = PBXBuildFile; productRef = AA2000000000000000000007 /* AnchorMacFeatures */; };
 		AA1000000000000000000008 /* AnchorTransport in Frameworks */ = {isa = PBXBuildFile; productRef = AA2000000000000000000008 /* AnchorTransport */; };
 		AA100000000000000000000C /* AnchorTransport in Frameworks */ = {isa = PBXBuildFile; productRef = AA200000000000000000000C /* AnchorTransport */; };
-		BB1000000000000000000001 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB4000000000000000000002 /* main.swift */; };
+		BB1000000000000000000001 /* Packages/AnchorKit/Sources/AnchorCLI/main.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB4000000000000000000002 /* Packages/AnchorKit/Sources/AnchorCLI/main.swift */; };
 		BB1000000000000000000002 /* AnchorCore in Frameworks */ = {isa = PBXBuildFile; productRef = BB2000000000000000000001 /* AnchorCore */; };
 		BB1000000000000000000003 /* anchor in Copy Helpers */ = {isa = PBXBuildFile; fileRef = BB4000000000000000000001 /* anchor */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DD1000000000000000000001 /* AnchorSafariExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = DD4000000000000000000001 /* AnchorSafariExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DD1000000000000000000002 /* AnchorCore in Frameworks */ = {isa = PBXBuildFile; productRef = DD2000000000000000000001 /* AnchorCore */; };
 		DD1000000000000000000003 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD4000000000000000000002 /* SafariWebExtensionHandler.swift */; };
-		DD1000000000000000000004 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = DD4000000000000000000005 /* manifest.json */; };
-		DD1000000000000000000005 /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = DD4000000000000000000006 /* background.js */; };
-		DD1000000000000000000006 /* popup.js in Resources */ = {isa = PBXBuildFile; fileRef = DD4000000000000000000007 /* popup.js */; };
-		DD1000000000000000000007 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = DD4000000000000000000008 /* popup.html */; };
-		DD1000000000000000000008 /* popup.css in Resources */ = {isa = PBXBuildFile; fileRef = DD4000000000000000000009 /* popup.css */; };
-		DD1000000000000000000009 /* _locales in Resources */ = {isa = PBXBuildFile; fileRef = DD400000000000000000000A /* _locales */; };
+		DD1000000000000000000004 /* Resources/manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = DD4000000000000000000005 /* Resources/manifest.json */; };
+		DD1000000000000000000005 /* Resources/background.js in Resources */ = {isa = PBXBuildFile; fileRef = DD4000000000000000000006 /* Resources/background.js */; };
+		DD1000000000000000000006 /* Resources/popup.js in Resources */ = {isa = PBXBuildFile; fileRef = DD4000000000000000000007 /* Resources/popup.js */; };
+		DD1000000000000000000007 /* Resources/popup.html in Resources */ = {isa = PBXBuildFile; fileRef = DD4000000000000000000008 /* Resources/popup.html */; };
+		DD1000000000000000000008 /* Resources/popup.css in Resources */ = {isa = PBXBuildFile; fileRef = DD4000000000000000000009 /* Resources/popup.css */; };
+		DD1000000000000000000009 /* Resources/_locales in Resources */ = {isa = PBXBuildFile; fileRef = DD400000000000000000000A /* Resources/_locales */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		BB3000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BB5000000000000000000001;
+			remoteInfo = AnchorCommand;
+		};
 		CC3000000000000000000001 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = AA0000000000000000000001 /* Project object */;
@@ -41,13 +48,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = AA5000000000000000000003;
 			remoteInfo = "Anchor macOS";
-		};
-		BB3000000000000000000001 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = AA0000000000000000000001 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = BB5000000000000000000001;
-			remoteInfo = AnchorCommand;
 		};
 		DD3000000000000000000001 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -86,20 +86,20 @@
 /* Begin PBXFileReference section */
 		AA4000000000000000000001 /* Anchor iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anchor iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA4000000000000000000003 /* Anchor macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Anchor macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB4000000000000000000001 /* anchor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = anchor; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB4000000000000000000002 /* Packages/AnchorKit/Sources/AnchorCLI/main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Packages/AnchorKit/Sources/AnchorCLI/main.swift; sourceTree = SOURCE_ROOT; };
 		CC4000000000000000000001 /* AnchorIOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnchorIOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC4000000000000000000002 /* AnchorMacUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnchorMacUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		BB4000000000000000000001 /* anchor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = anchor; sourceTree = BUILT_PRODUCTS_DIR; };
-		BB4000000000000000000002 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Packages/AnchorKit/Sources/AnchorCLI/main.swift; sourceTree = SOURCE_ROOT; };
 		DD4000000000000000000001 /* AnchorSafariExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AnchorSafariExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD4000000000000000000002 /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
 		DD4000000000000000000003 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		DD4000000000000000000004 /* AnchorSafariExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AnchorSafariExtension.entitlements; sourceTree = "<group>"; };
-		DD4000000000000000000005 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Resources/manifest.json; sourceTree = "<group>"; };
-		DD4000000000000000000006 /* background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Resources/background.js; sourceTree = "<group>"; };
-		DD4000000000000000000007 /* popup.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Resources/popup.js; sourceTree = "<group>"; };
-		DD4000000000000000000008 /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = Resources/popup.html; sourceTree = "<group>"; };
-		DD4000000000000000000009 /* popup.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Resources/popup.css; sourceTree = "<group>"; };
-		DD400000000000000000000A /* _locales */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resources/_locales; sourceTree = "<group>"; };
+		DD4000000000000000000005 /* Resources/manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Resources/manifest.json; sourceTree = "<group>"; };
+		DD4000000000000000000006 /* Resources/background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Resources/background.js; sourceTree = "<group>"; };
+		DD4000000000000000000007 /* Resources/popup.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Resources/popup.js; sourceTree = "<group>"; };
+		DD4000000000000000000008 /* Resources/popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = Resources/popup.html; sourceTree = "<group>"; };
+		DD4000000000000000000009 /* Resources/popup.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Resources/popup.css; sourceTree = "<group>"; };
+		DD400000000000000000000A /* Resources/_locales */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resources/_locales; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -159,14 +159,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		DD4200000000000000000001 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				DD1000000000000000000002 /* AnchorCore in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		CC4200000000000000000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -181,25 +173,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DD4200000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD1000000000000000000002 /* AnchorCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		DD4100000000000000000001 /* Apps/AnchorSafariExtension */ = {
-			isa = PBXGroup;
-			children = (
-				DD4000000000000000000002 /* SafariWebExtensionHandler.swift */,
-				DD4000000000000000000003 /* Info.plist */,
-				DD4000000000000000000004 /* AnchorSafariExtension.entitlements */,
-				DD4000000000000000000005 /* manifest.json */,
-				DD4000000000000000000006 /* background.js */,
-				DD4000000000000000000007 /* popup.js */,
-				DD4000000000000000000008 /* popup.html */,
-				DD4000000000000000000009 /* popup.css */,
-				DD400000000000000000000A /* _locales */,
-			);
-			path = Apps/AnchorSafariExtension;
-			sourceTree = "<group>";
-		};
 		AA0000000000000000000002 = {
 			isa = PBXGroup;
 			children = (
@@ -209,7 +193,7 @@
 				CC4100000000000000000002 /* Apps/AnchorMacUITests */,
 				DD4100000000000000000001 /* Apps/AnchorSafariExtension */,
 				AA4100000000000000000007 /* Apps/Shared */,
-				BB4000000000000000000002 /* main.swift */,
+				BB4000000000000000000002 /* Packages/AnchorKit/Sources/AnchorCLI/main.swift */,
 				AA0000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -225,6 +209,22 @@
 				DD4000000000000000000001 /* AnchorSafariExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		DD4100000000000000000001 /* Apps/AnchorSafariExtension */ = {
+			isa = PBXGroup;
+			children = (
+				DD4000000000000000000002 /* SafariWebExtensionHandler.swift */,
+				DD4000000000000000000003 /* Info.plist */,
+				DD4000000000000000000004 /* AnchorSafariExtension.entitlements */,
+				DD4000000000000000000005 /* Resources/manifest.json */,
+				DD4000000000000000000006 /* Resources/background.js */,
+				DD4000000000000000000007 /* Resources/popup.js */,
+				DD4000000000000000000008 /* Resources/popup.html */,
+				DD4000000000000000000009 /* Resources/popup.css */,
+				DD400000000000000000000A /* Resources/_locales */,
+			);
+			path = Apps/AnchorSafariExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -305,26 +305,6 @@
 			productReference = BB4000000000000000000001 /* anchor */;
 			productType = "com.apple.product-type.tool";
 		};
-		DD5000000000000000000001 /* AnchorSafariExtension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = DD6000000000000000000001 /* Build configuration list for PBXNativeTarget "AnchorSafariExtension" */;
-			buildPhases = (
-				DD7000000000000000000001 /* Sources */,
-				DD4200000000000000000001 /* Frameworks */,
-				DD7100000000000000000001 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = AnchorSafariExtension;
-			packageProductDependencies = (
-				DD2000000000000000000001 /* AnchorCore */,
-			);
-			productName = AnchorSafariExtension;
-			productReference = DD4000000000000000000001 /* AnchorSafariExtension.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
 		CC5000000000000000000001 /* AnchorIOSUITests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CC6000000000000000000001 /* Build configuration list for PBXNativeTarget "AnchorIOSUITests" */;
@@ -371,6 +351,26 @@
 			productReference = CC4000000000000000000002 /* AnchorMacUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		DD5000000000000000000001 /* AnchorSafariExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DD6000000000000000000001 /* Build configuration list for PBXNativeTarget "AnchorSafariExtension" */;
+			buildPhases = (
+				DD7000000000000000000001 /* Sources */,
+				DD4200000000000000000001 /* Frameworks */,
+				DD7100000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AnchorSafariExtension;
+			packageProductDependencies = (
+				DD2000000000000000000001 /* AnchorCore */,
+			);
+			productName = AnchorSafariExtension;
+			productReference = DD4000000000000000000001 /* AnchorSafariExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -390,9 +390,6 @@
 					BB5000000000000000000001 = {
 						CreatedOnToolsVersion = 26.2;
 					};
-					DD5000000000000000000001 = {
-						CreatedOnToolsVersion = 26.2;
-					};
 					CC5000000000000000000001 = {
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = AA5000000000000000000001;
@@ -400,6 +397,9 @@
 					CC5000000000000000000002 = {
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = AA5000000000000000000003;
+					};
+					DD5000000000000000000001 = {
+						CreatedOnToolsVersion = 26.2;
 					};
 				};
 			};
@@ -446,19 +446,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		DD7100000000000000000001 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				DD1000000000000000000004 /* manifest.json in Resources */,
-				DD1000000000000000000005 /* background.js in Resources */,
-				DD1000000000000000000006 /* popup.js in Resources */,
-				DD1000000000000000000007 /* popup.html in Resources */,
-				DD1000000000000000000008 /* popup.css in Resources */,
-				DD1000000000000000000009 /* _locales in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		CC7100000000000000000001 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -470,6 +457,19 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DD7100000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD1000000000000000000004 /* Resources/manifest.json in Resources */,
+				DD1000000000000000000005 /* Resources/background.js in Resources */,
+				DD1000000000000000000006 /* Resources/popup.js in Resources */,
+				DD1000000000000000000007 /* Resources/popup.html in Resources */,
+				DD1000000000000000000008 /* Resources/popup.css in Resources */,
+				DD1000000000000000000009 /* Resources/_locales in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -494,15 +494,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BB1000000000000000000001 /* main.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		DD7000000000000000000001 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				DD1000000000000000000003 /* SafariWebExtensionHandler.swift in Sources */,
+				BB1000000000000000000001 /* Packages/AnchorKit/Sources/AnchorCLI/main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -520,9 +512,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DD7000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD1000000000000000000003 /* SafariWebExtensionHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		BB7200000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BB5000000000000000000001 /* AnchorCommand */;
+			targetProxy = BB3000000000000000000001 /* PBXContainerItemProxy */;
+		};
 		CC7200000000000000000001 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = AA5000000000000000000001 /* Anchor iOS */;
@@ -532,11 +537,6 @@
 			isa = PBXTargetDependency;
 			target = AA5000000000000000000003 /* Anchor macOS */;
 			targetProxy = CC3000000000000000000002 /* PBXContainerItemProxy */;
-		};
-		BB7200000000000000000001 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = BB5000000000000000000001 /* AnchorCommand */;
-			targetProxy = BB3000000000000000000001 /* PBXContainerItemProxy */;
 		};
 		DD7200000000000000000001 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -613,11 +613,11 @@
 		AA9000000000000000000011 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ANCHOR_IOS_CODE_SIGN_ENTITLEMENTS = Apps/AnchorIOS/AnchorIOS.entitlements;
 				ANCHOR_IOS_DEVELOPMENT_TEAM = DZPUSA6232;
 				ANCHOR_IOS_INFOPLIST_FILE = "Configuration/AnchorIOS-Info.plist";
+				ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "$(ANCHOR_IOS_CODE_SIGN_ENTITLEMENTS)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -643,11 +643,11 @@
 		AA9000000000000000000012 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ANCHOR_IOS_CODE_SIGN_ENTITLEMENTS = Apps/AnchorIOS/AnchorIOS.entitlements;
 				ANCHOR_IOS_DEVELOPMENT_TEAM = DZPUSA6232;
 				ANCHOR_IOS_INFOPLIST_FILE = "Configuration/AnchorIOS-Info.plist";
+				ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "$(ANCHOR_IOS_CODE_SIGN_ENTITLEMENTS)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -674,12 +674,12 @@
 		AA9000000000000000000031 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ANCHOR_MAC_CODE_SIGN_ENTITLEMENTS = "";
 				ANCHOR_MAC_DEVELOPMENT_TEAM = "";
 				ANCHOR_MAC_GENERATE_INFOPLIST_FILE = NO;
 				ANCHOR_MAC_INFOPLIST_FILE = "Configuration/AnchorMac-Info.plist";
+				ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "$(ANCHOR_MAC_CODE_SIGN_ENTITLEMENTS)";
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
@@ -694,7 +694,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Anchor uses Bluetooth to pair your nearby iPhone and Mac, detect proximity, and securely sync task status when network links are unavailable.";
-				INFOPLIST_KEY_NSBonjourServices = "_anchor._tcp";
+				INFOPLIST_KEY_NSBonjourServices = _anchor._tcp;
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Anchor uses local and peer-to-peer network connections to securely sync your paired iPhone and Mac.";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
@@ -712,12 +712,12 @@
 		AA9000000000000000000032 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ANCHOR_MAC_CODE_SIGN_ENTITLEMENTS = Apps/AnchorMac/AnchorMac.entitlements;
 				ANCHOR_MAC_DEVELOPMENT_TEAM = DZPUSA6232;
 				ANCHOR_MAC_GENERATE_INFOPLIST_FILE = NO;
 				ANCHOR_MAC_INFOPLIST_FILE = "Configuration/AnchorMac-Info.plist";
+				ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "$(ANCHOR_MAC_CODE_SIGN_ENTITLEMENTS)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -731,7 +731,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Anchor uses Bluetooth to pair your nearby iPhone and Mac, detect proximity, and securely sync task status when network links are unavailable.";
-				INFOPLIST_KEY_NSBonjourServices = "_anchor._tcp";
+				INFOPLIST_KEY_NSBonjourServices = _anchor._tcp;
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Anchor uses local and peer-to-peer network connections to securely sync your paired iPhone and Mac.";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
@@ -741,53 +741,6 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 6.0;
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-		DD9000000000000000000001 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = "";
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = NO;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Apps/AnchorSafariExtension/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.safari-extension;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = macosx;
-				SKIP_INSTALL = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_VERSION = 6.0;
-			};
-			name = Debug;
-		};
-		DD9000000000000000000002 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = Apps/AnchorSafariExtension/AnchorSafariExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DZPUSA6232;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Apps/AnchorSafariExtension/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.andywang.anchor.safari-extension;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SKIP_INSTALL = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_VERSION = 6.0;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -900,6 +853,53 @@
 			};
 			name = Release;
 		};
+		DD9000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Apps/AnchorSafariExtension/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.andywang.anchor.safari-extension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		DD9000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Apps/AnchorSafariExtension/AnchorSafariExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DZPUSA6232;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Apps/AnchorSafariExtension/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.andywang.anchor.safari-extension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_VERSION = 6.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -930,15 +930,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		DD6000000000000000000001 /* Build configuration list for PBXNativeTarget "AnchorSafariExtension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				DD9000000000000000000001 /* Debug */,
-				DD9000000000000000000002 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		BB6000000000000000000001 /* Build configuration list for PBXNativeTarget "AnchorCommand" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -962,6 +953,15 @@
 			buildConfigurations = (
 				CC9000000000000000000021 /* Debug */,
 				CC9000000000000000000022 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DD6000000000000000000001 /* Build configuration list for PBXNativeTarget "AnchorSafariExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DD9000000000000000000001 /* Debug */,
+				DD9000000000000000000002 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -43,7 +43,7 @@ struct MacReturnMemoryView: View {
             }
         }
         .padding(AnchorSpacing.large)
-        .background(AnchorPalette.surface, in: .rect(cornerRadius: 24, style: .continuous))
+        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 24, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(
@@ -77,7 +77,7 @@ struct MacReturnMemoryView: View {
 
                 Button(L10n.continueWorking, systemImage: "play.fill", action: onContinue)
                     .buttonStyle(.borderedProminent)
-                    .tint(AnchorPalette.deepSea)
+                    .tint(AnchorPalette.interaction)
                     .controlSize(.small)
                     .accessibilityIdentifier("mac.presence.continue")
             }
@@ -153,7 +153,7 @@ struct MacReturnMemoryView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(process.sourceName), \(process.title)")
-        .accessibilityValue("\(progressText(for: process)), \(L10n.status(process.status))")
+        .accessibilityValue("\(progressText(for: process)), \(L10n.processStatus(process))")
     }
 
     private var returningContent: some View {
@@ -176,7 +176,7 @@ struct MacReturnMemoryView: View {
                         if let awaySince {
                             Text(awayDuration(from: awaySince))
                                 .font(.caption.weight(.bold))
-                                .foregroundStyle(AnchorPalette.deepSea)
+                                .foregroundStyle(AnchorPalette.brandDeep)
                         }
                         Text(L10n.returning)
                             .font(.title.bold())
@@ -195,7 +195,7 @@ struct MacReturnMemoryView: View {
 
                 Button(L10n.continueWorking, systemImage: "play.fill", action: onContinue)
                     .buttonStyle(.borderedProminent)
-                    .tint(AnchorPalette.deepSea)
+                    .tint(AnchorPalette.interaction)
                     .controlSize(.small)
                     .accessibilityIdentifier("mac.presence.continue")
             }
@@ -338,10 +338,10 @@ struct MacReturnMemoryView: View {
                 .padding(AnchorSpacing.medium)
             }
         }
-        .background(AnchorPalette.surface, in: .rect(cornerRadius: 16, style: .continuous))
+        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 16, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(AnchorPalette.ink.opacity(0.08), lineWidth: 1)
+                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
         }
     }
 

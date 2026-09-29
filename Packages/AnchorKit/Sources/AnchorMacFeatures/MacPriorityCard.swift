@@ -12,7 +12,7 @@ struct MacPriorityCard: View {
     }
 
     private var blockedProcess: AnchorProcess? {
-        session.processes.first(where: { $0.status == .failed || $0.status == .blocked })
+        session.processes.first(where: { ($0.status == .failed && !$0.isInterrupted) || $0.status == .blocked })
     }
 
     private var attentionProcess: AnchorProcess? {
@@ -49,7 +49,7 @@ struct MacPriorityCard: View {
             VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
                 Text(kicker)
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(AnchorPalette.deepSea)
+                    .foregroundStyle(AnchorPalette.brandDeep)
                     .textCase(.uppercase)
                 Text(headline)
                     .font(.headline)
@@ -69,17 +69,17 @@ struct MacPriorityCard: View {
                     onOpenProcess(processID)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(AnchorPalette.deepSea)
+                .tint(AnchorPalette.interaction)
                 .controlSize(.small)
                 .accessibilityIdentifier("mac.priority.open")
             }
         }
         .padding(AnchorSpacing.medium)
-        .background(tint.opacity(0.11), in: .rect(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(tint.opacity(0.32), lineWidth: 1)
-        }
+        .fluoriteSurface(
+            fill: tint.opacity(0.11),
+            border: tint.opacity(0.32),
+            cornerRadius: 14
+        )
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("mac.priority.card")
     }

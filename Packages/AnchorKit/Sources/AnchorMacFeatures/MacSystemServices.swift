@@ -20,28 +20,30 @@ enum MacLaunchAtLogin {
 }
 
 @MainActor
-final class MacDecisionNotificationService {
+public final class MacDecisionNotificationService {
     private var hasObservedInitialProjection = false
     private var observedDecisionIDs = Set<UUID>()
 
-    static func authorizationStatus() async -> UNAuthorizationStatus {
+    public init() {}
+
+    public static func authorizationStatus() async -> UNAuthorizationStatus {
         await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
     }
 
-    static func requestAuthorization() async -> Bool {
+    public static func requestAuthorization() async -> Bool {
         (try? await UNUserNotificationCenter.current().requestAuthorization(
             options: [.alert, .sound, .badge]
         )) ?? false
     }
 
-    static func openSystemSettings() {
+    public static func openSystemSettings() {
         guard let url = URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension") else {
             return
         }
         NSWorkspace.shared.open(url)
     }
 
-    static func removePendingDecisionNotifications() async {
+    public static func removePendingDecisionNotifications() async {
         let center = UNUserNotificationCenter.current()
         let requests = await center.pendingNotificationRequests()
         let identifiers = requests.map(\.identifier).filter { $0.hasPrefix("anchor.decision.") }
@@ -49,7 +51,7 @@ final class MacDecisionNotificationService {
         center.removePendingNotificationRequests(withIdentifiers: identifiers)
     }
 
-    func observe(_ projection: SessionProjection, enabled: Bool) {
+    public func observe(_ projection: SessionProjection, enabled: Bool) {
         let currentDecisionIDs = Set(projection.openDecisions.map(\.id))
         guard hasObservedInitialProjection else {
             hasObservedInitialProjection = true

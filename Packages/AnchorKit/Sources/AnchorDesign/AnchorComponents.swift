@@ -1,8 +1,8 @@
 import AnchorCore
 import SwiftUI
 
+/// The shared fluorite information surface used by both native app targets.
 public struct AnchorCard<Content: View>: View {
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     private let content: Content
     private let tint: Color?
 
@@ -12,32 +12,12 @@ public struct AnchorCard<Content: View>: View {
     }
 
     public var body: some View {
-#if os(iOS)
         content
             .padding(AnchorSpacing.medium)
             .fluoriteSurface(
                 border: tint.map { $0.opacity(0.32) } ?? AnchorPalette.fluoriteBorder,
                 cornerRadius: 14
             )
-#else
-        content
-            .padding(AnchorSpacing.medium)
-            .background {
-                if reduceTransparency {
-                    AnchorPalette.surface
-                } else {
-                    AnchorPalette.surface.opacity(0.94)
-                }
-            }
-            .overlay(alignment: .top) {
-                Capsule()
-                    .fill((tint ?? .white).opacity(0.42))
-                    .frame(height: 2)
-                    .padding(.horizontal, AnchorSpacing.large)
-            }
-            .clipShape(.rect(cornerRadius: 26, style: .continuous))
-            .shadow(color: (tint ?? AnchorPalette.ink).opacity(0.12), radius: 18, y: 9)
-#endif
     }
 }
 
@@ -49,6 +29,9 @@ public struct AnchorMark: View {
     }
 
     public var body: some View {
+#if os(iOS)
+        HarborBrandMark(size: size)
+#else
         ZStack {
             Circle()
                 .fill(
@@ -77,6 +60,7 @@ public struct AnchorMark: View {
         }
         .shadow(color: AnchorPalette.cyan.opacity(0.22), radius: size * 0.22, y: size * 0.12)
         .accessibilityHidden(true)
+#endif
     }
 }
 
@@ -84,19 +68,25 @@ public struct AnchorMark: View {
 /// richer surrounding process label instead of a standalone single character.
 public struct SourceMark: View {
     private let symbol: String
-    private let tone: String
     private let baseSize: CGFloat
     @ScaledMetric(relativeTo: .title3) private var scale: CGFloat = 1
 
     public init(symbol: String, tone: String, size: CGFloat = 42) {
         self.symbol = symbol
-        self.tone = tone
         baseSize = size
     }
 
     public var body: some View {
-        let size = baseSize * scale
 #if os(iOS)
+        let size = baseSize * scale
+        Text(symbol)
+            .font(.subheadline.bold())
+            .foregroundStyle(AnchorIOSStyle.heading)
+            .frame(width: size, height: size)
+            .background(AnchorIOSStyle.cyan.opacity(0.18), in: .rect(cornerRadius: size * 0.26))
+            .accessibilityHidden(true)
+#else
+        let size = baseSize * scale
         Text(symbol)
             .font(.subheadline.bold())
             .foregroundStyle(AnchorPalette.brandDeep)
@@ -115,27 +105,6 @@ public struct SourceMark: View {
             }
             .shadow(color: AnchorPalette.brandDeep.opacity(0.06), radius: 5, y: 3)
             .accessibilityHidden(true)
-#else
-        Text(symbol)
-            .font(.subheadline.bold())
-            .foregroundStyle(AnchorPalette.deepSea)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .accessibilityHidden(true)
-        .frame(width: size, height: size)
-        .background(
-            AnchorPalette.sourceMark(tone),
-            in: .rect(cornerRadius: size * 0.29, style: .continuous)
-        )
-        .overlay(alignment: .top) {
-            Capsule()
-                .fill(.white.opacity(0.34))
-                .frame(width: size * 0.55, height: max(2, size * 0.08))
-                .padding(.top, size * 0.08)
-        }
-        .shadow(color: AnchorPalette.source(tone).opacity(0.24), radius: size * 0.18, y: size * 0.10)
-        .accessibilityRepresentation {
-            EmptyView()
-        }
 #endif
     }
 }
@@ -144,18 +113,29 @@ public struct StatusBadge: View {
     private let status: ProcessStatus
     private let text: String
     private let decorative: Bool
+    private let interrupted: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo: .caption) private var textSize: CGFloat = 12
     @ScaledMetric(relativeTo: .caption) private var badgeScale: CGFloat = 1
 
-    public init(status: ProcessStatus, text: String, decorative: Bool = false) {
+    public init(status: ProcessStatus, text: String, decorative: Bool = false, interrupted: Bool = false) {
         self.status = status
         self.text = text
         self.decorative = decorative
+        self.interrupted = interrupted
     }
 
     @ViewBuilder
     public var body: some View {
+#if os(iOS)
+        Label(text, systemImage: symbol)
+            .font(.caption.bold())
+            .foregroundStyle(AnchorIOSStyle.text)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(tint.opacity(0.20), in: .capsule)
+            .accessibilityHidden(decorative)
+#else
         if decorative {
             Canvas { context, size in
                 let capsule = Path(
@@ -211,6 +191,7 @@ public struct StatusBadge: View {
                 )
                 .accessibilityRespondsToUserInteraction(false)
         }
+#endif
     }
 
     private var badgeWidth: CGFloat {
@@ -218,7 +199,8 @@ public struct StatusBadge: View {
     }
 
     private var symbol: String {
-        switch status {
+        if interrupted { return "stop.circle" }
+        return switch status {
         case .queued: "clock"
         case .running: "play.fill"
         case .needsDecision: "exclamationmark.bubble.fill"
@@ -230,7 +212,8 @@ public struct StatusBadge: View {
     }
 
     private var tint: Color {
-        switch status {
+        if interrupted { return AnchorPalette.secondaryInk }
+        return switch status {
         case .needsDecision, .blocked: AnchorPalette.sand
         case .completed: AnchorPalette.seafoam
         case .failed, .disconnected: AnchorPalette.coral
@@ -294,6 +277,8 @@ public struct AnchorPrimaryButtonStyle: ButtonStyle {
 
     public func makeBody(configuration: Configuration) -> some View {
 #if os(iOS)
+        AnchorIOSPrimaryButtonStyle().makeBody(configuration: configuration)
+#else
         configuration.label
             .font(.headline)
             .foregroundStyle(.white)
@@ -319,20 +304,6 @@ public struct AnchorPrimaryButtonStyle: ButtonStyle {
             .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.98)
             .opacity(configuration.isPressed ? 0.94 : 1)
             .animation(reduceMotion ? nil : AnchorMotion.press, value: configuration.isPressed)
-#else
-        configuration.label
-            .font(.headline)
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity, minHeight: 52)
-            .padding(.horizontal, AnchorSpacing.medium)
-            .background(AnchorPalette.deepSea, in: .capsule)
-            .shadow(
-                color: AnchorPalette.deepSea.opacity(0.25),
-                radius: 0,
-                y: reduceMotion ? 3 : (configuration.isPressed ? 2 : 5)
-            )
-            .offset(y: reduceMotion ? 0 : (configuration.isPressed ? 3 : 0))
-            .animation(reduceMotion ? nil : .snappy(duration: 0.18), value: configuration.isPressed)
 #endif
     }
 }

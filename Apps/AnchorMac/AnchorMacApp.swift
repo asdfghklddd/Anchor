@@ -6,6 +6,9 @@ import SwiftUI
 
 @main
 struct AnchorMacApp: App {
+    @NSApplicationDelegateAdaptor(AnchorMacApplicationDelegate.self)
+    private var applicationDelegate
+
     private let model: AnchorSessionModel
     private let server: AnchorBonjourServer
     private let proximityAdvertiser: AnchorProximityAdvertiser
@@ -25,6 +28,14 @@ struct AnchorMacApp: App {
         let usesAutomaticICloudPairing: Bool
 #if DEBUG
         isUITesting = environment["ANCHOR_UI_TESTING"] == "1"
+        // Apply appearance only to the isolated test app, without changing macOS settings.
+        if isUITesting {
+            switch environment["ANCHOR_UI_TEST_APPEARANCE"] {
+            case "Dark": NSApplication.shared.appearance = NSAppearance(named: .darkAqua)
+            case "Light": NSApplication.shared.appearance = NSAppearance(named: .aqua)
+            default: break
+            }
+        }
         let uiTestStorageID = environment["ANCHOR_UI_TEST_STORAGE_ID"]
             .flatMap(UUID.init(uuidString:)) ?? UUID()
         let uiTestRootURL = isUITesting
@@ -155,9 +166,12 @@ struct AnchorMacApp: App {
         }
         server.onCurrentProcessSnapshot = currentProcessSnapshot
         advertiser.onCurrentProcessSnapshot = currentProcessSnapshot
+        let phoneAnchorState = AnchorPhoneAnchorState()
         let applyInboundEvent: @Sendable (EventEnvelope) async throws -> Void = { envelope in
             let wasAlreadyApplied = await repository.currentProjection().session?.processedEventIDs.contains(envelope.id) == true
             try await repository.applyRemote(envelope)
+            let appliedProjection = await repository.currentProjection()
+            await phoneAnchorState.receive(envelope, projection: appliedProjection, localSourceID: deviceID)
             guard !wasAlreadyApplied,
                   let operation = try? JSONDecoder.anchor.decode(
                       SessionOperation.self,
@@ -280,6 +294,12 @@ struct AnchorMacApp: App {
         )
         self.sourceCoordinator = sourceCoordinator
         self.taskLifecycleBridge = taskLifecycleBridge
+        applicationDelegate.configure(
+            model: model,
+            linkController: server,
+            sourceSetupModel: sourceSetupModel,
+            phoneAnchorState: phoneAnchorState
+        )
         let startup: @MainActor @Sendable () async -> Void = {
 #if DEBUG
             if let validationRootURL {
@@ -330,66 +350,12 @@ struct AnchorMacApp: App {
     }
 
     var body: some Scene {
-        Window("Anchor", id: "anchor-details") {
-            AnchorMacRootView(
+        Settings {
+            AnchorMacSettingsScene(
                 model: model,
-                linkController: server,
-                sourceSetupModel: sourceSetupModel,
-                showsCompletedSessionInCurrentWork: false
+                controller: server,
+                sourceSetupModel: sourceSetupModel
             )
         }
-        .defaultSize(width: 1080, height: 720)
-
-        MenuBarExtra {
-            MacMenuHost(model: model)
-        } label: {
-            Label {
-                Text("Anchor")
-            } icon: {
-                // MenuBarExtra renders this asset at its intrinsic 18-point size.
-                Image("AnchorMenuBarIcon")
-                    .renderingMode(.template)
-            }
-        }
-        .menuBarExtraStyle(.window)
-    }
-}
-
-private struct MacMenuHost: View {
-    let model: AnchorSessionModel
-    @Environment(\.dismiss) private var dismissMenu
-    @Environment(\.openWindow) private var openWindow
-    @AppStorage("anchor.mac.selected-section") private var selectedSection = "current"
-
-    var body: some View {
-        AnchorMacMenuView(
-            model: model,
-            onOpenDetails: { open(.current) },
-            onOpenTimeline: { open(.timeline) },
-            onOpenSources: { open(.sources) },
-            onOpenSettings: { open(.settings) },
-            onContinueWorking: continueWorking,
-            onQuit: { NSApp.terminate(nil) },
-            showsCompletedSessionInCurrentWork: false
-        )
-    }
-
-    private func continueWorking() {
-        open(.current)
-        Task { _ = await model.continueWorking() }
-    }
-
-    private func open(_ destination: MenuDestination) {
-        selectedSection = destination.rawValue
-        dismissMenu()
-        NSApp.activate(ignoringOtherApps: true)
-        openWindow(id: "anchor-details")
-    }
-
-    private enum MenuDestination: String {
-        case current
-        case timeline
-        case sources
-        case settings
     }
 }

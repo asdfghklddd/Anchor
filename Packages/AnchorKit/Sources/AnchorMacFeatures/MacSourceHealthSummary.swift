@@ -72,11 +72,7 @@ struct MacSourceHealthSummary: View {
             }
         }
         .padding(AnchorSpacing.large)
-        .background(AnchorPalette.surface, in: .rect(cornerRadius: 22, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(AnchorPalette.ink.opacity(0.08), lineWidth: 1)
-        }
+        .fluoriteSurface(cornerRadius: 14, elevated: true)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("mac.sources.summary")
     }
@@ -85,7 +81,7 @@ struct MacSourceHealthSummary: View {
         VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
             Text(L10n.sourceHealth)
                 .font(.caption.weight(.bold))
-                .foregroundStyle(AnchorPalette.deepSea)
+                .foregroundStyle(AnchorPalette.interaction)
                 .textCase(.uppercase)
             Text(L10n.connections)
                 .font(.title2.bold())
@@ -157,7 +153,7 @@ private struct MacSourceMetric: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, AnchorSpacing.small)
         .padding(.vertical, AnchorSpacing.xSmall)
-        .background(tint.opacity(0.10), in: .rect(cornerRadius: 12, style: .continuous))
+        .background(tint.opacity(0.10), in: .rect(cornerRadius: 10))
     }
 }
 #endif

@@ -187,10 +187,11 @@ public actor ProcessSourceCoordinator: SourceHealthProviding, SourceActionPerfor
                 try Task.checkCancellation()
 
                 do {
-                    guard let currentSessionID = await repository.currentProjection().session?.id else {
+                    let current = await repository.currentProjection()
+                    guard !current.hostedSessions.isEmpty else {
                         throw SessionRepositoryError.noActiveSession
                     }
-                    guard currentSessionID == externalEvent.sessionID else {
+                    guard current.hostedSessions.contains(where: { $0.id == externalEvent.sessionID }) else {
                         throw ProcessSourceError.sessionMismatch
                     }
                     let observation = try externalEvent.observation()

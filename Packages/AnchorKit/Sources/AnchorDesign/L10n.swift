@@ -242,6 +242,10 @@ public enum L10n {
     public static let localOnlyDetail = AnchorStrings.value("privacy.local.detail", default: "Raw work content stays on your devices unless you explicitly connect a source.")
     public static let notificationMeaningful = AnchorStrings.value("notifications.meaningful", default: "Meaningful changes")
     public static let notificationDecisions = AnchorStrings.value("notifications.decisions", default: "Decision requests")
+    public static let edgeSoundEffects = AnchorStrings.value(
+        "sound.edge.effects",
+        default: "Anchor sound effects"
+    )
     public static let notificationPermissionDetail = AnchorStrings.value(
         "notifications.permission.detail",
         default: "Allow notifications in System Settings to receive decision requests."
@@ -472,7 +476,48 @@ public enum L10n {
     public static let noEvents = AnchorStrings.value("events.none", default: "No events yet")
     public static let openDetails = AnchorStrings.value("mac.open.details", default: "Open Anchor")
     public static let openCurrentProcess = AnchorStrings.value("mac.open.current", default: "Open current process")
+    public static let navigationExpand = AnchorStrings.value(
+        "mac.navigation.expand",
+        default: "Expand navigation"
+    )
+    public static let navigationCollapse = AnchorStrings.value(
+        "mac.navigation.collapse",
+        default: "Collapse navigation"
+    )
+    public static let navigationExpanded = AnchorStrings.value(
+        "mac.navigation.expanded",
+        default: "Navigation expanded"
+    )
+    public static let navigationCollapsed = AnchorStrings.value(
+        "mac.navigation.collapsed",
+        default: "Navigation collapsed"
+    )
+    public static let historySearch = AnchorStrings.value(
+        "mac.history.search",
+        default: "Search history"
+    )
+    public static let historyTrail = AnchorStrings.value(
+        "mac.history.trail",
+        default: "History trail"
+    )
+    public static let viewFullTimeline = AnchorStrings.value(
+        "mac.timeline.view.all",
+        default: "View full timeline"
+    )
+    public static let processDetails = AnchorStrings.value(
+        "mac.process.details",
+        default: "Process details"
+    )
+    public static let recoveryReadError = AnchorStrings.value(
+        "mac.error.recovery.read",
+        default: "Some saved data could not be read. Anchor kept the original data for recovery."
+    )
+    public static let showFewerProcesses = AnchorStrings.value(
+        "mac.process.show.fewer",
+        default: "Show fewer processes"
+    )
     public static let openOnMac = AnchorStrings.value("process.action.open.on.mac", default: "Open on Mac")
+    public static let currentTasks = AnchorStrings.value("mac.current.tasks", default: "Current tasks")
     public static let currentWork = AnchorStrings.value("mac.current.work", default: "Current work")
     public static let timeline = AnchorStrings.value("timeline", default: "Timeline")
     public static let historyNoSnapshots = AnchorStrings.value(
@@ -551,6 +596,13 @@ public enum L10n {
 
     public static func processCount(_ count: Int) -> String {
         String.localizedStringWithFormat(AnchorStrings.value("process.count", default: "%lld processes"), count)
+    }
+
+    public static func showAllProcesses(_ count: Int) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value("mac.process.show.all", default: "Show all %lld processes"),
+            count
+        )
     }
 
     public static func noteCount(_ count: Int) -> String {
@@ -645,6 +697,16 @@ public enum L10n {
         case .wide: AnchorStrings.value("tile.wide", default: "Wide")
         case .large: AnchorStrings.value("tile.large", default: "Large")
         }
+    }
+
+    public static func processStatus(_ process: AnchorProcess) -> String {
+        process.isInterrupted
+            ? AnchorStrings.value("status.interrupted", default: "Interrupted")
+            : status(process.status)
+    }
+
+    public static func compactProcessStatus(_ process: AnchorProcess) -> String {
+        process.isInterrupted ? processStatus(process) : compactStatus(process.status)
     }
 
     public static func status(_ status: ProcessStatus) -> String {

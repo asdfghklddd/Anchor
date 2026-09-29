@@ -1,6 +1,9 @@
 import Foundation
 
 public enum SessionCommand: Sendable {
+    indirect case forSession(UUID, SessionCommand)
+    case hostSession(AnchorSession)
+    case selectSession(UUID)
     case createSession(goal: AnchorGoal, processes: [AnchorProcess])
     case updateGoal(title: String, completionCriteria: String, note: String)
     case addNote(String)

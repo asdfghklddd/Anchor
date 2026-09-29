@@ -9,7 +9,17 @@ public enum SessionReducer {
         var result = projection
         result.generatedAt = now
 
+        result.session?.captureJoiningOrder()
         switch command {
+        case .forSession:
+            guard let operation = try SessionOperation.make(from: command, projection: result, now: now) else {
+                throw SessionRepositoryError.malformedEvent
+            }
+            return try reduce(result, operation: operation, now: now)
+        case let .hostSession(session):
+            return try reduce(result, operation: .hostSession(session), now: now)
+        case let .selectSession(id):
+            try result.selectHostedSession(id)
         case let .createSession(goal, processes):
             // A duplicate create can arrive after a retry. The command does
             // not carry the generated session ID, so an existing workspace is
@@ -138,6 +148,7 @@ public enum SessionReducer {
             return try reduce(
                 result,
                 operation: .observeProcess(observation),
+                targetSessionID: observation.process.sessionID ?? result.session?.id ?? UUID(),
                 now: now
             )
 
@@ -289,6 +300,7 @@ public enum SessionReducer {
             result.errorMessage = nil
         }
 
+        result.session?.captureJoiningOrder()
         return result
     }
 
@@ -301,7 +313,19 @@ public enum SessionReducer {
         let operationDate = now ?? operation.occurredAt
         result.generatedAt = operationDate
 
+        result.session?.captureJoiningOrder()
         switch operation {
+        case let .scoped(id, operation):
+            return try reduce(result, operation: operation, targetSessionID: id, now: operationDate)
+        case let .hostSession(session):
+            guard !result.hostedSessions.contains(where: { $0.id == session.id }),
+                  !result.archivedSessions.contains(where: { $0.id == session.id }) else { return result }
+            if let current = result.session { result.additionalSessions.append(current) }
+            result.session = session
+            result.dataObservedAt = operationDate
+            result.errorMessage = nil
+        case let .selectSession(id, _):
+            try result.selectHostedSession(id)
         case let .createSession(session):
             if let existing = result.session,
                existing.id != session.id,
@@ -425,6 +449,15 @@ public enum SessionReducer {
             try result.withSession { session in
                 append(event, to: &session)
             }
+
+        case let .syncTaskStructure(task, workItems, _):
+            guard result.session?.id == task.id,
+                  workItems.allSatisfy({ $0.taskID == task.id }) else {
+                throw SessionRepositoryError.eventSessionMismatch
+            }
+            // This event populated the retired taskRecord read model only.
+            // TaskRunStore owns that data now; retain the original envelope,
+            // leaving session goals, processes and their newer observations intact.
 
         case let .observeProcess(observation):
             try result.withSession { session in
@@ -573,6 +606,7 @@ public enum SessionReducer {
             result.dataObservedAt = at
         }
 
+        result.session?.captureJoiningOrder()
         return result
     }
 }

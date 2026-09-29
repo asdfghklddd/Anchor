@@ -4,10 +4,13 @@ import Foundation
 /// another device. UI-facing `SessionCommand` values intentionally remain
 /// ergonomic; this operation is the wire and storage representation.
 public enum SessionOperation: Codable, Hashable, Sendable {
-    // Schema 2 adds explicit unfinished archival; older peers reject it safely.
-    static let latestEnvelopeSchemaVersion = 2
+    // Schema 3 adds concurrent hosting and task selection; older peers reject these operations safely.
+    static let latestEnvelopeSchemaVersion = 3
 
     case createSession(AnchorSession)
+    indirect case scoped(sessionID: UUID, operation: SessionOperation)
+    case hostSession(AnchorSession)
+    case selectSession(UUID, at: Date)
     case updateGoal(AnchorGoal, at: Date)
     case addNote(AnchorNote)
     case resolveDecision(
@@ -22,6 +25,8 @@ public enum SessionOperation: Codable, Hashable, Sendable {
     case reorderProcesses([UUID])
     case updateTileSize(processID: UUID, size: ProcessTileSize)
     case recordEvent(ProcessEvent)
+    // Decode the retired task projection event without discarding immutable history.
+    case syncTaskStructure(task: AnchorTask, workItems: [AnchorWorkItem], at: Date)
     case observeProcess(ProcessObservation)
     case updatePresence(status: PresenceStatus, at: Date, eventID: UUID)
     case acknowledgeReturn(at: Date)
@@ -31,9 +36,12 @@ public enum SessionOperation: Codable, Hashable, Sendable {
 
     public var sessionID: UUID? {
         switch self {
-        case let .createSession(session): session.id
+        case let .scoped(id, _): id
+        case let .createSession(session), let .hostSession(session): session.id
+        case let .selectSession(id, _): id
         case let .addNote(note): note.sessionID
         case let .addProcess(process), let .updateProcess(process): process.sessionID
+        case let .syncTaskStructure(task, _, _): task.id
         case let .recordEvent(event): event.sessionID
         case let .observeProcess(observation): observation.process.sessionID
         default: nil
@@ -42,12 +50,15 @@ public enum SessionOperation: Codable, Hashable, Sendable {
 
     public var occurredAt: Date {
         switch self {
-        case let .createSession(session): session.startedAt
+        case let .scoped(_, operation): operation.occurredAt
+        case let .createSession(session), let .hostSession(session): session.startedAt
+        case let .selectSession(_, at): at
         case let .updateGoal(_, at): at
         case let .addNote(note): note.createdAt
         case let .resolveDecision(_, _, resolvedAt, _): resolvedAt
         case let .addProcess(process): process.updatedAt
         case let .updateProcess(process): process.updatedAt
+        case let .syncTaskStructure(_, _, at): at
         case let .recordEvent(event): event.occurredAt
         case let .observeProcess(observation):
             observation.event?.occurredAt ?? observation.process.updatedAt
@@ -62,12 +73,16 @@ public enum SessionOperation: Codable, Hashable, Sendable {
     }
 
     var envelopeSchemaVersion: Int {
+        if case .scoped = self { return 3 }
+        if case .hostSession = self { return 3 }
+        if case .selectSession = self { return 3 }
         if case .archiveSession = self { return 2 }
         return 1
     }
 
     public var deduplicationKey: String? {
         switch self {
+        case let .scoped(_, operation): operation.deduplicationKey
         case let .recordEvent(event): event.deduplicationKey
         case let .observeProcess(observation): observation.deduplicationKey
         default: nil
@@ -78,6 +93,7 @@ public enum SessionOperation: Codable, Hashable, Sendable {
     /// operation remains durable even when no adapter supports that command.
     public var sourceAction: SourceAction? {
         switch self {
+        case let .scoped(_, operation): operation.sourceAction
         case let .resolveDecision(decisionID, optionID, _, _):
             .resolveDecision(decisionID: decisionID, optionID: optionID)
         default:
@@ -93,6 +109,17 @@ public enum SessionOperation: Codable, Hashable, Sendable {
         now: Date = .now
     ) throws -> SessionOperation? {
         switch command {
+        case let .forSession(id, command):
+            var context = projection
+            try context.selectHostedSession(id)
+            guard let operation = try make(from: command, projection: context, now: now) else {
+                throw SessionRepositoryError.malformedEvent
+            }
+            return .scoped(sessionID: id, operation: operation)
+        case let .hostSession(session): return .hostSession(session)
+        case let .selectSession(id):
+            guard projection.hostedSessions.contains(where: { $0.id == id }) else { throw SessionRepositoryError.noActiveSession }
+            return .selectSession(id, at: now)
         case let .createSession(goal, processes):
             let sessionID = UUID()
             let normalizedProcesses = processes.map { process in
@@ -119,6 +146,7 @@ public enum SessionOperation: Codable, Hashable, Sendable {
                     title: title,
                     completionCriteria: completionCriteria,
                     note: note,
+                    userPlan: session.goal.userPlan,
                     createdAt: session.goal.createdAt
                 ),
                 at: now
@@ -166,16 +194,20 @@ public enum SessionOperation: Codable, Hashable, Sendable {
                 normalizedEvent(event, sessionID: projection.session?.id, receivedAt: now)
             )
         case let .observeProcess(observation):
-            guard projection.session != nil else {
+            guard !projection.hostedSessions.isEmpty else {
                 throw SessionRepositoryError.noActiveSession
             }
+            if let id = observation.process.sessionID,
+               !projection.hostedSessions.contains(where: { $0.id == id }) {
+                throw SessionRepositoryError.eventSessionMismatch
+            }
             var process = observation.process
-            process.sessionID = projection.session?.id ?? process.sessionID
+            process.sessionID = process.sessionID ?? projection.session?.id
             var event = observation.event
             if let eventValue = event {
                 event = normalizedEvent(
                     eventValue,
-                    sessionID: projection.session?.id ?? eventValue.sessionID,
+                    sessionID: process.sessionID ?? eventValue.sessionID,
                     receivedAt: now
                 )
             }
