@@ -336,6 +336,7 @@ struct MacSourcesView: View {
 }
 
 struct MacSettingsView: View {
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
     let projection: SessionProjection
     let controller: (any LocalLinkControlling)?
     let sourceSetupModel: MacSourceSetupModel?
@@ -354,36 +355,6 @@ struct MacSettingsView: View {
 
     var body: some View {
         Form {
-            Section(L10n.sources) {
-                if let sourceSetupModel {
-                    MacSourceSetupView(model: sourceSetupModel)
-                        .accessibilityIdentifier("mac.sources.setup")
-                }
-
-                MacSourceHealthSummary(projection: projection)
-
-                if sourceGroups.isEmpty {
-                    ContentUnavailableView(
-                        L10n.connectedSources,
-                        systemImage: "point.3.filled.connected.trianglepath.dotted",
-                        description: Text(L10n.noEvents)
-                    )
-                    .frame(maxWidth: .infinity, minHeight: 180)
-                } else {
-                    LazyVGrid(
-                        columns: [GridItem(.adaptive(minimum: 280), spacing: AnchorSpacing.medium)],
-                        alignment: .leading,
-                        spacing: AnchorSpacing.medium
-                    ) {
-                        ForEach(sourceGroups) { source in
-                            MacSourceCard(source: source) {
-                                selectedSource = source
-                            }
-                        }
-                    }
-                }
-            }
-
             Section(L10n.connections) {
                 LabeledContent(L10n.macConnection) {
                     Label(
@@ -412,7 +383,7 @@ struct MacSettingsView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
-                        if let controller {
+                        if projection.connection == .failed, let controller {
                             Button(L10n.retry, systemImage: "arrow.clockwise") {
                                 Task { await controller.retryConnection() }
                             }
@@ -421,7 +392,35 @@ struct MacSettingsView: View {
                     }
                 }
                 MacPairingControls(controller: controller)
-                    .accessibilityIdentifier("mac.settings.pair")
+            }
+            Section(L10n.sources) {
+                if let sourceSetupModel {
+                    MacSourceSetupView(model: sourceSetupModel)
+                        .accessibilityIdentifier("mac.sources.setup")
+                }
+
+                MacSourceHealthSummary(projection: projection)
+
+                if sourceGroups.isEmpty {
+                    ContentUnavailableView(
+                        L10n.connectedSources,
+                        systemImage: "point.3.filled.connected.trianglepath.dotted",
+                        description: Text(L10n.noEvents)
+                    )
+                    .frame(maxWidth: .infinity, minHeight: 180)
+                } else {
+                    LazyVGrid(
+                        columns: [GridItem(.adaptive(minimum: 280), spacing: AnchorSpacing.medium)],
+                        alignment: .leading,
+                        spacing: AnchorSpacing.medium
+                    ) {
+                        ForEach(sourceGroups) { source in
+                            MacSourceCard(source: source) {
+                                selectedSource = source
+                            }
+                        }
+                    }
+                }
             }
             Section(L10n.settings) {
                 Toggle(L10n.startAtLogin, isOn: $launchAtLogin)
@@ -473,7 +472,8 @@ struct MacSettingsView: View {
                 }
                 Label(L10n.voiceOver, systemImage: "speaker.wave.3")
                 Label(L10n.dynamicType, systemImage: "textformat.size")
-                Label(L10n.reduceMotion, systemImage: "figure.walk.motion")
+                Toggle(L10n.reduceMotion, isOn: $reduceMotion)
+                    .accessibilityIdentifier("settings.reduceMotion")
                 Label(L10n.increaseContrast, systemImage: "circle.lefthalf.filled")
                 Label(L10n.reduceTransparency, systemImage: "square.on.square")
             }
@@ -563,8 +563,8 @@ struct MacSettingsView: View {
         switch projection.connection {
         case .connected: AnchorPalette.mintInk
         case .pairing: AnchorPalette.sourceInk("sand")
-        case .disconnected, .permissionDenied, .failed: AnchorPalette.coral
-        case .unavailable: AnchorPalette.secondaryInk
+        case .permissionDenied, .failed: AnchorPalette.coral
+        case .disconnected, .unavailable: AnchorPalette.secondaryInk
         }
     }
 
@@ -572,7 +572,6 @@ struct MacSettingsView: View {
         switch projection.connection {
         case .permissionDenied: L10n.permissionDeniedDetail
         case .failed: L10n.connectionFailedDetail
-        case .disconnected: L10n.disconnectedDetail
         default: nil
         }
     }

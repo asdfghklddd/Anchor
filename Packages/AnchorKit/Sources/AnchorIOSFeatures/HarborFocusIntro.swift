@@ -75,7 +75,7 @@ struct HarborFocusIntro: View {
 
     private var focusMinutes: Int {
         guard let session else { return 0 }
-        return max(1, Int(now.timeIntervalSince(session.startedAt) / 60))
+        return max(0, Int(now.timeIntervalSince(session.startedAt) / 60))
     }
 
     private var focusSummary: String {

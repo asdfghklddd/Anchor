@@ -78,6 +78,7 @@ struct HarborTopBar: View {
                     .font(.caption).foregroundStyle(connectionColor)
             }
             .frame(minWidth: 44, minHeight: 44, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("workspace.connection.action")
@@ -134,7 +135,7 @@ struct HarborTopBar: View {
 
     private var connectionSymbol: String {
         switch connection {
-        case .connected: "wifi"
+        case .connected: "link"
         case .pairing: "arrow.triangle.2.circlepath"
         case .disconnected, .unavailable: "wifi.slash"
         case .permissionDenied: "hand.raised.fill"

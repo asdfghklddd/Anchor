@@ -85,7 +85,10 @@ public enum SessionReducer {
                 session.decisions[index].resolvedAt = now
                 let processID = session.decisions[index].processID
                 if let processIndex = session.processes.firstIndex(where: { $0.id == processID }) {
-                    session.processes[processIndex].status = .running
+                    // A saved choice is not evidence that an external process resumed.
+                    if session.processes[processIndex].sourceID == nil {
+                        session.processes[processIndex].status = .running
+                    }
                     session.processes[processIndex].updatedAt = now
                 }
                 let event = ProcessEvent(
@@ -125,10 +128,12 @@ public enum SessionReducer {
 
         case let .reorderProcesses(ids):
             try result.withSession { session in
-                let lookup = Dictionary(uniqueKeysWithValues: session.processes.map { ($0.id, $0) })
-                let ordered = ids.compactMap { lookup[$0] }
-                let remaining = session.processes.filter { !ids.contains($0.id) }
-                session.processes = ordered + remaining
+                let lookup = Dictionary(session.processes.map { ($0.id, $0) }, uniquingKeysWith: { _, latest in latest })
+                var seen = Set<UUID>()
+                session.processes = (ids + session.processes.map(\.id)).compactMap { id in
+                    guard seen.insert(id).inserted else { return nil }
+                    return lookup[id]
+                }
             }
 
         case let .updateTileSize(processID, size):
@@ -254,7 +259,7 @@ public enum SessionReducer {
             // intact so stale projections remain visible to the UI.
 
         case let .updateSourceHealth(health):
-            result.sourceHealth = Dictionary(uniqueKeysWithValues: health.map { ($0.id, $0) })
+            result.sourceHealth = Dictionary(health.map { ($0.id, $0) }, uniquingKeysWith: { _, latest in latest })
 
         case let .updateDurableSyncState(state):
             result.durableSyncState = state
@@ -386,7 +391,10 @@ public enum SessionReducer {
                 session.decisions[index].resolvedAt = resolvedAt
                 let processID = session.decisions[index].processID
                 if let processIndex = session.processes.firstIndex(where: { $0.id == processID }) {
-                    session.processes[processIndex].status = .running
+                    // A saved choice is not evidence that an external process resumed.
+                    if session.processes[processIndex].sourceID == nil {
+                        session.processes[processIndex].status = .running
+                    }
                     session.processes[processIndex].updatedAt = resolvedAt
                 }
                 append(
@@ -430,11 +438,12 @@ public enum SessionReducer {
 
         case let .reorderProcesses(ids):
             try result.withSession { session in
-                let lookup = Dictionary(uniqueKeysWithValues: session.processes.map { ($0.id, $0) })
-                let requestedIDs = Set(ids)
-                let ordered = ids.compactMap { lookup[$0] }
-                let remaining = session.processes.filter { !requestedIDs.contains($0.id) }
-                session.processes = ordered + remaining
+                let lookup = Dictionary(session.processes.map { ($0.id, $0) }, uniquingKeysWith: { _, latest in latest })
+                var seen = Set<UUID>()
+                session.processes = (ids + session.processes.map(\.id)).compactMap { id in
+                    guard seen.insert(id).inserted else { return nil }
+                    return lookup[id]
+                }
             }
 
         case let .updateTileSize(processID, size):

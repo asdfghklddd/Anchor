@@ -2,6 +2,9 @@ import SwiftUI
 
 /// Shared motion values keep feedback crisp and spatial transitions consistent.
 public enum AnchorMotion {
+    /// App-owned preference: full motion on first launch, reduced only by opt-in.
+    public static let reduceMotionDefaultsKey = "anchor.accessibility.reduceMotion"
+
     public static let press = Animation.timingCurve(0.23, 1, 0.32, 1, duration: 0.14)
     public static let micro = Animation.timingCurve(0.23, 1, 0.32, 1, duration: 0.20)
     public static let panel = Animation.timingCurve(0.23, 1, 0.32, 1, duration: 0.26)

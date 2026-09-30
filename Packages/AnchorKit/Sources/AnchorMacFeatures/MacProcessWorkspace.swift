@@ -518,6 +518,9 @@ struct MacDecisionPanel: View {
                 }
             }
 
+            Text(AnchorStrings.value("decision.local.record", default: "Your choice is saved in Anchor. Continue in the source app unless it supports remote actions; process status updates come from that source."))
+                .font(.caption).foregroundStyle(.secondary)
+
             Button(L10n.confirmChoice) {
                 guard let selectedOptionID,
                       let option = decision.options.first(where: { $0.id == selectedOptionID }) else {

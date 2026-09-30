@@ -5,9 +5,11 @@ public struct AnchorEventAssociation: Codable, Hashable, Sendable {
     public let taskID: UUID
     public let workItemID: UUID
     public let confirmedByUser: Bool
+    public let automaticallyMatched: Bool?
 
-    public init(taskID: UUID, workItemID: UUID, confirmedByUser: Bool = false) {
+    public init(taskID: UUID, workItemID: UUID, confirmedByUser: Bool = false, automaticallyMatched: Bool = false) {
         self.taskID = taskID; self.workItemID = workItemID; self.confirmedByUser = confirmedByUser
+        self.automaticallyMatched = automaticallyMatched ? true : nil
     }
 }
 

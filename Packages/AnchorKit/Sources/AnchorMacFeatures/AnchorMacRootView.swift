@@ -16,7 +16,7 @@ public struct AnchorMacRootView: View {
     @State private var isSidebarExpanded = false
     @State private var requestsSidebarToggleFocus = false
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
     @Environment(\.controlActiveState) private var controlActiveState
 
     public init(
@@ -53,8 +53,7 @@ public struct AnchorMacRootView: View {
                         .accessibilityIdentifier("mac.navigation.current")
                     }
                     MacRootStatusBanners(
-                        model: model,
-                        linkController: linkController
+                        model: model
                     )
                 }
                 .fixedSize(horizontal: false, vertical: true)
@@ -67,8 +66,11 @@ public struct AnchorMacRootView: View {
                         }
                 }
                 .toolbar(.hidden, for: .windowToolbar)
+                .contentMargins(.top, 72, for: .scrollContent)
             }
-            .padding(.top, 48)
+            .ignoresSafeArea(.container, edges: .top)
+            // Keep scrolling text clear of the fixed navigation trigger and window controls.
+            .padding(.leading, 56)
             .zIndex(0)
 
             HStack(alignment: .top, spacing: AnchorSpacing.small) {
@@ -108,6 +110,11 @@ public struct AnchorMacRootView: View {
             }
         }
         .onAppear(perform: migrateStoredSection)
+        // NavigationStack can recreate a native toolbar after the window is configured.
+        // Keep its background and scroll-edge material out of the custom header.
+        .toolbar(.hidden, for: .windowToolbar)
+        .toolbarBackground(.hidden, for: .windowToolbar)
+        .scrollEdgeEffectHidden(true, for: .top)
         .tint(AnchorPalette.interaction)
         .frame(minWidth: 900, minHeight: 620)
         .toolbar {
@@ -207,26 +214,15 @@ public struct AnchorMacRootView: View {
 
 private struct MacRootStatusBanners: View {
     let model: AnchorSessionModel
-    let linkController: (any LocalLinkControlling)?
 
     var body: some View {
-        VStack(spacing: 0) {
-            if let errorMessage {
-                MacErrorBanner(
-                    message: errorMessage,
-                    // A transport retry cannot repair a repository or command error.
-                    onRetry: nil,
-                    onDismiss: { Task { await model.clearError() } }
-                )
-            }
-            if model.projection.isStale {
-                MacFreshnessBanner(
-                    observedAt: model.projection.dataObservedAt,
-                    onRetry: linkController.map { controller in
-                        { Task { await controller.retryConnection() } }
-                    }
-                )
-            }
+        if let errorMessage {
+            MacErrorBanner(
+                message: errorMessage,
+                // A transport retry cannot repair a repository or command error.
+                onRetry: nil,
+                onDismiss: { Task { await model.clearError() } }
+            )
         }
     }
 

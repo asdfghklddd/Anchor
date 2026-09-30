@@ -218,6 +218,38 @@ struct AnchorLinkCodecTests {
         #expect(await target.retainedEvents() == [currentEvent])
     }
 
+    @Test("Reconnect restores every active hosted task after earlier delivery")
+    func reconnectRestoresAllHostedTasks() async throws {
+        let suffix = UUID().uuidString
+        let sourceStorage = URL.temporaryDirectory.appending(path: "anchor-hosted-source-\(suffix).json")
+        let targetStorage = URL.temporaryDirectory.appending(path: "anchor-hosted-target-\(suffix).json")
+        defer {
+            try? FileManager.default.removeItem(at: sourceStorage)
+            try? FileManager.default.removeItem(at: targetStorage)
+        }
+
+        let source = LocalSessionRepository(storageURL: sourceStorage, sourceID: UUID())
+        let target = LocalSessionRepository(storageURL: targetStorage, sourceID: UUID())
+        for title in ["Essay", "Portfolio"] {
+            try await source.send(.hostSession(AnchorSession(
+                goal: AnchorGoal(title: title, completionCriteria: "Done")
+            )))
+        }
+        for event in await source.pendingEvents() {
+            try await source.markDelivered(event.id)
+        }
+
+        let linked = LinkedSessionRepository(base: source, transport: ApplyingEventTransport(receiver: target))
+        await linked.reconcilePeerHistory()
+        await linked.reconcilePeerHistory()
+
+        let sourceIDs = await source.currentProjection().hostedSessions.map(\.id)
+        let targetProjection = await target.currentProjection()
+        #expect(targetProjection.hostedSessions.map(\.id) == sourceIDs)
+        #expect(targetProjection.hostedSessions.map(\.goal.title) == ["Essay", "Portfolio"])
+        #expect(await target.retainedEvents().count == 2)
+    }
+
     @Test("Updating trust material does not delete the existing Keychain item first")
     func keychainUpdate() throws {
         let service = "com.andywang.anchor.tests.keychain.\(UUID().uuidString)"
@@ -404,6 +436,7 @@ struct AnchorLinkCodecTests {
                 processes: []
             )
         )
+        await clientRepository.flushPendingEvents()
         #expect(await clientBase.pendingEvents().count == 1)
 
         try server.start()
@@ -418,6 +451,7 @@ struct AnchorLinkCodecTests {
         #expect(await serverBase.currentProjection().session?.goal.title == "Phone goal")
 
         try await serverRepository.send(.addNote("Mac note"))
+        await serverRepository.flushPendingEvents()
         #expect(await serverBase.pendingEvents().isEmpty)
         #expect(await clientBase.currentProjection().session?.notes.first?.text == "Mac note")
 
@@ -453,6 +487,7 @@ struct AnchorLinkCodecTests {
                 )
             )
         )
+        await serverRepository.flushPendingEvents()
         #expect(await clientBase.currentProjection().session?.processes.first?.status == .running)
 
         let completedAt = runningAt.addingTimeInterval(1)
@@ -475,9 +510,11 @@ struct AnchorLinkCodecTests {
                 )
             )
         )
+        await serverRepository.flushPendingEvents()
         #expect(await clientBase.currentProjection().session?.processes.first?.status == .completed)
 
         try await clientRepository.send(.completeSession)
+        await clientRepository.flushPendingEvents()
         #expect(await clientBase.currentProjection().session == nil)
         #expect(await serverBase.currentProjection().session == nil)
         #expect(await clientBase.currentProjection().archivedSessions.first?.id == sessionID)
@@ -490,11 +527,12 @@ struct AnchorLinkCodecTests {
                 processes: []
             )
         )
+        await clientRepository.flushPendingEvents()
         #expect(await serverBase.currentProjection().session?.goal.title == "Next phone goal")
         #expect(await serverBase.currentProjection().archivedSessions.first?.id == sessionID)
     }
 
-    @Test("A real Codex lifecycle reaches the iPhone projection over the local link")
+    @Test("A real Codex lifecycle reaches the iPhone return summary after reconnect")
     func codexLifecycleRoundTrip() async throws {
         let suffix = UUID().uuidString
         let serviceType = isolatedServiceType()
@@ -554,6 +592,7 @@ struct AnchorLinkCodecTests {
                 processes: []
             )
         )
+        await clientRepository.flushPendingEvents()
         try server.start()
         defer { server.stop() }
         client.startDiscovery()
@@ -562,6 +601,10 @@ struct AnchorLinkCodecTests {
         await clientRepository.flushPendingEvents()
 
         let session = try #require(await serverBase.currentProjection().session)
+        let awayAt = Date.now
+        try await clientRepository.send(.updatePresence(.away, at: awayAt))
+        await clientRepository.flushPendingEvents()
+        #expect(await serverBase.currentProjection().session?.presence == .away)
         client.stop()
         let sourceID = UUID()
         let workItemID = UUID()
@@ -625,7 +668,7 @@ struct AnchorLinkCodecTests {
         )
         await coordinator.register(source)
 
-        let startedAt = session.startedAt.addingTimeInterval(1)
+        let startedAt = Date.now
         try appendCodexLifecycle(
             .started,
             turnID: "turn-1",
@@ -634,32 +677,207 @@ struct AnchorLinkCodecTests {
         )
         try await waitForSourceEventCount(1, in: coordinator, sourceID: sourceID)
         #expect(await serverBase.pendingEvents().count == 1)
+        #expect(await serverBase.currentProjection().session?.processes.first?.status == .running)
         #expect(await clientBase.currentProjection().session?.processes.isEmpty == true)
-
-        client.startDiscovery()
-        try await waitForProcessStatus(.running, in: clientBase)
-        await serverRepository.flushPendingEvents()
-        #expect(await serverBase.pendingEvents().isEmpty)
 
         try appendCodexLifecycle(
             .completed,
             turnID: "turn-1",
-            at: startedAt.addingTimeInterval(1),
+            at: .now,
             to: sessionFile
         )
-        try await waitForProcessStatus(.completed, in: clientBase)
         try await waitForSourceEventCount(2, in: coordinator, sourceID: sourceID)
         await coordinator.stop()
+        #expect(await serverBase.pendingEvents().count == 2)
+
+        // The phone can enter the return screen before its disconnected Mac
+        // has replayed the Codex events. Rebuilding the immutable history must
+        // fill that already-visible summary when the authenticated link resumes.
+        let phoneModel = await AnchorSessionModel(
+            repository: clientRepository,
+            initialProjection: await clientBase.currentProjection()
+        )
+        #expect(await phoneModel.beginReturn())
+        #expect(await clientBase.currentProjection().session?.returnSummary?.changes.isEmpty == true)
+
+        client.startDiscovery()
+        try await waitForProcessStatus(.completed, in: clientBase)
+        await serverRepository.flushPendingEvents()
+        #expect(await serverBase.pendingEvents().isEmpty)
 
         let phoneSession = try #require(await clientBase.currentProjection().session)
         #expect(phoneSession.processes.count == 1)
         #expect(phoneSession.processes.first?.sourceName == "Codex")
         #expect(phoneSession.processes.first?.status == .completed)
-        #expect(phoneSession.timeline.map(\.kind) == [.completed, .created])
+        #expect(phoneSession.timeline.filter { $0.kind != .presence }.map(\.kind) == [.completed, .created])
         let taskRecord = try #require(await taskStore.currentTaskRecord())
         #expect(taskRecord.runs.first?.outcome == .completed)
         #expect(taskRecord.events.map(\.kind) == [.started, .completed])
         #expect(await serverBase.pendingEvents().isEmpty)
+
+        let returnSession = try #require(await clientBase.currentProjection().session)
+        let summary = try #require(returnSession.returnSummary)
+        #expect(returnSession.presence == .returning)
+        #expect(summary.awaySince == awayAt)
+        #expect(summary.changes.map(\.kind) == [.completed, .created])
+        #expect(summary.completedCount == 1)
+        #expect(await serverBase.currentProjection().session?.presence == .returning)
+
+        #expect(await phoneModel.continueWorking())
+        await clientRepository.flushPendingEvents()
+        #expect(await clientBase.currentProjection().session?.presence == .atDesk)
+        #expect(await clientBase.currentProjection().session?.returnSummary == nil)
+        #expect(await serverBase.currentProjection().session?.presence == .atDesk)
+    }
+
+    @Test(
+        "A local Codex rollout reaches the iPhone return summary when explicitly supplied",
+        .enabled(if: ProcessInfo.processInfo.environment["ANCHOR_REAL_CODEX_ROLLOUT"] != nil)
+    )
+    func localCodexRolloutRoundTrip() async throws {
+        let path = try #require(ProcessInfo.processInfo.environment["ANCHOR_REAL_CODEX_ROLLOUT"])
+        let rolloutURL = URL(filePath: path)
+        let records = CodexLifecycleScanner.scan(data: try Data(contentsOf: rolloutURL))
+        #expect(records.count == 2)
+        #expect(records.map(\.lifecycle) == [.started, .completed])
+        let firstRecord = try #require(records.first)
+
+        let suffix = UUID().uuidString
+        let serverService = "com.andywang.anchor.tests.server.local-codex.\(suffix)"
+        let clientService = "com.andywang.anchor.tests.client.local-codex.\(suffix)"
+        let root = URL.temporaryDirectory.appending(path: "anchor-local-codex-link-\(suffix)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer {
+            deleteKeychainItems(service: serverService)
+            deleteKeychainItems(service: clientService)
+            try? FileManager.default.removeItem(at: root)
+        }
+
+        let serviceType = isolatedServiceType()
+        let server = AnchorBonjourServer(
+            identityStore: PairingIdentityStore(service: serverService),
+            automaticPairing: .manualOnly,
+            serviceType: serviceType
+        )
+        let client = AnchorBonjourClient(
+            identityStore: PairingIdentityStore(service: clientService),
+            automaticPairing: .manualOnly,
+            serviceType: serviceType
+        )
+        let macBase = LocalSessionRepository(
+            storageURL: root.appending(path: "mac-session.json"),
+            sourceID: UUID()
+        )
+        let phoneBase = LocalSessionRepository(
+            storageURL: root.appending(path: "iphone-session.json"),
+            sourceID: UUID()
+        )
+        let macRepository = LinkedSessionRepository(base: macBase, transport: server)
+        let phoneRepository = LinkedSessionRepository(base: phoneBase, transport: client)
+        server.onEvent = { [weak macRepository] event in
+            guard let macRepository else { throw CancellationError() }
+            try await macRepository.applyRemote(event)
+        }
+        client.onEvent = { [weak phoneRepository] event in
+            guard let phoneRepository else { throw CancellationError() }
+            try await phoneRepository.applyRemote(event)
+        }
+        server.onConnectionState = { state in
+            guard state == .connected else { return }
+            Task { await macRepository.flushPendingEvents() }
+        }
+        client.onConnectionState = { state in
+            guard state == .connected else { return }
+            Task { await phoneRepository.flushPendingEvents() }
+        }
+
+        let awayAt = firstRecord.timestamp.addingTimeInterval(-1)
+        let session = AnchorSession(
+            goal: AnchorGoal(title: "Local Codex session", completionCriteria: "Observe lifecycle"),
+            startedAt: awayAt.addingTimeInterval(-1)
+        )
+        try await phoneRepository.send(.hostSession(session))
+        await phoneRepository.flushPendingEvents()
+        try server.start()
+        defer { server.stop() }
+        client.startDiscovery()
+        defer { client.stop() }
+        try await client.pair(using: try #require(await server.currentPairingCode()))
+        await phoneRepository.flushPendingEvents()
+        try await phoneRepository.send(.updatePresence(.away, at: awayAt))
+        await phoneRepository.flushPendingEvents()
+        client.stop()
+
+        let sourceID = UUID()
+        let workItemID = UUID()
+        let taskStore = TaskRunStore(url: root.appending(path: "task-runs.json"))
+        try await taskStore.upsert(task: AnchorTask(
+            id: session.id,
+            title: session.goal.title,
+            completionCriteria: session.goal.completionCriteria,
+            createdAt: session.startedAt
+        ))
+        try await taskStore.upsert(workItem: AnchorWorkItem(
+            id: workItemID,
+            taskID: session.id,
+            title: "Codex conversation",
+            createdAt: session.startedAt
+        ))
+        let source = CodexLifecycleFileSource(
+            fileURL: rolloutURL,
+            pollInterval: 0.05,
+            sessionContextProvider: {
+                ProcessSourceSessionContext(sessionID: session.id, startedAt: session.startedAt)
+            },
+            checkpointStore: CodexLifecycleCheckpointStore(
+                storageURL: root.appending(path: "codex-checkpoints.json")
+            ),
+            descriptor: SourceDescriptor(
+                id: sourceID,
+                name: "Codex",
+                kind: .integration,
+                symbol: "C",
+                tone: "cyan",
+                capabilities: [.observe],
+                permission: .granted
+            )
+        )
+        let coordinator = ProcessSourceCoordinator(
+            repository: macRepository,
+            sources: [],
+            taskRunStore: taskStore
+        )
+        await coordinator.start()
+        try await coordinator.setAssociation(
+            AnchorEventAssociation(
+                taskID: session.id,
+                workItemID: workItemID,
+                confirmedByUser: true
+            ),
+            for: session.id,
+            sourceID: sourceID
+        )
+        await coordinator.register(source)
+        try await waitForSourceEventCount(2, in: coordinator, sourceID: sourceID)
+        await coordinator.stop()
+        #expect(await macBase.pendingEvents().count == 2)
+
+        let phoneModel = await AnchorSessionModel(
+            repository: phoneRepository,
+            initialProjection: await phoneBase.currentProjection()
+        )
+        #expect(await phoneModel.beginReturn())
+        #expect(await phoneBase.currentProjection().session?.returnSummary?.changes.isEmpty == true)
+        client.startDiscovery()
+        try await waitForProcessStatus(.completed, in: phoneBase)
+
+        let returned = try #require(await phoneBase.currentProjection().session)
+        #expect(returned.presence == .returning)
+        #expect(returned.processes.first?.sourceName == "Codex")
+        #expect(returned.processes.first?.status == .completed)
+        #expect(returned.returnSummary?.changes.map(\.kind) == [.completed, .created])
+        #expect(await phoneModel.continueWorking())
+        #expect(await phoneBase.currentProjection().session?.presence == .atDesk)
     }
 
     @Test("A paired iPhone can request the Mac's current process snapshot")
@@ -699,8 +917,8 @@ struct AnchorLinkCodecTests {
         #expect(snapshot.processNames == ["Claude", "Gemini"])
     }
 
-    @Test("iCloud identity is preferred over an available Bluetooth credential")
-    func iCloudPairingHasPriority() async throws {
+    @Test("Nearby Bluetooth pairs before optional iCloud identity")
+    func bluetoothPairingHasPriority() async throws {
         let suffix = UUID().uuidString
         let serviceType = isolatedServiceType()
         let serverService = "com.andywang.anchor.tests.server.automatic.\(suffix)"
@@ -733,7 +951,7 @@ struct AnchorLinkCodecTests {
         let statuses = client.pairingStatusUpdates()
         client.startDiscovery()
 
-        try await waitForPairingRoute(.iCloud, in: statuses)
+        try await waitForPairingRoute(.bluetooth, in: statuses)
     }
 
     @Test("Bluetooth proximity pairs automatically when iCloud identity is unavailable")
@@ -769,6 +987,22 @@ struct AnchorLinkCodecTests {
         let statuses = client.pairingStatusUpdates()
         client.startDiscovery()
 
+        try await waitForPairingRoute(.bluetooth, in: statuses)
+    }
+
+    @Test("Authenticated Bluetooth fallback publishes connected while Bonjour is unavailable")
+    func bluetoothFallbackPublishesConnected() async throws {
+        let client = AnchorBonjourClient(
+            identityStore: PairingIdentityStore(service: "com.andywang.anchor.tests.fallback.\(UUID().uuidString)"),
+            automaticPairing: .manualOnly
+        )
+        defer { client.stop() }
+        let signals = client.presenceSignals()
+        let statuses = client.pairingStatusUpdates()
+
+        client.updateFallbackConnection(.connected)
+
+        try await waitForConnection(.connected, in: signals)
         try await waitForPairingRoute(.bluetooth, in: statuses)
     }
 
@@ -974,6 +1208,24 @@ private func waitForPairingRoute(
                 #expect(status.route == route)
                 return
             }
+            throw AnchorLinkTestError.pairingStatusStreamEnded
+        }
+        group.addTask {
+            try await Task.sleep(for: .seconds(5))
+            throw AnchorLinkTestError.timedOutWaitingForPairing
+        }
+        _ = try await group.next()
+        group.cancelAll()
+    }
+}
+
+private func waitForConnection(
+    _ connection: ConnectionState,
+    in signals: AsyncStream<PresenceSignals>
+) async throws {
+    try await withThrowingTaskGroup(of: Void.self) { group in
+        group.addTask {
+            for await signal in signals where signal.connection == connection { return }
             throw AnchorLinkTestError.pairingStatusStreamEnded
         }
         group.addTask {

@@ -2,7 +2,7 @@ import SwiftUI
 
 /// A subtle physical response for card-like controls without delaying navigation.
 public struct AnchorPressButtonStyle: ButtonStyle {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
 
     public init() {}
 

@@ -22,6 +22,7 @@ public final class AnchorSessionModel {
     private var currentPosture = DevicePosture.unknown
     private var latestSignals: PresenceSignals
     private var pendingPresenceStatus: PresenceStatus?
+    private var resolvingDecisionIDs: Set<UUID> = []
 
     public init(
         repository: any SessionRepository,
@@ -148,7 +149,12 @@ public final class AnchorSessionModel {
             default: scoped = command
             }
             try await repository.send(scoped)
-            lastError = nil
+            switch command {
+            case .updateSignals, .updateSourceHealth, .updateDurableSyncState, .updatePresence:
+                break // Operational refreshes must not dismiss an actionable user error.
+            default:
+                lastError = nil
+            }
             return true
         } catch {
             lastError = error.localizedDescription
@@ -190,9 +196,24 @@ public final class AnchorSessionModel {
 
     @discardableResult
     public func resolve(decision: Decision, option: DecisionOption) async -> Bool {
-        guard let owner = projection.hostedSessions.first(where: { task in
+        guard resolvingDecisionIDs.insert(decision.id).inserted else { return false }
+        defer { resolvingDecisionIDs.remove(decision.id) }
+        let current = await repository.currentProjection()
+        guard let owner = current.hostedSessions.first(where: { task in
             task.decisions.contains(where: { $0.id == decision.id })
-        }) else { return false }
+        }), let savedDecision = owner.decisions.first(where: { $0.id == decision.id }) else {
+            lastError = SessionRepositoryError.decisionNotFound.localizedDescription
+            return false
+        }
+        // Reopening a stale sheet must not execute a second external action.
+        if savedDecision.status != .open {
+            guard savedDecision.selectedOptionID == option.id else {
+                lastError = SessionRepositoryError.invalidDecisionOption.localizedDescription
+                return false
+            }
+            lastError = nil
+            return true
+        }
         let sourceID = owner.processes.first { $0.id == decision.processID }?.sourceID
         let succeeded = await send(.forSession(owner.id, .resolveDecision(decisionID: decision.id, optionID: option.id)))
         guard succeeded, let sourceID, let sourceActionProvider else {
@@ -222,6 +243,17 @@ public final class AnchorSessionModel {
         }
         schedulePresenceEvaluation(for: latestSignals)
         return succeeded
+    }
+
+    /// A manual return follows the same summary path as a confirmed
+    /// connection or proximity return. Only the summary's Back action
+    /// acknowledges the return and restores the workspace.
+    @discardableResult
+    public func beginReturn() async -> Bool {
+        guard await repository.currentProjection().session?.presence == .away else {
+            return false
+        }
+        return await correctPresence(to: .returning)
     }
 
     @discardableResult

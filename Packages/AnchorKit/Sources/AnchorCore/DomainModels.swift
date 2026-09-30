@@ -237,7 +237,7 @@ public struct ContextSnapshot: Identifiable, Codable, Hashable, Sendable {
         self.createdAt = createdAt
         self.goalTitle = goalTitle
         self.processes = processes
-        processStates = Dictionary(uniqueKeysWithValues: processes.map { ($0.id, $0.status) })
+        processStates = Dictionary(processes.map { ($0.id, $0.status) }, uniquingKeysWith: { _, latest in latest })
         self.openDecisionIDs = openDecisionIDs
         self.latestNote = latestNote
     }
@@ -261,7 +261,7 @@ public struct ContextSnapshot: Identifiable, Codable, Hashable, Sendable {
         processStates = try container.decodeIfPresent(
             [UUID: ProcessStatus].self,
             forKey: .processStates
-        ) ?? Dictionary(uniqueKeysWithValues: processes.map { ($0.id, $0.status) })
+        ) ?? Dictionary(processes.map { ($0.id, $0.status) }, uniquingKeysWith: { _, latest in latest })
         openDecisionIDs = try container.decode([UUID].self, forKey: .openDecisionIDs)
         latestNote = try container.decodeIfPresent(String.self, forKey: .latestNote)
     }

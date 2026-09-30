@@ -7,7 +7,7 @@ struct MacWorkProcessList: View {
     let processes: [AnchorProcess]
     let onOpenProcess: (UUID) -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
     @State private var showsAllProcesses = false
 
     var body: some View {
@@ -81,7 +81,7 @@ private struct MacWorkProcessRow: View {
     let process: AnchorProcess
     let action: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .body) private var statusWidth = 110.0
     @ScaledMetric(relativeTo: .body) private var progressWidth = 100.0

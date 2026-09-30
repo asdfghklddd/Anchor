@@ -210,6 +210,9 @@ public final class AnchorProximityAdvertiser: NSObject, CBPeripheralManagerDeleg
         didSubscribeTo characteristic: CBCharacteristic
     ) {
         guard characteristic.uuid == AnchorBluetoothService.eventTransferUUID else { return }
+        #if DEBUG
+        print("[AnchorPairing] Bluetooth central subscribed")
+        #endif
         subscribedCentrals[central.identifier] = central
         assemblers[central.identifier] = AnchorBluetoothTransferAssembler()
     }
@@ -505,7 +508,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
     private let deviceID: UUID
     private var manager: CBCentralManager?
     private var candidatePeripheral: CBPeripheral?
-    private var candidateWasNear = false
+    private var connectionAttemptWorkItem: DispatchWorkItem?
     private var eventCharacteristic: CBCharacteristic?
     private var peerID: UUID?
     private var staleSignalWorkItem: DispatchWorkItem?
@@ -561,6 +564,8 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
     public func stop() {
         staleSignalWorkItem?.cancel()
         staleSignalWorkItem = nil
+        connectionAttemptWorkItem?.cancel()
+        connectionAttemptWorkItem = nil
         pairingWorkItem?.cancel()
         pairingWorkItem = nil
         pairingAttempt = nil
@@ -569,7 +574,6 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
             manager?.cancelPeripheralConnection(candidatePeripheral)
         }
         candidatePeripheral = nil
-        candidateWasNear = false
         eventCharacteristic = nil
         peerID = nil
         hasDeliveredPairingCredential = false
@@ -583,14 +587,16 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         manager = nil
     }
 
-    public func refreshDataLink() {
+    public func refreshDataLink(cancelPendingPairing: Bool = true) {
         DispatchQueue.main.async { [weak self] in
             guard let self,
                   let peerID,
                   let key = identityStore.sharedKey(peerID: peerID) else { return }
-            pairingWorkItem?.cancel()
-            pairingWorkItem = nil
-            pairingAttempt = nil
+            if cancelPendingPairing {
+                pairingWorkItem?.cancel()
+                pairingWorkItem = nil
+                pairingAttempt = nil
+            }
             try? enqueue(LinkPayload(kind: .heartbeat), key: key)
         }
     }
@@ -700,8 +706,9 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         peripheral.delegate = self
         if peripheral.state == .connected {
             peripheral.discoverServices([AnchorBluetoothService.uuid])
+            scheduleConnectionAttemptTimeout(for: peripheral)
         } else {
-            central.connect(peripheral)
+            connect(peripheral, using: central)
         }
     }
 
@@ -725,10 +732,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
             #if DEBUG
             print("[AnchorPairing] Bluetooth connecting candidate")
             #endif
-            candidatePeripheral = peripheral
-            candidateWasNear = isNear
-            peripheral.delegate = self
-            central.connect(peripheral)
+            connect(peripheral, using: central)
         }
         scheduleStaleSignalFallback()
     }
@@ -738,6 +742,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         print("[AnchorPairing] Bluetooth connected to peripheral")
         #endif
         central.stopScan()
+        scheduleConnectionAttemptTimeout(for: peripheral)
         peripheral.discoverServices([AnchorBluetoothService.uuid])
     }
 
@@ -750,7 +755,8 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         print("[AnchorPairing] Bluetooth connect failed \(String(describing: error))")
         #endif
         if candidatePeripheral === peripheral { candidatePeripheral = nil }
-        candidateWasNear = false
+        connectionAttemptWorkItem?.cancel()
+        connectionAttemptWorkItem = nil
         setDataLinkState(.disconnected)
         startScanning(central)
     }
@@ -760,8 +766,13 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         didDisconnectPeripheral peripheral: CBPeripheral,
         error: (any Error)?
     ) {
-        if candidatePeripheral === peripheral { candidatePeripheral = nil }
-        candidateWasNear = false
+        #if DEBUG
+        print("[AnchorPairing] Bluetooth disconnected \(error.map { String(describing: $0) } ?? "cleanly")")
+        #endif
+        guard candidatePeripheral === peripheral else { return }
+        candidatePeripheral = nil
+        connectionAttemptWorkItem?.cancel()
+        connectionAttemptWorkItem = nil
         eventCharacteristic = nil
         peerID = nil
         hasDeliveredPairingCredential = false
@@ -824,10 +835,15 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         error: (any Error)?
     ) {
         guard characteristic.uuid == AnchorBluetoothService.eventTransferUUID else { return }
+        #if DEBUG
+        print("[AnchorPairing] Bluetooth notification \(characteristic.isNotifying) \(error.map { String(describing: $0) } ?? "ready")")
+        #endif
         if error != nil || !characteristic.isNotifying {
-            setDataLinkState(.disconnected)
+            disconnect(peripheral)
             return
         }
+        connectionAttemptWorkItem?.cancel()
+        connectionAttemptWorkItem = nil
         refreshDataLink()
     }
 
@@ -836,6 +852,9 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         didUpdateValueFor characteristic: CBCharacteristic,
         error: (any Error)?
     ) {
+        #if DEBUG
+        if let error { print("[AnchorPairing] Bluetooth value error \(String(describing: error))") }
+        #endif
         guard error == nil, let value = characteristic.value else { return }
         switch characteristic.uuid {
         case AnchorBluetoothService.pairingCredentialUUID:
@@ -846,19 +865,24 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
                 BluetoothPairingCredential.self,
                 from: value
             ), credential.secret.count == 32 else { return }
+            #if DEBUG
+            print("[AnchorPairing] Bluetooth credential challenge \(credential.challenge == nil ? "missing" : "ready"), trusted key \(identityStore.sharedKey(peerID: credential.deviceID) == nil ? "missing" : "present")")
+            #endif
             peerID = credential.deviceID
-            if candidateWasNear, !hasDeliveredPairingCredential {
+            if !hasDeliveredPairingCredential {
                 hasDeliveredPairingCredential = true
                 onPairingCredential(credential.deviceID, credential.secret)
             }
-            if candidateWasNear, let challenge = credential.challenge {
+            // The existing trust key may be stale. Try it first, then allow
+            // BLE bootstrap to replace it if no authenticated reply arrives.
+            refreshDataLink(cancelPendingPairing: false)
+            if let challenge = credential.challenge {
                 scheduleDirectPairing(
                     peerID: credential.deviceID,
                     secret: credential.secret,
                     challenge: challenge
                 )
             }
-            refreshDataLink()
         case AnchorBluetoothService.eventTransferUUID:
             do {
                 if let completed = try assembler.accept(value) {
@@ -883,7 +907,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
             outboundTransfers.removeAll()
             failAllDeliveries(with: error)
             failAllSnapshotRequests(with: error)
-            setDataLinkState(.disconnected)
+            disconnect(peripheral)
             return
         }
         if !outboundTransfers.isEmpty {
@@ -900,6 +924,34 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
             withServices: [AnchorBluetoothService.uuid],
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: true]
         )
+    }
+
+    private func connect(_ peripheral: CBPeripheral, using central: CBCentralManager) {
+        candidatePeripheral = peripheral
+        peripheral.delegate = self
+        central.connect(peripheral)
+        scheduleConnectionAttemptTimeout(for: peripheral)
+    }
+
+    private func scheduleConnectionAttemptTimeout(for peripheral: CBPeripheral) {
+        connectionAttemptWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self, weak peripheral] in
+            guard let self, let peripheral,
+                  candidatePeripheral === peripheral,
+                  eventCharacteristic?.isNotifying != true else { return }
+            #if DEBUG
+            print("[AnchorPairing] Bluetooth candidate timed out; scanning again")
+            #endif
+            connectionAttemptWorkItem = nil
+            manager?.cancelPeripheralConnection(peripheral)
+            candidatePeripheral = nil
+            eventCharacteristic = nil
+            peerID = nil
+            hasDeliveredPairingCredential = false
+            if let manager, manager.state == .poweredOn { startScanning(manager) }
+        }
+        connectionAttemptWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8, execute: workItem)
     }
 
     private func authenticatedKey() throws -> Data {
@@ -924,6 +976,8 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
               let encrypted = frame.encryptedPayload,
               let key = identityStore.sharedKey(peerID: frame.senderID),
               let payload = try? AnchorLinkCodec.open(encrypted, using: key) else { return }
+        pairingWorkItem?.cancel()
+        pairingWorkItem = nil
         setDataLinkState(.connected)
 
         guard replayWindow.accepts(payload.messageID) else {
@@ -975,10 +1029,17 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
 
     private func scheduleDirectPairing(peerID: UUID, secret: Data, challenge: Data) {
         pairingWorkItem?.cancel()
-        guard identityStore.sharedKey(peerID: peerID) == nil else { return }
+        guard dataLinkState != .connected else { return }
+        #if DEBUG
+        print("[AnchorPairing] Bluetooth direct pairing scheduled")
+        #endif
         let workItem = DispatchWorkItem { [weak self] in
             guard let self,
-                  identityStore.sharedKey(peerID: peerID) == nil else { return }
+                  self.peerID == peerID,
+                  dataLinkState != .connected else { return }
+            #if DEBUG
+            print("[AnchorPairing] Bluetooth direct pairing attempt")
+            #endif
             pairingWorkItem = nil
             let attempt = PairingAttempt(
                 peerID: peerID,
@@ -1009,8 +1070,9 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
             )
         }
         pairingWorkItem = workItem
-        // Give infrastructure and peer-to-peer Wi-Fi the first opportunity.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: workItem)
+        // Give nearby Wi-Fi a brief head start, then authenticate BLE even if
+        // the first RSSI sample was weak.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: workItem)
     }
 
     private func handlePairAccepted(_ frame: LinkFrame) {
@@ -1117,6 +1179,9 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
     private func setDataLinkState(_ state: ConnectionState) {
         guard dataLinkState != state else { return }
         dataLinkState = state
+        #if DEBUG
+        print("[AnchorPairing] Bluetooth data link \(state.rawValue)")
+        #endif
         onConnectionState?(state)
     }
 
@@ -1124,7 +1189,21 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         manager?.cancelPeripheralConnection(peripheral)
         if candidatePeripheral === peripheral {
             candidatePeripheral = nil
-            candidateWasNear = false
+            connectionAttemptWorkItem?.cancel()
+            connectionAttemptWorkItem = nil
+            eventCharacteristic = nil
+            peerID = nil
+            hasDeliveredPairingCredential = false
+            pairingWorkItem?.cancel()
+            pairingWorkItem = nil
+            pairingAttempt = nil
+            assembler = AnchorBluetoothTransferAssembler()
+            outboundTransfers.removeAll()
+            isWriting = false
+            failAllDeliveries(with: AnchorLinkError.connectionLost)
+            failAllSnapshotRequests(with: AnchorLinkError.connectionLost)
+            setDataLinkState(.disconnected)
+            if let manager, manager.state == .poweredOn { startScanning(manager) }
         }
     }
 

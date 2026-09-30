@@ -16,13 +16,14 @@ struct ProfileEditorView: View {
     @State private var hasLoaded = false
 
     var body: some View {
+        let avatarData = avatar
         NavigationStack {
             Form {
                 Section {
                     PhotosPicker(selection: $selection, matching: .images) {
                         HStack(spacing: 16) {
                             Group {
-                                if let image = UIImage(data: avatar) {
+                                if let image = UIImage(data: avatarData) {
                                     Image(uiImage: image).resizable().scaledToFill()
                                 } else { Image("DefaultProfileAvatar").resizable().scaledToFill() }
                             }

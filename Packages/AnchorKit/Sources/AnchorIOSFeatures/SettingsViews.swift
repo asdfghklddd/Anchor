@@ -39,14 +39,11 @@ struct SourceSettingsView: View {
 }
 
 struct NotificationSettingsView: View {
-    @State private var meaningfulChanges = true
-    @State private var decisions = true
 
     var body: some View {
         Form {
             Section(L10n.notificationsSettings) {
-                Toggle(L10n.notificationDecisions, isOn: $decisions)
-                Toggle(L10n.notificationMeaningful, isOn: $meaningfulChanges)
+                Text(AnchorStrings.value("notifications.availability", default: "Review decisions and process changes in Anchor. Background notifications are not available in this version."))
             }
             .listRowBackground(AnchorIOSStyle.surface)
         }
@@ -76,6 +73,8 @@ struct PrivacySettingsView: View {
 }
 
 struct AccessibilitySettingsView: View {
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
+
     var body: some View {
         Form {
             Section {
@@ -87,7 +86,8 @@ struct AccessibilitySettingsView: View {
             Section {
                 Label(L10n.voiceOver, systemImage: "speaker.wave.3")
                 Label(L10n.dynamicType, systemImage: "textformat.size")
-                Label(L10n.reduceMotion, systemImage: "figure.walk.motion")
+                Toggle(L10n.reduceMotion, isOn: $reduceMotion)
+                    .accessibilityIdentifier("settings.reduceMotion")
                 Label(L10n.increaseContrast, systemImage: "circle.lefthalf.filled")
                 Label(L10n.reduceTransparency, systemImage: "square.on.square")
             }

@@ -25,7 +25,13 @@ struct AnchorSavedPlan: View {
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("task.saved.plan")
             .task(id: goal.id) {
-                images = AnchorPlanImages.load(goalID: goal.id, names: plan.localImageNames)
+                let goalID = goal.id
+                let names = plan.localImageNames
+                let loaded = await Task.detached(priority: .userInitiated) {
+                    AnchorPlanImages.load(goalID: goalID, names: names)
+                }.value
+                guard !Task.isCancelled else { return }
+                images = loaded
             }
         }
     }

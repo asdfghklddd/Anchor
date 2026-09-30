@@ -25,17 +25,19 @@ jobs:
       - uses: actions/checkout@v7
       - name: Show toolchain
         run: xcodebuild -version
-      - name: Reject archived Demo surfaces in the production project
+      - name: Reject Demo surfaces in the production project
         shell: bash
         run: |
           set -euo pipefail
           project_list="$(xcodebuild -list -json -project Anchor.xcodeproj)"
           if grep -E 'Anchor (iOS|macOS) Demo|AnchorDemoSupport' <<<"$project_list"; then
-            echo "Production project exposes an archived Demo target, scheme, or package."
+            echo "Production project exposes a Demo target, scheme, or package."
             exit 1
           fi
           grep -q 'AnchorIOSUITests' <<<"$project_list"
           grep -q 'AnchorMacUITests' <<<"$project_list"
+      - name: Check production data boundary
+        run: python3 scripts/validation/check-production-data.py
       - name: Test reducers, sources, persistence, and transport
         working-directory: Packages/AnchorKit
         run: swift test

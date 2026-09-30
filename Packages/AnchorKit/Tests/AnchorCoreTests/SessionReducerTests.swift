@@ -4,6 +4,26 @@ import Testing
 
 @Suite("Session reducer")
 struct SessionReducerTests {
+    @Test("Saving an external decision does not invent resumed execution")
+    func externalDecisionWaitsForSource() throws {
+        let process = AnchorProcess(sourceID: UUID(), sourceName: "External", sourceSymbol: "E",
+            sourceTone: "cyan", title: "Work", status: .needsDecision)
+        let option = DecisionOption(title: "Continue", detail: "Selected by user")
+        let decision = Decision(processID: process.id, title: "Choose", prompt: "Next step", options: [option])
+        let session = AnchorSession(goal: AnchorGoal(title: "Goal", completionCriteria: "Done"),
+            processes: [process], decisions: [decision])
+        let projection = SessionProjection(session: session)
+        let command = SessionCommand.resolveDecision(decisionID: decision.id, optionID: option.id)
+        let direct = try SessionReducer.reduce(projection, command: command)
+        let encodedOperation = try SessionOperation.make(from: command, projection: projection)
+        let operation = try #require(encodedOperation)
+        let replayed = try SessionReducer.reduce(projection, operation: operation, targetSessionID: session.id, now: .now)
+        for result in [direct, replayed] {
+            #expect(result.session?.decisions.first?.status == .resolved)
+            #expect(result.session?.processes.first?.status == .needsDecision)
+        }
+    }
+
     @Test("Older projections decode with an empty task archive")
     func archivedSessionsAreAdditivelyCompatible() throws {
         let projection = SessionProjection(

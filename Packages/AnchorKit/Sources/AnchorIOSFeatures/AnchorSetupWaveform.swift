@@ -1,23 +1,28 @@
 #if os(iOS)
+import AnchorDesign
 import SwiftUI
 
-/// The waveform responds to microphone energy. Reduced Motion keeps a still indicator.
+/// Actual microphone energy remains visible even with Reduce Motion enabled.
 struct AnchorSetupWaveform: View {
     let level: Double
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
 
     var body: some View {
-        Canvas { context, size in
-            let energy = reduceMotion ? 0.4 : level
-            let count = 30
-            for index in 0..<count {
-                let envelope = abs(sin(Double(index) * 1.71)) * (0.3 + abs(sin(Double(index) * 0.38)) * 0.7)
-                let height = max(2, (0.2 + energy * 0.8) * envelope * size.height)
-                let rect = CGRect(x: Double(index) * size.width / Double(count), y: (size.height - height) / 2, width: 1.2, height: height)
-                context.fill(Path(roundedRect: rect, cornerRadius: 0.6), with: .color(AnchorSetupStyle.accent))
+        let energy = min(1, max(0, level))
+        HStack(spacing: 0) {
+            ForEach(0..<24, id: \.self) { index in
+                // Keep every bar readable; the former envelope made most bars
+                // tiny even when the microphone was receiving normal speech.
+                let envelope = 0.45 + 0.55 * abs(sin(Double(index) * 1.71))
+                Capsule()
+                    .fill(AnchorSetupStyle.accent)
+                    .frame(width: 2, height: max(2, energy * envelope * 40))
+                    .frame(maxWidth: .infinity)
             }
         }
-        .frame(height: 30)
+        .frame(height: 40)
+        // Animate actual bar geometry, rather than a Canvas drawing closure.
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.06), value: energy)
         .accessibilityHidden(true)
     }
 }

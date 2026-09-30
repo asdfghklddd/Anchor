@@ -8,11 +8,12 @@ struct ConnectionPairingSection: View {
     let controller: any LocalLinkControlling
     let connection: ConnectionState
     let proximity: ProximityState
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
     @Environment(\.dismiss) private var dismiss
     @State private var isSubmitting = false
     @State private var pairingCode = ""
     @State private var pairingStatus = DevicePairingStatus.automatic
+    @State private var isShowingManualCode = false
     @State private var errorMessage: String?
 
     var body: some View {
@@ -23,7 +24,7 @@ struct ConnectionPairingSection: View {
             } else if connection == .permissionDenied || proximity == .permissionDenied {
                 Label(L10n.permissionDenied, systemImage: "hand.raised.fill")
                 Text(L10n.permissionDeniedDetail).font(.caption)
-            } else if pairingStatus.phase == .verificationCodeRequired {
+            } else if pairingStatus.phase == .verificationCodeRequired || isShowingManualCode {
                 Text(L10n.pairingFallbackDetail).font(.caption)
                 TextField(L10n.pairingCode, text: $pairingCode)
                     .keyboardType(.numberPad).textContentType(.oneTimeCode)
@@ -37,6 +38,10 @@ struct ConnectionPairingSection: View {
                       systemImage: connection == .failed ? "exclamationmark.triangle" : "macbook.and.iphone")
                     .accessibilityIdentifier("connections.pairing.automatic")
                 Text(L10n.pairingAutomaticDetail).font(.caption)
+                Button(L10n.pairingCode, systemImage: "number") {
+                    isShowingManualCode = true
+                }
+                .accessibilityIdentifier("connections.pairing.show.code")
             }
             if let errorMessage {
                 Text(errorMessage).font(.caption).foregroundStyle(.red)
@@ -46,7 +51,8 @@ struct ConnectionPairingSection: View {
             Text(L10n.bluetoothProximity + " · " + proximityLabel)
                 .font(.caption2).foregroundStyle(AnchorIOSStyle.secondaryText)
             HStack(spacing: 10) {
-                if connection != .connected, pairingStatus.phase == .verificationCodeRequired {
+                if connection != .connected,
+                   pairingStatus.phase == .verificationCodeRequired || isShowingManualCode {
                     Button(action: submitPairingCode) {
                         Text(L10n.pairDevice).frame(maxWidth: .infinity)
                             .foregroundStyle(AnchorIOSStyle.onAction)
@@ -92,7 +98,7 @@ struct ConnectionPairingSection: View {
 
     private var proximityLabel: String {
         switch proximity {
-        case .near: L10n.connected
+        case .near: L10n.nearby
         case .far: L10n.away
         case .permissionDenied: L10n.permissionDenied
         case .unknown, .unavailable: L10n.unknown
@@ -125,6 +131,7 @@ struct ConnectionPairingSection: View {
     private func retryConnection() {
         errorMessage = nil
         pairingCode = ""
+        isShowingManualCode = false
         Task { await controller.retryConnection() }
     }
 
@@ -134,6 +141,7 @@ struct ConnectionPairingSection: View {
         if status.phase == .connected {
             errorMessage = nil
             pairingCode = ""
+            isShowingManualCode = false
         }
         announce(status)
     }

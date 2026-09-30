@@ -9,7 +9,7 @@ struct ProjectionStatusBanners: View {
     let availability: ProjectionAvailability
     let now: Date
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
 
     var body: some View {
         // Present one prioritized status so related connection symptoms never stack.

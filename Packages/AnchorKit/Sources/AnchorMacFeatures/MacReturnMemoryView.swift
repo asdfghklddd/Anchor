@@ -9,7 +9,7 @@ struct MacReturnMemoryView: View {
     let onOpenProcess: (UUID) -> Void
     let onContinue: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
 
     @State private var showingChanges = false
 

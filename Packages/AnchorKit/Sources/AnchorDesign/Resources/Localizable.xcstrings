@@ -95,13 +95,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anchor follows Dynamic Type, VoiceOver, Reduce Motion, Increase Contrast, and Reduce Transparency automatically."
+            "value" : "Full animations are enabled by default. You can enable Reduce Motion here. Anchor follows system Dynamic Type, VoiceOver, Increase Contrast, and Reduce Transparency settings."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anchor 会自动遵循动态字体、旁白、减弱动态效果、增强对比度和降低透明度设置。"
+            "value" : "默认展示完整动态效果，可在此开启减弱动态效果。动态字体、旁白、增强对比度和降低透明度仍遵循系统设置。"
           }
         }
       }
@@ -442,10 +442,10 @@
     "Anchor cannot confirm that you left. Check Mac, local network, and Bluetooth access." : {
 
     },
-    "Anchor could not reach the Mac service. Check the local connection and try again." : {
+    "Anchor connects over the local network or nearby Bluetooth. Use the six-digit code if needed." : {
 
     },
-    "Anchor follows Dynamic Type, VoiceOver, Reduce Motion, Increase Contrast, and Reduce Transparency automatically." : {
+    "Anchor could not reach the Mac service. Check the local connection and try again." : {
 
     },
     "Anchor includes its Safari extension. Enable it once in Safari to share privacy-minimal web app state." : {
@@ -464,6 +464,9 @@
 
     },
     "Anchor saved" : {
+
+    },
+    "Anchor sound effects" : {
 
     },
     "Anchor will preserve this task in history and remove it from current work. Continuing the conversation later starts a new task." : {
@@ -530,6 +533,9 @@
 
     },
     "Authorize the Codex sessions folder once. Anchor discovers task metadata, then tracks only tasks you associate." : {
+
+    },
+    "Automatic pairing is unavailable. Enter the six-digit code shown on your Mac." : {
 
     },
     "Available" : {
@@ -640,6 +646,9 @@
         }
       }
     },
+    "Back" : {
+
+    },
     "Begin this session" : {
 
     },
@@ -715,6 +724,9 @@
 
     },
     "Codex" : {
+
+    },
+    "Collapse navigation" : {
 
     },
     "Compact" : {
@@ -802,6 +814,18 @@
 
     },
     "Connected sources" : {
+
+    },
+    "Connected with iCloud identity" : {
+
+    },
+    "Connected with nearby Bluetooth" : {
+
+    },
+    "Connected with pairing code" : {
+
+    },
+    "Connecting automatically" : {
 
     },
     "connection.bluetooth" : {
@@ -967,9 +991,6 @@
     "Connections" : {
 
     },
-    "Context sync is stable" : {
-
-    },
     "Context worth keeping" : {
 
     },
@@ -1014,6 +1035,9 @@
 
     },
     "Current task observation" : {
+
+    },
+    "Current tasks" : {
 
     },
     "Current work" : {
@@ -1342,6 +1366,9 @@
     "Execution" : {
 
     },
+    "Expand navigation" : {
+
+    },
     "Failed" : {
 
     },
@@ -1430,13 +1457,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lldm"
+            "value" : "Session elapsed: %lld min"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lldm"
+            "value" : "任务已开始 %lld 分钟"
           }
         }
       }
@@ -1510,18 +1537,21 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Focus time"
+            "value" : "Session elapsed"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "专注时长"
+            "value" : "任务经过时间"
           }
         }
       }
     },
     "Folder access granted" : {
+
+    },
+    "Full animations are enabled by default. You can enable Reduce Motion here. Anchor follows system Dynamic Type, VoiceOver, Increase Contrast, and Reduce Transparency settings." : {
 
     },
     "Generating" : {
@@ -1718,6 +1748,9 @@
     "Here is what changed while you were away." : {
 
     },
+    "Here’s what happened in Anchor" : {
+
+    },
     "history" : {
       "localizations" : {
         "en" : {
@@ -1735,6 +1768,9 @@
       }
     },
     "History" : {
+
+    },
+    "History trail" : {
 
     },
     "history.empty.detail" : {
@@ -1784,6 +1820,60 @@
           }
         }
       }
+    },
+    "home.empty.tasks" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop an anchor to host your first task"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "投锚后，你的任务会显示在这里"
+          }
+        }
+      }
+    },
+    "home.task.library" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task library"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务进程库"
+          }
+        }
+      }
+    },
+    "home.tasks.manage" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage hosted tasks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "管理托管任务"
+          }
+        }
+      }
+    },
+    "I’m back at my desk" : {
+
     },
     "I’m still at my desk" : {
 
@@ -1908,6 +1998,22 @@
     "Mac online" : {
 
     },
+    "mac.current.tasks" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current tasks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前任务"
+          }
+        }
+      }
+    },
     "mac.current.work" : {
       "localizations" : {
         "en" : {
@@ -1920,6 +2026,118 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "当前工作"
+          }
+        }
+      }
+    },
+    "mac.error.recovery.read" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some saved data could not be read. Anchor kept the original data for recovery."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分已保存的数据无法读取，Anchor 已保留原始数据以便恢复。"
+          }
+        }
+      }
+    },
+    "mac.history.search" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search history"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索历史记录"
+          }
+        }
+      }
+    },
+    "mac.history.trail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History trail"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "历史轨迹"
+          }
+        }
+      }
+    },
+    "mac.navigation.collapse" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse navigation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收起导航"
+          }
+        }
+      }
+    },
+    "mac.navigation.collapsed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navigation collapsed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导航已收起"
+          }
+        }
+      }
+    },
+    "mac.navigation.expand" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expand navigation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展开导航"
+          }
+        }
+      }
+    },
+    "mac.navigation.expanded" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navigation expanded"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导航已展开"
           }
         }
       }
@@ -1956,6 +2174,206 @@
         }
       }
     },
+    "mac.process.details" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Process details"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进程详情"
+          }
+        }
+      }
+    },
+    "mac.process.show.all" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show all %lld processes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示全部 %lld 个进程"
+          }
+        }
+      }
+    },
+    "mac.process.show.fewer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show fewer processes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收起进程"
+          }
+        }
+      }
+    },
+    "mac.timeline.view.all" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View full timeline"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看完整时间线"
+          }
+        }
+      }
+    },
+    "mac.work.peer.disconnected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device disconnected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设备未连接"
+          }
+        }
+      }
+    },
+    "mac.work.progress.reported" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Average reported process progress"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已上报进程的平均进度"
+          }
+        }
+      }
+    },
+    "mac.work.progress.unavailable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No process has reported progress yet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无进程上报进度"
+          }
+        }
+      }
+    },
+    "mac.work.status.active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In progress"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进行中"
+          }
+        }
+      }
+    },
+    "mac.work.status.archived" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archived"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已归档"
+          }
+        }
+      }
+    },
+    "mac.work.status.completed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成"
+          }
+        }
+      }
+    },
+    "mac.work.status.draft" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not started"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未开始"
+          }
+        }
+      }
+    },
+    "mac.work.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep your current work in view."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "专注眼前的工作，随时接续。"
+          }
+        }
+      }
+    },
     "Manage processes" : {
 
     },
@@ -1963,6 +2381,9 @@
 
     },
     "MEMORY TRACE" : {
+
+    },
+    "Microphone access is off. Enable it in Settings to use voice input." : {
 
     },
     "minute.count" : {
@@ -1996,6 +2417,12 @@
     "Name the outcome, then add the work already in motion." : {
 
     },
+    "Navigation collapsed" : {
+
+    },
+    "Navigation expanded" : {
+
+    },
     "Nearby" : {
 
     },
@@ -2018,6 +2445,9 @@
 
     },
     "No events yet" : {
+
+    },
+    "No new changes while you were away." : {
 
     },
     "No result yet" : {
@@ -2338,13 +2768,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anchor first checks your iCloud identity, then a nearby Bluetooth device."
+            "value" : "Anchor connects over the local network or nearby Bluetooth. Use the six-digit code if needed."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anchor 会先检查同一 iCloud 账号身份，再尝试附近的蓝牙设备。"
+            "value" : "Anchor 会优先通过局域网或附近的蓝牙连接；如有需要，可使用六位配对码。"
           }
         }
       }
@@ -2547,9 +2977,6 @@
     "Pairing code copied" : {
 
     },
-    "Parallel efficiency 2.4×" : {
-
-    },
     "PARALLEL PROCESSES" : {
 
     },
@@ -2613,6 +3040,22 @@
         }
       }
     },
+    "presence.back.at.desk" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I’m back at my desk"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我回到桌前了"
+          }
+        }
+      }
+    },
     "Prior failure" : {
 
     },
@@ -2666,6 +3109,9 @@
           }
         }
       }
+    },
+    "Process details" : {
+
     },
     "Process flow" : {
 
@@ -2885,22 +3331,6 @@
         }
       }
     },
-    "process.parallel.efficiency" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Parallel efficiency 2.4×"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "并行效率 2.4×"
-          }
-        }
-      }
-    },
     "process.ready" : {
       "localizations" : {
         "en" : {
@@ -3058,13 +3488,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iCloud account on this device"
+            "value" : "Local device identity"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "本机 iCloud 账户"
+            "value" : "本机设备身份"
           }
         }
       }
@@ -3136,6 +3566,40 @@
         }
       }
     },
+    "profile.avatar.change" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change avatar"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更换头像"
+          }
+        }
+      }
+    },
+    "profile.avatar.reset" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use default avatar"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用默认头像"
+          }
+        }
+      }
+    },
     "profile.contexts.saved" : {
       "localizations" : {
         "en" : {
@@ -3199,23 +3663,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "本月完成率 86%"
-          }
-        }
-      }
-    },
-    "profile.detail.chart" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recent twelve records trend"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "最近十二次记录趋势"
           }
         }
       }
@@ -3311,13 +3758,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The current decision has been resolved."
+            "value" : "No pending decisions."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "当前判断已经完成。"
+            "value" : "当前没有待处理的决策。"
           }
         }
       }
@@ -3560,23 +4007,6 @@
         }
       }
     },
-    "profile.detail.steady" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stable"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "稳定向上"
-          }
-        }
-      }
-    },
     "profile.detail.trend" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3599,13 +4029,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Focus protected"
+            "value" : "Session elapsed"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已守住的专注"
+            "value" : "任务经过时间"
           }
         }
       }
@@ -3616,30 +4046,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Goals, process states, and return notes stay consistent across your Apple devices."
+            "value" : "iCloud sync requires a configured container and an available iCloud account. Nearby device pairing is managed separately in Connections."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "目标、进程状态与返航记录会在你的 Apple 设备间保持一致。"
-          }
-        }
-      }
-    },
-    "profile.icloud.just.now" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Just now"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "刚刚"
+            "value" : "iCloud 同步需要已配置的容器和可用的 iCloud 账户。附近设备配对请在连接设置中管理。"
           }
         }
       }
@@ -3777,6 +4190,23 @@
         }
       }
     },
+    "profile.name" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "昵称"
+          }
+        }
+      }
+    },
     "profile.personal" : {
       "localizations" : {
         "en" : {
@@ -3805,22 +4235,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "本次工作数据"
-          }
-        }
-      }
-    },
-    "profile.sync.stable" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Context sync is stable"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上下文同步稳定"
           }
         }
       }
@@ -4028,6 +4442,22 @@
     "Return" : {
 
     },
+    "return.back" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返回"
+          }
+        }
+      }
+    },
     "return.changes" : {
       "localizations" : {
         "en" : {
@@ -4172,6 +4602,22 @@
         }
       }
     },
+    "return.no.changes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No new changes while you were away."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开期间没有新的变化。"
+          }
+        }
+      }
+    },
     "return.progress" : {
       "localizations" : {
         "en" : {
@@ -4184,6 +4630,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "工作向前推进了 %lld%%"
+          }
+        }
+      }
+    },
+    "return.ready" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your task is ready when you are."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务已经准备好，随时可以继续。"
           }
         }
       }
@@ -4236,6 +4698,22 @@
         }
       }
     },
+    "return.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Here’s what happened in Anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这是 Anchor 为你记录的进展"
+          }
+        }
+      }
+    },
     "return.title" : {
       "localizations" : {
         "en" : {
@@ -4264,6 +4742,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "个等待判断"
+          }
+        }
+      }
+    },
+    "return.while.away" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "While you were away..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开期间..."
+          }
+        }
+      }
+    },
+    "return.work.now" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前进展"
           }
         }
       }
@@ -4297,6 +4807,9 @@
 
     },
     "Saved contexts" : {
+
+    },
+    "Search history" : {
 
     },
     "Secured. You can step away." : {
@@ -4513,6 +5026,635 @@
         }
       }
     },
+    "setup.plan.back" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返回"
+          }
+        }
+      }
+    },
+    "setup.plan.criteria" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completion criteria"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成标准"
+          }
+        }
+      }
+    },
+    "setup.plan.criteria.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For example: clear hierarchy, a working prototype. Put each criterion on a new line."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例如：信息层级清晰、完成可演示的原型。每条标准可以另起一行。"
+          }
+        }
+      }
+    },
+    "setup.plan.criteria.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write each completion criterion on a new line…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写下完成标准，每条可以另起一行…"
+          }
+        }
+      }
+    },
+    "setup.plan.criteria.prompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What will done look like?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "怎样才算完成？"
+          }
+        }
+      }
+    },
+    "setup.plan.criterion.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a criterion"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加标准"
+          }
+        }
+      }
+    },
+    "setup.plan.down" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move down"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下移"
+          }
+        }
+      }
+    },
+    "setup.plan.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑"
+          }
+        }
+      }
+    },
+    "setup.plan.edit.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done editing"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成编辑"
+          }
+        }
+      }
+    },
+    "setup.plan.goal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Goal"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标"
+          }
+        }
+      }
+    },
+    "setup.plan.goal.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For example: finish redesigning the Anchor homepage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例如：完成 Anchor 首页的重新设计"
+          }
+        }
+      }
+    },
+    "setup.plan.goal.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start with a goal, a question, or an idea…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从目标、问题或一个想法开始…"
+          }
+        }
+      }
+    },
+    "setup.plan.goal.prompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What would you like to do?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你准备做什么？"
+          }
+        }
+      }
+    },
+    "setup.plan.hint.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try describing it like this"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "试试这样说"
+          }
+        }
+      }
+    },
+    "setup.plan.keyboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use keyboard"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "键盘输入"
+          }
+        }
+      }
+    },
+    "setup.plan.newline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New line"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另起一行"
+          }
+        }
+      }
+    },
+    "setup.plan.next" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一段"
+          }
+        }
+      }
+    },
+    "setup.plan.original" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your description"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原始想法"
+          }
+        }
+      }
+    },
+    "setup.plan.photo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reference image"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "参考图片"
+          }
+        }
+      }
+    },
+    "setup.plan.photo.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An image could not be added. Try choosing it again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有图片未能添加，请重新选择后再试。"
+          }
+        }
+      }
+    },
+    "setup.plan.photo.remove" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove image"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除图片"
+          }
+        }
+      }
+    },
+    "setup.plan.photos" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add images"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加图片"
+          }
+        }
+      }
+    },
+    "setup.plan.reorder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reorder step"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调整步骤顺序"
+          }
+        }
+      }
+    },
+    "setup.plan.required" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write or say a few words to continue"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写下或说出一些内容，再继续"
+          }
+        }
+      }
+    },
+    "setup.plan.review" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review plan"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看计划"
+          }
+        }
+      }
+    },
+    "setup.plan.review.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your words, ready for a final review"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你写下的计划，确认后就开始"
+          }
+        }
+      }
+    },
+    "setup.plan.save.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not save this task. Your input is still here. Please try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务暂时未能保存，你的输入还在，请重试。"
+          }
+        }
+      }
+    },
+    "setup.plan.saving" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saving…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在保存…"
+          }
+        }
+      }
+    },
+    "setup.plan.start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始执行"
+          }
+        }
+      }
+    },
+    "setup.plan.step.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a step"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加步骤"
+          }
+        }
+      }
+    },
+    "setup.plan.steps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Action plan"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行动计划"
+          }
+        }
+      }
+    },
+    "setup.plan.steps.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For example: review the content, sketch the layout, build the prototype. Put each step on a new line."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例如：梳理内容、画出布局、制作原型。每个步骤可以另起一行。"
+          }
+        }
+      }
+    },
+    "setup.plan.steps.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write each action step on a new line…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写下行动步骤，每步可以另起一行…"
+          }
+        }
+      }
+    },
+    "setup.plan.steps.prompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How will you get there?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你准备怎么做？"
+          }
+        }
+      }
+    },
+    "setup.plan.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn your thoughts into a plan"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "让想法变成可执行的计划"
+          }
+        }
+      }
+    },
+    "setup.plan.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task anchoring"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务投锚"
+          }
+        }
+      }
+    },
+    "setup.plan.up" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move up"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上移"
+          }
+        }
+      }
+    },
     "setup.processes.synced" : {
       "localizations" : {
         "en" : {
@@ -4621,6 +5763,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "无法启动语音输入，请再试一次。"
+          }
+        }
+      }
+    },
+    "setup.voice.error.microphone-denied" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone access is off. Enable it in Settings to use voice input."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "麦克风权限已关闭，请在设置中开启后使用语音输入。"
           }
         }
       }
@@ -4753,6 +5911,12 @@
         }
       }
     },
+    "Show all %lld processes" : {
+
+    },
+    "Show fewer processes" : {
+
+    },
     "snapshot.running.waiting" : {
       "localizations" : {
         "en" : {
@@ -4765,6 +5929,25 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld 运行 · %2$lld 待判断"
+          }
+        }
+      }
+    },
+    "Some saved data could not be read. Anchor kept the original data for recovery." : {
+
+    },
+    "sound.edge.effects" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor sound effects"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "船锚提示音"
           }
         }
       }
@@ -4959,13 +6142,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Grant read-only access so Anchor can discover Codex tasks. Nothing is associated until you choose Track."
+            "value" : "Allow local matching of new Codex conversations to tasks anchored within the preceding 30 minutes. Conversation text is not stored or synced."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "授予只读访问，以便 Anchor 发现 Codex 任务。只有你点击“跟踪”后才会建立关联。"
+            "value" : "允许 Anchor 在本地匹配投锚后 30 分钟内新建的 Codex 对话。匹配时读取的文字不保存、不同步。"
           }
         }
       }
@@ -5055,13 +6238,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Discovered from local metadata and lifecycle events. Track once to associate future runs with this Anchor task."
+            "value" : "New conversations with strongly matching task keywords are linked automatically. Ambiguous conversations remain available for manual tracking."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "根据本地元数据和生命周期事件发现。确认跟踪一次后，后续执行会继续归入当前 Anchor 任务。"
+            "value" : "投锚后新建、且与任务关键词高度匹配的对话会自动关联。匹配不明确的对话可手动跟踪。"
           }
         }
       }
@@ -6148,12 +7331,6 @@
         }
       }
     },
-    "status.interrupted" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Interrupted" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已中断" } }
-      }
-    },
     "status.failed" : {
       "localizations" : {
         "en" : {
@@ -6182,6 +7359,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "生成中"
+          }
+        }
+      }
+    },
+    "status.interrupted" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interrupted"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已中断"
           }
         }
       }
@@ -6392,6 +7585,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "当前状态"
+          }
+        }
+      }
+    },
+    "task.detail.criteria" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completion criteria"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成标准"
+          }
+        }
+      }
+    },
+    "task.detail.processes" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Process progress"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进程进展"
+          }
+        }
+      }
+    },
+    "task.detail.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task details"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务详情"
           }
         }
       }
@@ -6615,6 +7859,9 @@
     "Tracking" : {
 
     },
+    "Trusted device connected" : {
+
+    },
     "Try again" : {
 
     },
@@ -6650,6 +7897,9 @@
 
     },
     "View %lld specific changes" : {
+
+    },
+    "View full timeline" : {
 
     },
     "View output" : {
@@ -6694,6 +7944,9 @@
     "When work moves, Anchor will keep the decision trail here." : {
 
     },
+    "While you were away..." : {
+
+    },
     "Wide" : {
 
     },
@@ -6701,6 +7954,9 @@
 
     },
     "Work in progress" : {
+
+    },
+    "Work now" : {
 
     },
     "Work ready to sync" : {
@@ -6785,6 +8041,9 @@
     "YOUR NEXT STEP" : {
 
     },
+    "Your task is ready when you are." : {
+
+    },
     "Your work is still moving" : {
 
     },
@@ -6794,1097 +8053,138 @@
     "zsh setup copied. Paste it into Terminal to enable observation for that shell." : {
 
     },
-    "Anchor first checks your iCloud identity, then a nearby Bluetooth device." : {},
-    "Anchor sound effects" : {},
-    "Automatic pairing is unavailable. Enter the six-digit code shown on your Mac." : {},
-    "Collapse navigation" : {},
-    "Connected with iCloud identity" : {},
-    "Connected with nearby Bluetooth" : {},
-    "Connected with pairing code" : {},
-    "Connecting automatically" : {},
-    "Current tasks" : {},
-    "Expand navigation" : {},
-    "History trail" : {},
-    "Navigation collapsed" : {},
-    "Navigation expanded" : {},
-    "Process details" : {},
-    "Search history" : {},
-    "Show all %lld processes" : {},
-    "Show fewer processes" : {},
-    "Some saved data could not be read. Anchor kept the original data for recovery." : {},
-    "Trusted device connected" : {},
-    "View full timeline" : {},
-    "home.empty.tasks" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drop an anchor to host your first task"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "投锚后，你的任务会显示在这里"
-          }
-        }
-      }
-    },
-    "home.task.library" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Task library"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "任务进程库"
-          }
-        }
-      }
-    },
-    "home.tasks.manage" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Manage hosted tasks"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "管理托管任务"
-          }
-        }
-      }
-    },
-    "mac.current.tasks" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Current tasks"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "当前任务"
-          }
-        }
-      }
-    },
-    "mac.error.recovery.read" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Some saved data could not be read. Anchor kept the original data for recovery."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "部分已保存的数据无法读取，Anchor 已保留原始数据以便恢复。"
-          }
-        }
-      }
-    },
-    "mac.history.search" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search history"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "搜索历史记录"
-          }
-        }
-      }
-    },
-    "mac.history.trail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "History trail"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "历史轨迹"
-          }
-        }
-      }
-    },
-    "mac.navigation.collapse" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Collapse navigation"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "收起导航"
-          }
-        }
-      }
-    },
-    "mac.navigation.collapsed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Navigation collapsed"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导航已收起"
-          }
-        }
-      }
-    },
-    "mac.navigation.expand" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Expand navigation"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "展开导航"
-          }
-        }
-      }
-    },
-    "mac.navigation.expanded" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Navigation expanded"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导航已展开"
-          }
-        }
-      }
-    },
-    "mac.process.details" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Process details"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "进程详情"
-          }
-        }
-      }
-    },
-    "mac.process.show.all" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show all %lld processes"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "显示全部 %lld 个进程"
-          }
-        }
-      }
-    },
-    "mac.process.show.fewer" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show fewer processes"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "收起进程"
-          }
-        }
-      }
-    },
-    "mac.timeline.view.all" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "View full timeline"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "查看完整时间线"
-          }
-        }
-      }
-    },
-    "mac.work.peer.disconnected" : {
+    "notifications.availability" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Device disconnected"
+            "value" : "Review decisions and process changes in Anchor. Background notifications are not available in this version."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "设备未连接"
+            "value" : "请在 Anchor 内查看决策和进程变化。当前版本尚不支持后台通知。"
           }
         }
       }
     },
-    "mac.work.progress.reported" : {
+    "sync.state.notConfigured" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Average reported process progress"
+            "value" : "Not configured"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已上报进程的平均进度"
+            "value" : "未配置"
           }
         }
       }
     },
-    "mac.work.progress.unavailable" : {
+    "sync.state.idle" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No process has reported progress yet"
+            "value" : "Waiting to sync"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "暂无进程上报进度"
+            "value" : "等待同步"
           }
         }
       }
     },
-    "mac.work.status.active" : {
+    "sync.state.syncing" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "In progress"
+            "value" : "Syncing"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "进行中"
+            "value" : "同步中"
           }
         }
       }
     },
-    "mac.work.status.archived" : {
+    "sync.state.available" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Archived"
+            "value" : "Last sync succeeded"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已归档"
+            "value" : "上次同步成功"
           }
         }
       }
     },
-    "mac.work.status.completed" : {
+    "sync.state.offline" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Completed"
+            "value" : "Offline"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已完成"
+            "value" : "离线"
           }
         }
       }
     },
-    "mac.work.status.draft" : {
+    "sync.state.failed" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Not started"
+            "value" : "Sync failed"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "未开始"
+            "value" : "同步失败"
           }
         }
       }
     },
-    "mac.work.subtitle" : {
+    "decision.local.record" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keep your current work in view."
+            "value" : "Your choice is saved in Anchor. Continue in the source app unless it supports remote actions; process status updates come from that source."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "专注眼前的工作，随时接续。"
-          }
-        }
-      }
-    },
-    "profile.avatar.change" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Change avatar"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "更换头像"
-          }
-        }
-      }
-    },
-    "profile.avatar.reset" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use default avatar"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "使用默认头像"
-          }
-        }
-      }
-    },
-    "profile.name" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Name"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "昵称"
-          }
-        }
-      }
-    },
-    "setup.plan.back" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "返回"
-          }
-        }
-      }
-    },
-    "setup.plan.criteria" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Completion criteria"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "完成标准"
-          }
-        }
-      }
-    },
-    "setup.plan.criteria.hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "For example: clear hierarchy, a working prototype. Put each criterion on a new line."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "例如：信息层级清晰、完成可演示的原型。每条标准可以另起一行。"
-          }
-        }
-      }
-    },
-    "setup.plan.criteria.prompt" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What will done look like?"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "怎样才算完成？"
-          }
-        }
-      }
-    },
-    "setup.plan.criterion.add" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add a criterion"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "添加标准"
-          }
-        }
-      }
-    },
-    "setup.plan.down" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move down"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "下移"
-          }
-        }
-      }
-    },
-    "setup.plan.edit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "编辑"
-          }
-        }
-      }
-    },
-    "setup.plan.edit.done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done editing"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "完成编辑"
-          }
-        }
-      }
-    },
-    "setup.plan.goal" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Goal"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "目标"
-          }
-        }
-      }
-    },
-    "setup.plan.goal.hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "For example: finish redesigning the Anchor homepage"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "例如：完成 Anchor 首页的重新设计"
-          }
-        }
-      }
-    },
-    "setup.plan.goal.prompt" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What would you like to do?"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "你准备做什么？"
-          }
-        }
-      }
-    },
-    "setup.plan.hint.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try describing it like this"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "试试这样说"
-          }
-        }
-      }
-    },
-    "setup.plan.keyboard" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use keyboard"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "键盘输入"
-          }
-        }
-      }
-    },
-    "setup.plan.newline" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New line"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "另起一行"
-          }
-        }
-      }
-    },
-    "setup.plan.next" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Next"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "下一段"
-          }
-        }
-      }
-    },
-    "setup.plan.original" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your description"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "原始想法"
-          }
-        }
-      }
-    },
-    "setup.plan.photo" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reference image"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "参考图片"
-          }
-        }
-      }
-    },
-    "setup.plan.photo.failed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "An image could not be added. Try choosing it again."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "有图片未能添加，请重新选择后再试。"
-          }
-        }
-      }
-    },
-    "setup.plan.photo.remove" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove image"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "移除图片"
-          }
-        }
-      }
-    },
-    "setup.plan.photos" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add images"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "添加图片"
-          }
-        }
-      }
-    },
-    "setup.plan.reorder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reorder step"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "调整步骤顺序"
-          }
-        }
-      }
-    },
-    "setup.plan.required" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write or say a few words to continue"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "写下或说出一些内容，再继续"
-          }
-        }
-      }
-    },
-    "setup.plan.review" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Review plan"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "查看计划"
-          }
-        }
-      }
-    },
-    "setup.plan.review.subtitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your words, ready for a final review"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "你写下的计划，确认后就开始"
-          }
-        }
-      }
-    },
-    "setup.plan.save.failed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not save this task. Your input is still here. Please try again."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "任务暂时未能保存，你的输入还在，请重试。"
-          }
-        }
-      }
-    },
-    "setup.plan.saving" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Saving…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在保存…"
-          }
-        }
-      }
-    },
-    "setup.plan.start" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开始执行"
-          }
-        }
-      }
-    },
-    "setup.plan.step.add" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add a step"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "添加步骤"
-          }
-        }
-      }
-    },
-    "setup.plan.steps" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Action plan"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "行动计划"
-          }
-        }
-      }
-    },
-    "setup.plan.steps.hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "For example: review the content, sketch the layout, build the prototype. Put each step on a new line."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "例如：梳理内容、画出布局、制作原型。每个步骤可以另起一行。"
-          }
-        }
-      }
-    },
-    "setup.plan.steps.prompt" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "How will you get there?"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "你准备怎么做？"
-          }
-        }
-      }
-    },
-    "setup.plan.subtitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Turn your thoughts into a plan"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "让想法变成可执行的计划"
-          }
-        }
-      }
-    },
-    "setup.plan.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Task anchoring"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "任务投锚"
-          }
-        }
-      }
-    },
-    "setup.plan.up" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move up"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上移"
-          }
-        }
-      }
-    },
-    "sound.edge.effects" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anchor sound effects"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "船锚提示音"
-          }
-        }
-      }
-    },
-    "setup.plan.goal.placeholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start with a goal, a question, or an idea…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "从目标、问题或一个想法开始…"
-          }
-        }
-      }
-    },
-    "setup.plan.criteria.placeholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write each completion criterion on a new line…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "写下完成标准，每条可以另起一行…"
-          }
-        }
-      }
-    },
-    "setup.plan.steps.placeholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write each action step on a new line…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "写下行动步骤，每步可以另起一行…"
+            "value" : "选择会保存在 Anchor 中。除非来源支持远程操作，否则请在来源应用中继续处理；进程状态以来源的后续更新为准。"
           }
         }
       }

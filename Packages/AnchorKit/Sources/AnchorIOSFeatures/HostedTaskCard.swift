@@ -7,21 +7,17 @@ struct HostedTaskCard: View {
     let task: AnchorSession
     let height: CGFloat
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .headline) private var titleSize: CGFloat = 20
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .top, spacing: 4) {
-                Text(task.goal.title).font(.caption.weight(.medium))
+                Text(task.goal.title).font(.system(size: titleSize, weight: .semibold))
                     .foregroundStyle(.primary)
-                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 status
-            }
-            if let main = task.conversationsInJoiningOrder.first {
-                Text(main.metric).font(.headline.monospacedDigit())
-                    .foregroundStyle(AnchorIOSStyle.heading)
-                Text(main.metricLabel).font(.caption2).foregroundStyle(AnchorIOSStyle.secondaryText)
-                    .lineLimit(1)
             }
             Spacer(minLength: 0)
             HStack {
@@ -29,7 +25,7 @@ struct HostedTaskCard: View {
                 progressCapsule
             }
         }
-        .padding(10)
+        .padding(12)
         .frame(maxWidth: .infinity)
         .frame(minHeight: height, maxHeight: dynamicTypeSize.isAccessibilitySize ? nil : height, alignment: .topLeading)
         .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: 16))
@@ -48,11 +44,11 @@ struct HostedTaskCard: View {
             }
         } else {
             HStack(spacing: 3) {
-                dot(active: task.taskProcesses.contains { $0.status == .running }, color: .green)
+                dot(active: task.taskProcesses.contains { $0.status == .running } || (task.taskProcesses.isEmpty && task.status == .active), color: .green)
                 dot(active: task.taskProcesses.contains { [.failed, .blocked, .disconnected].contains($0.status) }, color: .red)
                 if task.taskProcesses.contains(where: { $0.status == .needsDecision }) {
-                    Image(systemName: "star.fill").font(.caption2).foregroundStyle(AnchorIOSStyle.yellow)
-                        .frame(width: 8, height: 8)
+                    Image(systemName: "star.fill").font(.system(size: 12)).foregroundStyle(AnchorIOSStyle.yellow)
+                        .frame(width: 12, height: 12)
                 } else {
                     dot(active: false, color: AnchorIOSStyle.yellow)
                 }
@@ -62,7 +58,7 @@ struct HostedTaskCard: View {
     }
 
     private func dot(active: Bool, color: Color) -> some View {
-        Circle().fill(active ? color : AnchorIOSStyle.border).frame(width: 8, height: 8)
+        Circle().fill(active ? color : AnchorIOSStyle.border).frame(width: 12, height: 12)
     }
 
     private var progressCapsule: some View {
@@ -77,11 +73,11 @@ struct HostedTaskCard: View {
                         .rotationEffect(.degrees(-90))
                 }
             }
-            .frame(width: 11, height: 11)
+            .frame(width: 13, height: 13)
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 3)
-        .frame(width: 48, height: 14)
+        .frame(width: 50, height: 17)
         .background(color.opacity(0.18), in: .capsule)
         .accessibilityLabel(L10n.taskProgress)
         .accessibilityValue(progress?.formatted(.percent) ?? "—")

@@ -114,7 +114,7 @@ public struct StatusBadge: View {
     private let text: String
     private let decorative: Bool
     private let interrupted: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
     @ScaledMetric(relativeTo: .caption) private var textSize: CGFloat = 12
     @ScaledMetric(relativeTo: .caption) private var badgeScale: CGFloat = 1
 
@@ -271,7 +271,7 @@ private struct StripePattern: View {
 }
 
 public struct AnchorPrimaryButtonStyle: ButtonStyle {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
 
     public init() {}
 

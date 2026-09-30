@@ -192,7 +192,7 @@ public struct HarborClayAvatar: View {
 }
 
 public struct HarborAnchorControl: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
 
     private let label: String
     private let action: () -> Void
@@ -271,7 +271,7 @@ public struct HarborAnchorControl: View {
 }
 
 public struct HarborPrimaryButtonStyle: ButtonStyle {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
     @Environment(\.isEnabled) private var isEnabled
 
     public init() {}
@@ -350,7 +350,7 @@ public struct HarborInputSurface: ViewModifier {
 }
 
 private struct HarborAnchorButtonStyle: ButtonStyle {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label

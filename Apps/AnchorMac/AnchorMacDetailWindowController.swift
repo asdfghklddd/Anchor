@@ -10,7 +10,8 @@ final class AnchorMacDetailWindowController: NSWindowController {
     init(
         model: AnchorSessionModel,
         linkController: (any LocalLinkControlling)?,
-        sourceSetupModel: MacSourceSetupModel
+        sourceSetupModel: MacSourceSetupModel,
+        defaults: UserDefaults?
     ) {
         let rootView = AnchorMacRootView(
             model: model,
@@ -18,7 +19,9 @@ final class AnchorMacDetailWindowController: NSWindowController {
             sourceSetupModel: sourceSetupModel,
             showsCompletedSessionInCurrentWork: false
         )
-        let hostingController = NSHostingController(rootView: rootView)
+        let hostingController = NSHostingController(
+            rootView: rootView.defaultAppStorage(defaults ?? .standard)
+        )
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Anchor"
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
@@ -26,6 +29,8 @@ final class AnchorMacDetailWindowController: NSWindowController {
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.titlebarSeparatorStyle = .none
+        window.isOpaque = false
+        window.backgroundColor = .clear
         window.isMovableByWindowBackground = true
         window.setContentSize(NSSize(width: 1080, height: 720))
         window.minSize = NSSize(width: 900, height: 620)
@@ -47,6 +52,10 @@ final class AnchorMacDetailWindowController: NSWindowController {
 
     func present() {
         guard let window else { return }
+        // SwiftUI navigation may update native title-bar attributes while mounting.
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.titlebarSeparatorStyle = .none
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
     }

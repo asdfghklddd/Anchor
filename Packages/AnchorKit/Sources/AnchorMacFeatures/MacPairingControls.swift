@@ -7,16 +7,18 @@ struct MacPairingControls: View {
     let controller: (any LocalLinkControlling)?
     @State private var pairingStatus = DevicePairingStatus.automatic
     @State private var pairingCode: String?
+    @State private var isShowingManualCode = false
 
     var body: some View {
         Group {
-            if controller != nil {
+            if let controller {
                 switch pairingStatus.phase {
                 case .automatic:
-                    Label(L10n.pairingAutomatically, systemImage: "icloud.and.arrow.down")
+                    Label(L10n.pairingAutomatically, systemImage: "macbook.and.iphone")
                     Text(L10n.pairingAutomaticDetail)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    manualCodeControl(controller: controller)
                 case .verificationCodeRequired:
                     if let pairingCode {
                         MacPairingCodeView(pairingCode: pairingCode)
@@ -49,12 +51,33 @@ struct MacPairingControls: View {
         }
     }
 
+    @ViewBuilder
+    private func manualCodeControl(controller: any LocalLinkControlling) -> some View {
+        if isShowingManualCode, let pairingCode {
+            MacPairingCodeView(pairingCode: pairingCode)
+        } else {
+            Button {
+                Task {
+                    pairingCode = await controller.currentPairingCode()
+                    isShowingManualCode = pairingCode != nil
+                }
+            } label: {
+                Label(L10n.pairingCode, systemImage: "number")
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .accessibilityIdentifier("mac.pairing.show.code")
+        }
+    }
+
     private func apply(_ status: DevicePairingStatus, controller: any LocalLinkControlling) async {
         guard pairingStatus != status else { return }
         pairingStatus = status
         pairingCode = status.phase == .verificationCodeRequired
             ? await controller.currentPairingCode()
             : nil
+        if status.phase == .connected { isShowingManualCode = false }
         let message = switch status.phase {
         case .automatic: L10n.pairingAutomatically
         case .verificationCodeRequired: L10n.pairingHint

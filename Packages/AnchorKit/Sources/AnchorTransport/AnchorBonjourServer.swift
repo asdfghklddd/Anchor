@@ -45,7 +45,7 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
     public init(
         identityStore: PairingIdentityStore = PairingIdentityStore(),
         deviceID: UUID? = nil,
-        automaticPairing: AutomaticPairingConfiguration = .macProduction(),
+        automaticPairing: AutomaticPairingConfiguration = .manualOnly,
         bluetoothPairingToken: AnchorBluetoothPairingToken? = nil,
         serviceType: String = AnchorBonjourServer.serviceType,
         serviceName: String = "Anchor"
@@ -473,10 +473,18 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
     }
 
     private func setPairingStatus(_ status: DevicePairingStatus) {
-        guard pairingStatus != status else { return }
-        pairingStatus = status
+        let visibleStatus: DevicePairingStatus
+        if effectiveConnectionState == .connected, status.phase != .connected {
+            visibleStatus = pairingStatus.phase == .connected
+                ? pairingStatus
+                : DevicePairingStatus(phase: .connected, route: .bluetooth)
+        } else {
+            visibleStatus = status
+        }
+        guard pairingStatus != visibleStatus else { return }
+        pairingStatus = visibleStatus
         for continuation in pairingStatusContinuations.values {
-            continuation.yield(status)
+            continuation.yield(visibleStatus)
         }
     }
 

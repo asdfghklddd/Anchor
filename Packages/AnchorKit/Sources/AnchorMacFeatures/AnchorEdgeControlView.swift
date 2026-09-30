@@ -6,7 +6,7 @@ public struct AnchorEdgeControlView: View {
     private let presentation: AnchorEdgePresentationModel
     private let onOpenDetails: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
     @Environment(\.colorSchemeContrast) private var contrast
     @FocusState private var isKeyboardFocused: Bool
     @State private var isHovering = false

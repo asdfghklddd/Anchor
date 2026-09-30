@@ -11,7 +11,7 @@ struct AnchorEdgeBoatArtwork: View {
     let hoverStartedAt: Date
     var anchorTravel: CGFloat = 0
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
 
     var body: some View {
         TimelineView(

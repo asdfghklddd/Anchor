@@ -33,8 +33,10 @@ struct AnchorIOSApp: App {
             ?? (isUITesting
                 ? "com.andywang.anchor.ui-tests.\(uiTestStorageID.uuidString)"
                 : "com.andywang.anchor.local-link")
+        // The default local build should never query a synchronizable
+        // Keychain item just to discover a nearby Mac.
         usesAutomaticICloudPairing = !isUITesting
-            && environment["ANCHOR_DISABLE_ICLOUD_PAIRING"] != "1"
+            && environment["ANCHOR_ENABLE_ICLOUD_PAIRING"] == "1"
         recoveryReviewInterval = isUITesting
             ? environment["ANCHOR_UI_TEST_RECOVERY_INTERVAL"].flatMap(TimeInterval.init) ?? 86_400
             : 86_400
@@ -42,7 +44,7 @@ struct AnchorIOSApp: App {
         isUITesting = false
         uiTestStorageURL = nil
         pairingIdentityService = "com.andywang.anchor.local-link"
-        usesAutomaticICloudPairing = true
+        usesAutomaticICloudPairing = false
         recoveryReviewInterval = 86_400
 #endif
         if let uiTestStorageURL {

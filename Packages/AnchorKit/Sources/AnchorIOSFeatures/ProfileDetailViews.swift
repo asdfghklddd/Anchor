@@ -10,6 +10,7 @@ enum ProfileInfoKind: Hashable {
 
 struct ProfileInfoSheet: View {
     let kind: ProfileInfoKind
+    let projection: SessionProjection
 
     @Environment(\.dismiss) private var dismiss
 
@@ -97,7 +98,7 @@ struct ProfileInfoSheet: View {
         case .account:
             L10n.profile
         case .icloud:
-            L10n.contextSyncStable
+            cloudStatus
         }
     }
 
@@ -111,7 +112,7 @@ struct ProfileInfoSheet: View {
         case .icloud:
             AnchorStrings.value(
                 "profile.icloud.copy",
-                default: "Goals, process states, and return notes stay consistent across your Apple devices."
+                default: "iCloud sync requires a configured container and an available iCloud account. Nearby device pairing is managed separately in Connections."
             )
         }
     }
@@ -123,18 +124,28 @@ struct ProfileInfoSheet: View {
         }
     }
 
+    private var cloudStatus: String {
+        switch projection.durableSyncState {
+        case .notConfigured: AnchorStrings.value("sync.state.notConfigured", default: "Not configured")
+        case .idle: AnchorStrings.value("sync.state.idle", default: "Waiting to sync")
+        case .syncing: AnchorStrings.value("sync.state.syncing", default: "Syncing")
+        case .available: AnchorStrings.value("sync.state.available", default: "Last sync succeeded")
+        case .offline: AnchorStrings.value("sync.state.offline", default: "Offline")
+        case .failed: AnchorStrings.value("sync.state.failed", default: "Sync failed")
+        }
+    }
+
     private var facts: [(label: String, value: String)] {
         switch kind {
         case .account:
             [
                 (AnchorStrings.value("profile.account.device", default: "Device"), AnchorStrings.value("profile.account.device.value", default: "This iPhone")),
                 (AnchorStrings.value("profile.account.workspace", default: "Workspace"), AnchorStrings.value("profile.account.workspace.value", default: "Personal")),
-                (AnchorStrings.value("profile.account.identity", default: "Sync identity"), AnchorStrings.value("profile.account.identity.value", default: "iCloud account on this device")),
+                (AnchorStrings.value("profile.account.identity", default: "Sync identity"), AnchorStrings.value("profile.account.identity.value", default: "Local device identity")),
             ]
         case .icloud:
             [
-                (AnchorStrings.value("profile.icloud.status", default: "Current status"), L10n.connected),
-                (AnchorStrings.value("profile.icloud.last.sync", default: "Last sync"), AnchorStrings.value("profile.icloud.just.now", default: "Just now")),
+                (AnchorStrings.value("profile.icloud.status", default: "Current status"), cloudStatus),
                 (AnchorStrings.value("profile.icloud.scope", default: "Sync scope"), AnchorStrings.value("profile.icloud.scope.value", default: "Goals and process states")),
             ]
         }
@@ -146,6 +157,7 @@ struct ProfileDetailSheet: View {
     let kind: ProfileDetailKind
     let onManage: () -> Void
     let onFinish: () -> Void
+    var onDecision: ((UUID) -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
 
@@ -159,15 +171,23 @@ struct ProfileDetailSheet: View {
                         detailHero
 
                         if kind == .session {
+                            if let onDecision {
+                                ForEach(projection.openDecisions) { decision in
+                                    Button { onDecision(decision.id) } label: {
+                                        Label(decision.title, systemImage: "star.fill")
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .buttonStyle(HarborPrimaryButtonStyle())
+                                    .accessibilityIdentifier("task.decision.\(decision.id)")
+                                }
+                            }
+                            sessionMetrics
+                            if !processes.isEmpty { processPulse }
                             if let goal = projection.session?.goal, goal.userPlan != nil {
                                 AnchorSavedPlan(goal: goal)
                                     .padding(16)
                                     .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: 18))
                             }
-                            sessionMetrics
-                            processPulse
-                        } else {
-                            trendSection
                         }
 
                         recentSection
@@ -209,78 +229,64 @@ struct ProfileDetailSheet: View {
         .accessibilityIdentifier("profile.detail.\(String(describing: kind))")
     }
 
-    private var detailHero: some View {
-        AnchorCard(tint: kind.tint) {
-            VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-                HStack(alignment: .top, spacing: AnchorSpacing.small) {
-                    Image(systemName: kind.symbol)
-                        .font(.title3.bold())
-                        .foregroundStyle(kind.tint)
-                        .frame(width: 42, height: 42)
-                        .background(kind.tint.opacity(0.14), in: .circle)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(kind.kicker)
-                            .font(.caption2.bold())
-                            .foregroundStyle(AnchorPalette.link)
-                        Text(kind.value(projection: projection))
-                            .font(.title.bold().monospacedDigit())
-                            .foregroundStyle(AnchorPalette.ink)
-                    }
-                    Spacer(minLength: 0)
-                }
-
-                Text(kind.headline)
-                    .font(.title2.bold())
-                    .foregroundStyle(AnchorPalette.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text(kind.subline(projection: projection))
-                    .font(.body)
-                    .foregroundStyle(AnchorPalette.secondaryInk)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-    }
-
-    private var trendSection: some View {
-        VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-            HStack(alignment: .bottom) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(AnchorStrings.value("profile.detail.trend", default: "TREND"))
-                        .font(.caption2.bold())
-                        .foregroundStyle(AnchorPalette.link)
-                    Text(AnchorStrings.value("profile.detail.recent.records", default: "Recent records"))
-                        .font(.title3.bold())
+    @ViewBuilder private var detailHero: some View {
+        if kind == .session, let task = projection.session {
+            AnchorCard(tint: kind.tint) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(task.goal.title)
+                        .font(.title2.bold())
                         .foregroundStyle(AnchorPalette.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if !task.goal.completionCriteria.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text(AnchorStrings.value("task.detail.criteria", default: "Completion criteria"))
+                            .font(.subheadline.bold())
+                            .foregroundStyle(AnchorPalette.link)
+                        Text(task.goal.completionCriteria)
+                            .font(.body)
+                            .foregroundStyle(AnchorPalette.secondaryInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
-                Spacer()
-                Text(AnchorStrings.value("profile.detail.steady", default: "Stable"))
-                    .font(.caption.bold())
-                    .foregroundStyle(AnchorPalette.secondaryInk)
             }
+        } else {
+            AnchorCard(tint: kind.tint) {
+                VStack(alignment: .leading, spacing: AnchorSpacing.small) {
+                    HStack(alignment: .top, spacing: AnchorSpacing.small) {
+                        Image(systemName: kind.symbol)
+                            .font(.title3.bold())
+                            .foregroundStyle(kind.tint)
+                            .frame(width: 42, height: 42)
+                            .background(kind.tint.opacity(0.14), in: .circle)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(kind.kicker)
+                                .font(.caption2.bold())
+                                .foregroundStyle(AnchorPalette.link)
+                            Text(kind.value(projection: projection))
+                                .font(.title.bold().monospacedDigit())
+                                .foregroundStyle(AnchorPalette.ink)
+                        }
+                        Spacer(minLength: 0)
+                    }
 
-            HStack(alignment: .bottom, spacing: 5) {
-                ForEach(Array(kind.bars.enumerated()), id: \.offset) { _, height in
-                    Capsule()
-                        .fill(kind.tint.opacity(0.82))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 110 * height)
+                    Text(kind.headline)
+                        .font(.title2.bold())
+                        .foregroundStyle(AnchorPalette.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text(kind.subline(projection: projection))
+                        .font(.body)
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .frame(height: 120, alignment: .bottom)
-            .padding(.horizontal, AnchorSpacing.small)
-            .padding(.top, AnchorSpacing.small)
-            .background(kind.tint.opacity(0.10), in: .rect(cornerRadius: 18, style: .continuous))
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(AnchorStrings.value("profile.detail.chart", default: "Recent twelve records trend"))
         }
     }
 
     private var sessionMetrics: some View {
         HStack(spacing: 0) {
-            profileMetric(L10n.minuteCount(focusMinutes), label: L10n.focusTime)
+            profileMetric(projection.session?.conversationsInJoiningOrder.first?.progress?.formatted(.percent.precision(.fractionLength(0))) ?? "—", label: L10n.taskProgress)
             Divider().padding(.vertical, 8)
-            profileMetric(TaskStatusPresentation.text(for: projection.session), label: L10n.currentStatus)
+            profileMetric(sessionStatus, label: L10n.currentStatus)
             Divider().padding(.vertical, 8)
             profileMetric("\(completedCount)/\(processCount)", label: L10n.completedWork)
         }
@@ -305,10 +311,9 @@ struct ProfileDetailSheet: View {
 
     private var processPulse: some View {
         VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-            sectionHeading(
-                kicker: AnchorStrings.value("profile.detail.process.pulse", default: "PROCESS PULSE"),
-                title: L10n.processFlow
-            )
+            Text(AnchorStrings.value("task.detail.processes", default: "Process progress"))
+                .font(.title3.bold())
+                .foregroundStyle(AnchorPalette.ink)
             VStack(spacing: 0) {
                 ForEach(processes) { process in
                     HStack(spacing: AnchorSpacing.small) {
@@ -317,9 +322,15 @@ struct ProfileDetailSheet: View {
                             Text(process.title)
                                 .font(.subheadline.bold())
                                 .foregroundStyle(AnchorPalette.ink)
-                            Text("\(process.sourceName) · \(L10n.status(process.status))")
+                            Text(L10n.status(process.status))
                                 .font(.caption2)
                                 .foregroundStyle(AnchorPalette.secondaryInk)
+                            if !process.detail.isEmpty {
+                                Text(process.detail)
+                                    .font(.subheadline)
+                                    .foregroundStyle(AnchorPalette.secondaryInk)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
                         Spacer(minLength: 4)
                         VStack(alignment: .trailing, spacing: 4) {
@@ -349,10 +360,9 @@ struct ProfileDetailSheet: View {
 
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-            sectionHeading(
-                kicker: AnchorStrings.value("profile.detail.memory.trace", default: "MEMORY TRACE"),
-                title: AnchorStrings.value("profile.detail.key.memory", default: "Key memories")
-            )
+            Text(AnchorStrings.value("profile.detail.recent.records", default: "Recent records"))
+                .font(.title3.bold())
+                .foregroundStyle(AnchorPalette.ink)
             VStack(spacing: 0) {
                 if timeline.isEmpty {
                     Text(L10n.noEvents)
@@ -412,15 +422,23 @@ struct ProfileDetailSheet: View {
     }
 
     private var timeline: [ProcessEvent] {
-        Array((projection.session?.timeline ?? []).prefix(3))
+        Array((projection.session?.timeline ?? []).sorted { $0.occurredAt > $1.occurredAt }.prefix(6))
+    }
+
+    private var sessionStatus: String {
+        if !projection.openDecisions.isEmpty { return L10n.status(.needsDecision) }
+        for status in [ProcessStatus.failed, .blocked, .disconnected, .running] {
+            if processes.contains(where: { $0.status == status }) { return L10n.status(status) }
+        }
+        if !processes.isEmpty && processes.allSatisfy({ $0.status == .completed }) {
+            return L10n.status(.completed)
+        }
+        return L10n.status(.queued)
     }
 
     private var processCount: Int { processes.count }
     private var completedCount: Int { processes.filter { $0.status == .completed }.count }
-    private var focusMinutes: Int {
-        guard let startedAt = projection.session?.startedAt else { return 0 }
-        return max(0, Int(Date.now.timeIntervalSince(startedAt) / 60))
-    }
+
 }
 
 private extension ProfileDetailKind {
@@ -429,7 +447,7 @@ private extension ProfileDetailKind {
         case .focus: L10n.history
         case .contexts: L10n.savedContexts
         case .anchors: L10n.completedAnchors
-        case .session: L10n.sessionSummary
+        case .session: AnchorStrings.value("task.detail.title", default: "Task details")
         case .returnMemory: L10n.returning
         case .decisionTrace: L10n.decisions
         case .contextSnapshot: L10n.contextNote
@@ -486,8 +504,8 @@ private extension ProfileDetailKind {
         case .contexts: "\((projection.session?.notes.count ?? 0) + (projection.session?.snapshots.count ?? 0))"
         case .anchors: "\(projection.session?.taskProcesses.filter { $0.status == .completed }.count ?? 0)"
         case .session, .returnMemory: TaskStatusPresentation.text(for: projection.session)
-        case .decisionTrace: projection.openDecisions.isEmpty ? "✓" : "1"
-        case .contextSnapshot: "\(projection.session?.taskProcesses.count ?? 0)/\(projection.session?.taskProcesses.count ?? 0)"
+        case .decisionTrace: "\(projection.openDecisions.count)"
+        case .contextSnapshot: "\(projection.session?.snapshots.count ?? 0)"
         }
     }
 
@@ -500,22 +518,11 @@ private extension ProfileDetailKind {
         case .returnMemory: L10n.returnDetail
         case .decisionTrace:
             projection.openDecisions.isEmpty
-                ? AnchorStrings.value("profile.detail.decision.resolved", default: "The current decision has been resolved.")
+                ? AnchorStrings.value("profile.detail.decision.resolved", default: "No pending decisions.")
                 : AnchorStrings.value("profile.detail.decision.waiting", default: "A decision is waiting for your judgment.")
         case .contextSnapshot: L10n.contextNote
         }
     }
 
-    var bars: [CGFloat] {
-        switch self {
-        case .focus: [0.34, 0.48, 0.38, 0.72, 0.61, 0.84, 0.68, 0.92, 0.76, 0.88, 0.64, 0.96]
-        case .contexts: [0.74, 0.88, 0.82, 0.96, 0.91, 1, 0.86, 0.94, 0.97, 0.93, 1, 0.96]
-        case .anchors: [0.22, 0.42, 0.38, 0.58, 0.52, 0.70, 0.66, 0.78, 0.72, 0.84, 0.88, 0.86]
-        case .session: []
-        case .returnMemory: [0.92, 0.94, 0.88, 0.96, 0.95, 1, 0.91, 0.96, 0.98, 0.94, 0.97, 0.96]
-        case .decisionTrace: [0.18, 0.22, 0.30, 0.34, 0.48, 0.55, 0.63, 0.72, 0.78, 0.84, 0.92, 1]
-        case .contextSnapshot: [1, 1, 0.96, 1, 0.92, 1, 1, 0.96, 1, 1, 0.96, 1]
-        }
-    }
 }
 #endif

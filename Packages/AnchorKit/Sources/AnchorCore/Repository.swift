@@ -117,6 +117,32 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
             }
         }
 
+        let cleanedBase = RetiredRecordingCleanup.clean(baseProjection)
+        let cleanedEvents = RetiredRecordingCleanup.filteredEvents(events)
+        let retainedIDs = Set(cleanedEvents.map(\.id))
+        let cleanedOutbox = outbox.filter { retainedIDs.contains($0.id) }
+        let baseChanged = cleanedBase != baseProjection
+        let eventsChanged = cleanedEvents != events
+        let outboxChanged = cleanedOutbox != outbox
+        if baseChanged || eventsChanged || outboxChanged {
+            do {
+                // Back up before changing persisted history. Failure leaves the original intact.
+                if let storedData {
+                    let backup = resolvedURL.appendingPathExtension("before-recording-cleanup-\(UUID().uuidString).bak")
+                    try storedData.write(to: backup, options: .atomic)
+                }
+                let cleaned = PersistedState(schemaVersion: Self.schemaVersion,
+                    baseProjection: cleanedBase, events: cleanedEvents, outbox: cleanedOutbox,
+                    nextSequence: nextSequence)
+                try JSONEncoder.anchor.encode(cleaned).write(to: resolvedURL, options: .atomic)
+                baseProjection = cleanedBase
+                events = cleanedEvents
+                outbox = cleanedOutbox
+            } catch {
+                startupError = "Recording data cleanup failed; the original history was preserved. \(error.localizedDescription)"
+            }
+        }
+
         projection = Self.replay(
             baseProjection: baseProjection,
             events: events,
@@ -231,6 +257,10 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
     }
 
     public func applyRemote(_ envelope: EventEnvelope) throws {
+        if RetiredRecordingCleanup.sessionIDs.contains(envelope.sessionID) { return }
+        if let operation = try? JSONDecoder.anchor.decode(SessionOperation.self, from: envelope.payload),
+           case let .observeProcess(observation) = RetiredRecordingCleanup.unscoped(operation),
+           RetiredRecordingCleanup.isRecordingProcess(observation.process) { return }
         guard envelope.schemaVersion <= SessionOperation.latestEnvelopeSchemaVersion else {
             throw SessionRepositoryError.unsupportedEventSchema
         }
@@ -421,9 +451,9 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         sourceHealth: [UUID: SourceHealth],
         durableSyncState: DurableSyncState
     ) -> SessionProjection {
-        var result = baseProjection
+        var result = RetiredRecordingCleanup.clean(baseProjection)
         var latestObservedAt = baseProjection.dataObservedAt
-        for envelope in events.sorted(by: eventSort) {
+        for envelope in RetiredRecordingCleanup.filteredEvents(events).sorted(by: eventSort) {
             guard let operation = try? JSONDecoder.anchor.decode(
                 SessionOperation.self,
                 from: envelope.payload
@@ -583,7 +613,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         _ local: [AnchorProcess],
         _ remote: [AnchorProcess]
     ) -> [AnchorProcess] {
-        var byID = Dictionary(uniqueKeysWithValues: local.map { ($0.id, $0) })
+        var byID = Dictionary(local.map { ($0.id, $0) }, uniquingKeysWith: { _, latest in latest })
         for candidate in remote {
             guard let existing = byID[candidate.id] else {
                 byID[candidate.id] = candidate
@@ -611,7 +641,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         _ local: [Decision],
         _ remote: [Decision]
     ) -> [Decision] {
-        var byID = Dictionary(uniqueKeysWithValues: local.map { ($0.id, $0) })
+        var byID = Dictionary(local.map { ($0.id, $0) }, uniquingKeysWith: { _, latest in latest })
         for candidate in remote {
             guard let existing = byID[candidate.id] else {
                 byID[candidate.id] = candidate
@@ -635,7 +665,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         _ remote: [T],
         newer: (T, T) -> Bool
     ) -> [T] where T.ID: Hashable {
-        var byID = Dictionary(uniqueKeysWithValues: local.map { ($0.id, $0) })
+        var byID = Dictionary(local.map { ($0.id, $0) }, uniquingKeysWith: { _, latest in latest })
         for candidate in remote {
             if let existing = byID[candidate.id] {
                 if newer(candidate, existing) {

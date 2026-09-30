@@ -15,9 +15,8 @@ public enum L10n {
     public static let notifications = AnchorStrings.value("notifications", default: "Notifications")
     public static let profile = AnchorStrings.value("profile", default: "My Anchor")
     public static let personalAnchor = AnchorStrings.value("profile.personal", default: "PERSONAL ANCHOR")
-    public static let contextSyncStable = AnchorStrings.value("profile.sync.stable", default: "Context sync is stable")
     public static let macOnline = AnchorStrings.value("profile.mac.online", default: "Mac online")
-    public static let guardedFocus = AnchorStrings.value("profile.focus.guarded", default: "Focus protected")
+    public static let guardedFocus = AnchorStrings.value("profile.focus.guarded", default: "Session elapsed")
     public static let savedContexts = AnchorStrings.value("profile.contexts.saved", default: "Saved contexts")
     public static let completedAnchors = AnchorStrings.value("profile.anchors.completed", default: "Completed anchors")
     public static let thisSessionData = AnchorStrings.value("profile.session.data", default: "THIS SESSION")
@@ -65,6 +64,7 @@ public enum L10n {
     public static let voiceInputHint = AnchorStrings.value("setup.voice.hint", default: "Speak the completion standard, then edit the text if needed.")
     public static let voiceInputEditHint = AnchorStrings.value("setup.voice.edit.hint", default: "Speak first. Refine the words below when needed.")
     public static let voiceInputDenied = AnchorStrings.value("setup.voice.error.denied", default: "Speech input is off. Enable Speech Recognition in Settings.")
+    public static let voiceInputMicrophoneDenied = AnchorStrings.value("setup.voice.error.microphone-denied", default: "Microphone access is off. Enable it in Settings to use voice input.")
     public static let voiceInputRestricted = AnchorStrings.value("setup.voice.error.restricted", default: "Speech input is restricted on this device.")
     public static let voiceInputNotReady = AnchorStrings.value("setup.voice.error.not-determined", default: "Speech input is not ready yet. Try again.")
     public static let voiceInputUnavailable = AnchorStrings.value("setup.voice.error.unavailable", default: "Speech input is temporarily unavailable.")
@@ -110,7 +110,6 @@ public enum L10n {
     public static let happeningNow = AnchorStrings.value("process.happening.now", default: "What is happening now")
     public static let live = AnchorStrings.value("status.live", default: "LIVE")
     public static let processFlow = AnchorStrings.value("process.flow", default: "Process flow")
-    public static let parallelEfficiency = AnchorStrings.value("process.parallel.efficiency", default: "Parallel efficiency 2.4×")
     public static let macConnected = AnchorStrings.value("connection.mac.connected", default: "Mac connected")
     public static let remoteSyncing = AnchorStrings.value("connection.remote.syncing", default: "Remote syncing")
     public static let generating = AnchorStrings.value("status.generating", default: "Generating")
@@ -126,7 +125,7 @@ public enum L10n {
         default: "Open Connections to review Mac, local network, and Bluetooth status."
     )
     public static let waitingConfirmation = AnchorStrings.value("status.waiting.confirmation", default: "Waiting for you")
-    public static let focusTime = AnchorStrings.value("focus.time", default: "Focus time")
+    public static let focusTime = AnchorStrings.value("focus.time", default: "Session elapsed")
     public static let focusActive = AnchorStrings.value("focus.active", default: "In focus")
     public static let confirmDirection = AnchorStrings.value("decision.confirm.direction", default: "Confirm direction")
     public static let ambient = AnchorStrings.value("ambient", default: "Ambient workspace")
@@ -178,7 +177,14 @@ public enum L10n {
     public static let synchronizedWork = AnchorStrings.value("away.synchronized.work", default: "Work that keeps syncing")
     public static let currentAnchor = AnchorStrings.value("away.current.anchor", default: "CURRENT ANCHOR · CURRENT GOAL")
     public static let atDeskCorrection = AnchorStrings.value("presence.at.desk", default: "I’m still at my desk")
+    public static let backAtDesk = AnchorStrings.value("presence.back.at.desk", default: "I’m back at my desk")
     public static let returning = AnchorStrings.value("return.title", default: "Welcome back")
+    public static let returnWhileAway = AnchorStrings.value("return.while.away", default: "While you were away...")
+    public static let returnSubtitle = AnchorStrings.value("return.subtitle", default: "Here’s what happened in Anchor")
+    public static let returnBack = AnchorStrings.value("return.back", default: "Back")
+    public static let returnNoChanges = AnchorStrings.value("return.no.changes", default: "No new changes while you were away.")
+    public static let returnWorkNow = AnchorStrings.value("return.work.now", default: "Work now")
+    public static let returnReady = AnchorStrings.value("return.ready", default: "Your task is ready when you are.")
     public static let returnNavigationTitle = AnchorStrings.value("return.nav", default: "Return")
     public static let returnDetail = AnchorStrings.value("return.detail", default: "Here is what changed while you were away.")
     public static let returnHeadline = AnchorStrings.value("return.headline", default: "Your work was held safely.")
@@ -251,7 +257,7 @@ public enum L10n {
         default: "Allow notifications in System Settings to receive decision requests."
     )
     public static let displaySupport = AnchorStrings.value("accessibility.display", default: "Display accommodations")
-    public static let displaySupportDetail = AnchorStrings.value("accessibility.display.detail", default: "Anchor follows Dynamic Type, VoiceOver, Reduce Motion, Increase Contrast, and Reduce Transparency automatically.")
+    public static let displaySupportDetail = AnchorStrings.value("accessibility.display.detail", default: "Full animations are enabled by default. You can enable Reduce Motion here. Anchor follows system Dynamic Type, VoiceOver, Increase Contrast, and Reduce Transparency settings.")
     public static let sourceHealth = AnchorStrings.value("source.health", default: "Source health")
     public static let connectedSources = AnchorStrings.value("source.connected", default: "Connected sources")
     public static let sourceDetails = AnchorStrings.value("source.details", default: "Source details")
@@ -544,7 +550,7 @@ public enum L10n {
     )
     public static let pairingAutomaticDetail = AnchorStrings.value(
         "pair.automatic.detail",
-        default: "Anchor first checks your iCloud identity, then a nearby Bluetooth device."
+        default: "Anchor connects over the local network or nearby Bluetooth. Use the six-digit code if needed."
     )
     public static let pairingFallbackDetail = AnchorStrings.value(
         "pair.fallback.detail",
@@ -648,7 +654,7 @@ public enum L10n {
 
     public static func focusDuration(_ minutes: Int) -> String {
         String.localizedStringWithFormat(
-            AnchorStrings.value("focus.duration", default: "%lldm"),
+            AnchorStrings.value("focus.duration", default: "Session elapsed: %lld min"),
             minutes
         )
     }

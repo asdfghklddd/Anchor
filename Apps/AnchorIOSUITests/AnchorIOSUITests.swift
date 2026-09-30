@@ -6,6 +6,76 @@ final class AnchorIOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testFreshLaunchHasNoHostedTasks() throws {
+        let app = isolatedApplication()
+        defer { app.terminate() }
+        app.launch()
+        XCTAssertTrue(app.buttons["anchor.note.button"].waitForExistence(timeout: 8))
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "hosted.task.")).count, 0)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.buttons["anchor.note.button"].waitForExistence(timeout: 8))
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "hosted.task.")).count, 0)
+    }
+
+    @MainActor
+    func testVoicePermissionFlowKeepsSetupResponsive() throws {
+        XCUIDevice.shared.orientation = .portrait
+        let app = isolatedApplication()
+        defer { app.terminate() }
+        app.launch()
+
+        let createButton = app.buttons["anchor.note.button"]
+        XCTAssertTrue(createButton.waitForExistence(timeout: 8))
+        createButton.tap()
+        let voiceButton = app.buttons["setup.voice.input.button"]
+        XCTAssertTrue(voiceButton.waitForExistence(timeout: 5))
+        voiceButton.tap()
+
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        for _ in 0..<2 {
+            let alert = springboard.alerts.firstMatch
+            guard alert.waitForExistence(timeout: 5) else { break }
+            let allowButton = ["Allow", "允许", "OK", "好"]
+                .map { alert.buttons[$0] }
+                .first { $0.exists }
+            XCTAssertNotNil(allowButton, "Unexpected voice permission alert")
+            allowButton?.tap()
+        }
+
+        // Permission callbacks and audio setup finish after the alerts close.
+        Thread.sleep(forTimeInterval: 3)
+        XCTAssertTrue(element("setup.screen", in: app).waitForExistence(timeout: 5))
+        let recording = ["Stop listening", "停止聆听"].contains(voiceButton.label)
+#if targetEnvironment(simulator)
+        // Some simulator runtimes cannot initialize the system recognizer.
+        // They must surface an error and leave the setup screen usable.
+        if recording {
+            voiceButton.tap()
+        } else {
+            XCTAssertTrue(element("setup.input.error", in: app).exists)
+        }
+#else
+        XCTAssertTrue(
+            recording,
+            "Voice recording did not start after permission. Button: \(voiceButton.label); error: \(element("setup.input.error", in: app).label)"
+        )
+        voiceButton.tap()
+        XCTAssertTrue(["Use voice input", "用语音输入"].contains(voiceButton.label))
+#endif
+        // Cancel a new recognition setup by switching to typing, then start again.
+        // A late callback from the first request must not disable the controls.
+        for _ in 0..<2 {
+            if voiceButton.isEnabled { voiceButton.tap() }
+            app.buttons["setup.keyboard.button"].tap()
+            XCTAssertTrue(app.buttons["setup.keyboard.done"].waitForExistence(timeout: 3))
+            app.buttons["setup.keyboard.done"].tap()
+            XCTAssertTrue(voiceButton.waitForExistence(timeout: 3))
+            XCTAssertTrue(voiceButton.isEnabled)
+        }
+    }
+
+    @MainActor
     func testWorkspaceFollowsLandscapeRotation() throws {
         XCUIDevice.shared.orientation = .portrait
         let app = isolatedApplication()
@@ -141,10 +211,15 @@ final class AnchorIOSUITests: XCTestCase {
         XCTAssertTrue(app.buttons["workspace.connection.action"].waitForExistence(timeout: 8))
         app.buttons["workspace.connection.action"].tap()
         let card = element("connections.screen", in: app)
-        XCTAssertTrue(card.waitForExistence(timeout: 3))
+        XCTAssertTrue(card.waitForExistence(timeout: 5), app.debugDescription)
         XCTAssertLessThan(card.frame.height, app.frame.height * 0.65)
         XCTAssertGreaterThan(card.frame.minY, app.frame.height * 0.3)
         XCTAssertTrue(app.buttons["connections.primary"].exists)
+        let manualCodeButton = app.buttons["connections.pairing.show.code"]
+        XCTAssertTrue(manualCodeButton.exists)
+        manualCodeButton.tap()
+        XCTAssertTrue(element("connections.pairing.code", in: app).exists)
+        XCTAssertTrue(app.buttons["connections.pairing.submit"].exists)
         app.buttons["connections.primary"].tap()
         XCTAssertTrue(app.buttons["connections.close"].exists)
         XCUIDevice.shared.orientation = .landscapeRight
@@ -221,13 +296,12 @@ final class AnchorIOSUITests: XCTestCase {
         XCTAssertTrue(element("task.saved.plan", in: app).waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["制作交互原型"].exists)
         app.terminate()
-        app.launchEnvironment["ANCHOR_SETUP_VISUAL_RECORDING"] = "1"
         app.launch()
         XCTAssertTrue(app.buttons["anchor.note.button"].waitForExistence(timeout: 8))
         app.buttons["anchor.note.button"].tap()
         type("今天计划完成竞品分析初步调研，上午还有一个小组工作会议。", into: element("setup.goal.field", in: app))
         app.buttons["setup.keyboard.done"].tap()
-        capture("Visual 06 recording appearance only", app: app)
+        capture("Visual 06 voice input idle", app: app)
         XCTAssertTrue(app.buttons["setup.voice.input.button"].exists)
 
 
@@ -375,6 +449,48 @@ final class AnchorIOSUITests: XCTestCase {
         XCTAssertTrue(app.buttons["workspace.connection.action"].label.contains("ANDY TEST"))
         XCTAssertTrue(app.buttons["HKUST essay"].exists)
         XCTAssertTrue(app.buttons["Portfolio"].exists)
+    }
+
+    @MainActor
+    func testSetupKeyboardControlsSurviveRepeatedEditingAndReview() throws {
+        let app = isolatedApplication()
+        defer { app.terminate() }
+        app.launch()
+        XCTAssertTrue(app.buttons["anchor.note.button"].waitForExistence(timeout: 8))
+        app.buttons["anchor.note.button"].tap()
+
+        func assertControls() {
+            for id in ["setup.keyboard.newline", "setup.keyboard.done", "setup.keyboard.next"] {
+                XCTAssertTrue(app.buttons[id].waitForExistence(timeout: 3), id)
+                XCTAssertTrue(app.buttons[id].isHittable, id)
+            }
+        }
+
+        for field in ["setup.goal.field", "setup.criteria.field", "setup.steps.field"] {
+            // Direct text taps and the explicit keyboard button must behave alike.
+            type("Editable text", into: element(field, in: app))
+            assertControls()
+            app.buttons["setup.keyboard.newline"].tap()
+            XCTAssertTrue((element(field, in: app).value as? String)?.contains("\n") == true)
+            element(field, in: app).typeText("Second line")
+            app.buttons["setup.keyboard.done"].tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 3))
+            XCTAssertTrue(element("setup.screen", in: app).exists)
+            app.buttons["setup.keyboard.button"].tap()
+            assertControls()
+            // A downward gesture while correcting text must not close the sheet.
+            element(field, in: app).swipeDown()
+            XCTAssertTrue(element("setup.screen", in: app).exists)
+            assertControls()
+            app.buttons["setup.keyboard.next"].tap()
+        }
+        XCTAssertTrue(app.buttons["setup.edit.0"].waitForExistence(timeout: 3))
+        app.buttons["setup.edit.0"].tap()
+        element("setup.goal.field", in: app).tap()
+        assertControls()
+        app.buttons["setup.keyboard.done"].tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 3))
+        XCTAssertTrue(element("setup.screen", in: app).exists)
     }
 
     @MainActor

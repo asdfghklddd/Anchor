@@ -15,6 +15,8 @@ public actor LinkedSessionRepository: SessionRepository {
     private let eventBackedBase: (any EventBackedSessionRepository)?
     private let transport: any AnchorEventTransport
     private var activeFlush: ActiveFlush?
+    private var backgroundFlush: Task<Void, Never>?
+    private var flushRequested = false
 
     public init(
         base: any SessionRepository,
@@ -46,7 +48,26 @@ public actor LinkedSessionRepository: SessionRepository {
 
     public func send(_ command: SessionCommand) async throws {
         try await base.send(command)
-        await flushPendingEvents()
+        requestBackgroundFlush()
+    }
+
+    /// UI commands finish when the local mutation is durable. Radio delivery
+    /// must not keep an editor or confirmation sheet waiting for peer ACKs.
+    private func requestBackgroundFlush() {
+        guard eventBackedBase != nil else { return }
+        flushRequested = true
+        guard backgroundFlush == nil else { return }
+        backgroundFlush = Task { [weak self] in
+            await self?.drainRequestedFlushes()
+        }
+    }
+
+    private func drainRequestedFlushes() async {
+        while flushRequested {
+            flushRequested = false
+            await flushPendingEvents()
+        }
+        backgroundFlush = nil
     }
 
     public func applyRemote(_ envelope: EventEnvelope) async throws {
@@ -91,8 +112,8 @@ public actor LinkedSessionRepository: SessionRepository {
         }
     }
 
-    /// Replays retained immutable events for current work, or the newest
-    /// terminal task when no work is active, after an authenticated reconnect.
+    /// Replays retained immutable events for every active hosted task, or the
+    /// newest terminal task when no work is active, after an authenticated reconnect.
     /// The receiver's event IDs, source sequences, and deduplication keys make
     /// this safe when both peers already contain some or all of the history.
     public func reconcilePeerHistory() async {
@@ -106,12 +127,15 @@ public actor LinkedSessionRepository: SessionRepository {
             }
             guard let eventBackedBase else { return }
             let projection = await eventBackedBase.currentProjection()
-            guard let reconciliationSessionID = projection.session?.id
-                ?? projection.archivedSessions.first?.id else {
+            let hostedSessionIDs = Set(projection.hostedSessions.map(\.id))
+            let reconciliationSessionIDs = hostedSessionIDs.isEmpty
+                ? Set(projection.archivedSessions.prefix(1).map(\.id))
+                : hostedSessionIDs
+            guard !reconciliationSessionIDs.isEmpty else {
                 return
             }
             let retainedEvents = await eventBackedBase.retainedEvents().filter {
-                $0.sessionID == reconciliationSessionID
+                reconciliationSessionIDs.contains($0.sessionID)
             }
             let transport = self.transport
             let id = UUID()

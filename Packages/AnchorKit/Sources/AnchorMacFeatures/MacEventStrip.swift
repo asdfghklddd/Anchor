@@ -9,7 +9,7 @@ struct MacEventStrip: View {
     let onOpenTimeline: () -> Void
 
     private var processesByID: [UUID: AnchorProcess] {
-        Dictionary(uniqueKeysWithValues: processes.map { ($0.id, $0) })
+        Dictionary(processes.map { ($0.id, $0) }, uniquingKeysWith: { _, latest in latest })
     }
 
     var body: some View {

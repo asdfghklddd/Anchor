@@ -80,6 +80,37 @@ struct PresenceReducerTests {
         #expect(status == .away)
     }
 
+    @Test("Manual return opens the summary before resuming the workspace")
+    @MainActor
+    func manualReturnRequiresSummaryAcknowledgement() async throws {
+        let awayAt = Date(timeIntervalSince1970: 1_000)
+        let repository = InMemorySessionRepository(initialProjection: SessionProjection(
+            session: AnchorSession(goal: AnchorGoal(title: "Return task", completionCriteria: "Resume"))
+        ))
+        try await repository.send(.updatePresence(.away, at: awayAt))
+        try await repository.send(.recordEvent(ProcessEvent(
+            occurredAt: awayAt.addingTimeInterval(10),
+            kind: .progress,
+            title: "Work progressed while away"
+        )))
+        let model = AnchorSessionModel(
+            repository: repository,
+            initialProjection: await repository.currentProjection()
+        )
+
+        #expect(await model.beginReturn())
+        let reviewing = await repository.currentProjection()
+        #expect(reviewing.session?.presence == .returning)
+        #expect(reviewing.session?.returnSummary?.awaySince == awayAt)
+        #expect(reviewing.session?.returnSummary?.changes.first?.title == "Work progressed while away")
+
+        #expect(await model.continueWorking())
+        let resumed = await repository.currentProjection()
+        #expect(resumed.session?.presence == .atDesk)
+        #expect(resumed.session?.returnSummary == nil)
+        #expect(await model.beginReturn() == false)
+    }
+
     @Test("The session model advances absence without requiring another radio callback")
     @MainActor
     func modelSchedulesPresenceDeadlines() async throws {

@@ -8,7 +8,7 @@ struct ProcessDetailView: View {
     let decision: Decision?
     let onDecision: (UUID) -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
 
     var body: some View {
         ScrollView {
@@ -96,9 +96,10 @@ struct DecisionView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
     @State private var selectedOptionID: UUID?
     @State private var feedbackTrigger = 0
+    @State private var isResolving = false
     @Namespace private var selectionMotion
 
     var body: some View {
@@ -109,6 +110,11 @@ struct DecisionView: View {
                     VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
                         decisionHero
                         directionPanel
+                        Text(AnchorStrings.value("decision.local.record", default: "Your choice is saved in Anchor. Continue in the source app unless it supports remote actions; process status updates come from that source."))
+                            .font(.caption).foregroundStyle(AnchorPalette.secondaryText)
+                        if let error = model.lastError {
+                            Text(error).font(.caption).foregroundStyle(.red)
+                        }
                         confirmButton
                     }
                     .padding(.horizontal, AnchorSpacing.medium)
@@ -158,8 +164,6 @@ struct DecisionView: View {
             }
 
             HStack(spacing: 16) {
-                StoryboardPreview(tint: AnchorPalette.aiBlue)
-                    .frame(width: 118, height: 86)
                 VStack(alignment: .leading, spacing: 5) {
                     Text(process?.metric ?? "")
                         .font(.largeTitle.bold().monospacedDigit())
@@ -193,7 +197,7 @@ struct DecisionView: View {
                         .font(.caption2.bold())
                         .foregroundStyle(AnchorPalette.interaction)
                         .accessibilityHidden(true)
-                    Text(L10n.chooseVisualDirection)
+                    Text(L10n.chooseDirection)
                         .font(.title3.bold())
                         .foregroundStyle(AnchorPalette.brandDeep)
                         .accessibilityIdentifier("decision.screen")
@@ -218,12 +222,6 @@ struct DecisionView: View {
             selectedOptionID = option.id
         } label: {
             HStack(spacing: 12) {
-                StoryboardPreview(
-                        tint: AnchorPalette.aiBlue,
-                    compact: true
-                )
-                .frame(width: 72, height: 54)
-
                 VStack(alignment: .leading, spacing: 3) {
                     Text("\(Character(UnicodeScalar(65 + index)!)) · \(option.title)")
                         .font(.subheadline.bold())
@@ -270,10 +268,14 @@ struct DecisionView: View {
         Button {
             guard let selectedOptionID,
                   let option = decision.options.first(where: { $0.id == selectedOptionID }) else { return }
-            feedbackTrigger += 1
+            guard !isResolving else { return }
+            isResolving = true
             Task {
-                await model.resolve(decision: decision, option: option)
-                dismiss()
+                defer { isResolving = false }
+                if await model.resolve(decision: decision, option: option) {
+                    feedbackTrigger += 1
+                    dismiss()
+                }
             }
         } label: {
             HStack {
@@ -283,7 +285,7 @@ struct DecisionView: View {
             .accessibilityIdentifier("decision.confirm.label")
         }
         .buttonStyle(HarborPrimaryButtonStyle())
-        .disabled(selectedOptionID == nil)
+        .disabled(selectedOptionID == nil || isResolving)
         .sensoryFeedback(.success, trigger: feedbackTrigger)
         .accessibilityIdentifier("decision.confirm.button")
     }

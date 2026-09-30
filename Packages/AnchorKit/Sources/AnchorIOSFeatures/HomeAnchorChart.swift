@@ -9,10 +9,16 @@ struct HomeAnchorChart: View {
     var height: CGFloat = 247
     private var lineLength: CGFloat { max(40, height - 102) }
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .caption2) private var labelSize: CGFloat = 8
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Anchors").font(.headline).foregroundStyle(.primary)
+            HStack {
+                Text("Anchors").font(.headline).foregroundStyle(.primary)
+                Spacer()
+                HarborAnchorGlyph(color: AnchorIOSStyle.text, lineWidth: 1.3)
+                    .frame(width: 13, height: 15).accessibilityHidden(true)
+            }
 
             GeometryReader { geometry in
                 if tasks.isEmpty {
@@ -67,10 +73,25 @@ struct HomeAnchorChart: View {
         let conversations = task.conversationsInJoiningOrder
         let color = HostedTaskAppearance.tint(task)
         return VStack(spacing: 8) {
-            Text(task.goal.title).font(.caption2).foregroundStyle(.secondary)
+            Text(task.goal.title).font(.system(size: labelSize)).foregroundStyle(.secondary)
                 .lineLimit(1).frame(width: width)
             ScrollView(.horizontal) {
                 HStack(alignment: .top, spacing: 6) {
+                    if conversations.isEmpty {
+                        // A newly created task still owns an anchor. No measured
+                        // progress is available until a process is attached.
+                        HarborAnchorGlyph(color: AnchorIOSStyle.border, lineWidth: 1.2)
+                            .frame(width: 9, height: 16).padding(.top, 8)
+                        ZStack(alignment: .top) {
+                            Capsule().stroke(color.opacity(0.35), style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
+                                .frame(width: 31, height: 31 + lineLength)
+                            HarborAnchorGlyph(color: .white, lineWidth: 1.8)
+                                .frame(width: 19, height: 19).frame(width: 31, height: 31)
+                                .background(color, in: .circle)
+                        }
+                        .accessibilityLabel(task.goal.title)
+                        .accessibilityValue(L10n.taskProgress + " —")
+                    }
                     ForEach(displayOrder(conversations), id: \.id) { process in
                         let index = process.id == conversations.first?.id ? 0 : 1
                         conversationLine(process, main: index == 0, tint: color)
@@ -102,14 +123,15 @@ struct HomeAnchorChart: View {
             }
         } else {
             VStack(spacing: 4) {
-                HarborAnchorGlyph(color: tint, lineWidth: 1.2).frame(width: 9, height: 16)
-                if let progress {
+                HarborAnchorGlyph(color: process.status == .queued ? AnchorIOSStyle.border : tint, lineWidth: 1.2).frame(width: 9, height: 16)
+                if let progress, progress > 0 {
                     Capsule().fill(tint.opacity(0.24)).frame(width: 7, height: max(2, lineLength * progress))
-                } else {
+                } else if progress == nil {
                     Capsule().stroke(tint.opacity(0.45), style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
                         .frame(width: 7, height: lineLength)
                 }
             }
+            .padding(.top, 8)
         }
     }
 

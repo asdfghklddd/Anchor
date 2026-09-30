@@ -9,22 +9,13 @@
     let height: CGFloat
     let changeSegment: (AnchorSetupSegment) -> Void
     let toggleSpeech: () -> Void
-    let advance: () -> Void
     @State private var selection: [PhotosPickerItem] = []
     @State private var photoError: String?
-    @FocusState private var editing: Bool
+    @FocusState.Binding var editing: Bool
     @ScaledMetric(relativeTo: .subheadline) private var textSize: CGFloat = 16
     @ScaledMetric(relativeTo: .footnote) private var hintSize: CGFloat = 14
 
-    private var visualRecordingPreview: Bool {
-      #if DEBUG
-        return ProcessInfo.processInfo.environment["ANCHOR_UI_TESTING"] == "1"
-          && ProcessInfo.processInfo.environment["ANCHOR_SETUP_VISUAL_RECORDING"] == "1"
-      #else
-        return false
-      #endif
-    }
-    private var recording: Bool { visualRecordingPreview || speech.isRecording }
+    private var recording: Bool { speech.isRecording }
 
     var body: some View {
       VStack(alignment: .leading, spacing: 14) {
@@ -60,7 +51,7 @@
               .accessibilityIdentifier("setup.photos.button")
               .disabled(draft.isImportingImages || draft.imageData.count >= 6)
               if recording {
-                AnchorSetupWaveform(level: visualRecordingPreview ? 0.65 : speech.audioLevel)
+                AnchorSetupWaveform(level: speech.audioLevel)
                   .padding(.trailing, 6)
               } else {
                 Spacer(minLength: 4)
@@ -68,7 +59,7 @@
               AnchorSetupVoiceButton(recording: recording, action: voiceAction)
                 .disabled(speech.isRequestingPermission)
               if recording {
-                AnchorSetupWaveform(level: visualRecordingPreview ? 0.65 : speech.audioLevel)
+                AnchorSetupWaveform(level: speech.audioLevel)
                   .padding(.leading, 6)
               } else {
                 Spacer(minLength: 4)
@@ -120,24 +111,6 @@
         guard !items.isEmpty else { return }
         Task { await importPhotos(items) }
       }
-      .toolbar {
-        ToolbarItemGroup(placement: .keyboard) {
-          Button(SetupCopy.newLine) {
-            draft.setText(draft.text(for: draft.segment) + "\n", for: draft.segment)
-          }
-          Spacer()
-          Button(SetupCopy.doneEditing) { editing = false }.accessibilityIdentifier(
-            "setup.keyboard.done")
-          Button(draft.segment == .steps ? SetupCopy.review : SetupCopy.next) {
-            editing = false
-            advance()
-          }
-          .disabled(
-            draft.text(for: draft.segment).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-          )
-          .accessibilityIdentifier("setup.keyboard.next")
-        }
-      }
     }
 
     private var editorHeight: CGFloat {
@@ -169,10 +142,6 @@
               .allowsHitTesting(false)
               .accessibilityHidden(true)
           }
-        }
-        .onChange(of: editing) { _, isEditing in
-          draft.isKeyboardEditing = isEditing
-          if isEditing { speech.stop() }
         }
     }
 
@@ -222,7 +191,10 @@
             throw CocoaError(.fileReadUnknown)
           }
           guard draft.imageData.count < 6 else { break }
-          draft.imageData.append(try AnchorPlanImages.preparedData(data))
+          let prepared = try await Task.detached(priority: .userInitiated) {
+            try AnchorPlanImages.preparedData(data)
+          }.value
+          draft.imageData.append(prepared)
         } catch { photoError = SetupCopy.photoFailed }
       }
     }

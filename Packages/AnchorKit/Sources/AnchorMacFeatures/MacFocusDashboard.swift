@@ -21,6 +21,16 @@ struct MacFocusDashboard: View {
                 onOpenProcess: onOpenProcess,
                 onOpenTimeline: onOpenTimeline
             )
+        } else if !model.projection.hostedSessions.isEmpty {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    MacWorkHeaderView(projection: model.projection)
+                    MacHostedTaskLibrary(model: model, selectedSessionID: nil)
+                }
+                .frame(maxWidth: 1120, alignment: .leading)
+                .padding(32)
+            }
+            .accessibilityIdentifier("mac.current.screen")
         } else {
             MacEmptyWorkView(
                 projection: model.projection,

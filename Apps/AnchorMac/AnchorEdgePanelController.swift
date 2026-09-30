@@ -1,4 +1,5 @@
 import AnchorCore
+import AnchorDesign
 import AnchorMacFeatures
 import AppKit
 import Observation
@@ -150,7 +151,7 @@ final class AnchorEdgePanelController {
         presentation.synchronize(
             activeSessionID: activeSessionID,
             isLoading: snapshot.2,
-            reduceMotion: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+            reduceMotion: UserDefaults.standard.bool(forKey: AnchorMotion.reduceMotionDefaultsKey)
         )
         let decisionNotificationsEnabled = UserDefaults.standard.bool(
             forKey: "anchor.mac.notifications.decisions"

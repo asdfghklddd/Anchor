@@ -18,6 +18,10 @@ struct MacWorkOverviewView: View {
                     projection: model.projection
                 )
 
+                if model.projection.hostedSessions.count > 1 {
+                    MacHostedTaskLibrary(model: model, selectedSessionID: session.id)
+                }
+
                 if session.status == .completed {
                     MacCompletionBanner(
                         session: session,
@@ -71,7 +75,7 @@ struct MacWorkOverviewView: View {
             .padding(.vertical, AnchorSpacing.large)
         }
         .background(.clear)
-        .navigationTitle(L10n.currentWork)
+        .navigationTitle("")
         .accessibilityIdentifier("mac.current.screen")
     }
 
@@ -87,6 +91,52 @@ struct MacWorkOverviewView: View {
 
     private func resumeSession() {
         Task { await model.send(.resumeSession) }
+    }
+}
+
+struct MacHostedTaskLibrary: View {
+    let model: AnchorSessionModel
+    let selectedSessionID: UUID?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AnchorSpacing.small) {
+            Text(AnchorStrings.value("home.task.library", default: "Task library"))
+                .font(.headline)
+                .foregroundStyle(AnchorPalette.brandDeep)
+
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
+                ForEach(Array(model.projection.hostedSessions.reversed())) { task in
+                    let isSelected = task.id == selectedSessionID
+                    Button {
+                        Task { await model.selectHostedTask(task.id) }
+                    } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(task.goal.title)
+                                .font(.callout.weight(isSelected ? .semibold : .medium))
+                                .lineLimit(2)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Text(task.status == .active ? MacWorkCopy.active : MacWorkCopy.draft)
+                                .font(.caption)
+                                .foregroundStyle(AnchorPalette.secondaryInk)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)
+                        .padding(12)
+                        .background(
+                            isSelected ? AnchorPalette.softBlue.opacity(0.5) : AnchorPalette.fluoriteSurface,
+                            in: .rect(cornerRadius: 14)
+                        )
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(isSelected ? AnchorPalette.interaction : AnchorPalette.fluoriteBorder, lineWidth: 1)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("mac.hosted.task.\(task.id)")
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                }
+            }
+        }
+        .accessibilityIdentifier("mac.hosted.task-library")
     }
 }
 #endif

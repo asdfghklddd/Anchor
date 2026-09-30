@@ -10,18 +10,21 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     private var detailWindowController: AnchorMacDetailWindowController?
     private var edgePanelController: AnchorEdgePanelController?
     private var phoneAnchorState: AnchorPhoneAnchorState?
+    private var interfaceDefaults: UserDefaults?
     private var didFinishLaunching = false
 
     func configure(
         model: AnchorSessionModel,
         linkController: any LocalLinkControlling,
         sourceSetupModel: MacSourceSetupModel,
-        phoneAnchorState: AnchorPhoneAnchorState
+        phoneAnchorState: AnchorPhoneAnchorState,
+        defaults: UserDefaults?
     ) {
         self.model = model
         self.linkController = linkController
         self.sourceSetupModel = sourceSetupModel
         self.phoneAnchorState = phoneAnchorState
+        interfaceDefaults = defaults
         startInterfaceIfReady()
     }
 
@@ -64,7 +67,8 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         let detailWindowController = AnchorMacDetailWindowController(
             model: model,
             linkController: linkController,
-            sourceSetupModel: sourceSetupModel
+            sourceSetupModel: sourceSetupModel,
+            defaults: interfaceDefaults
         )
         self.detailWindowController = detailWindowController
 

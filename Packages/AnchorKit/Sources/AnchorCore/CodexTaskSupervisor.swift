@@ -17,6 +17,7 @@ public struct CodexTaskCandidate: Identifiable, Hashable, Sendable {
     public let modifiedAt: Date
     public let activity: CodexTaskActivity
     public let activityObservedAt: Date?
+    public let createdAt: Date?
 
     public init(
         id: String,
@@ -25,7 +26,8 @@ public struct CodexTaskCandidate: Identifiable, Hashable, Sendable {
         originator: String?,
         modifiedAt: Date,
         activity: CodexTaskActivity,
-        activityObservedAt: Date?
+        activityObservedAt: Date?,
+        createdAt: Date? = nil
     ) {
         self.id = id
         self.fileURL = fileURL
@@ -34,12 +36,13 @@ public struct CodexTaskCandidate: Identifiable, Hashable, Sendable {
         self.modifiedAt = modifiedAt
         self.activity = activity
         self.activityObservedAt = activityObservedAt
+        self.createdAt = createdAt
     }
 }
 
 /// Resident metadata supervisor for Codex Desktop session files. The stream is
-/// a discovery surface only; candidates cannot mutate an Anchor task until the
-/// user confirms an association in the Mac app.
+/// a discovery surface; the Mac coordinator applies manual or high-confidence
+/// automatic association separately.
 public actor CodexTaskSupervisor {
     private struct CacheEntry {
         let metadata: CodexSessionFileMetadata
@@ -54,6 +57,7 @@ public actor CodexTaskSupervisor {
         }
 
         let type: String
+        let timestamp: String?
         let payload: Payload
     }
 
@@ -131,7 +135,12 @@ public actor CodexTaskSupervisor {
             originator: sessionMetadata.payload.originator,
             modifiedAt: metadata.contentModificationDate,
             activity: lifecycle.map(Self.activity) ?? .unknown,
-            activityObservedAt: lifecycle?.timestamp
+            activityObservedAt: lifecycle?.timestamp,
+            createdAt: sessionMetadata.timestamp.flatMap { value in
+                let parser = ISO8601DateFormatter()
+                parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                return parser.date(from: value) ?? ISO8601DateFormatter().date(from: value)
+            }
         )
     }
 

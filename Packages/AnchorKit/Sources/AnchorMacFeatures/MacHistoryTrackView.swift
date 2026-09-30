@@ -156,7 +156,7 @@ private struct MacHistorySnapshotCard: View {
     let snapshot: ContextSnapshot
     let action: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
     @State private var isHovering = false
 
     var body: some View {

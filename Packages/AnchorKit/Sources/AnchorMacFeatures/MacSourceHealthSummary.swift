@@ -37,8 +37,8 @@ struct MacSourceHealthSummary: View {
         switch projection.connection {
         case .connected: AnchorPalette.mintInk
         case .pairing: AnchorPalette.sourceInk("sand")
-        case .disconnected, .permissionDenied, .failed: AnchorPalette.sourceInk("coral")
-        case .unavailable: AnchorPalette.secondaryInk
+        case .permissionDenied, .failed: AnchorPalette.sourceInk("coral")
+        case .disconnected, .unavailable: AnchorPalette.secondaryInk
         }
     }
 
@@ -94,11 +94,6 @@ struct MacSourceHealthSummary: View {
             Label(connectionLabel, systemImage: connectionSymbol)
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(connectionTint)
-            if projection.isStale {
-                Label(L10n.stale, systemImage: "clock.badge.exclamationmark")
-                    .font(.caption)
-                    .foregroundStyle(AnchorPalette.sourceInk("sand"))
-            }
         }
     }
 

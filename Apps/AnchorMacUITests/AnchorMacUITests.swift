@@ -17,6 +17,11 @@ final class AnchorMacUITests: XCTestCase {
         openNavigation(in: app)
         app.buttons["mac.section.settings"].click()
         XCTAssertTrue(element("mac.settings.screen", in: app).waitForExistence(timeout: 5))
+        let showCode = app.buttons["mac.pairing.show.code"]
+        XCTAssertTrue(showCode.waitForExistence(timeout: 5), app.debugDescription)
+        showCode.click()
+        XCTAssertTrue(app.buttons["mac.pairing.copy"].waitForExistence(timeout: 5), app.debugDescription)
+        element("mac.settings.screen", in: app).swipeUp()
         XCTAssertTrue(element("mac.sources.summary", in: app).exists)
         XCTAssertTrue(element("mac.sources.setup", in: app).exists)
     }
@@ -80,7 +85,7 @@ final class AnchorMacUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [restDelay], timeout: 6), .completed)
 
         edgeEntry.click()
-        XCTAssertTrue(element("mac.current.screen", in: app).waitForExistence(timeout: 8))
+        XCTAssertTrue(element("mac.empty.screen", in: app).waitForExistence(timeout: 8))
     }
 
     @MainActor

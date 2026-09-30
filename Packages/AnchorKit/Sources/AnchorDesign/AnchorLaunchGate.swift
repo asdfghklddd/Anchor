@@ -2,11 +2,12 @@
 import SwiftUI
 
 public struct AnchorLaunchGate<Content: View>: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
 
     @State private var isPresentingSplash = true
     @State private var logoIsVisible = false
     @State private var wordmarkIsVisible = false
+    @State private var rippleIsExpanded = false
     @State private var isExiting = false
 
     private let content: Content
@@ -18,44 +19,51 @@ public struct AnchorLaunchGate<Content: View>: View {
     public var body: some View {
         ZStack {
             content
+                .allowsHitTesting(!isPresentingSplash)
+                .accessibilityHidden(isPresentingSplash)
 
             if isPresentingSplash {
                 HarborLaunchSplash(
                     logoIsVisible: logoIsVisible,
-                    wordmarkIsVisible: wordmarkIsVisible
+                    wordmarkIsVisible: wordmarkIsVisible,
+                    rippleIsExpanded: rippleIsExpanded
                 )
                 .opacity(isExiting ? 0 : 1)
-                .scaleEffect(reduceMotion || !isExiting ? 1 : 1.02)
                 .zIndex(100)
-                .allowsHitTesting(false)
                 .accessibilityIdentifier("launch.splash")
             }
         }
-        .task { await playLaunchSequence() }
+        .task(id: reduceMotion) { await playLaunchSequence() }
     }
 
     @MainActor
     private func playLaunchSequence() async {
         guard isPresentingSplash else { return }
 
-        if reduceMotion {
-            logoIsVisible = true
-            wordmarkIsVisible = true
-            guard await wait(for: .milliseconds(880)) else { return }
-            withAnimation(.easeOut(duration: 0.27)) { isExiting = true }
-            guard await wait(for: .milliseconds(270)) else { return }
-            isPresentingSplash = false
-            return
+        // A cancelled presentation may be mounted again, or Reduce Motion may change.
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            logoIsVisible = reduceMotion
+            wordmarkIsVisible = reduceMotion
+            rippleIsExpanded = false
+            isExiting = false
         }
 
-        withAnimation(.timingCurve(0.2, 0.8, 0.2, 1, duration: 0.7)) {
-            logoIsVisible = true
+        if reduceMotion {
+            guard await wait(for: .milliseconds(220)) else { return }
+        } else {
+            withAnimation(AnchorMotion.continuity) { logoIsVisible = true }
+            guard await wait(for: .milliseconds(280)) else { return }
+            withAnimation(AnchorMotion.panel) { wordmarkIsVisible = true }
+            withAnimation(.easeOut(duration: 0.58)) { rippleIsExpanded = true }
+            guard await wait(for: .milliseconds(580)) else { return }
         }
-        guard await wait(for: .milliseconds(350)) else { return }
-        withAnimation(.easeOut(duration: 0.4)) { wordmarkIsVisible = true }
-        guard await wait(for: .milliseconds(530)) else { return }
-        withAnimation(.easeOut(duration: 0.34)) { isExiting = true }
-        guard await wait(for: .milliseconds(270)) else { return }
+
+        // Keep the overlay mounted for the entire fade; never truncate its last frames.
+        let fadeDuration = reduceMotion ? 0.18 : 0.28
+        withAnimation(.easeInOut(duration: fadeDuration)) { isExiting = true }
+        guard await wait(for: .seconds(fadeDuration)) else { return }
         isPresentingSplash = false
     }
 

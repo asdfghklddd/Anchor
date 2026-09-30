@@ -7,6 +7,7 @@
     let model: AnchorSessionModel
     @Bindable var draft: AnchorSetupDraft
     @Environment(\.dismiss) private var dismiss
+    @FocusState private var editing: Bool
     @State private var speechInput = SpeechInputController()
     @State private var speechSegment: AnchorSetupSegment?
     @State private var editingReview = false
@@ -31,7 +32,7 @@
                   draft: draft, speech: speechInput,
                   height: draft.isKeyboardEditing
                     ? max(210, min(240, geometry.size.height - 210)) : AnchorSetupStyle.inputHeight,
-                  changeSegment: changeSegment, toggleSpeech: toggleSpeech, advance: advance)
+                  changeSegment: changeSegment, toggleSpeech: toggleSpeech, editing: $editing)
               }
               if let saveError {
                 Text(saveError).font(.caption).foregroundStyle(AnchorIOSStyle.secondaryText)
@@ -43,7 +44,7 @@
             .frame(maxWidth: 580)
             .frame(maxWidth: .infinity)
           }
-          .scrollDismissesKeyboard(.interactively)
+          .scrollDismissesKeyboard(.never)
           .onChange(of: draft.segment) { scroll.scrollTo("top", anchor: .top) }
           .onChange(of: draft.isReviewing) { scroll.scrollTo("top", anchor: .top) }
         }
@@ -56,7 +57,9 @@
           .ignoresSafeArea()
       }
       .safeAreaInset(edge: .bottom, spacing: 0) {
-        if draft.isReviewing || !draft.isKeyboardEditing {
+        if editing {
+          keyboardControls
+        } else if draft.isReviewing || !draft.isKeyboardEditing {
           VStack(spacing: 8) {
             Button(action: advance) {
               HStack {
@@ -88,9 +91,40 @@
         guard let speechSegment else { return }
         draft.setText(transcript, for: speechSegment)
       }
+      .onChange(of: editing) { _, isEditing in
+        draft.isKeyboardEditing = isEditing
+        if isEditing { speechInput.stop() }
+      }
       .onDisappear { speechInput.stop() }
-      .interactiveDismissDisabled(saving || draft.isImportingImages)
+      .interactiveDismissDisabled(editing || saving || draft.isImportingImages)
       .disabled(saving)
+    }
+
+    // Keep these controls in the sheet's safe area so every focus path shows
+    // them, including tapping recognized text and reopening a review segment.
+    private var keyboardControls: some View {
+      GlassEffectContainer(spacing: 12) {
+        HStack(spacing: 12) {
+          Button(SetupCopy.newLine) {
+            draft.setText(draft.text(for: draft.segment) + "\n", for: draft.segment)
+          }
+          .accessibilityIdentifier("setup.keyboard.newline")
+          Spacer(minLength: 0)
+          Button(SetupCopy.doneEditing) { editing = false }
+            .accessibilityIdentifier("setup.keyboard.done")
+          Button(draft.segment == .steps ? SetupCopy.review : SetupCopy.next) {
+            editing = false
+            advance()
+          }
+          .disabled(!canAdvance)
+          .accessibilityIdentifier("setup.keyboard.next")
+        }
+        .buttonStyle(.glass)
+        .controlSize(.regular)
+        .tint(AnchorSetupStyle.accent)
+      }
+      .padding(.horizontal, 16)
+      .padding(.vertical, 8)
     }
 
     private var canAdvance: Bool {
@@ -108,6 +142,7 @@
     }
 
     private func changeSegment(_ segment: AnchorSetupSegment) {
+      editing = false
       speechInput.stop()
       speechSegment = nil
       draft.segment = segment
@@ -154,7 +189,11 @@
       Task {
         defer { saving = false }
         do {
-          let names = try AnchorPlanImages.save(draft.imageData, goalID: draft.goalID)
+          let images = draft.imageData
+          let goalID = draft.goalID
+          let names = try await Task.detached(priority: .userInitiated) {
+            try AnchorPlanImages.save(images, goalID: goalID)
+          }.value
           let goal = AnchorGoal(
             id: draft.goalID,
             title: draft.goalTitle.trimmingCharacters(in: .whitespacesAndNewlines),

@@ -18,8 +18,7 @@ App Group `WebInbox`. The production app's `WebProcessSource` consumes that
 inbox. The containing app and native extension remain sandboxed and share only
 `group.com.andywang.anchor` for this flow.
 
-The archived Demo project embeds neither the Safari extension nor the CLI. The repository
-contains no Chromium native-messaging executable, host manifest, external update
+The repository contains no Chromium native-messaging executable, host manifest, external update
 configuration, browser setup XPC service, or unpacked Chrome extension.
 
 ## Privacy-minimal generic state

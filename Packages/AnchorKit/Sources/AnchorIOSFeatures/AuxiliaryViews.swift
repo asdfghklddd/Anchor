@@ -75,7 +75,7 @@ struct ProfileView: View {
     let onRoute: (AnchorRoute) -> Void
     let onSheet: (AnchorSheet) -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
 
     var body: some View {
         ZStack {
@@ -122,7 +122,7 @@ struct ProfileView: View {
                 Text(displayName)
                     .font(.title.bold())
                     .foregroundStyle(AnchorPalette.brandDeep)
-                Label(L10n.contextSyncStable, systemImage: "wifi")
+                Label(projection.connection == .connected ? L10n.connected : L10n.disconnected, systemImage: projection.connection == .connected ? "wifi" : "wifi.slash")
                     .font(.caption.bold())
                     .foregroundStyle(AnchorPalette.secondaryText)
             }
@@ -162,8 +162,7 @@ struct ProfileView: View {
                 value: L10n.minuteCount(focusMinutes),
                 label: L10n.guardedFocus,
                 symbol: "timer",
-                tint: AnchorPalette.coral,
-                progress: min(1, Double(focusMinutes) / 60)
+                tint: AnchorPalette.coral
             ) {
                 onSheet(.profileDetail(.focus))
             }
@@ -171,8 +170,7 @@ struct ProfileView: View {
                 value: "\(savedContextCount)",
                 label: L10n.savedContexts,
                 symbol: "square.stack.3d.up",
-                tint: AnchorPalette.periwinkle,
-                progress: min(1, Double(savedContextCount) / 10)
+                tint: AnchorPalette.periwinkle
             ) {
                 onSheet(.profileDetail(.contexts))
             }
@@ -180,8 +178,7 @@ struct ProfileView: View {
                 value: "\(completedCount)",
                 label: L10n.completedAnchors,
                 symbol: "scope",
-                tint: AnchorPalette.seafoam,
-                progress: min(1, Double(completedCount) / 4)
+                tint: AnchorPalette.seafoam
             ) {
                 onSheet(.profileDetail(.anchors))
             }
@@ -193,7 +190,6 @@ struct ProfileView: View {
         label: String,
         symbol: String,
         tint: Color,
-        progress: Double,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -219,11 +215,8 @@ struct ProfileView: View {
                     .font(.caption2.bold())
                     .foregroundStyle(AnchorPalette.secondaryText)
                     .lineLimit(2)
-                AnchorProgress(value: progress, tint: tint)
-                    .frame(height: 5)
             }
             .animation(profileValueAnimation, value: value)
-            .animation(profileValueAnimation, value: progress)
             .padding(12)
             .frame(maxWidth: .infinity, minHeight: 118, alignment: .topLeading)
             .fluoriteSurface(cornerRadius: 16)
@@ -262,8 +255,7 @@ struct ProfileView: View {
                 }
 
                 HStack(spacing: 12) {
-                    Label(L10n.parallelEfficiency, systemImage: "gauge.with.dots.needle.67percent")
-                    Label(L10n.anchoredCount((projection.session?.notes.count ?? 0) + 1), systemImage: "mappin.and.ellipse")
+                    Label(L10n.anchoredCount((projection.session?.notes.count ?? 0)), systemImage: "mappin.and.ellipse")
                 }
                 .font(.caption2.bold())
                 .foregroundStyle(AnchorPalette.secondaryInk)
@@ -309,12 +301,7 @@ struct ProfileView: View {
             VStack(spacing: 0) {
                 ForEach(Array((projection.session?.timeline ?? []).prefix(3).enumerated()), id: \.element.id) { index, event in
                     Button {
-                        let detail: ProfileDetailKind = switch index {
-                        case 0: .returnMemory
-                        case 1: .decisionTrace
-                        default: .contextSnapshot
-                        }
-                        onSheet(.profileDetail(detail))
+                        onSheet(.profileDetail(.session))
                     } label: {
                         HStack(alignment: .top, spacing: 11) {
                             Image(systemName: eventSymbol(event.kind))

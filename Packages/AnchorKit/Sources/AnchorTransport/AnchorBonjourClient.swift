@@ -28,7 +28,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     private static let operationTimeout: TimeInterval = 10
     private static let reconnectDelay: TimeInterval = 1
     private static let automaticCredentialWait: TimeInterval = 1
-    private static let automaticCredentialCheckLimit = 12
+    private static let automaticCredentialCheckLimit = 4
     private static let automaticAttemptTimeout: TimeInterval = 2
 
     private let queue = DispatchQueue(label: "com.andywang.anchor.bonjour.client")
@@ -72,7 +72,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
 
     public init(
         identityStore: PairingIdentityStore = PairingIdentityStore(),
-        automaticPairing: AutomaticPairingConfiguration = .iOSProduction(),
+        automaticPairing: AutomaticPairingConfiguration = .manualOnly,
         serviceType: String = AnchorBonjourServer.serviceType
     ) {
         self.identityStore = identityStore
@@ -507,11 +507,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
                   pairingContinuation == nil,
                   pairingAttempt?.method == method else { return }
             pairingAttempt = nil
-            if method == .iCloud {
-                scheduleVerificationCodeFallback(after: Self.automaticCredentialWait)
-            } else {
-                exposeVerificationCodeFallback()
-            }
+            scheduleVerificationCodeFallback(after: Self.automaticCredentialWait)
         }
         automaticPairingWorkItem = workItem
         queue.asyncAfter(deadline: .now() + Self.automaticAttemptTimeout, execute: workItem)
@@ -530,12 +526,6 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     }
 
     private func attemptNextAutomaticMethodOrScheduleFallback() {
-        if let secret = automaticPairing.iCloudSecretProvider(),
-           secret.count == 32,
-           !attemptedAutomaticMethods.contains(.iCloud) {
-            beginPairing(method: .iCloud, secret: secret)
-            return
-        }
         if let peerID,
            let secret = bluetoothPairingSecrets[peerID],
            !attemptedAutomaticMethods.contains(.bluetooth) {
@@ -546,16 +536,16 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     }
 
     private func attemptNextAutomaticMethodOrExposeFallback() {
-        if let secret = automaticPairing.iCloudSecretProvider(),
-           secret.count == 32,
-           !attemptedAutomaticMethods.contains(.iCloud) {
-            beginPairing(method: .iCloud, secret: secret)
-            return
-        }
         if let peerID,
            let secret = bluetoothPairingSecrets[peerID],
            !attemptedAutomaticMethods.contains(.bluetooth) {
             beginPairing(method: .bluetooth, secret: secret)
+            return
+        }
+        if let secret = automaticPairing.iCloudSecretProvider(),
+           secret.count == 32,
+           !attemptedAutomaticMethods.contains(.iCloud) {
+            beginPairing(method: .iCloud, secret: secret)
             return
         }
         if automaticCredentialChecksRemaining > 0 {
@@ -886,10 +876,18 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     }
 
     private func setPairingStatus(_ status: DevicePairingStatus) {
-        guard pairingStatus != status else { return }
-        pairingStatus = status
+        let visibleStatus: DevicePairingStatus
+        if effectiveConnectionState == .connected, status.phase != .connected {
+            visibleStatus = pairingStatus.phase == .connected
+                ? pairingStatus
+                : DevicePairingStatus(phase: .connected, route: .bluetooth)
+        } else {
+            visibleStatus = status
+        }
+        guard pairingStatus != visibleStatus else { return }
+        pairingStatus = visibleStatus
         for continuation in pairingStatusContinuations.values {
-            continuation.yield(status)
+            continuation.yield(visibleStatus)
         }
     }
 

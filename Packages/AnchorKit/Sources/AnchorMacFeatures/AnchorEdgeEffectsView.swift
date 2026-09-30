@@ -1,9 +1,10 @@
 #if os(macOS)
+import AnchorDesign
 import SwiftUI
 
 public struct AnchorEdgeEffectsView: View {
     private let presentation: AnchorEdgePresentationModel
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
 
     public init(presentation: AnchorEdgePresentationModel) {
         self.presentation = presentation

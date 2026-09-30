@@ -250,7 +250,7 @@ public actor TaskRunStore {
     }
 
     public func confirmAssociation(_ association: AnchorSessionAssociation) throws {
-        guard association.target.confirmedByUser else { throw TaskRunStoreError.confirmationRequired }
+        guard association.target.confirmedByUser || association.target.automaticallyMatched == true else { throw TaskRunStoreError.confirmationRequired }
         guard association.sourceID != nil else { throw TaskRunStoreError.sourceIdentityRequired }
         try requireOpenTask(association.target.taskID)
         guard state.workItems.contains(where: {

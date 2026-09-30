@@ -9,7 +9,6 @@ public struct AnchorIOSRootView: View {
     private let currentProcessProvider: (any CurrentProcessProviding)?
     private let auxiliaryToolbarLabel: String?
     private let auxiliaryToolbarAction: (() -> Void)?
-    private let onReturnFromAway: (() -> Void)?
     private let recoveryReviewInterval: TimeInterval
 
     @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -29,7 +28,6 @@ public struct AnchorIOSRootView: View {
         currentProcessProvider: (any CurrentProcessProviding)? = nil,
         auxiliaryToolbarLabel: String? = nil,
         auxiliaryToolbarAction: (() -> Void)? = nil,
-        onReturnFromAway: (() -> Void)? = nil,
         recoveryReviewInterval: TimeInterval = 86_400
     ) {
         self.model = model
@@ -37,7 +35,6 @@ public struct AnchorIOSRootView: View {
         self.currentProcessProvider = currentProcessProvider
         self.auxiliaryToolbarLabel = auxiliaryToolbarLabel
         self.auxiliaryToolbarAction = auxiliaryToolbarAction
-        self.onReturnFromAway = onReturnFromAway
         self.recoveryReviewInterval = recoveryReviewInterval
     }
 
@@ -112,6 +109,12 @@ public struct AnchorIOSRootView: View {
         }
         .onChange(of: model.projection.session?.presence, initial: true) { _, presence in
             synchronizeCover(with: presence)
+        }
+        .onChange(of: model.projection.session?.returnSummary?.generatedAt) { _, generatedAt in
+            guard generatedAt != nil, model.projection.session?.presence == .returning else { return }
+            sheet = nil
+            suspendedSetup = false
+            fullScreen = .returning
         }
         .onChange(of: model.projection.session?.id) { _, sessionID in
             if sessionID != nil {
@@ -208,14 +211,15 @@ public struct AnchorIOSRootView: View {
             ProfileEditorView()
                 .presentationDetents([.large])
         case .icloud:
-            ProfileInfoSheet(kind: .icloud)
+            ProfileInfoSheet(kind: .icloud, projection: model.projection)
                 .presentationDetents([.large])
         case let .profileDetail(kind):
             ProfileDetailSheet(
                 projection: model.projection,
                 kind: kind,
                 onManage: { sheet = .layout },
-                onFinish: { sheet = .finish }
+                onFinish: { sheet = .finish },
+                onDecision: { sheet = .decision($0) }
             )
             .presentationDetents([.large])
         case .setup:
@@ -265,7 +269,6 @@ public struct AnchorIOSRootView: View {
         AnchorFullScreenHost(
             item: item,
             model: model,
-            onReturn: onReturnFromAway,
             onProfile: {
                 fullScreen = nil
                 path.append(.profile)
@@ -349,12 +352,11 @@ public struct AnchorIOSRootView: View {
 private struct AnchorFullScreenHost: View {
     let item: AnchorFullScreen
     let model: AnchorSessionModel
-    let onReturn: (() -> Void)?
     let onProfile: () -> Void
     let onNotifications: () -> Void
     let onLayout: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
 
     var body: some View {
         ZStack {
@@ -374,13 +376,13 @@ private struct AnchorFullScreenHost: View {
             AwayView(
                 projection: model.projection,
                 model: model,
-                onReturn: onReturn,
                 onProfile: onProfile,
                 onNotifications: onNotifications,
                 onLayout: onLayout
             )
         case .returning:
             ReturnView(projection: model.projection, model: model)
+                .id(model.projection.session?.returnSummary?.generatedAt)
         }
     }
 }

@@ -4,14 +4,6 @@ Anchor is a native iPhone and macOS attention companion for people coordinating
 several AI-assisted processes at once. It preserves the goal, live process state,
 human decisions, and the context needed to return after an interruption.
 
-![Historical Anchor iPhone prototype](Product/Prototype/output/playwright/01-home-portrait.png)
-
-## Development branches
-
-`codex/anchor-rollback-260918` is the designated branch for ongoing iOS design
-and interaction work. GitHub's default branch is `main`. Check both remote
-branch tips and open pull requests before starting work.
-
 ## Current implementation
 
 - Dedicated iOS and macOS production apps with the shared bundle identifier
@@ -38,8 +30,6 @@ branch tips and open pull requests before starting work.
   durable-sync coordinator.
 - Production-only macOS application lifecycle, generic CLI lifecycle, and a
   privacy-minimal Safari Web Extension embedded only in the formal macOS app.
-- A frozen semifinal fixture application is retained under
-  `Archive/Competition/SemifinalDemo` and is not loaded by the formal project.
 
 SwiftData-backed persistence, production CloudKit container activation,
 site-specific web adapters, and direct integrations remain later phases. The MVP path
@@ -48,7 +38,7 @@ an optional CloudKit event adapter, and a supported CLI contract.
 
 ## Repository map
 
-See [the project map](docs/project-map.md) for source, documentation, and archive entry points.
+See [the project map](docs/project-map.md) for source and documentation entry points.
 
 ```text
 Anchor.xcodeproj
@@ -65,9 +55,6 @@ Packages/AnchorKit/
 ├── Sources/AnchorIOSFeatures/
 ├── Sources/AnchorMacFeatures/
 └── Sources/AnchorTransport/
-Archive/Competition/SemifinalDemo/
-└── AnchorSemifinalDemo.xcodeproj  frozen Demo-only project
-Product/Prototype/         original definition, React prototype and captures
 Documentation/
 ```
 
@@ -108,30 +95,56 @@ targets. Their launch environments create a private temporary repository and
 disable live CloudKit, proximity, Bonjour, and source observation, so the tests
 do not mutate the installed app's task data or source permissions.
 
-GitHub Actions builds both production Release schemes, runs the production
-package tests, compiles both formal UI-test bundles, archives both apps, and
-rejects archived Demo resources or copy in either archive. A separate archive
-workflow builds the semifinal Demo apps
-and their fixture-bound UI-test targets only when archived files change or when
-it is started manually. The
-local acceptance matrix and remaining device-only checks are recorded in
+GitHub Actions builds both production Release schemes, runs the package tests,
+compiles both formal UI-test bundles, archives both apps, and checks that Demo
+resources are absent. The local acceptance record and remaining device checks are in
 [`Documentation/VALIDATION.md`](Documentation/VALIDATION.md).
 
 ## Public repository boundary
 
-The archived Demo fixtures contain synthetic data only. Production targets and
-the formal `AnchorKit` package do not link the archived support package. The
-bundled Nunito font is distributed with its original
-SIL Open Font License notice. No credentials, CloudKit secrets, or signing
-material are stored in this repository.
+Production targets and the formal `AnchorKit` package use real local task data.
+Test fixtures live under `Tests` and are not linked into the apps. No credentials,
+CloudKit secrets, or signing material are stored in this repository.
 
 The source is published for portfolio review. No redistribution or commercial-use
 license is granted.
 
-## Archived competition Demo
+## Final competition source submission
 
-Production app targets have no fixture fallback and the formal Xcode project
-contains no Demo target, scheme, or Demo-bound UI-test target. The archived
-project, restoration tag, compatibility boundary, and on-demand build commands
-are documented in
-[`Archive/Competition/SemifinalDemo/README.md`](Archive/Competition/SemifinalDemo/README.md).
+Both production launchers start without recording tasks in Debug and Release.
+Task data comes from user actions, observed sources, or paired devices. The iOS
+profile reports actual connection/cloud state; unavailable background notifications
+are described explicitly. Session elapsed time is not a measurement of focused work.
+External process status remains source-owned after recording a decision.
+
+Upgrading a recording build backs up `session-state.json` beside the original
+with a `before-recording-cleanup-<UUID>.bak` suffix before removing the three
+reserved recording task identities and marked recording process events. Real
+session goals and notes are retained. Upgrade both devices before reconnecting;
+an older recording build can still generate synthetic presence changes. This
+migration does not erase cloud records or backup files.
+
+Create a clean source ZIP from the current working files (including uncommitted
+changes):
+
+```sh
+python3 scripts/validation/check-production-data.py
+python3 scripts/release/export-source.py /tmp/Anchor-source-submission.zip
+```
+
+The export includes the native project, production packages, resources, tests,
+and supporting scripts/documentation. It excludes Git history, build output and
+device data. Test doubles stay in `Tests`; they are not linked into the apps.
+
+Real-device Bluetooth/Bonjour pairing, speech permissions, signed Safari App
+Group handoff and provisioned CloudKit must be checked on the corresponding
+hardware/account; a successful unsigned build does not validate these services.
+
+### Reliability follow-up
+
+Local task edits now finish after local persistence and replicate in the background.
+Decision delivery uses task ownership and avoids repeated source actions. Photo
+processing and file access run off the UI thread; recording cleanup is scoped to
+the correct speech request. See the latest section of
+[the validation record](Documentation/VALIDATION.md) for regression, native UI,
+command execution and event stress-test results and remaining device checks.
