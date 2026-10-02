@@ -12,6 +12,10 @@
   proposal that touches those decisions, and distinguish source-confirmed issues
   from hypotheses that need live interaction testing. A review request alone does
   not authorize changing the app UI.
+- Treat Part I of `DESIGN.md` as frozen: change it only when the project owner
+  explicitly requests a philosophy amendment. Maintain current implementation
+  evidence in Part II and derived requirements in Part III; never report a target
+  requirement as implemented without evidence.
 
 ## Build and test
 

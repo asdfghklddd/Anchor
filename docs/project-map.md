@@ -16,7 +16,7 @@ Generic app/browser tracking and decision execution have been retired.
 
 ## Documentation entry points
 
-- [Design](../DESIGN.md): current iOS visual tokens, components, page rules, and verification boundaries.
+- [Design](../DESIGN.md): frozen design philosophy, current iOS/macOS experience, and derived visual, interaction, motion, and verification requirements.
 - [README](../README.md): setup and source submission.
 - [Validation](../Documentation/VALIDATION.md): latest verified results and device acceptance still needed.
 - [CLI contract](../Documentation/CLI_EVENT_CONTRACT.md): active terminal integration.

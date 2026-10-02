@@ -11,7 +11,7 @@
 | M7 | 普通应用/Safari 部分撤回；现有来源设置只保留 Codex/终端。新的引导文案建议尚未作为本轮 UI 改动实施。 |
 | I4–I8、M3–M6、M8 | 保留为待讨论候选；本轮清理不改变已确认布局与动效。 |
 
-后续实现：I1 在当前 App 使用期间保留草稿并提供确认放弃入口；I2 仅在保存成功后反馈，保存中防重复提交；I3 按用户新定义保留绿/红/黄三灯，去掉五角星，完成使用对勾徽章。下文 Before/After 为初次评审记录，最新约定见 DESIGN.md 的 2026-10-02 修正章节。
+后续实现：I1 在当前 App 使用期间保留草稿并提供确认放弃入口；I2 仅在保存成功后反馈，保存中防重复提交；I3 按用户新定义保留绿/红/黄三灯，去掉五角星，完成使用对勾徽章。下文 Before/After 为初次评审记录，最新约定见 [DESIGN.md](../DESIGN.md) 第三部分的 D02（状态语义）与 D06（创建、记录和完成）。
 
 ## 评审方法与边界
 
@@ -53,7 +53,7 @@
 
 - I1：`AnchorIOSFeatures/AnchorIOSRootView.swift:125–133`、`AnchorSetupView.swift` 的 header close 与 interactiveDismissDisabled、`AnchorSetupHeader.swift` 的 close。
 - I2：`AnchorIOSFeatures/ProcessViews.swift:395–406`。
-- I3：`AnchorIOSFeatures/HostedTaskCard.swift:38–61`；已确认颜色语义见 DESIGN.md 首页章节。
+- I3：`AnchorIOSFeatures/HostedTaskCard.swift:38–61`；已确认颜色语义见 DESIGN.md 第三部分 D02。
 - I4：`AnchorIOSFeatures/HostedTaskCard.swift:64` 起。
 - I5：`AnchorIOSFeatures/PortraitDashboard.swift:40`、`HomeAnchorChart.swift:25`。
 - I6：`AnchorIOSFeatures/HarborTopBar.swift:61–88`、`146` 起。

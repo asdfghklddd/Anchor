@@ -12,7 +12,8 @@ answer questions, make decisions, or resume external tools on the user’s behal
   contracts, presence inference, return summaries, and event deduplication.
 - `AnchorDesign`: adaptive iOS colors from the approved Figma homepage,
   platform-aware components, and an English/Simplified Chinese String Catalog.
-  See [DESIGN.md](DESIGN.md) for the current iOS visual contract.
+  See [DESIGN.md](DESIGN.md) for the frozen design philosophy, current iOS/macOS
+  experience, and detailed design requirements.
 - `AnchorIOSFeatures`: setup, portrait dashboard, landscape Ambient workspace,
   anchor notes, handoff/away/return, history, management, and settings.
 - The production iPhone loop has an explicit final confirmation boundary:
@@ -21,7 +22,7 @@ answer questions, make decisions, or resume external tools on the user’s behal
   preserves the others. The homepage uses the main conversation for its progress
   capsule and shows individual conversation progress in the anchor chart.
 - `AnchorMacFeatures`: menu bar status plus a native detail window using
-  `NavigationSplitView`.
+  `NavigationStack` and an expandable sidebar.
 - `AnchorTransport`: Bonjour discovery, one-time-code key agreement, Keychain
   trust, authenticated event envelopes and acknowledgements, BLE RSSI proximity
   advertising/scanning, and an optional CloudKit private event store.
