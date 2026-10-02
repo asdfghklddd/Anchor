@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Anchor 当前版本的 iPhone 与 Mac 页面、交互路径、功能结构与设计说明。点击节点，查看真实界面和实现依据。">
+  <meta name="theme-color" content="#f4f9f8"><title>Anchor · 页面与交互地图</title>
+  <link rel="icon" href="assets/logo.png"><link rel="stylesheet" href="styles.css">
+  <script defer src="data.js"></script><script defer src="app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+<header class="topbar">
+  <a class="brand" href="#overview" aria-label="Anchor 地图首页"><img src="assets/logo.png" alt="" width="38" height="38"><strong>Anchor<span>产品协作地图</span></strong></a>
+  <nav aria-label="主要栏目">
+    <a href="#overview" data-section="overview">总览</a><a href="#map" data-section="map">交互地图</a><a href="#pages" data-section="pages">页面目录</a><a href="#architecture" data-section="architecture">功能结构</a><a href="#design" data-section="design">设计与版本</a>
+  </nav>
+  <a class="repo-link" href="https://github.com/asdfghklddd/Anchor" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
+</header>
+<main id="main">
+<section id="overview" class="section overview">
+  <div class="hero-copy">
+    <div class="eyebrow"><span class="live-dot"></span> PRODUCT ATLAS <span class="edition">2026.10.02</span></div>
+    <h1>把工作留在锚点，<br>把注意力<span>带回来。</span></h1>
+    <p class="lead">从手机上的一次投锚，到电脑上的任务观察，再到离开后的返航。这里是一份可以一起查看、讨论和维护的 Anchor 地图。</p>
+    <div class="hero-actions"><a class="primary" href="#map">沿着交互看一遍 <span aria-hidden="true">↗</span></a><a class="text-link" href="#pages">查找一个页面 <span aria-hidden="true">→</span></a></div>
+    <div class="hero-meta"><span>iPhone × Mac</span><span>原生应用 · 本地优先</span><span>按最新源码核对</span></div>
+  </div>
+  <div class="hero-art" aria-label="当前应用界面：工作台与返航摘要">
+    <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit orbit-three"></div>
+    <div class="art-label top"><span class="live-dot"></span> 看见进展，接回上下文</div>
+    <button class="hero-phone phone-home" data-page="home" aria-label="查看竖屏工作台"><img src="assets/ios-home.png" alt="最新本地 iPhone 工作台：未知、0%、63%、100% 四种进度" fetchpriority="high" width="1206" height="2622"></button>
+    <button class="hero-phone phone-return" data-page="return" aria-label="查看返航摘要"><img src="assets/ios-return.png" alt="包含测试任务、七条变化和进展统计的四卡返航摘要" fetchpriority="high" width="1206" height="2622"></button>
+    <span class="art-label bottom">01 投锚 <i>→</i> 02 观察 <i>→</i> 03 返航</span>
+  </div>
+</section>
+<section class="intro-strip" aria-label="地图使用说明">
+  <p><strong>一份地图，连接产品与实现。</strong><span>点击任一节点，查看页面入口、交互规则、界面素材和对应源码。</span></p>
+  <div class="metrics"><span><b id="page-count">43</b>页面 / 模块</span><span><b>5</b>交互视角</span><span><b>2</b>原生客户端</span></div>
+</section>
+<section id="map" class="section">
+  <div class="section-heading"><div><span class="eyebrow">01 / INTERACTION MAP</span><h2>每一步，都有来处和去向。</h2></div><p>先看工作主线，再展开双端页面与数据流。</p></div>
+  <div id="map-tabs" class="segmented" aria-label="选择地图"></div>
+  <div class="map-shell">
+    <div class="map-heading"><div><h3 id="map-title"></h3><p id="map-subtitle"></p></div><button class="quiet print-button" id="print">打印 / 保存 PDF ↗</button></div>
+    <div class="map-legend"><span><i></i>用户操作</span><span><i class="sync"></i>数据流 / 同步</span><span><i class="auto"></i>状态自动切换</span><span class="map-tip">点节点看详情 · 点路径高亮关联</span></div>
+    <p class="mobile-hint">← 左右滑动地图查看全部节点，或使用下方路径索引。</p><div class="map-workspace"><div class="map-viewport" id="map-viewport"><div class="map-canvas" id="map-canvas"><svg id="map-lines" aria-hidden="true"></svg><div id="map-lanes" class="map-lanes"></div></div></div><aside class="route-sidebar"><h4>路径索引 <span id="route-count"></span></h4><div id="routes"></div></aside></div>
+    <div class="map-bottom"><span id="map-status" role="status">点击一条路径，可高亮起点与终点。</span><button id="clear-route" class="quiet">清除高亮</button></div>
+  </div>
+  <p class="small-note">地图表示当前实现关系。页面截图使用隔离测试数据；无截图的节点提供结构说明。完整能力与验收范围见下方「设计与版本」。</p>
+</section>
+<section id="pages" class="section">
+  <div class="section-heading"><div><span class="eyebrow">02 / PAGE DIRECTORY</span><h2>双端界面，放在一起看。</h2></div><p>按设备筛选，或搜索页面、功能和交互关键词。</p></div>
+  <div class="directory-toolbar"><div id="platform-tabs" class="segmented small" aria-label="筛选设备"></div><label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜索：返航、连接、任务…" aria-label="搜索页面与功能"><kbd>/</kbd></label><label class="check-filter"><input id="screens-only" type="checkbox">只看界面素材</label></div>
+  <div class="result-line" id="result-count" role="status" aria-live="polite"></div><div class="page-grid" id="page-grid"></div>
+  <div id="empty-state" class="empty-state" hidden><h3>没有匹配的页面</h3><p>试试「任务」「返航」或切换设备筛选。</p><button class="quiet" id="reset-search">重置筛选</button></div>
+</section>
+<section id="architecture" class="section">
+  <div class="section-heading"><div><span class="eyebrow">03 / FUNCTIONAL STRUCTURE</span><h2>表面是两块屏幕，底下是一条工作线。</h2></div></div>
+  <div class="architecture-lead"><div><span class="tag">六个功能域</span><h3>从建立工作，到恢复上下文。</h3><p>iPhone 负责创建、查看、记录和确认；Mac 负责观察已接入的任务。共享核心将用户操作与来源事件变成一致、可回看的工作状态。</p><button class="text-link" id="open-system">展开数据流地图 <span aria-hidden="true">→</span></button></div><div class="system-summary"><span>Codex / CLI</span><b>↓</b><span>来源采集 → 事件与任务状态</span><b>↓</b><span>本地持久化 ↔ 认证设备同步</span><b>↓</b><span>iPhone / Mac 状态投影</span><small>可选 CloudKit · 生产容器与设备仍需配置验收</small></div></div>
+  <div id="module-grid" class="module-grid"></div>
+  <div class="boundary-note"><strong>这个网页怎么协作？</strong><p>它是一份公开的产品说明，不连接个人工作数据。每个节点可复制独立链接，并跳转到对应代码或预填反馈的 GitHub Issue 页面。只有你在 GitHub 点击提交后，反馈才会发布。</p></div>
+</section>
+<section id="design" class="section">
+  <div class="section-heading"><div><span class="eyebrow">04 / DESIGN & VERSION</span><h2>把最新的共识，写在同一个地方。</h2></div><a class="text-link" href="https://github.com/asdfghklddd/Anchor/blob/main/DESIGN.md" target="_blank" rel="noopener">阅读完整设计规范 ↗</a></div>
+  <div class="principles"><article><b>01</b><h3>帮助人保持和恢复注意力</h3><p>总览呈现重点，详情留住上下文，返航帮助人接着做。</p></article><article><b>02</b><h3>低干扰，也有足够的信息</h3><p>真实进展应容易察觉；重要结果持续可查，无需一直盯着屏幕。</p></article><article><b>03</b><h3>反馈清楚，交互自然</h3><p>操作有回应，动画解释变化，手机和电脑都保持良好的交互品质。</p></article></div>
+  <div class="change-table-wrap"><table><caption>相对旧版交互地图，需要更新的关键认识</caption><thead><tr><th>主题</th><th>当前版本</th><th>阅读时注意</th></tr></thead><tbody>
+    <tr><td>产品职责</td><td>手机工作副屏 + Mac 任务观察</td><td>已移除代决策、外部作答和恢复执行入口。</td></tr>
+    <tr><td>数据来源</td><td>Codex 本地会话 + CLI 命令生命周期</td><td>通用应用 / 浏览器活动与 Safari 扩展已退出范围。</td></tr>
+    <tr><td>自动离开</td><td>全部认证连接连续失联 ≥ 五分钟，再短暂交接</td><td>此前必须有过有效连接；手动离开立即生效。</td></tr>
+    <tr><td>返航顺序</td><td>认证重连 → 四卡回顾 → 返回 → 横屏提示</td><td>无需先横屏；旋转和 RSSI 不会单独触发返航。</td></tr>
+    <tr><td>多任务与进度</td><td>独立任务记录、主会话粗线、未知进度虚线</td><td>本地可读性修订已显示「未知」和具体百分比；颜色代表任务，主会话胶囊不混合平均。</td></tr>
+    <tr><td>完成表达</td><td>对勾徽章 + 用户最终完成确认</td><td>五角星已退役；来源执行结束不自动完成整体锚点。</td></tr>
+    <tr><td>通知与云同步</td><td>应用内变化记录；可选 CloudKit 事件适配</td><td>后台通知未提供；生产 CloudKit 仍需配置和验收。</td></tr>
+  </tbody></table></div>
+  <div class="evidence-grid"><article><span class="tag">源码快照</span><h3>可追溯的实现依据</h3><p>基于 <a id="baseline-link" href="https://github.com/asdfghklddd/Anchor/commit/3ed3e0c25e3734f94945c2b1a921b5c7e3cbe285">3ed3e0c</a> 整理主体结构，并纳入 2026-10-02 最新本地可读性素材。首页、横屏和创建表单的本地修订已单独标注；源码链接固定到已提交基线。</p><p>本页是人工核对的版本快照；后续产品变化需要同步维护地图数据。</p></article><article><span class="tag amber">验收边界</span><h3>实现存在，不等于全部实机通过</h3><p>BLE / Bonjour 配对、签名 CLI、语音权限、CloudKit、完整辅助功能体验仍需对应设备与账号验收。当前截图不证明这些服务已完成验收。</p><a class="text-link" href="https://github.com/asdfghklddd/Anchor/blob/main/Documentation/VALIDATION.md" target="_blank" rel="noopener">查看验证记录 ↗</a></article></div>
+</section>
+<footer><div class="brand"><img src="assets/logo.png" alt="" width="30" height="30"><strong>Anchor<span>让工作有处可回。</span></strong></div><p>更新于 2026 年 10 月 2 日 · 页面与交互地图</p><a href="https://github.com/asdfghklddd/Anchor/blob/main/docs/MAINTAINING.md" target="_blank" rel="noopener">维护这份地图 ↗</a><a href="#overview">回到顶部 ↑</a></footer>
+</main>
+<dialog id="detail-dialog" aria-labelledby="detail-title"><div class="dialog-toolbar"><span id="detail-kicker"></span><button class="close" id="close-dialog" aria-label="关闭详情">✕</button></div><div id="detail-content"></div></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+<noscript><div class="noscript">启用 JavaScript 可使用地图筛选与节点详情。也可以直接查看 <a href="https://github.com/asdfghklddd/Anchor/blob/main/DESIGN.md">设计规范</a>与<a href="https://github.com/asdfghklddd/Anchor/blob/main/docs/project-map.md">项目结构</a>。</div></noscript>
+</body></html>

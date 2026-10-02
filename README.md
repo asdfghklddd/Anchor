@@ -4,6 +4,23 @@ Anchor observes AI task and terminal command state on the Mac and synchronizes i
 to an iPhone work dashboard. The Mac is an observation companion; it does not
 answer questions, make decisions, or resume external tools on the user’s behalf.
 
+## 页面与交互地图 · Product atlas
+
+**[打开 Anchor 公开交互地图 →](https://asdfghklddd.github.io/Anchor/)**
+
+面向同学与协作者的当前产品说明：iPhone / Mac 页面目录、五种交互地图、
+功能结构、来源与同步关系，以及本轮设计更新。支持搜索、设备筛选、截图放大、
+节点独立链接和跳转源码；不需要安装 App。
+
+- [查看交互主线](https://asdfghklddd.github.io/Anchor/#map)
+- [查看功能与数据流](https://asdfghklddd.github.io/Anchor/#map/system)
+- [页面目录](https://asdfghklddd.github.io/Anchor/#pages) · [设计与版本](https://asdfghklddd.github.io/Anchor/#design)
+- [地图源码与维护说明](docs/MAINTAINING.md)
+
+The public atlas is a versioned, static product reference. Screenshots use isolated
+validation data; the site does not connect to personal Anchor tasks or cloud data.
+GitHub Pages publishes the `docs/` directory on `main`.
+
 ## Current implementation
 
 - Dedicated iOS and macOS production apps with the shared bundle identifier
