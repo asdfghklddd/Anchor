@@ -9,6 +9,7 @@ public final class AnchorSessionModel {
     public private(set) var lastError: String?
 
     private let repository: any SessionRepository
+    private let usesTaskDashboard: Bool
     private let presenceProvider: (any PresenceSignalProviding)?
     private let sourceHealthProvider: (any SourceHealthProviding)?
     private let sourceActionProvider: (any SourceActionPerforming)?
@@ -23,6 +24,7 @@ public final class AnchorSessionModel {
     private var latestSignals: PresenceSignals
     private var pendingPresenceStatus: PresenceStatus?
     private var resolvingDecisionIDs: Set<UUID> = []
+    private var lastReturnFeedbackKey: String?
 
     public init(
         repository: any SessionRepository,
@@ -31,14 +33,16 @@ public final class AnchorSessionModel {
         sourceActionProvider: (any SourceActionPerforming)? = nil,
         durableSyncStatusProvider: (any DurableSyncStatusProviding)? = nil,
         initialProjection: SessionProjection = .empty,
-        presencePolicy: PresencePolicy = PresencePolicy()
+        presencePolicy: PresencePolicy = PresencePolicy(),
+        usesTaskDashboard: Bool = false
     ) {
         self.repository = repository
+        self.usesTaskDashboard = usesTaskDashboard
         self.presenceProvider = presenceProvider
         self.sourceHealthProvider = sourceHealthProvider
         self.sourceActionProvider = sourceActionProvider
         self.durableSyncStatusProvider = durableSyncStatusProvider
-        projection = initialProjection
+        projection = usesTaskDashboard ? TaskDashboardPolicy.presentation(of: initialProjection) : initialProjection
         presenceReducer = PresenceReducer(
             status: initialProjection.session?.presence ?? .unknown,
             policy: presencePolicy
@@ -48,6 +52,10 @@ public final class AnchorSessionModel {
             connection: initialProjection.connection,
             proximity: initialProjection.proximity
         )
+        if initialProjection.connection == .connected,
+           initialProjection.session?.presence != .away {
+            presenceReducer.reduce(latestSignals)
+        }
     }
 
     public func start() {
@@ -73,7 +81,7 @@ public final class AnchorSessionModel {
                 }
                 self.latestSignals.connection = projection.connection
                 self.latestSignals.proximity = projection.proximity
-                self.projection = projection
+                self.projection = self.present(projection)
                 self.isLoading = false
             }
         }
@@ -134,6 +142,9 @@ public final class AnchorSessionModel {
     @discardableResult
     public func send(_ command: SessionCommand) async -> Bool {
         do {
+            if usesTaskDashboard && !TaskDashboardPolicy.allows(command) {
+                throw ProcessSourceError.unsupportedAction
+            }
             // Bind UI mutations to the task displayed when the action began.
             // A peer changing selection cannot redirect an in-flight edit.
             let scoped: SessionCommand
@@ -170,7 +181,7 @@ public final class AnchorSessionModel {
     @discardableResult
     public func selectHostedTask(_ id: UUID) async -> Bool {
         guard await send(.selectSession(id)) else { return false }
-        projection = await repository.currentProjection()
+        projection = present(await repository.currentProjection())
         return true
     }
 
@@ -185,7 +196,7 @@ public final class AnchorSessionModel {
         if current.hostedSessions.contains(where: { $0.id == id }) { return true }
         let nextColor = (current.hostedSessions.map { $0.taskColorIndex ?? 0 }.max() ?? -1) + 1
         guard await send(.hostSession(AnchorSession(id: id, goal: goal, processes: normalized, taskColorIndex: nextColor))) else { return false }
-        projection = await repository.currentProjection()
+        projection = present(await repository.currentProjection())
         return true
     }
 
@@ -196,6 +207,10 @@ public final class AnchorSessionModel {
 
     @discardableResult
     public func resolve(decision: Decision, option: DecisionOption) async -> Bool {
+        guard !usesTaskDashboard else {
+            lastError = ProcessSourceError.unsupportedAction.localizedDescription
+            return false
+        }
         guard resolvingDecisionIDs.insert(decision.id).inserted else { return false }
         defer { resolvingDecisionIDs.remove(decision.id) }
         let current = await repository.currentProjection()
@@ -234,6 +249,20 @@ public final class AnchorSessionModel {
         return true
     }
 
+    private func present(_ projection: SessionProjection) -> SessionProjection {
+        usesTaskDashboard ? TaskDashboardPolicy.presentation(of: projection) : projection
+    }
+
+    /// Consumed by the visible return screen, once per return, including view rebuilds.
+    public func claimReturnFeedback() -> Bool {
+        guard let session = projection.session, session.presence == .returning,
+              let summary = session.returnSummary else { return false }
+        let key = "\(session.id):\(summary.generatedAt.timeIntervalSince1970)"
+        guard lastReturnFeedbackKey != key else { return false }
+        lastReturnFeedbackKey = key
+        return true
+    }
+
     @discardableResult
     public func continueWorking() async -> Bool {
         presenceReducer.acknowledgeReturn()
@@ -246,7 +275,7 @@ public final class AnchorSessionModel {
     }
 
     /// A manual return follows the same summary path as a confirmed
-    /// connection or proximity return. Only the summary's Back action
+    /// authenticated reconnection. Only the summary's Back action
     /// acknowledges the return and restores the workspace.
     @discardableResult
     public func beginReturn() async -> Bool {
@@ -254,6 +283,14 @@ public final class AnchorSessionModel {
             return false
         }
         return await correctPresence(to: .returning)
+    }
+
+    /// A reliable explicit path when proximity is unavailable. A nearby radio
+    /// reading must not immediately undo the user's choice to leave.
+    @discardableResult
+    public func leaveDesk() async -> Bool {
+        guard projection.session != nil else { return false }
+        return await correctPresence(to: .away)
     }
 
     @discardableResult
@@ -293,17 +330,25 @@ public final class AnchorSessionModel {
         // session-scoped. Do not publish a presence command until an Anchor
         // session exists.
         guard projection.session != nil else { return }
+        let absenceBeganAt = presenceReducer.absenceBeganAt
         let newStatus = presenceReducer.reduce(signals)
         if newStatus != projection.session?.presence {
-            await publishPresence(newStatus, at: signals.observedAt)
+            // If iOS suspended our timer, the reconnect itself can confirm a
+            // long interruption. Save its start without inventing an old snapshot.
+            if newStatus == .returning, projection.session?.presence != .away,
+               let absenceBeganAt {
+                guard await publishPresence(.away, at: signals.observedAt, awaySince: absenceBeganAt) else { return }
+            }
+            await publishPresence(newStatus, at: signals.observedAt,
+                awaySince: newStatus == .away ? absenceBeganAt : nil)
         }
         schedulePresenceEvaluation(for: signals)
     }
 
     @discardableResult
-    private func publishPresence(_ status: PresenceStatus, at date: Date) async -> Bool {
+    private func publishPresence(_ status: PresenceStatus, at date: Date, awaySince: Date? = nil) async -> Bool {
         pendingPresenceStatus = status
-        let succeeded = await send(.updatePresence(status, at: date))
+        let succeeded = await send(.updatePresence(status, at: date, awaySince: awaySince))
         if !succeeded {
             pendingPresenceStatus = nil
             presenceReducer.correct(to: projection.session?.presence ?? .unknown)
@@ -315,9 +360,7 @@ public final class AnchorSessionModel {
         presenceEvaluationTask?.cancel()
         presenceEvaluationTask = nil
 
-        guard signals.posture == .portrait,
-              signals.connection == .disconnected,
-              signals.proximity == .far else { return }
+        guard presenceReducer.canConfirmAbsence(signals) else { return }
 
         let deadline: Date
         switch presenceReducer.status {

@@ -40,6 +40,9 @@ enum SetupCopy {
     static let down = AnchorStrings.value("setup.plan.down", default: "Move down")
     static let doneEditing = AnchorStrings.value("setup.plan.edit.done", default: "Done editing")
     static let inputRequired = AnchorStrings.value("setup.plan.required", default: "Write or say a few words to continue")
+    static let draftKept = AnchorStrings.value("setup.draft.kept", default: "Close and reopen to continue this draft.")
+    static let discardDraft = AnchorStrings.value("setup.draft.discard", default: "Discard draft")
+    static let discardDraftQuestion = AnchorStrings.value("setup.draft.discard.question", default: "Discard this draft and its images?")
 
 }
 #endif

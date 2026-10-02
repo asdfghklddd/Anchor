@@ -19,7 +19,8 @@ struct ProcessDetailView: View {
                             SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 48)
                             VStack(alignment: .leading) {
                                 Text(process.sourceName).font(.headline)
-                                StatusBadge(status: process.status, text: L10n.status(process.status))
+                                StatusBadge(status: process.isInterrupted ? .blocked : process.status,
+                                            text: L10n.processStatus(process))
                             }
                         }
                         Text(process.title)
@@ -309,8 +310,7 @@ struct AnchorNoteView: View {
     }
 
     @Environment(\.dismiss) private var dismiss
-    @State private var note = ""
-    @State private var savedTrigger = 0
+    @State private var submission = AnchorNoteSubmission()
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -338,7 +338,7 @@ struct AnchorNoteView: View {
                                 .font(.headline)
                                 .foregroundStyle(AnchorPalette.ink)
                             ZStack(alignment: .topLeading) {
-                                if note.isEmpty {
+                                if submission.text.isEmpty {
                                     Text(L10n.notePlaceholder)
                                         .font(.body)
                                         .foregroundStyle(AnchorPalette.secondaryInk.opacity(0.62))
@@ -346,14 +346,16 @@ struct AnchorNoteView: View {
                                         .padding(.vertical, 8)
                                         .allowsHitTesting(false)
                                 }
-                                TextEditor(text: $note)
+                                TextEditor(text: $submission.text)
                                     .font(.body)
+                                    .disabled(submission.isSaving)
+                                    .accessibilityIdentifier("note.text.field")
                                     .focused($isFocused)
                                     .scrollContentBackground(.hidden)
                                     .frame(minHeight: 126)
                                     .accessibilityLabel(L10n.momentToRemember)
-                                    .onChange(of: note) { _, newValue in
-                                        if newValue.count > 140 { note = String(newValue.prefix(140)) }
+                                    .onChange(of: submission.text) { _, newValue in
+                                        if newValue.count > 140 { submission.text = String(newValue.prefix(140)) }
                                     }
                             }
                             .padding(10)
@@ -372,7 +374,7 @@ struct AnchorNoteView: View {
                                 }
                                 .buttonStyle(.plain)
                                 Spacer()
-                                Text("\(note.count)/140")
+                                Text("\(submission.text.count)/140")
                                     .font(.caption.monospacedDigit())
                                     .foregroundStyle(AnchorPalette.secondaryInk)
                             }
@@ -392,18 +394,33 @@ struct AnchorNoteView: View {
                             .background(AnchorPalette.seafoam.opacity(0.17), in: .rect(cornerRadius: 18, style: .continuous))
                         }
 
+                        if submission.hasFailed {
+                            Text(AnchorStrings.value("note.save.failed", default: "Could not save this note. Your text is still here. Please try again."))
+                                .font(.caption).foregroundStyle(.red)
+                                .accessibilityIdentifier("note.save.error")
+                        }
                         Button {
-                            savedTrigger += 1
                             Task {
-                                guard let taskID, await model.send(.forSession(taskID, .addNote(note))) else { return }
-                                dismiss()
+                                let saved = await submission.save { text in
+                                    guard let taskID else { return false }
+                                    return await model.send(.forSession(taskID, .addNote(text)))
+                                }
+                                if saved { dismiss() }
                             }
                         } label: {
-                            Label(L10n.dropAnchor, systemImage: "scope")
+                            if submission.isSaving {
+                                HStack {
+                                    ProgressView()
+                                    Text(SetupCopy.saving)
+                                }
+                            } else {
+                                Label(L10n.dropAnchor, systemImage: "scope")
+                            }
                         }
                         .buttonStyle(HarborPrimaryButtonStyle())
-                        .disabled(note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        .sensoryFeedback(.success, trigger: savedTrigger)
+                        .disabled(!submission.canSave)
+                        .accessibilityIdentifier("note.save.button")
+                        .sensoryFeedback(.success, trigger: submission.successCount)
                     }
                     .padding(.horizontal, AnchorSpacing.medium)
                     .padding(.bottom, AnchorSpacing.large)
@@ -418,11 +435,13 @@ struct AnchorNoteView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(action: { dismiss() }) { Image(systemName: "xmark") }
                         .accessibilityLabel(L10n.cancel)
+                        .disabled(submission.isSaving)
                 }
             }
             .onAppear { isFocused = true }
         }
         .presentationCornerRadius(24)
+        .interactiveDismissDisabled(submission.isSaving)
     }
 
     private var snapshotStrip: some View {

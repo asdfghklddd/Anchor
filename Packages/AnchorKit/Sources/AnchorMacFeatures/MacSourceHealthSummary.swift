@@ -107,9 +107,9 @@ struct MacSourceHealthSummary: View {
 
     private var attentionMetric: some View {
         MacSourceMetric(
-            value: Text(projection.openDecisions.count, format: .number),
+            value: Text((projection.session?.taskProcesses.filter(\.requiresAttention).count ?? 0), format: .number),
             label: L10n.attentionNeeded,
-            tint: projection.openDecisions.isEmpty ? AnchorPalette.seafoam : AnchorPalette.sand
+            tint: (projection.session?.taskProcesses.contains(where: \.requiresAttention) != true) ? AnchorPalette.seafoam : AnchorPalette.sand
         )
     }
 

@@ -3,7 +3,6 @@ import Foundation
 /// Local keyword matching. Conversation text is read transiently and is never
 /// copied into a projection, sync event, or persistent matching index.
 public enum CodexAutoAssociation {
-    public static let discoveryWindow: TimeInterval = 30 * 60
 
     public static func matchingSession(
         text: String, conversationStartedAt: Date, sessions: [AnchorSession], now: Date = .now
@@ -11,12 +10,11 @@ public enum CodexAutoAssociation {
         guard conversationStartedAt <= now else { return nil }
         let words = tokens(text)
         let ranked = sessions.filter {
-            $0.status == .active && conversationStartedAt >= $0.startedAt &&
-                conversationStartedAt.timeIntervalSince($0.startedAt) <= discoveryWindow
+            $0.status == .active && conversationStartedAt >= $0.startedAt
         }.compactMap { session -> (UUID, Double)? in
             let title = tokens(session.goal.title)
             let shared = title.intersection(words).count
-            guard title.count >= 2, shared >= min(3, title.count) else { return nil }
+            guard !title.isEmpty, shared >= min(3, title.count) else { return nil }
             let coverage = Double(shared) / Double(title.count)
             guard coverage >= 0.5 else { return nil }
             let context = tokens(session.goal.completionCriteria + " " + (session.goal.userPlan?.steps.joined(separator: " ") ?? ""))

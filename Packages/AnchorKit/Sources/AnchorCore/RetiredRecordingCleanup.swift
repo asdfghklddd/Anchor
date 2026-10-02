@@ -74,7 +74,7 @@ enum RetiredRecordingCleanup {
                 return !(event.processID.map(processIDs.contains) ?? false)
             case let .resolveDecision(id, _, _, _):
                 return !decisionIDs.contains(id)
-            case let .updatePresence(_, at, _):
+            case let .updatePresence(_, at, _, _):
                 // The retired recorder wrote presence at t and t+3ms, and observations
                 // at t+1ms/t+2ms. Do not remove ordinary presence events at other times.
                 return !(recordingTimes[envelope.sessionID] ?? []).contains {

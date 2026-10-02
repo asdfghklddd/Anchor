@@ -376,6 +376,8 @@ public struct AnchorSession: Identifiable, Codable, Hashable, Sendable {
     public var goal: AnchorGoal
     public var status: SessionStatus
     public var presence: PresenceStatus
+    /// Start of the confirmed interruption; snapshot creation time remains accurate.
+    public var awayStartedAt: Date?
     public var startedAt: Date
     public var completedAt: Date?
     /// Terminal time for work preserved without a completion claim.

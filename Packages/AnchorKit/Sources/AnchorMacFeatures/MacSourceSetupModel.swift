@@ -30,7 +30,7 @@ public final class MacSourceSetupModel {
     private let defaults: UserDefaults
     private let onCodexSessionSelected: (@MainActor @Sendable (URL) async throws -> Void)?
     private let autoAssociationSessions: (@Sendable () async -> [AnchorSession])?
-    private let onAutoAssociation: (@MainActor @Sendable (URL, UUID) async throws -> Void)?
+    private let onCodexSessionAssociated: (@MainActor @Sendable (URL, UUID, Bool) async throws -> Void)?
     private let currentAnchorSessionID: (@Sendable () async -> UUID?)?
     private let taskStateProvider: (@Sendable () async -> AnchorTaskState?)?
     private var codexSecurityScopedURL: URL?
@@ -38,6 +38,7 @@ public final class MacSourceSetupModel {
     private var codexSessionsRootSecurityScopedURL: URL?
     private var codexSupervisor: CodexTaskSupervisor?
     private var codexDiscoveryTask: Task<Void, Never>?
+    private var registeredBindings = Set<TrackedCodexSession>()
     private var observedAnchorSessionID: UUID?
     private var isRestoringCodexSession = false
 
@@ -55,7 +56,7 @@ public final class MacSourceSetupModel {
         currentAnchorSessionID: (@Sendable () async -> UUID?)? = nil,
         taskStateProvider: (@Sendable () async -> AnchorTaskState?)? = nil,
         autoAssociationSessions: (@Sendable () async -> [AnchorSession])? = nil,
-        onAutoAssociation: (@MainActor @Sendable (URL, UUID) async throws -> Void)? = nil
+        onCodexSessionAssociated: (@MainActor @Sendable (URL, UUID, Bool) async throws -> Void)? = nil
     ) {
         commandURL = bundle.bundleURL.appending(path: "Contents/Helpers/anchor")
         let safariExtensionURL = bundle.bundleURL.appending(
@@ -67,7 +68,7 @@ public final class MacSourceSetupModel {
         self.currentAnchorSessionID = currentAnchorSessionID
         self.taskStateProvider = taskStateProvider
         self.autoAssociationSessions = autoAssociationSessions
-        self.onAutoAssociation = onAutoAssociation
+        self.onCodexSessionAssociated = onCodexSessionAssociated
         isCommandBundled = FileManager.default.isExecutableFile(atPath: commandURL.path)
         isSafariExtensionBundled = FileManager.default.fileExists(
             atPath: safariExtensionURL.path
@@ -77,10 +78,6 @@ public final class MacSourceSetupModel {
 
     public func refresh() async {
         refreshCommandStatus()
-        isSafariExtensionEnabled = (try? await safariExtensionClient.isEnabled()) == true
-        if isSafariExtensionEnabled {
-            isAwaitingSafariConfirmation = false
-        }
         await refreshTaskState()
         await refreshCodexCandidates()
     }
@@ -102,7 +99,12 @@ public final class MacSourceSetupModel {
     ) async throws {
         let resolvedID = codexSessionID ?? Self.codexSessionID(from: url)
         guard !trackedCodexSessionIDs.contains(resolvedID) else { return }
-        try await onCodexSessionSelected?(url)
+        if let onCodexSessionAssociated {
+            guard let owner = await currentAnchorSessionID?() else { throw SessionRepositoryError.noActiveSession }
+            try await onCodexSessionAssociated(url, owner, false)
+        } else {
+            try await onCodexSessionSelected?(url)
+        }
         codexSessionFileName = url.lastPathComponent
         trackedCodexSessionIDs.insert(resolvedID)
     }
@@ -116,10 +118,19 @@ public final class MacSourceSetupModel {
         await restoreTrackedCodexSessions()
 
         if codexSecurityScopedURL == nil,
+           let ownerText = defaults.string(forKey: Self.codexBookmarkKey + ".owner"),
+           let owner = UUID(uuidString: ownerText),
+           let onCodexSessionAssociated,
+           let activeSessions = await autoAssociationSessions?(),
+           activeSessions.contains(where: { $0.id == owner }),
            let url = resolveBookmarkedURL(for: Self.codexBookmarkKey),
            url.startAccessingSecurityScopedResource() {
             do {
-                try await connectCodexSession(url)
+                try await onCodexSessionAssociated(url, owner, false)
+                if await currentAnchorSessionID?() == owner {
+                    trackedCodexSessionIDs.insert(Self.codexSessionID(from: url))
+                    codexSessionFileName = url.lastPathComponent
+                }
                 codexSecurityScopedURL = url
             } catch {
                 url.stopAccessingSecurityScopedResource()
@@ -161,6 +172,9 @@ public final class MacSourceSetupModel {
             codexSecurityScopedURL?.stopAccessingSecurityScopedResource()
             codexSecurityScopedURL = url
             defaults.set(bookmark, forKey: Self.codexBookmarkKey)
+            if let owner = await currentAnchorSessionID?() {
+                defaults.set(owner.uuidString, forKey: Self.codexBookmarkKey + ".owner")
+            }
         } catch { errorMessage = error.localizedDescription }
     }
 
@@ -187,11 +201,8 @@ public final class MacSourceSetupModel {
             }
             codexSessionsRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
             codexSessionsRootSecurityScopedURL = url
-            codexSessionsRootURL = url
-            codexSessionsFolderName = url.lastPathComponent
             defaults.set(bookmark, forKey: Self.codexRootBookmarkKey)
-            restartCodexDiscovery(at: url)
-            await refreshCodexCandidates()
+            await observeAuthorizedCodexFolder(url)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -228,6 +239,7 @@ public final class MacSourceSetupModel {
                 )
             )
             saveTrackedCodexSessions(bindings)
+            registeredBindings.formUnion(bindings.filter { $0.anchorSessionID == anchorSessionID && $0.codexSessionID == candidate.id })
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -301,32 +313,45 @@ public final class MacSourceSetupModel {
             return
         }
         codexSessionsRootSecurityScopedURL = url
+        await observeAuthorizedCodexFolder(url)
+    }
+
+    /// Called only after the system picker grants folder access, or with a
+    /// disposable test directory. Discovery does not depend on the settings UI.
+    func observeAuthorizedCodexFolder(_ url: URL) async {
         codexSessionsRootURL = url
         codexSessionsFolderName = url.lastPathComponent
+        await restoreTrackedCodexSessions()
         restartCodexDiscovery(at: url)
-        await refreshCodexCandidates()
+    }
+
+    public func stopObserving() {
+        codexDiscoveryTask?.cancel()
+        codexDiscoveryTask = nil
+        codexSecurityScopedURL?.stopAccessingSecurityScopedResource()
+        codexSessionsRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
+        codexSecurityScopedURL = nil
+        codexSessionsRootSecurityScopedURL = nil
     }
 
     private func restoreTrackedCodexSessions() async {
         guard let rootURL = codexSessionsRootURL,
-              let anchorSessionID = await currentAnchorSessionID?() else {
-            return
-        }
-        observedAnchorSessionID = anchorSessionID
-        for binding in loadTrackedCodexSessions()
-        where binding.anchorSessionID == anchorSessionID || binding.automaticallyMatched == true {
+              let sessions = await autoAssociationSessions?(),
+              let onCodexSessionAssociated else { return }
+        let selectedID = await currentAnchorSessionID?()
+        let activeIDs = Set(sessions.filter { $0.status == .active }.map(\.id))
+        trackedCodexSessionIDs = []
+        for binding in loadTrackedCodexSessions() where activeIDs.contains(binding.anchorSessionID) {
             let url = rootURL.appending(path: binding.relativePath)
-            guard FileManager.default.fileExists(atPath: url.path) else { continue }
+            guard Self.relativePath(for: url, under: rootURL) != nil,
+                  FileManager.default.fileExists(atPath: url.path) else { continue }
             do {
-                if binding.automaticallyMatched == true, let onAutoAssociation {
-                    try await onAutoAssociation(url, binding.anchorSessionID)
-                    if binding.anchorSessionID == anchorSessionID { trackedCodexSessionIDs.insert(binding.codexSessionID) }
-                } else {
-                    try await connectCodexSession(url, codexSessionID: binding.codexSessionID)
+                if !registeredBindings.contains(binding) {
+                    try await onCodexSessionAssociated(url, binding.anchorSessionID, binding.automaticallyMatched == true)
+                    registeredBindings.insert(binding)
                 }
-            } catch {
-                errorMessage = error.localizedDescription
-            }
+                if binding.anchorSessionID == selectedID { trackedCodexSessionIDs.insert(binding.codexSessionID) }
+            } catch { errorMessage = error.localizedDescription }
         }
     }
 
@@ -353,14 +378,14 @@ public final class MacSourceSetupModel {
     }
 
     private func automaticallyAssociate(_ candidates: [CodexTaskCandidate]) async {
-        guard let root = codexSessionsRootURL, let autoAssociationSessions, let onAutoAssociation else { return }
+        guard let root = codexSessionsRootURL, let autoAssociationSessions, let onCodexSessionAssociated else { return }
         await refreshTaskState()
         let sessions = await autoAssociationSessions()
         for candidate in candidates {
             guard !Task.isCancelled,
                   !loadTrackedCodexSessions().contains(where: { $0.codexSessionID == candidate.id }),
                   let started = candidate.createdAt,
-                  sessions.contains(where: { started >= $0.startedAt && started.timeIntervalSince($0.startedAt) <= CodexAutoAssociation.discoveryWindow }),
+                  sessions.contains(where: { $0.status == .active && started >= $0.startedAt }),
                   let path = Self.relativePath(for: candidate.fileURL, under: root) else { continue }
             let request = await Task.detached(priority: .utility) {
                 CodexAutoAssociation.firstUserRequest(at: candidate.fileURL)
@@ -368,9 +393,11 @@ public final class MacSourceSetupModel {
             guard let request,
                   let sessionID = CodexAutoAssociation.matchingSession(text: request, conversationStartedAt: started, sessions: sessions) else { continue }
             do {
-                try await onAutoAssociation(candidate.fileURL, sessionID)
+                try await onCodexSessionAssociated(candidate.fileURL, sessionID, true)
                 var bindings = loadTrackedCodexSessions()
-                bindings.append(TrackedCodexSession(anchorSessionID: sessionID, codexSessionID: candidate.id, relativePath: path, automaticallyMatched: true))
+                let binding = TrackedCodexSession(anchorSessionID: sessionID, codexSessionID: candidate.id, relativePath: path, automaticallyMatched: true)
+                bindings.append(binding)
+                registeredBindings.insert(binding)
                 saveTrackedCodexSessions(bindings)
                 if await currentAnchorSessionID?() == sessionID {
                     trackedCodexSessionIDs.insert(candidate.id)

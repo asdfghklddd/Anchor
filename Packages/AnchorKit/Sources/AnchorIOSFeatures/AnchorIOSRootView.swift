@@ -18,6 +18,7 @@ public struct AnchorIOSRootView: View {
     @State private var setupDraft = AnchorSetupDraft()
     @State private var suspendedSetup = false
     @State private var fullScreen: AnchorFullScreen?
+    @State private var showsLandscapeHint = false
     @State private var posture = DevicePosture.unknown
     @State private var promptedRecoverySessionID: UUID?
     @Namespace private var processTransition
@@ -60,6 +61,12 @@ public struct AnchorIOSRootView: View {
                         )
                     }
                 }
+                .safeAreaInset(edge: .bottom) {
+                    if showsLandscapeHint, posture == .portrait,
+                       model.projection.session?.presence == .atDesk {
+                        landscapeHint
+                    }
+                }
                 .navigationDestination(for: AnchorRoute.self) { route in
                     destination(for: route)
                 }
@@ -94,6 +101,7 @@ public struct AnchorIOSRootView: View {
         } action: { newPosture in
             guard newPosture != posture else { return }
             posture = newPosture
+            if newPosture == .landscape { showsLandscapeHint = false }
             // A rotation pauses setup without discarding its input or task identity.
             if newPosture == .landscape, sheet == .setup {
                 suspendedSetup = true
@@ -107,7 +115,8 @@ public struct AnchorIOSRootView: View {
             guard model.projection.session != nil else { return }
             Task { await model.updatePosture(newPosture) }
         }
-        .onChange(of: model.projection.session?.presence, initial: true) { _, presence in
+        .onChange(of: model.projection.session?.presence, initial: true) { previous, presence in
+            showsLandscapeHint = previous == .returning && presence == .atDesk && posture != .landscape
             synchronizeCover(with: presence)
         }
         .onChange(of: model.projection.session?.returnSummary?.generatedAt) { _, generatedAt in
@@ -117,6 +126,7 @@ public struct AnchorIOSRootView: View {
             fullScreen = .returning
         }
         .onChange(of: model.projection.session?.id) { _, sessionID in
+            showsLandscapeHint = false
             if sessionID != nil {
                 Task { await model.updatePosture(posture) }
             }
@@ -130,7 +140,9 @@ public struct AnchorIOSRootView: View {
                 sheet = .setup
                 return
             }
-            if previousSheet == .setup, !suspendedSetup { setupDraft = AnchorSetupDraft() }
+            // Closing keeps the draft. Only a successful submission or an explicit
+            // discard consumes its input and task identity.
+            if previousSheet == .setup, setupDraft.isConsumed { setupDraft = AnchorSetupDraft() }
             evaluateRecoveryReview(for: model.projection.session?.id)
         }
         .onChange(of: fullScreen) { _, presentedCover in
@@ -151,6 +163,28 @@ public struct AnchorIOSRootView: View {
             Text(model.lastError ?? "")
         }
         .task { model.start() }
+    }
+
+    private var landscapeHint: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "iphone.gen3.landscape")
+                .font(.title3)
+            Text(L10n.returnLandscapeHint)
+                .font(.subheadline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("return.landscape.hint")
+            Button { showsLandscapeHint = false } label: {
+                Image(systemName: "xmark")
+                    .frame(width: 44, height: 44)
+            }
+            .accessibilityLabel(L10n.close)
+            .accessibilityIdentifier("return.landscape.dismiss")
+        }
+        .foregroundStyle(AnchorIOSStyle.action)
+        .padding(.leading, 16)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .padding(.horizontal, 20)
+        .padding(.bottom, 8)
     }
 
     @ViewBuilder
@@ -219,6 +253,11 @@ public struct AnchorIOSRootView: View {
                 kind: kind,
                 onManage: { sheet = .layout },
                 onFinish: { sheet = .finish },
+                onLeave: {
+                    Task {
+                        if await model.leaveDesk() { sheet = nil }
+                    }
+                },
                 onDecision: { sheet = .decision($0) }
             )
             .presentationDetents([.large])
@@ -356,15 +395,17 @@ private struct AnchorFullScreenHost: View {
     let onNotifications: () -> Void
     let onLayout: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
 
     var body: some View {
         ZStack {
             content
                 .id(item)
-                .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+                .transition(reduceMotion || systemReduceMotion || item == .returning
+                    ? .opacity : .move(edge: .bottom).combined(with: .opacity))
         }
-        .animation(reduceMotion ? nil : AnchorMotion.panel, value: item)
+        .animation(reduceMotion || systemReduceMotion ? nil : AnchorMotion.panel, value: item)
     }
 
     @ViewBuilder

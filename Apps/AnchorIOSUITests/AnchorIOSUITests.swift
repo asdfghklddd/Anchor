@@ -6,6 +6,85 @@ final class AnchorIOSUITests: XCTestCase {
     }
 
     @MainActor
+    func testClosingSetupKeepsDraftUntilDiscardOrSuccessfulCreation() throws {
+        XCUIDevice.shared.orientation = .portrait
+        let app = isolatedApplication()
+        defer { app.terminate() }
+        app.launch()
+        let create = app.buttons["anchor.note.button"]
+        XCTAssertTrue(create.waitForExistence(timeout: 8))
+        create.tap()
+        type("Keep this draft", into: element("setup.goal.field", in: app))
+        advanceSetup(in: app)
+        type("Keep my criteria too", into: element("setup.criteria.field", in: app))
+        app.buttons["setup.close.button"].tap()
+        XCTAssertTrue(element("setup.screen", in: app).waitForNonExistence(timeout: 5))
+        create.tap()
+        let criteria = element("setup.criteria.field", in: app)
+        XCTAssertTrue(criteria.waitForExistence(timeout: 5))
+        XCTAssertEqual(criteria.value as? String, "Keep my criteria too")
+        app.buttons["setup.segment.0"].tap()
+        XCTAssertEqual(element("setup.goal.field", in: app).value as? String, "Keep this draft")
+        // Switching segments scrolls to the heading. Bring the bottom of the
+        // scrollable form back into view before comparing visible controls.
+        app.scrollViews.firstMatch.swipeUp()
+        capture("Draft restored after close", app: app)
+        XCTAssertLessThanOrEqual(app.buttons["setup.segment.0"].frame.maxY, app.buttons["setup.next.button"].frame.minY)
+        app.buttons["setup.draft.discard"].tap()
+        let discard = app.buttons.matching(identifier: "setup.draft.discard.confirm").firstMatch
+        XCTAssertTrue(discard.waitForExistence(timeout: 3))
+        discard.tap()
+        XCTAssertTrue(element("setup.screen", in: app).waitForNonExistence(timeout: 5))
+        create.tap()
+        XCTAssertEqual(element("setup.goal.field", in: app).value as? String, "")
+        type("Fresh task", into: element("setup.goal.field", in: app))
+        advanceSetup(in: app)
+        type("Confirmed", into: element("setup.criteria.field", in: app))
+        advanceSetup(in: app)
+        type("One step", into: element("setup.steps.field", in: app))
+        advanceSetup(in: app)
+        app.buttons["setup.start.button"].tap()
+        XCTAssertTrue(app.buttons["Fresh task"].waitForExistence(timeout: 5))
+        create.tap()
+        XCTAssertTrue(element("setup.goal.field", in: app).waitForExistence(timeout: 5))
+        XCTAssertEqual(element("setup.goal.field", in: app).value as? String, "")
+    }
+
+    @MainActor
+    func testNoteSaveReturnsToWorkspaceAndShowsPersistedNote() throws {
+        XCUIDevice.shared.orientation = .portrait
+        let app = isolatedApplication()
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        defer { app.terminate() }
+        app.launch()
+        XCTAssertTrue(app.buttons["anchor.note.button"].waitForExistence(timeout: 8))
+        app.buttons["anchor.note.button"].tap()
+        type("Note test task", into: element("setup.goal.field", in: app))
+        advanceSetup(in: app)
+        type("Note is retained", into: element("setup.criteria.field", in: app))
+        advanceSetup(in: app)
+        type("Save context", into: element("setup.steps.field", in: app))
+        advanceSetup(in: app)
+        app.buttons["setup.start.button"].tap()
+        XCTAssertTrue(app.buttons["Note test task"].waitForExistence(timeout: 5))
+        app.buttons["Manage hosted tasks"].tap()
+        XCTAssertTrue(app.buttons["Drop an anchor"].waitForExistence(timeout: 5))
+        app.buttons["Drop an anchor"].tap()
+        type("One verified note", into: element("note.text.field", in: app))
+        let save = app.buttons["note.save.button"]
+        if !save.isHittable { app.swipeUp() }
+        XCTAssertTrue(save.isEnabled)
+        save.tap()
+        XCTAssertTrue(element("note.text.field", in: app).waitForNonExistence(timeout: 5))
+        app.buttons["Manage hosted tasks"].tap()
+        XCTAssertTrue(app.buttons["Drop an anchor"].waitForExistence(timeout: 5))
+        app.buttons["Drop an anchor"].tap()
+        XCTAssertTrue(app.staticTexts["One verified note"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["note.save.button"].isEnabled)
+        capture("Saved anchor note", app: app)
+    }
+
+    @MainActor
     func testFreshLaunchHasNoHostedTasks() throws {
         let app = isolatedApplication()
         defer { app.terminate() }
@@ -306,6 +385,65 @@ final class AnchorIOSUITests: XCTestCase {
 
 
 
+    }
+
+    @MainActor
+    func testLeaveAndReturnReviewsSummaryBeforeResuming() throws {
+        try exerciseLeaveAndReturn(reduceMotion: false)
+    }
+
+    @MainActor
+    func testReturnReviewWithReducedMotion() throws {
+        try exerciseLeaveAndReturn(reduceMotion: true)
+    }
+
+    @MainActor
+    private func exerciseLeaveAndReturn(reduceMotion: Bool) throws {
+        XCUIDevice.shared.orientation = .portrait
+        let app = isolatedApplication()
+        defer { app.terminate() }
+        app.launchArguments += ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN",
+            "-anchor.accessibility.reduceMotion", reduceMotion ? "YES" : "NO"]
+        app.launch()
+        XCTAssertTrue(app.buttons["anchor.note.button"].waitForExistence(timeout: 8))
+        app.buttons["anchor.note.button"].tap()
+        type("Anchor 工作看板", into: element("setup.goal.field", in: app))
+        advanceSetup(in: app)
+        type("回来后继续完善任务同步", into: element("setup.criteria.field", in: app))
+        advanceSetup(in: app)
+        type("检查 iOS 与 Mac 的任务状态", into: element("setup.steps.field", in: app))
+        advanceSetup(in: app)
+        app.buttons["setup.start.button"].tap()
+        let card = app.buttons["Anchor 工作看板"]
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        card.tap()
+        let leave = app.buttons["profile.session.leave.button"]
+        XCTAssertTrue(leave.waitForExistence(timeout: 5))
+        if !leave.isHittable { app.swipeUp() }
+        capture("01-manual-leave-button", app: app)
+        leave.tap()
+        XCTAssertTrue(element("away.screen", in: app).waitForExistence(timeout: 5))
+        XCUIDevice.shared.orientation = .landscapeRight
+        XCTAssertTrue(element("away.screen", in: app).waitForExistence(timeout: 5))
+        XCTAssertFalse(element("return.screen", in: app).exists)
+        XCUIDevice.shared.orientation = .portrait
+        let comeBack = app.buttons["away.return.button"]
+        if !comeBack.isHittable { app.swipeUp() }
+        comeBack.tap()
+        XCTAssertTrue(element("return.screen", in: app).waitForExistence(timeout: 5))
+        XCTAssertTrue(element("return.task.card", in: app).exists)
+        XCTAssertFalse(element("return.landscape.hint", in: app).exists)
+        capture("02-return-in-portrait", app: app)
+        let back = app.buttons["return.back.button"]
+        if !back.isHittable { app.swipeUp() }
+        back.tap()
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        XCTAssertFalse(element("return.screen", in: app).exists)
+        XCTAssertTrue(element("return.landscape.hint", in: app).waitForExistence(timeout: 5))
+        capture("03-landscape-hint-after-review", app: app)
+        XCUIDevice.shared.orientation = .landscapeRight
+        XCTAssertFalse(element("return.landscape.hint", in: app).exists)
+        XCUIDevice.shared.orientation = .portrait
     }
 
     @MainActor

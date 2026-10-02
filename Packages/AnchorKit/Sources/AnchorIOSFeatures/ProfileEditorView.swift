@@ -6,7 +6,7 @@ import UIKit
 
 struct ProfileEditorView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("anchor.profile.name", store: ProfilePreferences.store) private var savedName = "ANDY"
+    @AppStorage("anchor.profile.name", store: ProfilePreferences.store) private var savedName = "Anchor"
     @AppStorage("anchor.profile.avatar", store: ProfilePreferences.store) private var savedAvatar = Data()
     @State private var name = ""
     @State private var avatar = Data()

@@ -68,7 +68,6 @@ struct MacEmptyWorkView: View {
                 processStatusItem
                 Divider()
                     .padding(.vertical, AnchorSpacing.small)
-                decisionStatusItem
             }
 
             VStack(spacing: 0) {
@@ -76,7 +75,6 @@ struct MacEmptyWorkView: View {
                 Divider()
                 processStatusItem
                 Divider()
-                decisionStatusItem
             }
         }
         .padding(.vertical, AnchorSpacing.small)
@@ -162,15 +160,6 @@ struct MacEmptyWorkView: View {
             value: "0",
             symbol: "square.grid.2x2",
             tint: AnchorPalette.cyan
-        )
-    }
-
-    private var decisionStatusItem: some View {
-        MacEmptyStatusItem(
-            title: L10n.decisions,
-            value: "0",
-            symbol: "exclamationmark.bubble",
-            tint: AnchorPalette.sand
         )
     }
 }

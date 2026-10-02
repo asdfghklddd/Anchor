@@ -512,6 +512,8 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
     private var eventCharacteristic: CBCharacteristic?
     private var peerID: UUID?
     private var staleSignalWorkItem: DispatchWorkItem?
+    private var rssiReadWorkItem: DispatchWorkItem?
+    private var proximityFilter = BluetoothProximityFilter()
     private var pairingWorkItem: DispatchWorkItem?
     private var pairingAttempt: PairingAttempt?
     private var hasDeliveredPairingCredential = false
@@ -562,8 +564,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
     }
 
     public func stop() {
-        staleSignalWorkItem?.cancel()
-        staleSignalWorkItem = nil
+        stopProximitySampling()
         connectionAttemptWorkItem?.cancel()
         connectionAttemptWorkItem = nil
         pairingWorkItem?.cancel()
@@ -677,8 +678,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         #if DEBUG
         print("[AnchorPairing] Bluetooth state \(central.state.rawValue)")
         #endif
-        staleSignalWorkItem?.cancel()
-        staleSignalWorkItem = nil
+        stopProximitySampling()
         switch central.state {
         case .poweredOn:
             startScanning(central)
@@ -718,23 +718,11 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
-        let value = RSSI.intValue
-        guard value != 127 else {
-            onUpdate(.unknown)
-            return
-        }
-        let isNear = value >= -68
-        #if DEBUG
-        print("[AnchorPairing] Bluetooth candidate RSSI \(value) near=\(isNear)")
-        #endif
-        onUpdate(isNear ? .near : .far)
+        // Discovery identifies a candidate, not the user's paired Mac. Publish
+        // distance only after an encrypted exchange authenticates this peer.
         if candidatePeripheral == nil {
-            #if DEBUG
-            print("[AnchorPairing] Bluetooth connecting candidate")
-            #endif
             connect(peripheral, using: central)
         }
-        scheduleStaleSignalFallback()
     }
 
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
@@ -754,7 +742,8 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         #if DEBUG
         print("[AnchorPairing] Bluetooth connect failed \(String(describing: error))")
         #endif
-        if candidatePeripheral === peripheral { candidatePeripheral = nil }
+        guard candidatePeripheral === peripheral else { return }
+        candidatePeripheral = nil
         connectionAttemptWorkItem?.cancel()
         connectionAttemptWorkItem = nil
         setDataLinkState(.disconnected)
@@ -1182,7 +1171,43 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         #if DEBUG
         print("[AnchorPairing] Bluetooth data link \(state.rawValue)")
         #endif
+        // Keep link and proximity updates ordered; observers must not carry a
+        // stale near reading across a disconnected channel.
         onConnectionState?(state)
+        if state == .connected, let peripheral = candidatePeripheral {
+            readProximity(from: peripheral)
+        } else {
+            stopProximitySampling()
+            onUpdate(proximityFilter.state)
+        }
+    }
+
+    public func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: (any Error)?) {
+        guard candidatePeripheral === peripheral, dataLinkState == .connected else { return }
+        let state = error == nil ? proximityFilter.sample(RSSI.intValue) : proximityFilter.reset()
+        onUpdate(state)
+        scheduleStaleSignalFallback()
+    }
+
+    private func readProximity(from peripheral: CBPeripheral) {
+        rssiReadWorkItem?.cancel()
+        guard candidatePeripheral === peripheral,
+              peripheral.state == .connected, dataLinkState == .connected else { return }
+        peripheral.readRSSI()
+        let workItem = DispatchWorkItem { [weak self, weak peripheral] in
+            guard let self, let peripheral else { return }
+            self.readProximity(from: peripheral)
+        }
+        rssiReadWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + BluetoothProximityFilter.sampleInterval, execute: workItem)
+    }
+
+    private func stopProximitySampling() {
+        rssiReadWorkItem?.cancel()
+        rssiReadWorkItem = nil
+        staleSignalWorkItem?.cancel()
+        staleSignalWorkItem = nil
+        proximityFilter.reset()
     }
 
     private func disconnect(_ peripheral: CBPeripheral) {
@@ -1210,10 +1235,11 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
     private func scheduleStaleSignalFallback() {
         staleSignalWorkItem?.cancel()
         let workItem = DispatchWorkItem { [weak self] in
-            self?.onUpdate(.unknown)
+            guard let self else { return }
+            onUpdate(proximityFilter.reset())
         }
         staleSignalWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 12, execute: workItem)
+        DispatchQueue.main.asyncAfter(deadline: .now() + BluetoothProximityFilter.staleInterval, execute: workItem)
     }
 }
 #endif

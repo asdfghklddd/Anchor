@@ -53,7 +53,9 @@ struct AnchorIOSApp: App {
                 withIntermediateDirectories: true
             )
         }
-        let identityStore = PairingIdentityStore(service: pairingIdentityService)
+        let identityStore = isUITesting
+            ? PairingIdentityStore.inMemory()
+            : PairingIdentityStore(service: pairingIdentityService)
         let client = AnchorBonjourClient(
             identityStore: identityStore,
             automaticPairing: usesAutomaticICloudPairing ? .iOSProduction() : .manualOnly
@@ -124,7 +126,8 @@ struct AnchorIOSApp: App {
         model = AnchorSessionModel(
             repository: repository,
             presenceProvider: presenceProvider,
-            durableSyncStatusProvider: cloudSyncRunner
+            durableSyncStatusProvider: cloudSyncRunner,
+            usesTaskDashboard: true
         )
 #if DEBUG
         if !isUITesting {

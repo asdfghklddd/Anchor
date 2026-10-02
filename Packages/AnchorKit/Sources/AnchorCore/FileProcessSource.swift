@@ -17,6 +17,7 @@ public struct FileProcessSource: ProcessSource, Sendable {
     public let maximumFileSize: Int
     public let descriptor: SourceDescriptor
     private let sessionContextProvider: @Sendable () async -> ProcessSourceSessionContext?
+    private let commandSessionContextProvider: (@Sendable (CLIProcessSignal) async -> ProcessSourceSessionContext?)?
     private let signalKind: FileProcessSignalKind
 
     public init(
@@ -24,6 +25,7 @@ public struct FileProcessSource: ProcessSource, Sendable {
         pollInterval: TimeInterval = 0.25,
         maximumFileSize: Int = 1_048_576,
         sessionContextProvider: @escaping @Sendable () async -> ProcessSourceSessionContext? = { nil },
+        commandSessionContextProvider: (@Sendable (CLIProcessSignal) async -> ProcessSourceSessionContext?)? = nil,
         signalKind: FileProcessSignalKind = .cli,
         descriptor: SourceDescriptor = SourceDescriptor(
             id: FileProcessSource.defaultSourceID,
@@ -38,6 +40,7 @@ public struct FileProcessSource: ProcessSource, Sendable {
         self.pollInterval = max(0.05, pollInterval)
         self.maximumFileSize = max(1, maximumFileSize)
         self.sessionContextProvider = sessionContextProvider
+        self.commandSessionContextProvider = commandSessionContextProvider
         self.signalKind = signalKind
         self.descriptor = descriptor
     }
@@ -180,7 +183,13 @@ public struct FileProcessSource: ProcessSource, Sendable {
                         CLIProcessSignal.self,
                         from: data
                     )
-                    guard let session = await sessionContextProvider() else {
+                    let context: ProcessSourceSessionContext?
+                    if let commandSessionContextProvider {
+                        context = await commandSessionContextProvider(signal)
+                    } else {
+                        context = await sessionContextProvider()
+                    }
+                    guard let session = context else {
                         return nil
                     }
                     guard signal.occurredAt >= session.startedAt else {

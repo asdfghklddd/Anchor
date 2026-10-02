@@ -43,18 +43,8 @@ cleanup() {
   stop_validation_app
 }
 trap cleanup EXIT
-
-find_validation_pid() {
-  local pid command
-  for pid in $(pgrep -x 'Anchor macOS' || true); do
-    command=$(ps eww -p "$pid" -o command= 2>/dev/null || true)
-    if [[ "$command" == *"ANCHOR_LOCAL_VALIDATION_ROOT=$validation_dir"* ]]; then
-      print "$pid"
-      return 0
-    fi
-  done
-  return 1
-}
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 wait_until() {
   local condition=$1
@@ -68,13 +58,14 @@ wait_until() {
 }
 
 launch_app() {
-  open -n \
-    --stdout "$validation_dir/app.out" \
-    --stderr "$validation_dir/app.err" \
-    --env "ANCHOR_LOCAL_VALIDATION_ROOT=$validation_dir" \
-    --env "ANCHOR_LOCAL_VALIDATION_CODEX_FILE=$codex_file" \
-    "$app_path"
-  wait_until 'app_pid=$(find_validation_pid)'
+  rm -f "$validation_dir/launch-marker.txt"
+  env \
+    "ANCHOR_LOCAL_VALIDATION_ROOT=$validation_dir" \
+    "ANCHOR_LOCAL_VALIDATION_CODEX_FILE=$codex_file" \
+    "$app_path/Contents/MacOS/Anchor macOS" \
+    > "$validation_dir/app.out" 2> "$validation_dir/app.err" &
+  app_pid=$!
+  wait_until '[[ -f "$validation_dir/launch-marker.txt" ]]'
   wait_until '[[ -f "$validation_dir/task-runs.json" ]] && jq -e ".associations | length == 1" "$validation_dir/task-runs.json" >/dev/null 2>&1'
 }
 

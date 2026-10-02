@@ -1,0 +1,8 @@
+// Optional stable development identity for real-device pairing across rebuilds.
+// Set ANCHOR_SIGNING_DEVELOPMENT_TEAM to your Apple Developer Team ID.
+ANCHOR_MAC_DEVELOPMENT_TEAM = $(ANCHOR_SIGNING_DEVELOPMENT_TEAM)
+DEVELOPMENT_TEAM = $(ANCHOR_SIGNING_DEVELOPMENT_TEAM)
+CODE_SIGN_STYLE = Automatic
+CODE_SIGN_IDENTITY = Apple Development
+ANCHOR_MAC_CODE_SIGN_ENTITLEMENTS = Configuration/AnchorMac-Development.entitlements
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) DEBUG ANCHOR_SIGNED_DEVELOPMENT

@@ -17,7 +17,7 @@ enum HostedTaskAppearance {
     }
 
     static func isComplete(_ task: AnchorSession) -> Bool {
-        !task.taskProcesses.isEmpty && task.taskProcesses.allSatisfy { $0.status == .completed }
+        HostedTaskIndicator(task: task).isComplete
     }
 }
 #endif

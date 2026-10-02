@@ -7,7 +7,9 @@ root = Path(__file__).resolve().parents[2]
 roots = [root / 'Apps/AnchorIOS', root / 'Apps/AnchorMac', root / 'Packages/AnchorKit/Sources']
 forbidden = ('DemoHostedTasks', 'RecordingReturnDemo', 'ANCHOR_UI_TEST_RECORDING',
              'ANCHOR_SETUP_VISUAL_RECORDING', 'StoryboardPreview', 'SimulatedProcessSource',
-             'Parallel efficiency 2.4', '并行效率 2.4', '"profile.icloud.just.now"')
+             'Parallel efficiency 2.4', '并行效率 2.4', '"profile.icloud.just.now"',
+             'ANCHOR_RETURN_REVIEW_EXPORT', '8EAB749A-9806-4D96-9577-10AA97049D4C',
+             '8EAB749A-9806-4D96-9577-10AA97049D4D')
 errors = []
 for directory in roots:
     for path in directory.rglob('*'):

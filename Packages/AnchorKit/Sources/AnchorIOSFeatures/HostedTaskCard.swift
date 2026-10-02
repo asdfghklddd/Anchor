@@ -7,6 +7,7 @@ struct HostedTaskCard: View {
     let task: AnchorSession
     let height: CGFloat
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
     @ScaledMetric(relativeTo: .headline) private var titleSize: CGFloat = 20
 
     var body: some View {
@@ -32,33 +33,44 @@ struct HostedTaskCard: View {
         .shadow(color: AnchorIOSStyle.heading.opacity(0.10), radius: 9, y: 5)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(task.goal.title)
-        .accessibilityValue(task.taskProcesses.map { L10n.status($0.status) }.joined(separator: ", ") + ", " + L10n.taskProgress + " " + (task.conversationsInJoiningOrder.first?.progress?.formatted(.percent) ?? "—"))
+        .accessibilityValue(accessibleStatus)
+    }
+
+    private var accessibleStatus: String {
+        let states = HostedTaskAppearance.isComplete(task)
+            ? L10n.completed
+            : task.taskProcesses.map { L10n.processStatus($0) }.joined(separator: ", ")
+        let progress = task.conversationsInJoiningOrder.first?.progress?.formatted(.percent) ?? "—"
+        return "\(states), \(L10n.taskProgress) \(progress)"
     }
 
     @ViewBuilder private var status: some View {
-        if HostedTaskAppearance.isComplete(task) {
-            VStack(spacing: 0) {
-                Image(systemName: "medal.fill").font(.caption2).foregroundStyle(AnchorIOSStyle.yellow)
-                Text("GET").font(.system(.caption2, design: .rounded).weight(.heavy))
-                    .foregroundStyle(AnchorIOSStyle.text)
-            }
+        let indicator = HostedTaskIndicator(task: task)
+        if indicator.isComplete {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(AnchorIOSStyle.success)
+                .frame(width: 26, height: 26)
+                .accessibilityLabel(L10n.completed)
         } else {
             HStack(spacing: 3) {
-                dot(active: task.taskProcesses.contains { $0.status == .running } || (task.taskProcesses.isEmpty && task.status == .active), color: .green)
-                dot(active: task.taskProcesses.contains { [.failed, .blocked, .disconnected].contains($0.status) }, color: .red)
-                if task.taskProcesses.contains(where: { $0.status == .needsDecision }) {
-                    Image(systemName: "star.fill").font(.system(size: 12)).foregroundStyle(AnchorIOSStyle.yellow)
-                        .frame(width: 12, height: 12)
-                } else {
-                    dot(active: false, color: AnchorIOSStyle.yellow)
-                }
+                dot(active: indicator.isRunning, color: .green, symbol: "play.fill")
+                dot(active: indicator.hasFailure, color: .red, symbol: "xmark")
+                dot(active: indicator.hasWarning, color: AnchorIOSStyle.yellow, symbol: "pause.fill")
             }
             .padding(.top, 3)
         }
     }
 
-    private func dot(active: Bool, color: Color) -> some View {
-        Circle().fill(active ? color : AnchorIOSStyle.border).frame(width: 12, height: 12)
+    private func dot(active: Bool, color: Color, symbol: String) -> some View {
+        Circle().fill(active ? color : AnchorIOSStyle.border)
+            .frame(width: 12, height: 12)
+            .overlay {
+                if active && differentiateWithoutColor {
+                    Image(systemName: symbol).font(.system(size: 7, weight: .heavy))
+                        .foregroundStyle(AnchorIOSStyle.onAccent)
+                }
+            }
     }
 
     private var progressCapsule: some View {

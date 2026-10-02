@@ -17,7 +17,7 @@ public enum SessionCommand: Sendable {
     case observeProcess(ProcessObservation)
     case applyEnvelope(EventEnvelope, event: ProcessEvent)
     case mergeRemoteSession(EventEnvelope, session: AnchorSession)
-    case updatePresence(PresenceStatus, at: Date)
+    case updatePresence(PresenceStatus, at: Date, awaySince: Date? = nil)
     case updateSignals(connection: ConnectionState, proximity: ProximityState, at: Date)
     case updateSourceHealth([SourceHealth])
     case updateDurableSyncState(DurableSyncState)

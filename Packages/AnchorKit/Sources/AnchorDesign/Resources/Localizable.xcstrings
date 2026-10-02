@@ -1,6 +1,402 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+  "return.saved.records": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Mac is disconnected. Showing saved records."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Mac 未连接，先显示已保存的记录。"
+        }
+      }
+    }
+  },
+  "return.no.received.changes": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "No changes received yet. This summary updates as records arrive."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "暂未收到离开期间的变化，新记录同步后会自动更新。"
+        }
+      }
+    }
+  },
+  "return.no.task.records": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "No task status has been received from Mac yet."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "尚未收到 Mac 的任务状态。"
+        }
+      }
+    }
+  },
+  "return.anchor.record": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Last anchor note"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "上次投锚记录"
+        }
+      }
+    }
+  },
+  "return.interrupted": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Codex task interrupted"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Codex 任务已中断"
+        }
+      }
+    }
+  },
+  "return.metric.running": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Running"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "运行中"
+        }
+      }
+    }
+  },
+  "return.metric.completed": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Completed"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "已完成"
+        }
+      }
+    }
+  },
+  "return.metric.failed": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Failed"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "失败"
+        }
+      }
+    }
+  },
+  "return.metric.attention": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Attention"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "需留意"
+        }
+      }
+    }
+  },
+  "return.view.record": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "View the full task record"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "查看完整任务记录"
+        }
+      }
+    }
+  },
+  "return.check.completion": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Review the results against your completion criteria"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "对照完成标准，确认工作结果"
+        }
+      }
+    }
+  },
+  "return.resume.context": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Pick up from your anchor note"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "接着投锚记录继续"
+        }
+      }
+    }
+  },
+  "return.review.failure": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Check the failed task on Mac first"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "先回 Mac 检查失败的任务"
+        }
+      }
+    }
+  },
+  "return.review.attention": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Check the interrupted or waiting task"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "先查看中断或等待中的任务"
+        }
+      }
+    }
+  },
+  "return.follow.running": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Check the work still in progress"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "查看仍在进行的工作"
+        }
+      }
+    }
+  },
+  "return.review.queued": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Review the task waiting to start"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "查看等待开始的任务"
+        }
+      }
+    }
+  },
+  "return.away.short": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Away for less than a minute"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "离开不到 1 分钟"
+        }
+      }
+    }
+  },
+  "return.away.minutes": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Away for %lld min"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "离开 %lld 分钟"
+        }
+      }
+    }
+  },
+  "return.metric.queued": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "%lld waiting to start"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "另有 %lld 个任务等待开始"
+        }
+      }
+    }
+  }
+,
+    "return.landscape.hint" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Turn your phone sideways to continue with the work dashboard." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将手机横放，继续查看工作看板。" } }
+      }
+    },
+  "session.leave": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Step away"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "暂时离开"
+        }
+      }
+    }
+  },
+  "note.save.failed": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Could not save this note. Your text is still here. Please try again."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "记录保存失败，文字已保留，请重试。"
+        }
+      }
+    }
+  },
+  "setup.draft.discard.question": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Discard this draft and its images?"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "放弃这份草稿及其中的图片？"
+        }
+      }
+    }
+  },
+  "setup.draft.discard": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Discard draft"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "放弃草稿"
+        }
+      }
+    }
+  },
+  "setup.draft.kept": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Close and reopen to continue this draft."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "关闭后可在本次使用中继续填写"
+        }
+      }
+    }
+  },
     "%1$@ · %2$@ %3$@ awaiting judgment" : {
 
     },
@@ -791,7 +1187,7 @@
     "Confirmed" : {
 
     },
-    "Connect each layer explicitly. Anchor observes lifecycle and structured progress without reading document content." : {
+    "Authorize the local Codex sessions folder once to discover matching new tasks, including Codex tasks in the ChatGPT app. Terminal commands use the shell connection below." : {
 
     },
     "connected" : {
@@ -1136,6 +1532,23 @@
         }
       }
     },
+    "decision.local.record" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your choice is saved in Anchor. Continue in the source app unless it supports remote actions; process status updates come from that source."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择会保存在 Anchor 中。除非来源支持远程操作，否则请在来源应用中继续处理；进程状态以来源的后续更新为准。"
+          }
+        }
+      }
+    },
     "decision.visual.direction" : {
       "localizations" : {
         "en" : {
@@ -1426,13 +1839,7 @@
         }
       }
     },
-    "Focus protected" : {
-
-    },
     "FOCUS SESSION" : {
-
-    },
-    "Focus time" : {
 
     },
     "focus.active" : {
@@ -2659,6 +3066,23 @@
     },
     "Notifications" : {
 
+    },
+    "notifications.availability" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review decisions and process changes in Anchor. Background notifications are not available in this version."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在 Anchor 内查看决策和进程变化。当前版本尚不支持后台通知。"
+          }
+        }
+      }
     },
     "notifications.decisions" : {
       "localizations" : {
@@ -4824,6 +5248,12 @@
     "Session complete" : {
 
     },
+    "Session elapsed" : {
+
+    },
+    "Session elapsed: %lld min" : {
+
+    },
     "Session summary" : {
 
     },
@@ -6366,13 +6796,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connect each layer explicitly. Anchor observes lifecycle and structured progress without reading document content."
+            "value" : "Authorize the local Codex sessions folder once to discover matching new tasks, including Codex tasks in the ChatGPT app. Terminal commands use the shell connection below."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "逐层明确连接。Anchor 获取生命周期与结构化进度，但不会读取文档内容。"
+            "value" : "首次授权本地 Codex 会话文件夹后，自动发现并匹配新任务，包括 ChatGPT 应用内的 Codex 任务。终端命令使用下方 Shell 接入。"
           }
         }
       }
@@ -7529,6 +7959,108 @@
         }
       }
     },
+    "sync.state.available" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last sync succeeded"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次同步成功"
+          }
+        }
+      }
+    },
+    "sync.state.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步失败"
+          }
+        }
+      }
+    },
+    "sync.state.idle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting to sync"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待同步"
+          }
+        }
+      }
+    },
+    "sync.state.notConfigured" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not configured"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未配置"
+          }
+        }
+      }
+    },
+    "sync.state.offline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离线"
+          }
+        }
+      }
+    },
+    "sync.state.syncing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syncing"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步中"
+          }
+        }
+      }
+    },
     "Syncing from Mac" : {
 
     },
@@ -8052,142 +8584,6 @@
     },
     "zsh setup copied. Paste it into Terminal to enable observation for that shell." : {
 
-    },
-    "notifications.availability" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Review decisions and process changes in Anchor. Background notifications are not available in this version."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请在 Anchor 内查看决策和进程变化。当前版本尚不支持后台通知。"
-          }
-        }
-      }
-    },
-    "sync.state.notConfigured" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not configured"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未配置"
-          }
-        }
-      }
-    },
-    "sync.state.idle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Waiting to sync"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "等待同步"
-          }
-        }
-      }
-    },
-    "sync.state.syncing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Syncing"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "同步中"
-          }
-        }
-      }
-    },
-    "sync.state.available" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Last sync succeeded"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上次同步成功"
-          }
-        }
-      }
-    },
-    "sync.state.offline" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Offline"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "离线"
-          }
-        }
-      }
-    },
-    "sync.state.failed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sync failed"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "同步失败"
-          }
-        }
-      }
-    },
-    "decision.local.record" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your choice is saved in Anchor. Continue in the source app unless it supports remote actions; process status updates come from that source."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选择会保存在 Anchor 中。除非来源支持远程操作，否则请在来源应用中继续处理；进程状态以来源的后续更新为准。"
-          }
-        }
-      }
     }
   },
   "version" : "1.0"

@@ -3,7 +3,7 @@ import AnchorCore
 import Foundation
 import Observation
 
-/// User-authored segments survive temporary sheet dismissal during rotation.
+/// User-authored segments survive closing the sheet and temporary rotation.
 @MainActor
 @Observable
 final class AnchorSetupDraft {
@@ -17,6 +17,12 @@ final class AnchorSetupDraft {
     var isKeyboardEditing = false
     var segment: AnchorSetupSegment = .goal
     var isReviewing = false
+    var editingReview = false
+    var isConsumed = false
+
+    var hasContent: Bool {
+        !originalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !imageData.isEmpty
+    }
 
     var criteria: [String] { lines(completionCriteria) }
     var steps: [String] { lines(actionPlan) }

@@ -245,3 +245,19 @@ struct CLIProcessSignalTests {
 private enum CLITestTimeout: Error {
     case expired
 }
+
+@Test("Terminal completion stays with its original anchor after task switching")
+func terminalCompletionRetainsAnchorOwner() throws {
+    let commandID = UUID()
+    let signal = CLIProcessSignal(commandID: commandID, phase: .started, executableName: "swift")
+    var original = AnchorSession(goal: AnchorGoal(title: "Original", completionCriteria: "Done"))
+    original.processes = [try signal.externalEvent(sessionID: original.id, sourceID: BuiltInProcessSourceID.file).process]
+    let selected = AnchorSession(goal: AnchorGoal(title: "Selected later", completionCriteria: "Done"))
+    let projection = SessionProjection(session: selected, additionalSessions: [original])
+    let finish = CLIProcessSignal(commandID: commandID, phase: .finished, executableName: "swift", exitCode: 0)
+    #expect(finish.sessionContext(in: projection)?.sessionID == original.id)
+    let fresh = CLIProcessSignal(commandID: UUID(), phase: .started, executableName: "swift")
+    #expect(fresh.sessionContext(in: projection)?.sessionID == selected.id)
+    original.status = .completed
+    #expect(finish.sessionContext(in: SessionProjection(session: selected, archivedSessions: [original])) == nil)
+}

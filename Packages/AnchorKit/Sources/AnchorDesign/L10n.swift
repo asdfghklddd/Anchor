@@ -179,8 +179,32 @@ public enum L10n {
     public static let atDeskCorrection = AnchorStrings.value("presence.at.desk", default: "I’m still at my desk")
     public static let backAtDesk = AnchorStrings.value("presence.back.at.desk", default: "I’m back at my desk")
     public static let returning = AnchorStrings.value("return.title", default: "Welcome back")
+    public static let returnSavedRecords = AnchorStrings.value("return.saved.records", default: "Mac is disconnected. Showing saved records.")
+    public static let returnNoReceivedChanges = AnchorStrings.value("return.no.received.changes", default: "No changes received yet. This summary updates as records arrive.")
+    public static let returnNoTaskRecords = AnchorStrings.value("return.no.task.records", default: "No task status has been received from Mac yet.")
+    public static let returnAnchorRecord = AnchorStrings.value("return.anchor.record", default: "Last anchor note")
+    public static let returnInterrupted = AnchorStrings.value("return.interrupted", default: "Codex task interrupted")
+    public static let returnRunning = AnchorStrings.value("return.metric.running", default: "Running")
+    public static let returnCompleted = AnchorStrings.value("return.metric.completed", default: "Completed")
+    public static let returnFailed = AnchorStrings.value("return.metric.failed", default: "Failed")
+    public static let returnAttention = AnchorStrings.value("return.metric.attention", default: "Attention")
+    public static let returnViewRecord = AnchorStrings.value("return.view.record", default: "View the full task record")
+    public static let returnCheckCompletion = AnchorStrings.value("return.check.completion", default: "Review the results against your completion criteria")
+    public static let returnResumeContext = AnchorStrings.value("return.resume.context", default: "Pick up from your anchor note")
+    public static let returnReviewFailure = AnchorStrings.value("return.review.failure", default: "Check the failed task on Mac first")
+    public static let returnReviewAttention = AnchorStrings.value("return.review.attention", default: "Check the interrupted or waiting task")
+    public static let returnFollowRunning = AnchorStrings.value("return.follow.running", default: "Check the work still in progress")
+    public static let returnReviewQueued = AnchorStrings.value("return.review.queued", default: "Review the task waiting to start")
+    public static func returnAwayDuration(_ seconds: TimeInterval) -> String {
+        if seconds < 60 { return AnchorStrings.value("return.away.short", default: "Away for less than a minute") }
+        return String(format: AnchorStrings.value("return.away.minutes", default: "Away for %lld min"), Int(seconds / 60))
+    }
+    public static func returnQueued(_ count: Int) -> String {
+        String(format: AnchorStrings.value("return.metric.queued", default: "%lld waiting to start"), count)
+    }
     public static let returnWhileAway = AnchorStrings.value("return.while.away", default: "While you were away...")
     public static let returnSubtitle = AnchorStrings.value("return.subtitle", default: "Here’s what happened in Anchor")
+    public static let returnLandscapeHint = AnchorStrings.value("return.landscape.hint", default: "Turn your phone sideways to continue with the work dashboard.")
     public static let returnBack = AnchorStrings.value("return.back", default: "Back")
     public static let returnNoChanges = AnchorStrings.value("return.no.changes", default: "No new changes while you were away.")
     public static let returnWorkNow = AnchorStrings.value("return.work.now", default: "Work now")
@@ -270,7 +294,7 @@ public enum L10n {
     )
     public static let sourceSetupDetail = AnchorStrings.value(
         "source.setup.detail",
-        default: "Connect each layer explicitly. Anchor observes lifecycle and structured progress without reading document content."
+        default: "Authorize the local Codex sessions folder once to discover matching new tasks, including Codex tasks in the ChatGPT app. Terminal commands use the shell connection below."
     )
     public static let sourceSetupMacApps = AnchorStrings.value(
         "source.setup.mac-apps",

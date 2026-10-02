@@ -225,6 +225,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         queue.async { [weak self] in
             guard let self, fallbackConnectionState != state else { return }
             fallbackConnectionState = state
+            if state != .connected { proximityState = .unknown }
             if state == .connected, connectionState != .connected {
                 setPairingStatus(DevicePairingStatus(phase: .connected, route: .bluetooth))
             } else if connectionState != .connected, pairingStatus.phase == .connected {
@@ -856,7 +857,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
             return .connected
         }
         if connectionState == .pairing { return .pairing }
-        if connectionState == .failed, fallbackConnectionState == .failed { return .failed }
+        if connectionState == .failed || fallbackConnectionState == .failed { return .failed }
         if connectionState == .permissionDenied,
            fallbackConnectionState == .permissionDenied {
             return .permissionDenied
@@ -869,7 +870,11 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
 
     private func publishEffectiveConnection() {
         let state = effectiveConnectionState
-        guard publishedConnectionState != state else { return }
+        guard publishedConnectionState != state else {
+            // BLE can reconnect while Wi-Fi has remained connected throughout.
+            broadcastSignals()
+            return
+        }
         publishedConnectionState = state
         onConnectionState?(state)
         broadcastSignals()
@@ -909,7 +914,8 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
             posture: .portrait,
             connection: effectiveConnectionState,
             proximity: proximityState,
-            observedAt: .now
+            observedAt: .now,
+            bluetoothConnection: fallbackConnectionState
         )
     }
 

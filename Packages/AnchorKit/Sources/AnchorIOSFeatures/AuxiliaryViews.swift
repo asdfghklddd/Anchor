@@ -70,7 +70,7 @@ private struct MetricTile: View {
 }
 
 struct ProfileView: View {
-    @AppStorage("anchor.profile.name", store: ProfilePreferences.store) private var displayName = "ANDY"
+    @AppStorage("anchor.profile.name", store: ProfilePreferences.store) private var displayName = "Anchor"
     let projection: SessionProjection
     let onRoute: (AnchorRoute) -> Void
     let onSheet: (AnchorSheet) -> Void

@@ -28,7 +28,7 @@ public enum SessionOperation: Codable, Hashable, Sendable {
     // Decode the retired task projection event without discarding immutable history.
     case syncTaskStructure(task: AnchorTask, workItems: [AnchorWorkItem], at: Date)
     case observeProcess(ProcessObservation)
-    case updatePresence(status: PresenceStatus, at: Date, eventID: UUID)
+    case updatePresence(status: PresenceStatus, at: Date, eventID: UUID, awaySince: Date? = nil)
     case acknowledgeReturn(at: Date)
     case completeSession(at: Date)
     case archiveSession(at: Date)
@@ -64,7 +64,7 @@ public enum SessionOperation: Codable, Hashable, Sendable {
             observation.event?.occurredAt ?? observation.process.updatedAt
         case .removeProcess, .reorderProcesses, .updateTileSize:
             .now
-        case let .updatePresence(_, at, _): at
+        case let .updatePresence(_, at, _, _): at
         case let .acknowledgeReturn(at): at
         case let .completeSession(at): at
         case let .archiveSession(at): at
@@ -217,8 +217,8 @@ public enum SessionOperation: Codable, Hashable, Sendable {
                 decision: observation.decision,
                 deduplicationKey: observation.deduplicationKey
             ))
-        case let .updatePresence(status, at):
-            return .updatePresence(status: status, at: at, eventID: UUID())
+        case let .updatePresence(status, at, awaySince):
+            return .updatePresence(status: status, at: at, eventID: UUID(), awaySince: awaySince)
         case .acknowledgeReturn:
             return .acknowledgeReturn(at: now)
         case .completeSession:

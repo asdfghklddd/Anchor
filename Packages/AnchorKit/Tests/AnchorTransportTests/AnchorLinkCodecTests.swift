@@ -134,7 +134,7 @@ struct AnchorLinkCodecTests {
     @Test("Sending without an authenticated peer reports failure")
     func unauthenticatedSendFails() async {
         let client = AnchorBonjourClient(
-            identityStore: PairingIdentityStore(service: "com.andywang.anchor.tests.\(UUID().uuidString)"),
+            identityStore: testIdentityStore(service: "com.andywang.anchor.tests.\(UUID().uuidString)"),
             automaticPairing: .manualOnly
         )
         let event = EventEnvelope(
@@ -155,7 +155,7 @@ struct AnchorLinkCodecTests {
         let service = "com.andywang.anchor.tests.offline.\(UUID().uuidString)"
         defer { deleteKeychainItems(service: service) }
         let client = AnchorBonjourClient(
-            identityStore: PairingIdentityStore(service: service),
+            identityStore: testIdentityStore(service: service),
             automaticPairing: .manualOnly
         )
         let repository = LinkedSessionRepository(
@@ -254,13 +254,13 @@ struct AnchorLinkCodecTests {
     func keychainUpdate() throws {
         let service = "com.andywang.anchor.tests.keychain.\(UUID().uuidString)"
         defer { deleteKeychainItems(service: service) }
-        let store = PairingIdentityStore(service: service)
+        let store = testIdentityStore(service: service)
         let peerID = UUID()
 
         try store.saveSharedKey(Data("first".utf8), peerID: peerID)
         try store.saveSharedKey(Data("second".utf8), peerID: peerID)
 
-        #expect(store.sharedKey(peerID: peerID) == Data("second".utf8))
+        #expect(testIdentityStore(service: service).sharedKey(peerID: peerID) == Data("second".utf8))
     }
 
     @Test("Authenticated local events are applied in receive order before acknowledgement")
@@ -275,7 +275,7 @@ struct AnchorLinkCodecTests {
         }
 
         let server = AnchorBonjourServer(
-            identityStore: PairingIdentityStore(service: serverService),
+            identityStore: testIdentityStore(service: serverService),
             automaticPairing: .manualOnly,
             serviceType: serviceType
         )
@@ -290,7 +290,7 @@ struct AnchorLinkCodecTests {
         defer { server.stop() }
 
         let client = AnchorBonjourClient(
-            identityStore: PairingIdentityStore(service: clientService),
+            identityStore: testIdentityStore(service: clientService),
             automaticPairing: .manualOnly,
             serviceType: serviceType
         )
@@ -337,7 +337,7 @@ struct AnchorLinkCodecTests {
 
         try await confirmation("One connected transition", expectedCount: 1) { connected in
             let server = AnchorBonjourServer(
-                identityStore: PairingIdentityStore(service: serverService),
+                identityStore: testIdentityStore(service: serverService),
                 automaticPairing: .manualOnly,
                 serviceType: serviceType
             )
@@ -351,7 +351,7 @@ struct AnchorLinkCodecTests {
             defer { server.stop() }
 
             let client = AnchorBonjourClient(
-                identityStore: PairingIdentityStore(service: clientService),
+                identityStore: testIdentityStore(service: clientService),
                 automaticPairing: .manualOnly,
                 serviceType: serviceType
             )
@@ -391,12 +391,12 @@ struct AnchorLinkCodecTests {
         }
 
         let server = AnchorBonjourServer(
-            identityStore: PairingIdentityStore(service: serverService),
+            identityStore: testIdentityStore(service: serverService),
             automaticPairing: .manualOnly,
             serviceType: serviceType
         )
         let client = AnchorBonjourClient(
-            identityStore: PairingIdentityStore(service: clientService),
+            identityStore: testIdentityStore(service: clientService),
             automaticPairing: .manualOnly,
             serviceType: serviceType
         )
@@ -547,12 +547,12 @@ struct AnchorLinkCodecTests {
         }
 
         let server = AnchorBonjourServer(
-            identityStore: PairingIdentityStore(service: serverService),
+            identityStore: testIdentityStore(service: serverService),
             automaticPairing: .manualOnly,
             serviceType: serviceType
         )
         let client = AnchorBonjourClient(
-            identityStore: PairingIdentityStore(service: clientService),
+            identityStore: testIdentityStore(service: clientService),
             automaticPairing: .manualOnly,
             serviceType: serviceType
         )
@@ -755,12 +755,12 @@ struct AnchorLinkCodecTests {
 
         let serviceType = isolatedServiceType()
         let server = AnchorBonjourServer(
-            identityStore: PairingIdentityStore(service: serverService),
+            identityStore: testIdentityStore(service: serverService),
             automaticPairing: .manualOnly,
             serviceType: serviceType
         )
         let client = AnchorBonjourClient(
-            identityStore: PairingIdentityStore(service: clientService),
+            identityStore: testIdentityStore(service: clientService),
             automaticPairing: .manualOnly,
             serviceType: serviceType
         )
@@ -892,7 +892,7 @@ struct AnchorLinkCodecTests {
         }
 
         let server = AnchorBonjourServer(
-            identityStore: PairingIdentityStore(service: serverService),
+            identityStore: testIdentityStore(service: serverService),
             automaticPairing: .manualOnly,
             serviceType: serviceType
         )
@@ -903,7 +903,7 @@ struct AnchorLinkCodecTests {
         defer { server.stop() }
 
         let client = AnchorBonjourClient(
-            identityStore: PairingIdentityStore(service: clientService),
+            identityStore: testIdentityStore(service: clientService),
             automaticPairing: .manualOnly,
             serviceType: serviceType
         )
@@ -932,7 +932,7 @@ struct AnchorLinkCodecTests {
         }
 
         let server = AnchorBonjourServer(
-            identityStore: PairingIdentityStore(service: serverService),
+            identityStore: testIdentityStore(service: serverService),
             deviceID: serverID,
             automaticPairing: AutomaticPairingConfiguration { iCloudSecret },
             bluetoothPairingToken: bluetoothToken,
@@ -942,7 +942,7 @@ struct AnchorLinkCodecTests {
         defer { server.stop() }
 
         let client = AnchorBonjourClient(
-            identityStore: PairingIdentityStore(service: clientService),
+            identityStore: testIdentityStore(service: clientService),
             automaticPairing: AutomaticPairingConfiguration { iCloudSecret },
             serviceType: serviceType
         )
@@ -968,7 +968,7 @@ struct AnchorLinkCodecTests {
         }
 
         let server = AnchorBonjourServer(
-            identityStore: PairingIdentityStore(service: serverService),
+            identityStore: testIdentityStore(service: serverService),
             deviceID: serverID,
             automaticPairing: .manualOnly,
             bluetoothPairingToken: bluetoothToken,
@@ -978,7 +978,7 @@ struct AnchorLinkCodecTests {
         defer { server.stop() }
 
         let client = AnchorBonjourClient(
-            identityStore: PairingIdentityStore(service: clientService),
+            identityStore: testIdentityStore(service: clientService),
             automaticPairing: .manualOnly,
             serviceType: serviceType
         )
@@ -993,7 +993,7 @@ struct AnchorLinkCodecTests {
     @Test("Authenticated Bluetooth fallback publishes connected while Bonjour is unavailable")
     func bluetoothFallbackPublishesConnected() async throws {
         let client = AnchorBonjourClient(
-            identityStore: PairingIdentityStore(service: "com.andywang.anchor.tests.fallback.\(UUID().uuidString)"),
+            identityStore: testIdentityStore(service: "com.andywang.anchor.tests.fallback.\(UUID().uuidString)"),
             automaticPairing: .manualOnly
         )
         defer { client.stop() }
@@ -1004,6 +1004,70 @@ struct AnchorLinkCodecTests {
 
         try await waitForConnection(.connected, in: signals)
         try await waitForPairingRoute(.bluetooth, in: statuses)
+    }
+
+    @Test("Bluetooth-only link counts both disconnection and failure, with a five-minute return boundary",
+          arguments: [ConnectionState.disconnected, .failed])
+    func bluetoothOnlyReturnBoundary(loss: ConnectionState) async throws {
+        for duration in [299.0, 300.0] {
+            let client = AnchorBonjourClient(
+                identityStore: PairingIdentityStore.inMemory(),
+                automaticPairing: .manualOnly
+            )
+            defer { client.stop() }
+            let stream = client.presenceSignals()
+            // Never start Bonjour: all effective connection signals come from BLE.
+            client.updateFallbackConnection(.connected)
+            client.updateProximity(.far)
+            client.updateFallbackConnection(loss)
+            client.updateFallbackConnection(.connected)
+            let values = try await withThrowingTaskGroup(of: [PresenceSignals].self) { group in
+                group.addTask {
+                    var values: [PresenceSignals] = []
+                    for await signal in stream where signal.bluetoothConnection != .unavailable {
+                        values.append(signal)
+                        if values.count == 4 { return values }
+                    }
+                    throw AnchorLinkTestError.pairingStatusStreamEnded
+                }
+                group.addTask {
+                    try await Task.sleep(for: .seconds(5))
+                    throw AnchorLinkTestError.timedOutWaitingForPairing
+                }
+                defer { group.cancelAll() }
+                return try await group.next() ?? []
+            }
+            #expect(values.map(\.connection) == [.connected, .connected, loss, .connected])
+            #expect(values.count == 4)
+            var reducer = PresenceReducer(status: .atDesk)
+            let start = Date(timeIntervalSince1970: 1_000)
+            var states: [PresenceStatus] = []
+            for (var signal, offset) in zip(values, [-10.0, -1.0, 0.0, duration]) {
+                signal.observedAt = start.addingTimeInterval(offset)
+                states.append(reducer.reduce(signal))
+            }
+            #expect(states == [.atDesk, .atDesk, .atDesk, duration < 300 ? .atDesk : .returning])
+        }
+    }
+
+    @Test("BLE loss clears stale near proximity in the same signal")
+    func bluetoothLossClearsProximity() async throws {
+        let client = AnchorBonjourClient(
+            identityStore: testIdentityStore(service: "com.andywang.anchor.tests.ble-loss.\(UUID().uuidString)"),
+            automaticPairing: .manualOnly
+        )
+        defer { client.stop() }
+        let stream = client.presenceSignals()
+        client.updateFallbackConnection(.connected)
+        client.updateProximity(.near)
+        client.updateFallbackConnection(.disconnected)
+        for await signal in stream {
+            if signal.bluetoothConnection == .disconnected {
+                #expect(signal.connection == .disconnected)
+                #expect(signal.proximity == .unknown)
+                break
+            }
+        }
     }
 
     @Test("Nearby TCP enables Apple peer-to-peer Wi-Fi")
@@ -1119,6 +1183,7 @@ private struct LegacyBluetoothPairingCredential: Codable {
 }
 
 private func deleteKeychainItems(service: String) {
+    UserDefaults.standard.removeObject(forKey: "\(service).local-device-id")
     let query: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
         kSecAttrService as String: service,
@@ -1244,4 +1309,10 @@ private enum AnchorLinkTestError: Error {
     case timedOutWaitingForSource
     case pairingStatusStreamEnded
     case timedOutWaitingForPairing
+}
+
+// Standalone package tests have no production Keychain entitlements. All real
+// Keychain integration here is scoped to disposable legacy test services.
+private func testIdentityStore(service: String) -> PairingIdentityStore {
+    PairingIdentityStore(service: service, keychain: .legacy)
 }

@@ -601,6 +601,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         }
         if remote.presence != .unknown {
             merged.presence = remote.presence
+            merged.awayStartedAt = remote.awayStartedAt
         }
         if remote.returnSummary != nil {
             merged.returnSummary = remote.returnSummary
@@ -715,7 +716,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         case let .updateProcess(process): process.updatedAt
         case let .recordEvent(event): event.occurredAt
         case let .observeProcess(observation): observation.event?.occurredAt ?? observation.process.updatedAt
-        case let .updatePresence(_, at, _): at
+        case let .updatePresence(_, at, _, _): at
         case let .acknowledgeReturn(at): at
         case let .completeSession(at): at
         case let .archiveSession(at): at

@@ -1,5 +1,11 @@
 # Web observation contract
 
+> Retired from the production observation flow on 2026-10-02. The app no longer
+> starts WebProcessSource, consumes WebInbox, or offers Safari setup. Existing
+> extension packaging is retained for compatibility. The contract below documents
+> that historical implementation; generic browsing is outside the task dashboard
+> scope. AI site-specific task observation would require a dedicated adapter.
+
 Anchor's MVP web layer is a Safari Web Extension embedded in the production
 macOS app. It does not read browser profile databases, cookies, page text, or
 network traffic, and it has no Chrome, Chromium, or browser-store dependency.

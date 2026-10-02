@@ -126,8 +126,6 @@ public struct AnchorMacMenuView: View {
             HStack {
                 Label(L10n.processCount(session.processes.count), systemImage: "square.grid.2x2")
                 Spacer()
-                Label("\(model.projection.openDecisions.count)", systemImage: "exclamationmark.bubble")
-                    .accessibilityLabel(L10n.decisionCount(model.projection.openDecisions.count))
             }
             .font(.subheadline.weight(.semibold))
             if let progress = model.projection.overallProgress {
@@ -150,8 +148,6 @@ public struct AnchorMacMenuView: View {
 
             HStack(spacing: 0) {
                 menuMetric(value: "0", label: L10n.processes, symbol: "square.grid.2x2")
-                Divider().padding(.vertical, AnchorSpacing.xSmall)
-                menuMetric(value: "0", label: L10n.decisions, symbol: "exclamationmark.bubble")
                 Divider().padding(.vertical, AnchorSpacing.xSmall)
                 menuMetric(value: "0", label: L10n.notes, symbol: "bookmark")
             }

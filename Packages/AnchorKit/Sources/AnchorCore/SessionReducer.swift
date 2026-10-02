@@ -181,15 +181,16 @@ public enum SessionReducer {
             }
             result.dataObservedAt = envelope.timestamp
 
-        case let .updatePresence(presence, date):
+        case let .updatePresence(presence, date, awaySince):
             try result.withSession { session in
                 let previous = session.presence
                 session.presence = presence
                 if presence == .away, previous != .away {
+                    session.awayStartedAt = min(awaySince ?? date, date)
                     session.snapshots.insert(session.makeSnapshot(at: date), at: 0)
                 }
                 if presence == .returning, previous != .returning {
-                    let awaySince = session.snapshots.first?.createdAt ?? date
+                    let awaySince = session.awayStartedAt ?? session.snapshots.first?.createdAt ?? date
                     let changes = session.timeline
                         .filter { $0.occurredAt >= awaySince }
                         .filter { $0.occurredAt <= date }
@@ -202,6 +203,7 @@ public enum SessionReducer {
                         }
                         .map {
                             ReturnChange(
+                                id: $0.id,
                                 occurredAt: $0.occurredAt,
                                 title: $0.title,
                                 detail: $0.detail,
@@ -268,6 +270,7 @@ public enum SessionReducer {
             try result.withSession { session in
                 session.presence = .atDesk
                 session.returnSummary = nil
+                session.awayStartedAt = nil
             }
 
         case .completeSession:
@@ -507,15 +510,16 @@ public enum SessionReducer {
                 }
             }
 
-        case let .updatePresence(status, at, _):
+        case let .updatePresence(status, at, _, awaySince):
             try result.withSession { session in
                 let previous = session.presence
                 session.presence = status
                 if status == .away, previous != .away {
+                    session.awayStartedAt = min(awaySince ?? at, at)
                     session.snapshots.insert(session.makeSnapshot(at: at), at: 0)
                 }
                 if status == .returning, previous != .returning {
-                    let awaySince = session.snapshots.first?.createdAt ?? at
+                    let awaySince = session.awayStartedAt ?? session.snapshots.first?.createdAt ?? at
                     let changes = session.timeline
                         .filter { $0.occurredAt >= awaySince }
                         .filter { $0.occurredAt <= at }
@@ -528,6 +532,7 @@ public enum SessionReducer {
                         }
                         .map {
                             ReturnChange(
+                                id: $0.id,
                                 occurredAt: $0.occurredAt,
                                 title: $0.title,
                                 detail: $0.detail,
@@ -581,6 +586,7 @@ public enum SessionReducer {
             try result.withSession { session in
                 session.presence = .atDesk
                 session.returnSummary = nil
+                session.awayStartedAt = nil
             }
 
         case let .completeSession(at):

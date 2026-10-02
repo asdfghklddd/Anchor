@@ -49,8 +49,12 @@ let package = Package(
             dependencies: ["AnchorCore"]
         ),
         .testTarget(
+            name: "AnchorIOSFeaturesTests",
+            dependencies: ["AnchorCore", "AnchorIOSFeatures"]
+        ),
+        .testTarget(
             name: "AnchorMacFeaturesTests",
-            dependencies: ["AnchorCore", "AnchorMacFeatures"]
+            dependencies: ["AnchorCore", "AnchorMacFeatures", "AnchorTransport"]
         ),
         .testTarget(
             name: "AnchorTransportTests",

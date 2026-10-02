@@ -64,7 +64,7 @@ struct AnchorMacApp: App {
                 : validationRootURL.map { "com.andywang.anchor.validation.\($0.lastPathComponent)" }
                     ?? "com.andywang.anchor.local-link")
         // Keep nearby pairing independent of iCloud Keychain on local builds.
-        usesAutomaticICloudPairing = !isUITesting
+        usesAutomaticICloudPairing = validationRootURL == nil && !isUITesting
             && environment["ANCHOR_ENABLE_ICLOUD_PAIRING"] == "1"
 #else
         isUITesting = false
@@ -87,7 +87,17 @@ struct AnchorMacApp: App {
             )
         }
 #endif
-        let identityStore = PairingIdentityStore(service: pairingIdentityService)
+        let pairingKeychain: PairingIdentityStore.Keychain
+#if DEBUG && !ANCHOR_SIGNED_DEVELOPMENT
+        // The ad-hoc development target has no Keychain access entitlements.
+        // Formal releases use the Data Protection keychain and stable signing.
+        pairingKeychain = .legacy
+#else
+        pairingKeychain = .dataProtection
+#endif
+        let identityStore = validationRootURL == nil
+            ? PairingIdentityStore(service: pairingIdentityService, keychain: pairingKeychain)
+            : PairingIdentityStore.inMemory()
         let deviceID = validationRootURL == nil
             ? identityStore.localDeviceID()
             : UUID(uuidString: "00000000-0000-4000-8000-0000000004F0")!
@@ -146,13 +156,13 @@ struct AnchorMacApp: App {
         let currentSessionID: @Sendable () async -> UUID? = {
             await currentSessionContext()?.sessionID
         }
-        let workspaceSource = MacWorkspaceProcessSource(
-            sessionIDProvider: currentSessionID
-        )
+        // Observe structured task signals only; ordinary app/browser activity
+        // does not describe the progress of an AI or terminal task.
         let sources: [any ProcessSource] = validationRootURL == nil ? [
-            FileProcessSource(sessionContextProvider: currentSessionContext),
-            WebProcessSource(sessionContextProvider: currentSessionContext),
-            workspaceSource,
+            FileProcessSource(sessionContextProvider: currentSessionContext,
+                commandSessionContextProvider: { signal in
+                    signal.sessionContext(in: await repository.currentProjection())
+                }),
         ] : []
         // Register Codex after manual selection or a high-confidence automatic match.
         let sourceCoordinator = ProcessSourceCoordinator(
@@ -162,35 +172,19 @@ struct AnchorMacApp: App {
         )
         let currentProcessSnapshot: @Sendable () async throws -> CurrentProcessSnapshot = {
             let projection = await repository.currentProjection()
-            if let session = projection.session {
-                return CurrentProcessSnapshot(
-                    processNames: session.processes.map(\.sourceName)
-                )
-            }
-
-            let runningApplications = NSWorkspace.shared.runningApplications
-                .filter { $0.activationPolicy == .regular }
-                .compactMap(\ .localizedName)
-            return CurrentProcessSnapshot(processNames: runningApplications)
+            return CurrentProcessSnapshot(
+                processNames: projection.hostedSessions.flatMap { session in
+                    session.processes.filter(TaskDashboardPolicy.includes).map(\.sourceName)
+                }
+            )
         }
         server.onCurrentProcessSnapshot = currentProcessSnapshot
         advertiser.onCurrentProcessSnapshot = currentProcessSnapshot
         let phoneAnchorState = AnchorPhoneAnchorState()
-        let decisionActionGate = SourceDecisionActionGate()
         let applyInboundEvent: @Sendable (EventEnvelope) async throws -> Void = { envelope in
-            let before = await repository.currentProjection()
             try await repository.applyRemote(envelope)
             let appliedProjection = await repository.currentProjection()
             await phoneAnchorState.receive(envelope, projection: appliedProjection, localSourceID: deviceID)
-            guard let operation = try? JSONDecoder.anchor.decode(SessionOperation.self, from: envelope.payload),
-                  let claimed = await decisionActionGate.claim(operation: operation,
-                    sessionID: envelope.sessionID, before: before, after: appliedProjection) else { return }
-            // The local event is already durable. A source action is best
-            // effort and is reported through source health without blocking
-            // the transport acknowledgement or causing a retry storm.
-            Task {
-                _ = try? await sourceCoordinator.perform(claimed.action, on: claimed.sourceID)
-            }
         }
         server.onEvent = applyInboundEvent
         advertiser.onEvent = applyInboundEvent
@@ -222,76 +216,25 @@ struct AnchorMacApp: App {
         self.server = server
         proximityAdvertiser = advertiser
         self.cloudSyncRunner = cloudSyncRunner
-        let bindCodexSession: @MainActor @Sendable (URL, UUID?) async throws -> Void = { fileURL, automaticSessionID in
-            let projection = await repository.currentProjection()
-            guard let session = automaticSessionID.flatMap({ id in projection.hostedSessions.first { $0.id == id } }) ?? (automaticSessionID == nil ? projection.session : nil) else {
-                throw SessionRepositoryError.noActiveSession
-            }
-            let sourceID = StableProcessIdentity.id(
-                namespace: "anchor.source.codex-session",
-                sessionID: session.id,
-                externalID: fileURL.lastPathComponent
-            )
-            let task = AnchorTask(
-                id: session.id,
-                title: session.goal.title,
-                completionCriteria: session.goal.completionCriteria,
-                createdAt: session.startedAt
-            )
-            let workItemID = StableProcessIdentity.id(
-                namespace: "anchor.work-item.codex",
-                sessionID: session.id,
-                externalID: fileURL.lastPathComponent
-            )
-            let workItem = AnchorWorkItem(
-                id: workItemID,
-                taskID: task.id,
-                title: "Codex conversation",
-                createdAt: session.startedAt
-            )
-            try await taskRunStore.host(task: task)
-            try await taskRunStore.upsert(workItem: workItem)
-            let boundSessionContext: @Sendable () async -> ProcessSourceSessionContext? = {
-                guard let bound = await repository.currentProjection().hostedSessions.first(where: { $0.id == session.id }) else { return nil }
-                return ProcessSourceSessionContext(sessionID: bound.id, startedAt: bound.startedAt)
-            }
-            let codexSource = CodexLifecycleFileSource(
-                fileURL: fileURL,
-                sessionContextProvider: boundSessionContext,
-                checkpointStore: codexCheckpointStore,
-                descriptor: SourceDescriptor(
-                    id: sourceID,
-                    name: "Codex",
-                    kind: .integration,
-                    symbol: "C",
-                    tone: "cyan",
-                    capabilities: [.observe],
-                    permission: .granted
-                )
-            )
-            try await sourceCoordinator.setAssociation(
-                AnchorEventAssociation(taskID: task.id, workItemID: workItem.id, confirmedByUser: automaticSessionID == nil, automaticallyMatched: automaticSessionID != nil),
-                for: session.id,
-                sourceID: codexSource.descriptor.id
-            )
-            await sourceCoordinator.register(codexSource)
-        }
+        let codexBinder = CodexSessionBinder(repository: repository, coordinator: sourceCoordinator,
+            taskRunStore: taskRunStore, checkpointStore: codexCheckpointStore)
         let setupModel = MacSourceSetupModel(
             defaults: validationDefaults ?? .standard,
-            onCodexSessionSelected: { url in try await bindCodexSession(url, nil) },
             currentAnchorSessionID: currentSessionID,
             taskStateProvider: {
                 await taskRunStore.currentTaskRecord()?.state
             },
             autoAssociationSessions: { await repository.currentProjection().hostedSessions },
-            onAutoAssociation: { url, sessionID in try await bindCodexSession(url, sessionID) }
+            onCodexSessionAssociated: { url, sessionID, automaticallyMatched in
+                try await codexBinder.bind(fileURL: url, sessionID: sessionID, automaticallyMatched: automaticallyMatched)
+            }
         )
         sourceSetupModel = setupModel
         model = AnchorSessionModel(
             repository: repository,
             sourceHealthProvider: sourceCoordinator,
-            sourceActionProvider: sourceCoordinator,
-            durableSyncStatusProvider: cloudSyncRunner
+            durableSyncStatusProvider: cloudSyncRunner,
+            usesTaskDashboard: true
         )
         self.sourceCoordinator = sourceCoordinator
         self.taskLifecycleBridge = taskLifecycleBridge

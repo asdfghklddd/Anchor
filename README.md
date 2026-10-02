@@ -1,8 +1,8 @@
 # Anchor
 
-Anchor is a native iPhone and macOS attention companion for people coordinating
-several AI-assisted processes at once. It preserves the goal, live process state,
-human decisions, and the context needed to return after an interruption.
+Anchor observes AI task and terminal command state on the Mac and synchronizes it
+to an iPhone work dashboard. The Mac is an observation companion; it does not
+answer questions, make decisions, or resume external tools on the user’s behalf.
 
 ## Current implementation
 
@@ -14,7 +14,7 @@ human decisions, and the context needed to return after an interruption.
   platform-aware components, and an English/Simplified Chinese String Catalog.
   See [DESIGN.md](DESIGN.md) for the current iOS visual contract.
 - `AnchorIOSFeatures`: setup, portrait dashboard, landscape Ambient workspace,
-  decisions, anchor notes, handoff/away/return, history, management, and settings.
+  anchor notes, handoff/away/return, history, management, and settings.
 - The production iPhone loop has an explicit final confirmation boundary:
   completing a task retains its detailed history across relaunches. Concurrent
   hosted tasks keep independent conversations and histories; completing one task
@@ -28,8 +28,13 @@ human decisions, and the context needed to return after an interruption.
 - `AnchorCore`: a versioned external source contract, actor-based source
   ingestion, a durable CLI inbox, deterministic event replay, and a retryable
   durable-sync coordinator.
-- Production-only macOS application lifecycle, generic CLI lifecycle, and a
-  privacy-minimal Safari Web Extension embedded only in the formal macOS app.
+- Production observation uses Codex conversation lifecycle and generic CLI command
+  lifecycle. General Mac application and Safari activity collection are disabled
+  in the app. Existing Safari packaging and legacy records remain compatible.
+- Codex tasks written to local session logs are supported, including the installed
+  app branded ChatGPT with bundle ID `com.openai.codex`. Ordinary ChatGPT chats
+  and other AI tools without this log contract need dedicated adapters. An open
+  application is never treated as evidence of a running AI task.
 
 SwiftData-backed persistence, production CloudKit container activation,
 site-specific web adapters, and direct integrations remain later phases. The MVP path
@@ -73,6 +78,36 @@ owner acceptance. Release and Archive retain the production App Group and
 automatic-signing settings. The Safari extension is bundled in Debug, but its
 cross-process App Group handoff still requires a provisioned Release build.
 
+Background pairing Keychain operations never request authentication UI. The
+legacy macOS keychain also has user interaction disabled within the Anchor
+process. Peer credentials and unavailable lookups are cached for that process;
+the public device identifier is migrated to UserDefaults without overwriting a
+protected legacy item. Production pairing defaults to the Data Protection
+keychain, using the app's signing entitlements instead of legacy per-item ACL
+authorization. Readable legacy peer keys migrate without deleting the original
+items; inaccessible legacy keys require fresh device pairing without a password
+dialog. Signing/entitlement failures do not fall back to legacy storage.
+Debug UI tests and `ANCHOR_LOCAL_VALIDATION_ROOT` launches use in-memory credentials.
+
+For real-device development that must retain pairing across rebuilds, use a
+stable Apple Development signing identity and the optional development config:
+
+```sh
+xcodebuild -project Anchor.xcodeproj -scheme 'Anchor macOS' \
+  -configuration Debug \
+  -xcconfig Configuration/AnchorMac-Development.xcconfig \
+  ANCHOR_SIGNING_DEVELOPMENT_TEAM=YOUR_TEAM_ID build
+```
+
+This selects Data Protection Keychain storage and its access-group entitlement,
+without enabling CloudKit or App Group capabilities. Xcode may need one-time
+developer-certificate setup; this is separate from app-user permissions.
+Ordinary ad-hoc Debug builds retain noninteractive legacy compatibility. They
+can lose access to previously authorized peer keys after recompilation and are
+not a substitute for signed real-device or distribution acceptance.
+Build-only CI can set `CODE_SIGNING_ALLOWED=NO`; unsigned Release products are
+compile checks and cannot validate production Keychain access.
+
 Run package tests without booting a simulator:
 
 ```sh
@@ -115,7 +150,8 @@ Both production launchers start without recording tasks in Debug and Release.
 Task data comes from user actions, observed sources, or paired devices. The iOS
 profile reports actual connection/cloud state; unavailable background notifications
 are described explicitly. Session elapsed time is not a measurement of focused work.
-External process status remains source-owned after recording a decision.
+External process status remains source-owned. Production apps do not offer
+decision confirmation or dispatch source actions.
 
 Upgrading a recording build backs up `session-state.json` beside the original
 with a `before-recording-cleanup-<UUID>.bak` suffix before removing the three

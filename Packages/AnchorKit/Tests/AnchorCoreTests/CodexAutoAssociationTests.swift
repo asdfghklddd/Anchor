@@ -13,10 +13,10 @@ private func autoTask(_ title: String, at: Date = anchorTime) -> AnchorSession {
     #expect(result == task.id)
 }
 
-@Test func autoAssociationRejectsOldLateUnrelatedAndAmbiguousConversations() {
+@Test func autoAssociationRejectsOldUnrelatedAndAmbiguousConversations() {
     let task = autoTask("复盘注册灰度效果")
     let relevant = "复盘注册灰度效果，整理用户反馈"
-    for offset: Double in [-1, 1801] {
+    for offset: Double in [-1] {
         #expect(CodexAutoAssociation.matchingSession(text: relevant, conversationStartedAt: anchorTime.addingTimeInterval(offset), sessions: [task], now: anchorTime.addingTimeInterval(3600)) == nil)
     }
     #expect(CodexAutoAssociation.matchingSession(text: "帮我完成一个任务，确认一下明天安排", conversationStartedAt: anchorTime, sessions: [task], now: anchorTime) == nil)
@@ -66,4 +66,14 @@ private func autoTask(_ title: String, at: Date = anchorTime) -> AnchorSession {
     #expect(text == "帮我复盘注册灰度效果")
     let task = autoTask("复盘注册灰度效果")
     #expect(CodexAutoAssociation.matchingSession(text: text, conversationStartedAt: anchorTime, sessions: [task], now: anchorTime) == task.id)
+}
+
+@Test func autoAssociationAcceptsSingleKeywordAndLongRunningAnchor() {
+    let task = autoTask("Anchor")
+    let later = anchorTime.addingTimeInterval(3 * 3600)
+    #expect(CodexAutoAssociation.matchingSession(text: "Fix the Anchor dashboard", conversationStartedAt: later, sessions: [task], now: later) == task.id)
+    var completed = task
+    completed.status = .completed
+    #expect(CodexAutoAssociation.matchingSession(text: "Fix the Anchor dashboard", conversationStartedAt: later, sessions: [completed], now: later) == nil)
+    #expect(CodexAutoAssociation.matchingSession(text: "Fix another project", conversationStartedAt: later, sessions: [task], now: later) == nil)
 }

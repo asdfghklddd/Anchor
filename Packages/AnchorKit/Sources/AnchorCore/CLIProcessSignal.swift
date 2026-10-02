@@ -152,6 +152,19 @@ public struct CLIProcessSignal: Identifiable, Codable, Hashable, Sendable {
         )
     }
 
+    /// A command's finish belongs to the task that received its start, even if
+    /// the phone has selected another anchor in the meantime.
+    public func sessionContext(in projection: SessionProjection) -> ProcessSourceSessionContext? {
+        let known = projection.hostedSessions + projection.archivedSessions
+        let owner = known.first { session in
+            session.processes.contains {
+                $0.sourceID == BuiltInProcessSourceID.file && $0.externalID == commandID.uuidString
+            }
+        }
+        guard let session = owner ?? projection.session, session.status == .active else { return nil }
+        return ProcessSourceSessionContext(sessionID: session.id, startedAt: session.startedAt)
+    }
+
     private static func executableBasename(_ value: String) -> String {
         let command = value.split(whereSeparator: { $0.isWhitespace }).first.map(String.init) ?? ""
         let basename = URL(filePath: command).lastPathComponent

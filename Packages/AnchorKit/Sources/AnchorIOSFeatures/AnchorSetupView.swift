@@ -10,12 +10,13 @@
     @FocusState private var editing: Bool
     @State private var speechInput = SpeechInputController()
     @State private var speechSegment: AnchorSetupSegment?
-    @State private var editingReview = false
+    @State private var showsDiscardConfirmation = false
     @State private var saving = false
     @State private var saveError: String?
 
     var body: some View {
       GeometryReader { geometry in
+        VStack(spacing: 0) {
         ScrollViewReader { scroll in
           ScrollView {
             VStack(spacing: 0) {
@@ -48,6 +49,10 @@
           .onChange(of: draft.segment) { scroll.scrollTo("top", anchor: .top) }
           .onChange(of: draft.isReviewing) { scroll.scrollTo("top", anchor: .top) }
         }
+        .frame(maxHeight: .infinity)
+        .clipped()
+        bottomControls.fixedSize(horizontal: false, vertical: true)
+        }
       }
       .background {
         (draft.isReviewing ? AnchorSetupStyle.reviewBackground : AnchorSetupStyle.background)
@@ -56,7 +61,31 @@
           }
           .ignoresSafeArea()
       }
-      .safeAreaInset(edge: .bottom, spacing: 0) {
+      .toolbar(.hidden, for: .navigationBar)
+      .onChange(of: speechInput.transcript) { _, transcript in
+        guard let speechSegment else { return }
+        draft.setText(transcript, for: speechSegment)
+      }
+      .onChange(of: editing) { _, isEditing in
+        draft.isKeyboardEditing = isEditing
+        if isEditing { speechInput.stop() }
+      }
+      .onDisappear { speechInput.stop() }
+      .interactiveDismissDisabled(editing || saving || draft.isImportingImages)
+      .disabled(saving)
+      .confirmationDialog(SetupCopy.discardDraftQuestion, isPresented: $showsDiscardConfirmation, titleVisibility: .visible) {
+        Button(SetupCopy.discardDraft, role: .destructive) {
+          speechInput.stop()
+          speechSegment = nil
+          draft.isConsumed = true
+          dismiss()
+        }
+        .accessibilityIdentifier("setup.draft.discard.confirm")
+        Button(L10n.cancel, role: .cancel) { }
+      }
+    }
+
+    @ViewBuilder private var bottomControls: some View {
         if editing {
           keyboardControls
         } else if draft.isReviewing || !draft.isKeyboardEditing {
@@ -79,25 +108,29 @@
             .accessibilityIdentifier(draft.isReviewing ? "setup.start.button" : "setup.next.button")
             .padding(.horizontal, 20)
             .frame(maxWidth: draft.isReviewing ? 580 : 190)
+            if draft.hasContent {
+              HStack(spacing: 12) {
+                Text(SetupCopy.draftKept).font(.caption)
+                  .foregroundStyle(AnchorIOSStyle.secondaryText)
+                  .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Button(SetupCopy.discardDraft, role: .destructive) {
+                  showsDiscardConfirmation = true
+                }
+                .font(.caption).frame(minHeight: 44)
+                .fixedSize(horizontal: true, vertical: false)
+                .disabled(draft.isImportingImages)
+                .accessibilityIdentifier("setup.draft.discard")
+              }
+              .padding(.horizontal, 20)
+              .frame(maxWidth: 580)
+            }
           }
           .padding(.top, 8)
           .padding(.bottom, draft.isReviewing ? 12 : 70)
           .frame(maxWidth: .infinity)
           .background { if draft.isReviewing { AnchorSetupStyle.reviewBottom } }
         }
-      }
-      .toolbar(.hidden, for: .navigationBar)
-      .onChange(of: speechInput.transcript) { _, transcript in
-        guard let speechSegment else { return }
-        draft.setText(transcript, for: speechSegment)
-      }
-      .onChange(of: editing) { _, isEditing in
-        draft.isKeyboardEditing = isEditing
-        if isEditing { speechInput.stop() }
-      }
-      .onDisappear { speechInput.stop() }
-      .interactiveDismissDisabled(editing || saving || draft.isImportingImages)
-      .disabled(saving)
     }
 
     // Keep these controls in the sheet's safe area so every focus path shows
@@ -137,7 +170,7 @@
     private var buttonTitle: String {
       if saving { return SetupCopy.saving }
       if draft.isReviewing { return SetupCopy.start }
-      return editingReview
+      return draft.editingReview
         ? SetupCopy.doneEditing : (draft.segment == .steps ? SetupCopy.review : SetupCopy.next)
     }
 
@@ -150,7 +183,7 @@
 
     private func edit(_ segment: AnchorSetupSegment) {
       changeSegment(segment)
-      editingReview = true
+      draft.editingReview = true
       draft.isReviewing = false
     }
 
@@ -175,9 +208,9 @@
         saveTask()
         return
       }
-      if editingReview || draft.segment == .steps {
+      if draft.editingReview || draft.segment == .steps {
         draft.isReviewing = true
-        editingReview = false
+        draft.editingReview = false
       } else if let next = AnchorSetupSegment(rawValue: draft.segment.rawValue + 1) {
         draft.segment = next
       }
@@ -202,6 +235,7 @@
             userPlan: AnchorUserPlan(steps: draft.steps, localImageNames: names))
           // A personal plan can start without any linked computer process.
           if await model.hostTask(id: draft.hostedTaskID, goal: goal, processes: []) {
+            draft.isConsumed = true
             dismiss()
           } else {
             saveError = SetupCopy.saveFailed

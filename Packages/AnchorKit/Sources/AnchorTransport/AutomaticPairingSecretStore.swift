@@ -25,7 +25,7 @@ public struct AutomaticPairingSecretStore: Sendable {
             kSecMatchLimit as String: kSecMatchLimitOne,
         ]
         var result: CFTypeRef?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        let status = NoninteractiveKeychain.copyMatching(query, result: &result)
         guard status == errSecSuccess else {
             #if DEBUG
             print("[AnchorPairing] iCloud keychain load status \(status)")
@@ -49,7 +49,7 @@ public struct AutomaticPairingSecretStore: Sendable {
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
             kSecValueData as String: secret,
         ]
-        let status = SecItemAdd(insertion as CFDictionary, nil)
+        let status = NoninteractiveKeychain.add(insertion)
         #if DEBUG
         print("[AnchorPairing] iCloud keychain add status \(status)")
         #endif

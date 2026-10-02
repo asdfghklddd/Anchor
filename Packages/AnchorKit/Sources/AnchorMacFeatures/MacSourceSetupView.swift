@@ -25,16 +25,6 @@ struct MacSourceSetupView: View {
                 }
 
                 MacSourceSetupRow(
-                    symbol: "macwindow",
-                    title: L10n.sourceSetupMacApps,
-                    detail: L10n.sourceSetupMacAppsDetail,
-                    status: L10n.sourceSetupReady,
-                    isReady: true
-                )
-
-                Divider()
-
-                MacSourceSetupRow(
                     symbol: "bubble.left.and.text.bubble.right",
                     title: L10n.sourceSetupCodex,
                     detail: L10n.sourceSetupCodexDetail,
@@ -93,31 +83,7 @@ struct MacSourceSetupView: View {
                         .accessibilityIdentifier("mac.sources.setup.shell.copied")
                 }
 
-                Divider()
 
-                MacSourceSetupRow(
-                    symbol: "safari",
-                    title: L10n.sourceSetupWebApps,
-                    detail: L10n.sourceSetupWebAppsDetail,
-                    status: safariStatus,
-                    isReady: model.isSafariExtensionEnabled
-                ) {
-                    Button(
-                        model.isSafariExtensionEnabled
-                            ? L10n.sourceSetupOpenSafariSettings
-                            : L10n.sourceSetupEnableSafari,
-                        systemImage: "puzzlepiece.extension"
-                    ) {
-                        Task { await model.openSafariExtensionSettings() }
-                    }
-                    .disabled(model.isWorking || !model.isSafariExtensionBundled)
-                    .accessibilityIdentifier("mac.sources.setup.safari.open-settings")
-                }
-
-                Text(L10n.sourceSetupWebDistributionDetail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .alert(
@@ -134,15 +100,6 @@ struct MacSourceSetupView: View {
         .task {
             await model.refresh()
             await model.restoreCodexSession()
-        }
-        .task(id: model.isAwaitingSafariConfirmation) {
-            guard model.isAwaitingSafariConfirmation else { return }
-            for _ in 0..<60 {
-                try? await Task.sleep(for: .seconds(1))
-                guard !Task.isCancelled else { return }
-                await model.refresh()
-                if !model.isAwaitingSafariConfirmation { return }
-            }
         }
         .task {
             while !Task.isCancelled {
@@ -165,16 +122,6 @@ struct MacSourceSetupView: View {
             return L10n.sourceSetupCodexFolderReady
         }
         return L10n.sourceSetupNotConnected
-    }
-
-    private var safariStatus: String {
-        if model.isSafariExtensionEnabled { return L10n.sourceSetupSafariEnabled }
-        if model.isAwaitingSafariConfirmation {
-            return L10n.sourceSetupAwaitingSafariConfirmation
-        }
-        return model.isSafariExtensionBundled
-            ? L10n.sourceSetupAvailable
-            : L10n.sourceSetupUnavailable
     }
 }
 

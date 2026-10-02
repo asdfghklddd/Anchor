@@ -78,9 +78,10 @@ changing this generic lifecycle contract.
 Signals older than the active Anchor session are moved to `.ignored` and never
 attached to the new session. Signals wait in the inbox while no session exists.
 
-The CLI source declares observation capability only. A decision can be resolved
-in Anchor and synchronized to the Mac, but the CLI does not claim to execute a
-source-side action until a future adapter declares `resolveDecision` support.
+The CLI source declares observation capability only. Production Anchor displays
+source-reported task state and never sends answers or resume commands back to a
+tool. Legacy decision fields remain decodable for stored and synchronized data;
+they do not enable decision controls in the production dashboard.
 
 The CLI is an ingestion adapter, not a source-specific AI integration. An AI or
 creative tool only needs to produce this contract; direct integrations can be

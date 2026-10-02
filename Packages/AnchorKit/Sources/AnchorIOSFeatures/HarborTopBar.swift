@@ -13,7 +13,7 @@ struct HarborTopBar: View {
 
 
     var onConnection: (() -> Void)? = nil
-    @AppStorage("anchor.profile.name", store: ProfilePreferences.store) private var displayName = "ANDY"
+    @AppStorage("anchor.profile.name", store: ProfilePreferences.store) private var displayName = "Anchor"
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
