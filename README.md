@@ -29,15 +29,17 @@ answer questions, make decisions, or resume external tools on the user’s behal
   ingestion, a durable CLI inbox, deterministic event replay, and a retryable
   durable-sync coordinator.
 - Production observation uses Codex conversation lifecycle and generic CLI command
-  lifecycle. General Mac application and Safari activity collection are disabled
-  in the app. Existing Safari packaging and legacy records remain compatible.
+  lifecycle. General Mac application observation, the Safari extension and its
+  inbox adapter have been removed. Legacy stored events remain readable; the
+  current dashboard filters retired sources and decision records.
 - Codex tasks written to local session logs are supported, including the installed
   app branded ChatGPT with bundle ID `com.openai.codex`. Ordinary ChatGPT chats
   and other AI tools without this log contract need dedicated adapters. An open
   application is never treated as evidence of a running AI task.
 
-SwiftData-backed persistence, production CloudKit container activation,
-site-specific web adapters, and direct integrations remain later phases. The MVP path
+SwiftData-backed persistence, production CloudKit container activation, and
+additional AI task adapters remain later phases. Generic application/browser
+activity tracking and decision execution are outside the product scope. The MVP path
 already has a crash-safe local event store, an authenticated same-network link,
 an optional CloudKit event adapter, and a supported CLI contract.
 
@@ -52,7 +54,6 @@ Apps/
 ├── AnchorMac/             production menu bar app
 ├── AnchorIOSUITests/      isolated production iPhone journeys
 ├── AnchorMacUITests/      isolated production Mac journeys
-├── AnchorSafariExtension/ production Safari Web Extension
 └── Shared/                app icon and accent assets
 Packages/AnchorKit/
 ├── Sources/AnchorCore/
@@ -75,8 +76,8 @@ Open `Anchor.xcodeproj`, then choose one of the two production app schemes:
 The `Anchor macOS` scheme uses ad-hoc **Sign to Run Locally** signing for its
 Debug run and test actions, so a developer account is not required for local
 owner acceptance. Release and Archive retain the production App Group and
-automatic-signing settings. The Safari extension is bundled in Debug, but its
-cross-process App Group handoff still requires a provisioned Release build.
+automatic-signing settings. The App Group remains necessary for the supported
+CLI inbox; there is no bundled Safari extension.
 
 Background pairing Keychain operations never request authentication UI. The
 legacy macOS keychain also has user interaction disabled within the Anchor
@@ -144,7 +145,7 @@ CloudKit secrets, or signing material are stored in this repository.
 The source is published for portfolio review. No redistribution or commercial-use
 license is granted.
 
-## Final competition source submission
+## Source export and competition history
 
 Both production launchers start without recording tasks in Debug and Release.
 Task data comes from user actions, observed sources, or paired devices. The iOS
@@ -160,6 +161,13 @@ session goals and notes are retained. Upgrade both devices before reconnecting;
 an older recording build can still generate synthetic presence changes. This
 migration does not erase cloud records or backup files.
 
+The competition submission record is retained locally under
+`../Build/Submission-final-20261002/`. It identifies the original submitted flat
+source package, which differs from today's source tree. The old ZIP and unpacked
+verification copies were removed during the user-approved local cleanup; the
+submission record and its hashes remain unchanged. A current export does not
+replace that historical record.
+
 Create a clean source ZIP from the current working files (including uncommitted
 changes):
 
@@ -172,14 +180,15 @@ The export includes the native project, production packages, resources, tests,
 and supporting scripts/documentation. It excludes Git history, build output and
 device data. Test doubles stay in `Tests`; they are not linked into the apps.
 
-Real-device Bluetooth/Bonjour pairing, speech permissions, signed Safari App
-Group handoff and provisioned CloudKit must be checked on the corresponding
+Real-device Bluetooth/Bonjour pairing, speech permissions, signed CLI App Group
+handoff and provisioned CloudKit must be checked on the corresponding
 hardware/account; a successful unsigned build does not validate these services.
 
 ### Reliability follow-up
 
 Local task edits now finish after local persistence and replicate in the background.
-Decision delivery uses task ownership and avoids repeated source actions. Photo
+Codex/CLI observations retain their task ownership; the production dashboard
+rejects decision commands and has no decision UI or notification sender. Photo
 processing and file access run off the UI thread; recording cleanup is scoped to
 the correct speech request. See the latest section of
 [the validation record](Documentation/VALIDATION.md) for regression, native UI,

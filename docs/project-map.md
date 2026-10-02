@@ -1,12 +1,13 @@
 # Anchor project map
 
 Anchor is a native iPhone/macOS attention companion with shared event-driven state.
+The Mac observes supported AI/terminal tasks and sends their state to the phone.
+Generic app/browser tracking and decision execution have been retired.
 
 | Path | Role |
 |---|---|
 | `Apps/AnchorIOS/AnchorIOSApp.swift` | Production iPhone entry |
 | `Apps/AnchorMac/AnchorMacApp.swift` | Production Mac entry |
-| `Apps/AnchorSafariExtension/` | Safari integration |
 | `Packages/AnchorKit/Sources/` | Core, design, iOS/macOS features, transport and CLI |
 | `Packages/AnchorKit/Tests/` | Shared package tests |
 | `Apps/AnchorIOSUITests/`, `Apps/AnchorMacUITests/` | Production UI tests |
@@ -18,7 +19,9 @@ Anchor is a native iPhone/macOS attention companion with shared event-driven sta
 - [Design](../DESIGN.md): current iOS visual tokens, components, page rules, and verification boundaries.
 - [README](../README.md): setup and source submission.
 - [Validation](../Documentation/VALIDATION.md): latest verified results and device acceptance still needed.
-- [CLI contract](../Documentation/CLI_EVENT_CONTRACT.md), [web contract](../Documentation/WEB_OBSERVATION_CONTRACT.md), [CloudKit](../Documentation/CLOUDKIT_MVP.md): integration boundaries.
+- [CLI contract](../Documentation/CLI_EVENT_CONTRACT.md): active terminal integration.
+- [CloudKit](../Documentation/CLOUDKIT_MVP.md): optional cloud configuration and acceptance still needed.
+- [Retired web contract](../Documentation/WEB_OBSERVATION_CONTRACT.md): historical data compatibility; no browser adapter ships.
 - [Launch motion](../Documentation/IOS_LAUNCH_MOTION.md): iOS transition behavior.
 - [Third-party notices](../Documentation/THIRD_PARTY_NOTICES.md): attribution.
 

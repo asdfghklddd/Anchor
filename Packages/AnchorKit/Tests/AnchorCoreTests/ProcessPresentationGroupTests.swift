@@ -26,7 +26,7 @@ struct ProcessPresentationGroupTests {
         #expect(session.taskProcesses.map(\.id) == [planned.id, observed.id])
     }
 
-    @Test("Built-in production source identities remain distinct")
+    @Test("Current and retired source identities remain distinct for stored events")
     func builtInSourceIdentitiesAreDistinct() {
         let identities = [
             BuiltInProcessSourceID.file,
@@ -41,10 +41,6 @@ struct ProcessPresentationGroupTests {
         #expect(BuiltInProcessSourceID.macWorkspace.uuidString == "00000000-0000-4000-8000-000000000403")
         #expect(BuiltInProcessSourceID.codex.uuidString == "00000000-0000-4000-8000-000000000404")
         #expect(FileProcessSource.defaultSourceID == BuiltInProcessSourceID.file)
-        #expect(WebProcessSource.defaultSourceID == BuiltInProcessSourceID.web)
-        #if os(macOS)
-        #expect(MacWorkspaceProcessSource.defaultSourceID == BuiltInProcessSourceID.macWorkspace)
-        #endif
         #expect(CodexLifecycleFileSource.defaultSourceID == BuiltInProcessSourceID.codex)
     }
 

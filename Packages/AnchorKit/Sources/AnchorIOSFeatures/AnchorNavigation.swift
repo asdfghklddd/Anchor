@@ -22,7 +22,6 @@ enum ProfileDetailKind: Hashable {
     case anchors
     case session
     case returnMemory
-    case decisionTrace
     case contextSnapshot
 }
 
@@ -33,7 +32,6 @@ enum AnchorSheet: Hashable, Identifiable {
     case note
     case goal
     case notifications
-    case decision(UUID)
     case layout
     case finish
     case recovery(UUID)

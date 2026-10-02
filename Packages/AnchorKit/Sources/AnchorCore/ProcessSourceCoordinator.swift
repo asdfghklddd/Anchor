@@ -3,7 +3,7 @@ import Foundation
 /// Owns source lifetimes and serializes normalized observations into the
 /// repository. A source failure is recorded per source and does not stop other
 /// adapters or discard events that were already committed locally.
-public actor ProcessSourceCoordinator: SourceHealthProviding, SourceActionPerforming {
+public actor ProcessSourceCoordinator: SourceHealthProviding {
     private struct AssociationKey: Hashable {
         let sessionID: UUID
         let sourceID: UUID
@@ -136,29 +136,6 @@ public actor ProcessSourceCoordinator: SourceHealthProviding, SourceActionPerfor
             continuation.onTermination = { [weak self] _ in
                 Task { await self?.removeHealthContinuation(id) }
             }
-        }
-    }
-
-    public func perform(
-        _ action: SourceAction,
-        on sourceID: UUID
-    ) async throws -> SourceActionReceipt {
-        guard let source = sources[sourceID] else {
-            throw ProcessSourceError.unsupportedAction
-        }
-        do {
-            let receipt = try await source.perform(action)
-            updateHealth(sourceID) { health in
-                health.lastError = nil
-                health.consecutiveFailures = 0
-            }
-            return receipt
-        } catch {
-            updateHealth(sourceID) { health in
-                health.lastError = error.localizedDescription
-                health.consecutiveFailures += 1
-            }
-            throw error
         }
     }
 

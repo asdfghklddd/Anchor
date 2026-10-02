@@ -316,7 +316,7 @@ struct ReturnView: View {
             // Sheet presentation carries its selection atomically. Keep the
             // selected task stable while still showing live status updates.
             let process = review.processes.first { $0.id == selection.id } ?? selection
-            ProcessDetailView(process: process, decision: nil, onDecision: { _ in })
+            ProcessDetailView(process: process)
                 .accessibilityIdentifier("return.process.detail")
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {

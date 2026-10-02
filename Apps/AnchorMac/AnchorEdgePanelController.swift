@@ -11,7 +11,6 @@ final class AnchorEdgePanelController {
     private let phoneAnchorState: AnchorPhoneAnchorState
     private let presentation: AnchorEdgePresentationModel
     private let onOpenDetails: () -> Void
-    private let notificationService = MacDecisionNotificationService()
     private let soundPlayer: AnchorEdgeSoundPlayer
 
     private let controlPanel: AnchorControlPanel
@@ -55,6 +54,7 @@ final class AnchorEdgePanelController {
         effectsPanel.orderFrontRegardless()
         controlPanel.orderFrontRegardless()
         observeModel()
+        Task { await MacNotificationSettings.removeRetiredDecisionNotifications() }
     }
 
     func stop() {
@@ -138,8 +138,7 @@ final class AnchorEdgePanelController {
             (
                 phoneAnchorState.activeSessionID(in: model.projection),
                 model.projection.session?.status,
-                model.isLoading,
-                model.projection
+                model.isLoading
             )
         } onChange: { [weak self] in
             Task { @MainActor in
@@ -152,13 +151,6 @@ final class AnchorEdgePanelController {
             activeSessionID: activeSessionID,
             isLoading: snapshot.2,
             reduceMotion: UserDefaults.standard.bool(forKey: AnchorMotion.reduceMotionDefaultsKey)
-        )
-        let decisionNotificationsEnabled = UserDefaults.standard.bool(
-            forKey: "anchor.mac.notifications.decisions"
-        )
-        notificationService.observe(
-            snapshot.3,
-            enabled: decisionNotificationsEnabled
         )
     }
 

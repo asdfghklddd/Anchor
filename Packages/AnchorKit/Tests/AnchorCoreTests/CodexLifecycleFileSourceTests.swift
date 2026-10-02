@@ -6,8 +6,8 @@ import Testing
 func builtInSourceIdentifiersAreUnique() {
     let ids = [
         FileProcessSource.defaultSourceID,
-        WebProcessSource.defaultSourceID,
-        MacWorkspaceProcessSource.defaultSourceID,
+        BuiltInProcessSourceID.web,
+        BuiltInProcessSourceID.macWorkspace,
         CodexLifecycleFileSource.defaultSourceID,
     ]
     #expect(Set(ids).count == ids.count)

@@ -89,18 +89,6 @@ public enum SessionOperation: Codable, Hashable, Sendable {
         }
     }
 
-    /// Resolving a decision is also an optional source-side command. The
-    /// operation remains durable even when no adapter supports that command.
-    public var sourceAction: SourceAction? {
-        switch self {
-        case let .scoped(_, operation): operation.sourceAction
-        case let .resolveDecision(decisionID, optionID, _, _):
-            .resolveDecision(decisionID: decisionID, optionID: optionID)
-        default:
-            nil
-        }
-    }
-
     /// Converts a user command into an operation with all generated IDs and
     /// timestamps fixed before it is persisted or sent.
     public static func make(

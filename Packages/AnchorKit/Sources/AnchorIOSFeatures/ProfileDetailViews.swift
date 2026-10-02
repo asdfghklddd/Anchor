@@ -158,7 +158,6 @@ struct ProfileDetailSheet: View {
     let onManage: () -> Void
     let onFinish: () -> Void
     var onLeave: (() -> Void)? = nil
-    var onDecision: ((UUID) -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
 
@@ -172,16 +171,6 @@ struct ProfileDetailSheet: View {
                         detailHero
 
                         if kind == .session {
-                            if let onDecision {
-                                ForEach(projection.openDecisions) { decision in
-                                    Button { onDecision(decision.id) } label: {
-                                        Label(decision.title, systemImage: "star.fill")
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                    }
-                                    .buttonStyle(HarborPrimaryButtonStyle())
-                                    .accessibilityIdentifier("task.decision.\(decision.id)")
-                                }
-                            }
                             sessionMetrics
                             if !processes.isEmpty { processPulse }
                             if let goal = projection.session?.goal, goal.userPlan != nil {
@@ -458,7 +447,6 @@ private extension ProfileDetailKind {
         case .anchors: L10n.completedAnchors
         case .session: AnchorStrings.value("task.detail.title", default: "Task details")
         case .returnMemory: L10n.returning
-        case .decisionTrace: L10n.decisions
         case .contextSnapshot: L10n.contextNote
         }
     }
@@ -470,14 +458,13 @@ private extension ProfileDetailKind {
         case .anchors: "scope"
         case .session: "waveform.path.ecg"
         case .returnMemory: "arrow.uturn.left.circle"
-        case .decisionTrace: "checkmark.bubble"
         case .contextSnapshot: "square.stack.3d.up"
         }
     }
 
     var tint: Color {
         switch self {
-        case .focus, .decisionTrace: AnchorPalette.coral
+        case .focus: AnchorPalette.coral
         case .contexts, .contextSnapshot: AnchorPalette.periwinkle
         case .anchors, .session, .returnMemory: AnchorPalette.seafoam
         }
@@ -490,7 +477,6 @@ private extension ProfileDetailKind {
         case .anchors: AnchorStrings.value("profile.detail.anchors.kicker", default: "ANCHOR LOG")
         case .session: AnchorStrings.value("profile.detail.session.kicker", default: "CURRENT ANCHOR")
         case .returnMemory: AnchorStrings.value("profile.detail.return.kicker", default: "RETURN MEMORY")
-        case .decisionTrace: AnchorStrings.value("profile.detail.decision.kicker", default: "DECISION TRACE")
         case .contextSnapshot: AnchorStrings.value("profile.detail.snapshot.kicker", default: "CONTEXT SNAPSHOT")
         }
     }
@@ -502,7 +488,6 @@ private extension ProfileDetailKind {
         case .anchors: AnchorStrings.value("profile.detail.anchors.headline", default: "Completion preserves the thread of the work.")
         case .session: AnchorStrings.value("profile.detail.session.headline", default: "The full shape of this work, held in one place.")
         case .returnMemory: AnchorStrings.value("profile.detail.return.headline", default: "The work stayed in the right place while you were away.")
-        case .decisionTrace: AnchorStrings.value("profile.detail.decision.headline", default: "A clear judgment keeps the next steps moving.")
         case .contextSnapshot: AnchorStrings.value("profile.detail.snapshot.headline", default: "Goal, processes, decisions, and position in one memory.")
         }
     }
@@ -513,7 +498,6 @@ private extension ProfileDetailKind {
         case .contexts: "\((projection.session?.notes.count ?? 0) + (projection.session?.snapshots.count ?? 0))"
         case .anchors: "\(projection.session?.taskProcesses.filter { $0.status == .completed }.count ?? 0)"
         case .session, .returnMemory: TaskStatusPresentation.text(for: projection.session)
-        case .decisionTrace: "\(projection.openDecisions.count)"
         case .contextSnapshot: "\(projection.session?.snapshots.count ?? 0)"
         }
     }
@@ -525,10 +509,6 @@ private extension ProfileDetailKind {
         case .anchors: AnchorStrings.value("profile.detail.anchors.subline", default: "Completed work is preserved as a recoverable context.")
         case .session: L10n.runningAndWaiting(running: projection.session?.taskProcesses.filter { $0.status == .running }.count ?? 0, attention: projection.openDecisions.count)
         case .returnMemory: L10n.returnDetail
-        case .decisionTrace:
-            projection.openDecisions.isEmpty
-                ? AnchorStrings.value("profile.detail.decision.resolved", default: "No pending decisions.")
-                : AnchorStrings.value("profile.detail.decision.waiting", default: "A decision is waiting for your judgment.")
         case .contextSnapshot: L10n.contextNote
         }
     }

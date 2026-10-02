@@ -10,8 +10,6 @@ import UniformTypeIdentifiers
 @Observable
 public final class MacSourceSetupModel {
     public private(set) var isCommandInstalled = false
-    public private(set) var isSafariExtensionEnabled = false
-    public private(set) var isAwaitingSafariConfirmation = false
     public private(set) var isWorking = false
     public private(set) var didCopyShellSetup = false
     public private(set) var codexSessionFileName: String?
@@ -22,11 +20,9 @@ public final class MacSourceSetupModel {
     public var errorMessage: String?
 
     public let isCommandBundled: Bool
-    public let isSafariExtensionBundled: Bool
 
     private let commandURL: URL
     private let installer = SourceArtifactInstaller()
-    private let safariExtensionClient = SafariExtensionStateClient()
     private let defaults: UserDefaults
     private let onCodexSessionSelected: (@MainActor @Sendable (URL) async throws -> Void)?
     private let autoAssociationSessions: (@Sendable () async -> [AnchorSession])?
@@ -59,10 +55,6 @@ public final class MacSourceSetupModel {
         onCodexSessionAssociated: (@MainActor @Sendable (URL, UUID, Bool) async throws -> Void)? = nil
     ) {
         commandURL = bundle.bundleURL.appending(path: "Contents/Helpers/anchor")
-        let safariExtensionURL = bundle.bundleURL.appending(
-            path: "Contents/PlugIns/AnchorSafariExtension.appex",
-            directoryHint: .isDirectory
-        )
         self.defaults = defaults
         self.onCodexSessionSelected = onCodexSessionSelected
         self.currentAnchorSessionID = currentAnchorSessionID
@@ -70,9 +62,6 @@ public final class MacSourceSetupModel {
         self.autoAssociationSessions = autoAssociationSessions
         self.onCodexSessionAssociated = onCodexSessionAssociated
         isCommandBundled = FileManager.default.isExecutableFile(atPath: commandURL.path)
-        isSafariExtensionBundled = FileManager.default.fileExists(
-            atPath: safariExtensionURL.path
-        )
         refreshCommandStatus()
     }
 
@@ -267,23 +256,6 @@ public final class MacSourceSetupModel {
         await performInstall {
             try installer.installCommand(from: commandURL, to: destinationURL)
             try storeBookmark(for: destinationURL, key: Self.commandBookmarkKey)
-        }
-    }
-
-    public func openSafariExtensionSettings() async {
-        guard isSafariExtensionBundled else {
-            errorMessage = L10n.sourceSetupSafariExtensionMissing
-            return
-        }
-
-        isWorking = true
-        didCopyShellSetup = false
-        defer { isWorking = false }
-        do {
-            try await safariExtensionClient.showPreferences()
-            isAwaitingSafariConfirmation = !isSafariExtensionEnabled
-        } catch {
-            errorMessage = error.localizedDescription
         }
     }
 

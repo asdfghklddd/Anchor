@@ -513,37 +513,6 @@ struct ProcessSourceTests {
         await coordinator.stop()
     }
 
-    @Test("A source action is routed through the coordinator")
-    func sourceActionIsRouted() async throws {
-        let sourceID = UUID()
-        let recorder = ActionRecorder()
-        let source = RecordingActionSource(
-            descriptor: SourceDescriptor(
-                id: sourceID,
-                name: "Action source",
-                kind: .integration,
-                symbol: "A",
-                tone: "periwinkle",
-                capabilities: [.observe, .resolveDecision]
-            ),
-            recorder: recorder
-        )
-        let coordinator = ProcessSourceCoordinator(
-            repository: InMemorySessionRepository(),
-            sources: [source]
-        )
-        let decisionID = UUID()
-        let optionID = UUID()
-
-        let receipt = try await coordinator.perform(
-            .resolveDecision(decisionID: decisionID, optionID: optionID),
-            on: sourceID
-        )
-
-        #expect(receipt.sourceID == sourceID)
-        #expect(await recorder.action == .resolveDecision(decisionID: decisionID, optionID: optionID))
-    }
-
     @Test("A failed durable upload leaves the event in the local outbox")
     func durableSyncRetriesAfterFailure() async throws {
         let storage = URL.temporaryDirectory.appending(path: "anchor-sync-\(UUID().uuidString).json")
@@ -697,30 +666,6 @@ private struct ImmediateSource: ProcessSource {
             continuation.yield(event)
             continuation.finish()
         }
-    }
-}
-
-private struct RecordingActionSource: ProcessSource {
-    let descriptor: SourceDescriptor
-    let recorder: ActionRecorder
-
-    func events() -> AsyncThrowingStream<ExternalProcessEvent, Error> {
-        AsyncThrowingStream { continuation in
-            continuation.finish()
-        }
-    }
-
-    func perform(_ action: SourceAction) async throws -> SourceActionReceipt {
-        await recorder.record(action)
-        return SourceActionReceipt(sourceID: descriptor.id, action: action)
-    }
-}
-
-private actor ActionRecorder {
-    private(set) var action: SourceAction?
-
-    func record(_ action: SourceAction) {
-        self.action = action
     }
 }
 

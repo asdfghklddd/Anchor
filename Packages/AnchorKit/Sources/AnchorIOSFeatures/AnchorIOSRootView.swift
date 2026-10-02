@@ -193,13 +193,7 @@ public struct AnchorIOSRootView: View {
         case let .process(id):
             if let owner = model.projection.hostedSessions.first(where: { $0.processes.contains(where: { $0.id == id }) }),
                let process = owner.processes.first(where: { $0.id == id }) {
-                ProcessDetailView(
-                    process: process,
-                    decision: owner.decisions.first {
-                        $0.processID == id && $0.status == .open
-                    },
-                    onDecision: { sheet = .decision($0) }
-                )
+                ProcessDetailView(process: process)
                 .navigationTransition(.zoom(sourceID: process.id, in: processTransition))
             } else {
                 ContentUnavailableView(L10n.emptyTitle, systemImage: "square.dashed")
@@ -257,8 +251,7 @@ public struct AnchorIOSRootView: View {
                     Task {
                         if await model.leaveDesk() { sheet = nil }
                     }
-                },
-                onDecision: { sheet = .decision($0) }
+                }
             )
             .presentationDetents([.large])
         case .setup:
@@ -280,10 +273,6 @@ public struct AnchorIOSRootView: View {
             NotificationsView(projection: model.projection) { id in
                 sheet = nil
                 path.append(.process(id))
-            }
-        case let .decision(id):
-            if let decision = model.projection.hostedSessions.flatMap(\.decisions).first(where: { $0.id == id }) {
-                DecisionView(model: model, decision: decision)
             }
         case .layout:
             TaskManagementView(model: model)

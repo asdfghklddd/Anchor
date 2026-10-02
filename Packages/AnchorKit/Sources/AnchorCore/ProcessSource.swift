@@ -101,33 +101,6 @@ public struct ProcessSourceSessionContext: Hashable, Sendable {
     }
 }
 
-public enum SourceAction: Codable, Hashable, Sendable {
-    case open(URL)
-    case resolveDecision(decisionID: UUID, optionID: UUID)
-}
-
-public struct SourceActionReceipt: Codable, Hashable, Sendable {
-    public let id: UUID
-    public let sourceID: UUID
-    public let action: SourceAction
-    public let performedAt: Date
-    public let deepLink: URL?
-
-    public init(
-        id: UUID = UUID(),
-        sourceID: UUID,
-        action: SourceAction,
-        performedAt: Date = .now,
-        deepLink: URL? = nil
-    ) {
-        self.id = id
-        self.sourceID = sourceID
-        self.action = action
-        self.performedAt = performedAt
-        self.deepLink = deepLink
-    }
-}
-
 /// A normalized observation emitted by a source adapter. The adapter owns
 /// source-specific parsing; Anchor only accepts this small, privacy-conscious
 /// value type and never needs raw prompts, documents, or model output.
@@ -262,7 +235,6 @@ public enum ProcessSourceError: LocalizedError, Codable, Hashable, Sendable {
 public protocol ProcessSource: Sendable {
     var descriptor: SourceDescriptor { get }
     func events() -> AsyncThrowingStream<ExternalProcessEvent, Error>
-    func perform(_ action: SourceAction) async throws -> SourceActionReceipt
     func acknowledge(_ event: ExternalProcessEvent) async throws
     func retry(_ event: ExternalProcessEvent) async throws
 }
@@ -271,18 +243,7 @@ public protocol SourceHealthProviding: Sendable {
     func healthChanges() async -> AsyncStream<[SourceHealth]>
 }
 
-/// A narrow command boundary used by the Mac companion when a decision is
-/// resolved on either device. The source adapter remains responsible for
-/// translating the normalized action into its own API or deep link.
-public protocol SourceActionPerforming: Sendable {
-    func perform(_ action: SourceAction, on sourceID: UUID) async throws -> SourceActionReceipt
-}
-
 public extension ProcessSource {
-    func perform(_ action: SourceAction) async throws -> SourceActionReceipt {
-        throw ProcessSourceError.unsupportedAction
-    }
-
     /// Sources with durable cursors override this to advance only after the
     /// normalized event has been committed by Anchor's repositories.
     func acknowledge(_ event: ExternalProcessEvent) async throws {

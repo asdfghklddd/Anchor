@@ -8,8 +8,6 @@ struct MacProcessDetailView: View {
     let processID: UUID
     let onOpenTimeline: () -> Void
 
-    @State private var selectedOptionID: UUID?
-
     var body: some View {
         Group {
             if let session = model.projection.session,
@@ -19,22 +17,6 @@ struct MacProcessDetailView: View {
                         MacProcessDetailHeader(process: process)
                         Button(L10n.viewFullTimeline, systemImage: "waveform.path.ecg", action: onOpenTimeline)
                             .buttonStyle(.borderless)
-
-                        if let decision = session.decisions.first(where: {
-                            $0.processID == process.id && $0.status == .open
-                        }) {
-                            MacDecisionPanel(
-                                decision: decision,
-                                selectedOptionID: $selectedOptionID,
-                                onResolve: resolve
-                            )
-                            .padding(AnchorSpacing.large)
-                            .fluoriteSurface(
-                                fill: AnchorPalette.sand.opacity(0.11),
-                                border: AnchorPalette.sand.opacity(0.36),
-                                cornerRadius: 18
-                            )
-                        }
 
                         MacProcessEventTimeline(events: process.events)
                     }
@@ -56,9 +38,5 @@ struct MacProcessDetailView: View {
         }
     }
 
-    private func resolve(_ decision: Decision, option: DecisionOption) {
-        selectedOptionID = nil
-        Task { await model.resolve(decision: decision, option: option) }
-    }
 }
 #endif

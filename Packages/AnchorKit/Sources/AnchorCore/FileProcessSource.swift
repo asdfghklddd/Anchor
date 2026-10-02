@@ -1,10 +1,5 @@
 import Foundation
 
-public enum FileProcessSignalKind: Sendable {
-    case cli
-    case web
-}
-
 /// A small, sandbox-friendly handoff boundary for the supported Anchor CLI.
 /// The CLI writes one atomically-created JSON file per observation; this source
 /// moves consumed files out of the inbox before yielding them to the actor.
@@ -18,7 +13,6 @@ public struct FileProcessSource: ProcessSource, Sendable {
     public let descriptor: SourceDescriptor
     private let sessionContextProvider: @Sendable () async -> ProcessSourceSessionContext?
     private let commandSessionContextProvider: (@Sendable (CLIProcessSignal) async -> ProcessSourceSessionContext?)?
-    private let signalKind: FileProcessSignalKind
 
     public init(
         directoryURL: URL = FileProcessSource.defaultInboxURL(),
@@ -26,7 +20,6 @@ public struct FileProcessSource: ProcessSource, Sendable {
         maximumFileSize: Int = 1_048_576,
         sessionContextProvider: @escaping @Sendable () async -> ProcessSourceSessionContext? = { nil },
         commandSessionContextProvider: (@Sendable (CLIProcessSignal) async -> ProcessSourceSessionContext?)? = nil,
-        signalKind: FileProcessSignalKind = .cli,
         descriptor: SourceDescriptor = SourceDescriptor(
             id: FileProcessSource.defaultSourceID,
             name: "Anchor CLI",
@@ -41,7 +34,6 @@ public struct FileProcessSource: ProcessSource, Sendable {
         self.maximumFileSize = max(1, maximumFileSize)
         self.sessionContextProvider = sessionContextProvider
         self.commandSessionContextProvider = commandSessionContextProvider
-        self.signalKind = signalKind
         self.descriptor = descriptor
     }
 
@@ -97,16 +89,6 @@ public struct FileProcessSource: ProcessSource, Sendable {
         #else
         return URL.applicationSupportDirectory
             .appending(path: "Anchor/Inbox", directoryHint: .isDirectory)
-        #endif
-    }
-
-    public static func defaultWebInboxURL() -> URL {
-        #if os(macOS)
-        return defaultAppGroupContainerURL()
-            .appending(path: "Anchor/WebInbox", directoryHint: .isDirectory)
-        #else
-        return URL.applicationSupportDirectory
-            .appending(path: "Anchor/WebInbox", directoryHint: .isDirectory)
         #endif
     }
 
@@ -177,46 +159,27 @@ public struct FileProcessSource: ProcessSource, Sendable {
             ) {
                 event = externalEvent
             } else {
-                switch signalKind {
-                case .cli:
-                    let signal = try JSONDecoder.anchorExternal.decode(
-                        CLIProcessSignal.self,
-                        from: data
-                    )
-                    let context: ProcessSourceSessionContext?
-                    if let commandSessionContextProvider {
-                        context = await commandSessionContextProvider(signal)
-                    } else {
-                        context = await sessionContextProvider()
-                    }
-                    guard let session = context else {
-                        return nil
-                    }
-                    guard signal.occurredAt >= session.startedAt else {
-                        try move(fileURL, to: ".ignored")
-                        return nil
-                    }
-                    event = try signal.externalEvent(
-                        sessionID: session.sessionID,
-                        sourceID: descriptor.id
-                    )
-                case .web:
-                    let signal = try JSONDecoder.anchorExternal.decode(
-                        WebProcessSignal.self,
-                        from: data
-                    )
-                    guard let session = await sessionContextProvider() else {
-                        return nil
-                    }
-                    guard signal.occurredAt >= session.startedAt else {
-                        try move(fileURL, to: ".ignored")
-                        return nil
-                    }
-                    event = try signal.externalEvent(
-                        sessionID: session.sessionID,
-                        sourceID: descriptor.id
-                    )
+                let signal = try JSONDecoder.anchorExternal.decode(
+                    CLIProcessSignal.self,
+                    from: data
+                )
+                let context: ProcessSourceSessionContext?
+                if let commandSessionContextProvider {
+                    context = await commandSessionContextProvider(signal)
+                } else {
+                    context = await sessionContextProvider()
                 }
+                guard let session = context else {
+                    return nil
+                }
+                guard signal.occurredAt >= session.startedAt else {
+                    try move(fileURL, to: ".ignored")
+                    return nil
+                }
+                event = try signal.externalEvent(
+                    sessionID: session.sessionID,
+                    sourceID: descriptor.id
+                )
             }
             try move(fileURL, to: ".processed")
             return event

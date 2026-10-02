@@ -13,7 +13,7 @@ subprocess.run(['python3', str(root / 'scripts/validation/check-production-data.
 # Explicit source roots keep user data, caches and Git history out.
 entries = ['Anchor.xcodeproj', 'Apps', 'Configuration', 'Packages/AnchorKit/Package.swift',
            'Packages/AnchorKit/Sources', 'Packages/AnchorKit/Tests', 'scripts',
-           'Documentation', 'docs', 'README.md', 'DESIGN.md', 'AGENTS.md', '.gitignore', '.github/workflows/native-ci.yml']
+           'Documentation', 'docs', '.agents/skills', 'README.md', 'DESIGN.md', 'AGENTS.md', '.gitignore', '.github/workflows/native-ci.yml']
 excluded = {'.DS_Store', 'xcuserdata', '.build', '.swiftpm', '__pycache__', 'node_modules'}
 args.output.parent.mkdir(parents=True, exist_ok=True)
 with zipfile.ZipFile(args.output, 'x', compression=zipfile.ZIP_DEFLATED) as archive:

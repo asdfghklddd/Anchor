@@ -67,7 +67,7 @@ struct TaskDashboardPolicyTests {
         let repository = InMemorySessionRepository(initialProjection: stored)
         let model = AnchorSessionModel(repository: repository, initialProjection: stored, usesTaskDashboard: true)
         #expect(model.projection.openDecisions.isEmpty)
-        #expect(await model.resolve(decision: decision, option: option) == false)
+        #expect(await model.send(.resolveDecision(decisionID: decision.id, optionID: option.id)) == false)
         #expect(await model.send(.forSession(session.id, .resolveDecision(decisionID: decision.id, optionID: option.id))) == false)
         #expect(await repository.currentProjection().session?.decisions.first?.status == .open)
         #expect(await model.selectHostedTask(session.id))

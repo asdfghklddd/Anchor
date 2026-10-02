@@ -197,11 +197,7 @@ struct AwayView: View {
         }
         .sheet(item: $selectedProcess) { process in
             NavigationStack {
-                ProcessDetailView(
-                    process: process,
-                    decision: projection.openDecisions.first { $0.processID == process.id },
-                    onDecision: { _ in }
-                )
+                ProcessDetailView(process: process)
             }
             .presentationCornerRadius(24)
         }

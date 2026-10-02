@@ -1,106 +1,42 @@
-# Web observation contract
+# Retired web observation contract
 
-> Retired from the production observation flow on 2026-10-02. The app no longer
-> starts WebProcessSource, consumes WebInbox, or offers Safari setup. Existing
-> extension packaging is retained for compatibility. The contract below documents
-> that historical implementation; generic browsing is outside the task dashboard
-> scope. AI site-specific task observation would require a dedicated adapter.
+Retired from the production flow and removed from the build on 2026-10-02.
 
-Anchor's MVP web layer is a Safari Web Extension embedded in the production
-macOS app. It does not read browser profile databases, cookies, page text, or
-network traffic, and it has no Chrome, Chromium, or browser-store dependency.
+## Current boundary
 
-## Production boundary
+Anchor observes Codex task lifecycle and supported terminal commands. Generic
+browser activity does not establish an AI task's progress, and is outside the
+current product scope. The app no longer includes:
 
-The production `Anchor macOS` target embeds `AnchorSafariExtension.appex`. Safari
-installs the extension with the containing app, while the user keeps the final
-decision to enable it in Safari. Anchor opens the system-managed Safari extension
-settings and polls the public `SFSafariExtensionManager` state so the Sources UI
-can move from awaiting confirmation to enabled without inspecting Safari data.
+- the Safari extension, its Xcode target or embedded `.appex`;
+- the Safari settings client or native message handler;
+- `WebProcessSource`, `WebProcessSignal` or WebInbox polling;
+- the general Mac application observer.
 
-The native app extension receives `browser.runtime.sendNativeMessage` requests,
-validates them as `anchor.web.activity.v1`, and atomically writes them into the
-App Group `WebInbox`. The production app's `WebProcessSource` consumes that
-inbox. The containing app and native extension remain sandboxed and share only
-`group.com.andywang.anchor` for this flow.
+The Mac App Group entitlement remains for the active CLI inbox. Removing the web
+adapter does not authorize deleting that entitlement or users' existing data.
 
-The repository contains no Chromium native-messaging executable, host manifest, external update
-configuration, browser setup XPC service, or unpacked Chrome extension.
+## Stored-data compatibility
 
-## Privacy-minimal generic state
+`BuiltInProcessSourceID.web` and `.macWorkspace` retain their original UUIDs.
+Existing `AnchorProcess`, `ExternalProcessEvent`, `SessionOperation` and decision
+records remain decodable for local history and peer replay. `TaskDashboardPolicy`
+filters retired sources and decision records from the active dashboard and return
+summary, and rejects decision commands in production.
 
-The Safari extension reports:
+Raw `anchor.web.activity.v1` producer signals are no longer accepted by the CLI
+inbox. This differs from reading previously persisted Anchor events, whose shared
+schema is preserved. The cleanup does not erase a user's old WebInbox files or
+rewrite the user's event store.
 
-- a random activity UUID scoped to one tab and site;
-- monotonically ordered lifecycle signals;
-- `active`, `background`, and `closed` state;
-- the HTTP(S) hostname only; and
-- the static source label `Safari`.
+## Historical implementation
 
-It ignores private tabs and non-HTTP(S) pages. It does not inject content scripts
-or store page titles, URL paths, query strings, page content, form values,
-cookies, or browsing history in Anchor. The `tabs` permission is used only to
-identify the active HTTP(S) hostname. The popup provides a persistent on/off
-control independent of Safari's own extension controls.
+The former adapter exchanged hostname-only tab activity through a sandboxed
+Safari extension and App Group WebInbox. It did not provide semantic AI progress.
+Its complete implementation and schema are preserved in the
+[pre-cleanup source commit](https://github.com/asdfghklddd/Anchor/tree/682a382/Apps/AnchorSafariExtension).
+This is historical reference, not setup guidance for the current app.
 
-Generic browser state cannot truthfully reveal a site's internal percentage or
-completion state. A future site-specific adapter may emit `running`,
-`completed`, or `failed` and optional `0...1` progress only after a separate,
-narrow permission and data review.
-
-## Signal schema
-
-```json
-{
-  "id": "01A23B45-C678-4901-A234-56789BCDEF01",
-  "schema": "anchor.web.activity.v1",
-  "activityID": "11A23B45-C678-4901-A234-56789BCDEF02",
-  "sequence": 42,
-  "state": "active",
-  "occurredAt": "2026-08-25T10:00:00Z",
-  "siteHost": "docs.example.com",
-  "browserName": "Safari"
-}
-```
-
-`siteName`, `progress`, `metric`, and `metricLabel` are optional structured
-adapter fields. The native decoder strips any scheme, path, query, or fragment
-from `siteHost` again. Progress outside `0...1`, unsupported schemas, oversized
-messages, and malformed hosts are rejected and quarantined.
-
-High-frequency active/background changes update the current process card without
-adding timeline noise. Structured progress, completion, and failure can create
-timeline events. Signals older than the current Anchor session are moved to
-`.ignored` rather than attached to a later session.
-
-## Packaging and verification
-
-The Safari resources live in `Apps/AnchorSafariExtension/Resources`. They are
-compiled into the signed native app extension and embedded at:
-
-```text
-Anchor macOS.app/Contents/PlugIns/AnchorSafariExtension.appex
-```
-
-A direct Developer ID distribution can ship the containing macOS app outside the
-Mac App Store after signing and notarization. Installation does not bypass
-Safari's final extension confirmation or permission UI.
-
-Verification must establish that:
-
-- the formal app contains the `.appex`, its manifest, and the `anchor` CLI;
-- the extension point is `com.apple.Safari.web-extension`;
-- the app and extension use the same App Group;
-- the archived Demo apps contain none of those production adapters; and
-- no Chrome/Chromium helper, manifest, update URL, or setup service remains.
-
-## Apple references
-
-- [Messaging between the app and JavaScript in a Safari web extension](https://developer.apple.com/documentation/safariservices/messaging-between-the-app-and-javascript-in-a-safari-web-extension)
-- [Running your Safari web extension](https://developer.apple.com/documentation/safariservices/running-your-safari-web-extension)
-- [Distributing your Safari web extension](https://developer.apple.com/documentation/safariservices/distributing-your-safari-web-extension)
-
-Safari's native-messaging implementation intentionally ignores the application
-identifier supplied by JavaScript and routes the message only to the containing
-app's native extension. That is why Anchor needs no external native-host registry
-or browser-specific installer.
+CI now verifies that the macOS archive contains the CLI helper and does not embed
+the retired Safari extension. Future AI integrations require an explicit task
+lifecycle contract; restoring generic browser tracking is not part of that work.

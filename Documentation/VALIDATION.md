@@ -2,7 +2,22 @@
 
 Last updated: 2026-10-02
 
-## Current results
+## Current results — product-scope cleanup (2026-10-02)
+
+- The pre-cleanup source was committed and pushed as `682a382` before deleting code. The current cleanup removes the Safari target/adapter, general Mac application observer, unused UI and source-action execution APIs. Legacy event/decision models and source UUIDs remain decodable; dashboard command rejection and stored-data filtering remain covered.
+- **Swift package regression succeeded:** Swift Testing reports **223 tests** across Core (149), Transport (43), MacFeatures (21), and IOSFeatures (10). One optional local-Codex-rollout test was skipped because `ANCHOR_REAL_CODEX_ROLLOUT` was not supplied. The count changed from 236 by removing 14 retired-feature tests and adding one regression that quarantines old raw web signals while continuing CLI ingestion.
+- The first run, concurrent with both Release builds, failed two fixed-delay animation assertions. After the builds finished, a standalone rerun passed; the final run after removing the remaining action APIs also passed. No animation timings were changed to obtain that result.
+- Final **iOS Simulator Release and macOS Release builds passed** with signing disabled. The macOS product retains `Contents/Helpers/anchor` and no longer embeds `AnchorSafariExtension.appex`. The CLI App Group and pairing entitlements remain unchanged.
+- **Five iOS UI tests passed on the final source:** note persistence, leave/return, final completion/history, populated return details and populated return at accessibility text size. Both xcresult summaries report zero failures or skips (3 workflow + 2 populated-return tests). The existing isolation script removed both temporary event stores after the run.
+- **macOS UI runtime acceptance remains unverified:** both the initial attempt and a separate retry failed before running either selected test because the runner timed out while enabling system automation mode. Debug test-bundle compilation succeeded. The retry wrapper found no pre-existing test instance and checked/terminated only processes from its owned temporary build path after exit. No GUI permission settings or user data were changed.
+- Production-data boundary, project plist validation and diff-whitespace checks passed. The export script now includes the project-only Skill and its license/provenance alongside AGENTS.md.
+- `DESIGN.md` is unchanged by this cleanup; its SHA-256 remains `760bc3e4027a2c6c7ce0af551e8ece41771abd4b42661661822c2b93b88c39f3`.
+
+The local cleanup ledger is `../Build/Cleanup-20261002.json`. It records removed generated files, duplicate-to-retained paths and preserved-input hashes. Submission records keep their original historical hashes even though old ZIP/extracted verification copies have been removed. Current source exports are separate from the original competition submission.
+
+Raw logs for this run use the `/tmp/anchor-cleanup-*` prefix. This section describes the cleanup snapshot; the dated sections below preserve earlier evidence. Historical Safari/decision acceptance items below no longer apply to the current product. Hardware Bluetooth/Bonjour, signed Keychain/CLI handoff, speech permissions and optional provisioned CloudKit remain separate device/account acceptance checks.
+
+## Historical source-submission results (2026-09-30)
 
 - Shared package: **205 tests passed** (149 core, 37 transport, 19 Mac features) in the final source-submission regression. These cover local persistence, slow peer acknowledgements, eventual outbox delivery, decision ownership and idempotency, duplicate process IDs, source ingestion, real loopback Bonjour pairing, reconnect, event acknowledgement, noninteractive Keychain access, and production pairing migration. The optional test against a user-supplied live Codex rollout was skipped because `ANCHOR_REAL_CODEX_ROLLOUT` was unset.
 - Earlier iPhone 18 Pro / iOS 27 Simulator validation: **12 full-suite UI tests passed**. After the reliability fixes, **3 targeted tests passed again** for creation and restoration, fresh launch, and speech permission/error handling with cancel and restart. These UI suites were not repeated for the final source-submission regression.

@@ -219,6 +219,28 @@ struct CLIProcessSignalTests {
         ))
     }
 
+    @Test("Retired browser signals are quarantined without blocking CLI work")
+    func retiredWebSignalDoesNotBlockCLI() async throws {
+        let inbox = URL.temporaryDirectory.appending(path: "anchor-retired-web-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: inbox) }
+        try FileManager.default.createDirectory(at: inbox, withIntermediateDirectories: true)
+        let legacy = #"{"id":"01A23B45-C678-4901-A234-56789BCDEF01","schema":"anchor.web.activity.v1","activityID":"11A23B45-C678-4901-A234-56789BCDEF02","sequence":42,"state":"active","occurredAt":"2026-08-25T10:00:00Z","siteHost":"docs.example.com","browserName":"Safari"}"#
+        try Data(legacy.utf8).write(to: inbox.appending(path: "000-web.json"))
+        let sessionID = UUID()
+        let signal = CLIProcessSignal(commandID: UUID(), phase: .started, executableName: "swift")
+        try JSONEncoder.anchorExternal.encode(signal).write(to: inbox.appending(path: "001-cli.json"))
+        let source = FileProcessSource(directoryURL: inbox, pollInterval: 0.02,
+            sessionContextProvider: {
+                ProcessSourceSessionContext(sessionID: sessionID, startedAt: .distantPast)
+            })
+        let received = try await firstEvent(from: source.events())
+        #expect(received.sessionID == sessionID)
+        #expect(received.sourceID == BuiltInProcessSourceID.file)
+        #expect(received.process.title == "swift")
+        #expect(FileManager.default.fileExists(atPath: inbox.appending(path: ".failed/000-web.json").path))
+        #expect(FileManager.default.fileExists(atPath: inbox.appending(path: ".processed/001-cli.json").path))
+    }
+
     private func firstEvent(
         from stream: AsyncThrowingStream<ExternalProcessEvent, Error>
     ) async throws -> ExternalProcessEvent {

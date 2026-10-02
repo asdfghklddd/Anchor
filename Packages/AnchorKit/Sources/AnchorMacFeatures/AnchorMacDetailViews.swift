@@ -124,224 +124,12 @@ struct MacTimelineView: View {
     }
 }
 
-struct MacHistoryView: View {
-    let projection: SessionProjection
-    let onOpenCurrentWork: () -> Void
-
-    @State private var selectedSnapshot: ContextSnapshot?
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AnchorSpacing.large) {
-                if let session = projection.session {
-                    AnchorCard(tint: AnchorPalette.seafoam) {
-                        VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-                            Text(L10n.currentWork)
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(AnchorPalette.brandDeep)
-                                .textCase(.uppercase)
-                            Text(session.goal.title)
-                                .font(.title2.bold())
-                            LabeledContent(
-                                L10n.startedAt(
-                                    session.startedAt.formatted(date: .abbreviated, time: .shortened)
-                                )
-                            ) {
-                                Text(L10n.processCount(session.processes.count))
-                            }
-                            .foregroundStyle(AnchorPalette.secondaryInk)
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-                        Text(L10n.history)
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(AnchorPalette.brandDeep)
-                            .textCase(.uppercase)
-                        if session.snapshots.isEmpty {
-                            historyEmptyState
-                        } else {
-                            ForEach(session.snapshots) { snapshot in
-                                Button {
-                                    selectedSnapshot = snapshot
-                                } label: {
-                                    AnchorCard {
-                                        HStack(alignment: .top, spacing: AnchorSpacing.medium) {
-                                            Image(systemName: "arrow.counterclockwise")
-                                                .foregroundStyle(AnchorPalette.cyan)
-                                                .frame(width: 32, height: 32)
-                                                .background(AnchorPalette.cyan.opacity(0.14), in: .circle)
-                                                .accessibilityHidden(true)
-                                            VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
-                                                Text(snapshot.goalTitle)
-                                                    .font(.headline)
-                                                    .foregroundStyle(AnchorPalette.ink)
-                                                Text(snapshot.createdAt, format: .dateTime.month().day().hour().minute())
-                                                    .font(.caption.monospacedDigit())
-                                                    .foregroundStyle(.secondary)
-                                                if let latestNote = snapshot.latestNote, !latestNote.isEmpty {
-                                                    Text(latestNote)
-                                                        .font(.callout)
-                                                        .foregroundStyle(AnchorPalette.secondaryInk)
-                                                        .lineLimit(2)
-                                                }
-                                                Label(
-                                                    L10n.processAttentionSummary(
-                                                        processes: snapshot.processes.count,
-                                                        attention: snapshot.openDecisionIDs.count
-                                                    ),
-                                                    systemImage: "arrow.up.right"
-                                                )
-                                                .font(.caption.weight(.semibold))
-                                                .foregroundStyle(AnchorPalette.brandDeep)
-                                            }
-                                            Spacer(minLength: 0)
-                                            Image(systemName: "chevron.right")
-                                                .font(.callout.weight(.bold))
-                                                .foregroundStyle(AnchorPalette.secondaryInk)
-                                                .accessibilityHidden(true)
-                                        }
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityHint(L10n.openDetails)
-                                .accessibilityIdentifier("mac.history.snapshot")
-                            }
-                        }
-                    }
-                } else {
-                    VStack(spacing: AnchorSpacing.medium) {
-                        ContentUnavailableView(
-                            L10n.emptyTitle,
-                            systemImage: "clock.arrow.circlepath",
-                            description: Text(L10n.historyEmptyDetail)
-                        )
-                        .accessibilityIdentifier("mac.history.empty.content")
-                        Button(L10n.currentWork, systemImage: "arrow.left", action: onOpenCurrentWork)
-                            .buttonStyle(.bordered)
-                            .accessibilityIdentifier("mac.history.current.button")
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 260)
-                    .background(AnchorPalette.fluoriteSurface.opacity(0.72), in: .rect(cornerRadius: 18))
-                }
-            }
-            .frame(maxWidth: 980, alignment: .leading)
-            .padding(AnchorSpacing.xLarge)
-        }
-        .background(.clear)
-        .navigationTitle(L10n.history)
-        .accessibilityIdentifier("mac.history.screen")
-        .sheet(item: $selectedSnapshot) { snapshot in
-            MacSnapshotDetailView(snapshot: snapshot)
-        }
-    }
-
-    private var historyEmptyState: some View {
-        VStack(spacing: AnchorSpacing.medium) {
-            ContentUnavailableView(
-                L10n.historyNoSnapshots,
-                systemImage: "clock.arrow.circlepath",
-                description: Text(L10n.historyNoSnapshotsDetail)
-            )
-            .accessibilityIdentifier("mac.history.no-snapshots.content")
-            Button(L10n.currentWork, systemImage: "arrow.left", action: onOpenCurrentWork)
-                .buttonStyle(.bordered)
-                .accessibilityIdentifier("mac.history.current.button")
-        }
-        .frame(maxWidth: .infinity, minHeight: 210)
-        .background(AnchorPalette.fluoriteSurface.opacity(0.72), in: .rect(cornerRadius: 18))
-    }
-}
-
-struct MacSourcesView: View {
-    let projection: SessionProjection
-    let sourceSetupModel: MacSourceSetupModel?
-    let onOpenSettings: () -> Void
-
-    @State private var selectedSource: MacSourceGroup?
-
-    private var sourceGroups: [MacSourceGroup] {
-        MacSourceGroup.groups(from: projection.session?.processes ?? [])
-    }
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AnchorSpacing.large) {
-                if let sourceSetupModel {
-                    MacSourceSetupView(model: sourceSetupModel)
-                }
-
-                MacSourceHealthSummary(projection: projection)
-
-                Text(L10n.connectedSources)
-                    .font(.title2.bold())
-                    .foregroundStyle(AnchorPalette.ink)
-
-                if sourceGroups.isEmpty {
-                    VStack(spacing: AnchorSpacing.medium) {
-                        ContentUnavailableView(
-                            projection.session == nil ? L10n.emptyTitle : L10n.connectedSources,
-                            systemImage: "point.3.filled.connected.trianglepath.dotted",
-                            description: Text(
-                                projection.session == nil
-                                    ? L10n.emptyDetail
-                                    : L10n.noEvents
-                            )
-                        )
-                        if projection.session == nil {
-                            Button(L10n.pairDevice, systemImage: "link", action: onOpenSettings)
-                                .buttonStyle(.borderedProminent)
-                                .tint(AnchorPalette.interaction)
-                                .controlSize(.large)
-                                .accessibilityIdentifier("mac.sources.pair.button")
-                        }
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 300)
-                    .background(AnchorPalette.fluoriteSurface.opacity(0.72), in: .rect(cornerRadius: 20, style: .continuous))
-                    .accessibilityIdentifier("mac.sources.empty")
-                } else {
-                    LazyVGrid(
-                        columns: [GridItem(.adaptive(minimum: 290), spacing: AnchorSpacing.medium)],
-                        alignment: .leading,
-                        spacing: AnchorSpacing.medium
-                    ) {
-                        ForEach(sourceGroups) { source in
-                            MacSourceCard(source: source) {
-                                selectedSource = source
-                            }
-                        }
-                    }
-                }
-            }
-            .frame(maxWidth: 980, alignment: .leading)
-            .padding(AnchorSpacing.xLarge)
-        }
-        .background(HarborBackground())
-        .navigationTitle(L10n.sourceHealth)
-        .accessibilityIdentifier("mac.sources.screen")
-        .sheet(item: $selectedSource) { source in
-            MacSourceDetailView(
-                source: source,
-                connection: projection.connection,
-                dataObservedAt: projection.dataObservedAt,
-                openDecisions: openDecisions(for: source)
-            )
-        }
-    }
-
-    private func openDecisions(for source: MacSourceGroup) -> [Decision] {
-        let processIDs = Set(source.processes.map(\.id))
-        return projection.openDecisions.filter { processIDs.contains($0.processID) }
-    }
-}
-
 struct MacSettingsView: View {
     @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
     let projection: SessionProjection
     let controller: (any LocalLinkControlling)?
     let sourceSetupModel: MacSourceSetupModel?
     @State private var launchAtLogin = MacLaunchAtLogin.isEnabled
-    @AppStorage("anchor.mac.notifications.decisions") private var decisionAlerts = false
     @AppStorage(AnchorEdgeSoundCue.enabledDefaultsKey) private var edgeSoundEffects = true
     @State private var notificationAuthorization: UNAuthorizationStatus = .notDetermined
     @State private var settingsMessage: String?
@@ -429,12 +217,6 @@ struct MacSettingsView: View {
                         guard !isLoadingSettings else { return }
                         applyLaunchAtLogin(enabled)
                     }
-                Toggle(L10n.notificationDecisions, isOn: $decisionAlerts)
-                    .disabled(isLoadingSettings || isApplyingSettings)
-                    .onChange(of: decisionAlerts) { _, enabled in
-                        guard !isLoadingSettings else { return }
-                        Task { await applyDecisionAlerts(enabled) }
-                    }
                 Toggle(L10n.edgeSoundEffects, isOn: $edgeSoundEffects)
                 if notificationAuthorization == .denied {
                     VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
@@ -445,7 +227,7 @@ struct MacSettingsView: View {
                         .font(.caption)
                         .foregroundStyle(AnchorPalette.coral)
                         Button(L10n.openSystemSettings, systemImage: "gearshape") {
-                            MacDecisionNotificationService.openSystemSettings()
+                            MacNotificationSettings.openSystemSettings()
                         }
                         .controlSize(.small)
                     }
@@ -494,7 +276,7 @@ struct MacSettingsView: View {
             )
         }
         .task {
-            notificationAuthorization = await MacDecisionNotificationService.authorizationStatus()
+            notificationAuthorization = await MacNotificationSettings.authorizationStatus()
             launchAtLogin = MacLaunchAtLogin.isEnabled
             isLoadingSettings = false
         }
@@ -515,25 +297,6 @@ struct MacSettingsView: View {
         } catch {
             launchAtLogin = MacLaunchAtLogin.isEnabled
             settingsMessage = error.localizedDescription
-        }
-    }
-
-    private func applyDecisionAlerts(_ enabled: Bool) async {
-        isApplyingSettings = true
-        defer { isApplyingSettings = false }
-
-        if enabled {
-            let granted = await MacDecisionNotificationService.requestAuthorization()
-            notificationAuthorization = await MacDecisionNotificationService.authorizationStatus()
-            guard granted else {
-                decisionAlerts = false
-                settingsMessage = L10n.notificationPermissionDetail
-                return
-            }
-            settingsMessage = nil
-        } else {
-            await MacDecisionNotificationService.removePendingDecisionNotifications()
-            settingsMessage = nil
         }
     }
 

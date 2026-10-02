@@ -32,20 +32,21 @@ The record name is the envelope UUID, so it is not an additional custom field.
 Mark `sessionID` and `timestamp` queryable, and `timestamp` sortable, because
 the store queries by session and orders the returned events by timestamp.
 
-The current project is signed with Andy's free Personal Team, which does not
-support the iCloud capability. Personal-Team builds therefore intentionally
-omit the CloudKit entitlement and bundle key, keep the app local-first, and
-leave the CloudKit backend available for a future paid-Team configuration. The
-repository now includes separate CloudKit variant files under `Configuration/`;
-the default schemes remain local-first. When a paid Developer Team is
-available, the variant files add the same entitlement and bundle key to both
-formal targets; their existing foreground
-`DurableSyncRunner` will then use this private container on the existing
-60-second cadence. The archived Demo project remains local-only.
+The default schemes do not configure a CloudKit container. macOS Debug uses
+ad-hoc signing by default; persistent device development can select
+`Configuration/AnchorMac-Development.xcconfig`. Release uses the configured
+production signing settings. None of these facts establishes that a CloudKit
+container has been provisioned or accepted on two devices.
 
-To build the future CloudKit variant without changing the current personal-Team
-configuration, provide the paid Team ID explicitly. The variant intentionally
-does not store a Team ID in Git:
+Both production launchers call `AnchorCloudSyncFactory.makeRunner`. It returns
+no runner without a container identifier. The separate CloudKit variants under
+`Configuration/` supply that identifier and the required entitlements. When
+configured, the factory's current default polling interval is **5 seconds**;
+this is a foreground-driven runner, not background push delivery. No Demo target
+is part of the current project.
+
+To build the optional CloudKit variant, supply the provisioned Developer Team ID
+explicitly. The variant does not store that Team ID in Git:
 
 ```sh
 xcodebuild -project Anchor.xcodeproj -scheme "Anchor iOS" \

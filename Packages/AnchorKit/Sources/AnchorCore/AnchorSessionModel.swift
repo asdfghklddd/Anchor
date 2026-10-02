@@ -12,7 +12,6 @@ public final class AnchorSessionModel {
     private let usesTaskDashboard: Bool
     private let presenceProvider: (any PresenceSignalProviding)?
     private let sourceHealthProvider: (any SourceHealthProviding)?
-    private let sourceActionProvider: (any SourceActionPerforming)?
     private let durableSyncStatusProvider: (any DurableSyncStatusProviding)?
     private var projectionTask: Task<Void, Never>?
     private var presenceTask: Task<Void, Never>?
@@ -23,14 +22,12 @@ public final class AnchorSessionModel {
     private var currentPosture = DevicePosture.unknown
     private var latestSignals: PresenceSignals
     private var pendingPresenceStatus: PresenceStatus?
-    private var resolvingDecisionIDs: Set<UUID> = []
     private var lastReturnFeedbackKey: String?
 
     public init(
         repository: any SessionRepository,
         presenceProvider: (any PresenceSignalProviding)? = nil,
         sourceHealthProvider: (any SourceHealthProviding)? = nil,
-        sourceActionProvider: (any SourceActionPerforming)? = nil,
         durableSyncStatusProvider: (any DurableSyncStatusProviding)? = nil,
         initialProjection: SessionProjection = .empty,
         presencePolicy: PresencePolicy = PresencePolicy(),
@@ -40,7 +37,6 @@ public final class AnchorSessionModel {
         self.usesTaskDashboard = usesTaskDashboard
         self.presenceProvider = presenceProvider
         self.sourceHealthProvider = sourceHealthProvider
-        self.sourceActionProvider = sourceActionProvider
         self.durableSyncStatusProvider = durableSyncStatusProvider
         projection = usesTaskDashboard ? TaskDashboardPolicy.presentation(of: initialProjection) : initialProjection
         presenceReducer = PresenceReducer(
@@ -203,50 +199,6 @@ public final class AnchorSessionModel {
     @discardableResult
     public func addNote(_ text: String) async -> Bool {
         await send(.addNote(text))
-    }
-
-    @discardableResult
-    public func resolve(decision: Decision, option: DecisionOption) async -> Bool {
-        guard !usesTaskDashboard else {
-            lastError = ProcessSourceError.unsupportedAction.localizedDescription
-            return false
-        }
-        guard resolvingDecisionIDs.insert(decision.id).inserted else { return false }
-        defer { resolvingDecisionIDs.remove(decision.id) }
-        let current = await repository.currentProjection()
-        guard let owner = current.hostedSessions.first(where: { task in
-            task.decisions.contains(where: { $0.id == decision.id })
-        }), let savedDecision = owner.decisions.first(where: { $0.id == decision.id }) else {
-            lastError = SessionRepositoryError.decisionNotFound.localizedDescription
-            return false
-        }
-        // Reopening a stale sheet must not execute a second external action.
-        if savedDecision.status != .open {
-            guard savedDecision.selectedOptionID == option.id else {
-                lastError = SessionRepositoryError.invalidDecisionOption.localizedDescription
-                return false
-            }
-            lastError = nil
-            return true
-        }
-        let sourceID = owner.processes.first { $0.id == decision.processID }?.sourceID
-        let succeeded = await send(.forSession(owner.id, .resolveDecision(decisionID: decision.id, optionID: option.id)))
-        guard succeeded, let sourceID, let sourceActionProvider else {
-            return succeeded
-        }
-
-        do {
-            _ = try await sourceActionProvider.perform(
-                .resolveDecision(decisionID: decision.id, optionID: option.id),
-                on: sourceID
-            )
-        } catch {
-            // The durable Anchor decision remains resolved. The adapter error
-            // is surfaced so the user can retry or open the source manually.
-            lastError = error.localizedDescription
-            return false
-        }
-        return true
     }
 
     private func present(_ projection: SessionProjection) -> SessionProjection {
