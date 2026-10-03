@@ -100,7 +100,8 @@
                 Text(buttonTitle).font(.subheadline.bold())
               }
               .frame(maxWidth: .infinity, minHeight: 44)
-              .foregroundStyle(canAdvance ? Color.white : AnchorSetupStyle.secondary)
+              .foregroundStyle(canAdvance ? AnchorIOSStyle.onAccent : AnchorSetupStyle.secondary)
+              .tint(AnchorIOSStyle.onAccent)
               .background(AnchorSetupStyle.accent.opacity(canAdvance ? 1 : 0.15), in: .capsule)
             }
             .buttonStyle(.plain)

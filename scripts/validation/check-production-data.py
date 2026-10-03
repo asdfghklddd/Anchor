@@ -10,6 +10,7 @@ forbidden = ('DemoHostedTasks', 'RecordingReturnDemo', 'ANCHOR_UI_TEST_RECORDING
              'Parallel efficiency 2.4', '并行效率 2.4', '"profile.icloud.just.now"',
              'ANCHOR_RETURN_REVIEW_EXPORT', '8EAB749A-9806-4D96-9577-10AA97049D4C',
              '8EAB749A-9806-4D96-9577-10AA97049D4D',
+             'ANCHOR_READABILITY_REVIEW_EXPORT', 'CA720001-7215-40E0-8B0B-',
              'struct WebProcessSource', 'struct MacWorkspaceProcessSource',
              'class SystemMacWorkspaceObserver', 'struct SafariExtensionStateClient',
              'struct DecisionView', 'struct MacDecisionPanel',

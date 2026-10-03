@@ -11,7 +11,7 @@ struct HostedTaskCard: View {
     @ScaledMetric(relativeTo: .headline) private var titleSize: CGFloat = 20
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 2) {
             HStack(alignment: .top, spacing: 4) {
                 Text(task.goal.title).font(.system(size: titleSize, weight: .semibold))
                     .foregroundStyle(.primary)
@@ -40,8 +40,16 @@ struct HostedTaskCard: View {
         let states = HostedTaskAppearance.isComplete(task)
             ? L10n.completed
             : task.taskProcesses.map { L10n.processStatus($0) }.joined(separator: ", ")
-        let progress = task.conversationsInJoiningOrder.first?.progress?.formatted(.percent) ?? "—"
-        return "\(states), \(L10n.taskProgress) \(progress)"
+        return "\(states), \(L10n.taskProgress) \(progressText)"
+    }
+
+    private var displayedProgress: Double? {
+        guard let value = task.conversationsInJoiningOrder.first?.progress, value.isFinite else { return nil }
+        return min(1, max(0, value))
+    }
+
+    private var progressText: String {
+        displayedProgress?.formatted(.percent.precision(.fractionLength(0))) ?? L10n.unknown
     }
 
     @ViewBuilder private var status: some View {
@@ -74,25 +82,38 @@ struct HostedTaskCard: View {
     }
 
     private var progressCapsule: some View {
-        let progress = task.conversationsInJoiningOrder.first?.progress
+        let progress = displayedProgress
         let color = HostedTaskAppearance.tint(task)
-        return HStack(spacing: 3) {
-            ZStack {
-                Circle().stroke(color.opacity(0.22), lineWidth: 2)
+        return HStack(spacing: 5) {
+            Group {
                 if let progress {
-                    Circle().trim(from: 0, to: min(1, max(0, progress)))
-                        .stroke(color, style: StrokeStyle(lineWidth: 2, lineCap: .round))
-                        .rotationEffect(.degrees(-90))
+                    ZStack {
+                        Circle().stroke(color.opacity(0.25), lineWidth: 2)
+                        Circle().trim(from: 0, to: progress)
+                            .stroke(color, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                    }
+                } else {
+                    Image(systemName: "questionmark")
+                        .font(.caption2.weight(.semibold))
                 }
             }
             .frame(width: 13, height: 13)
-            Spacer(minLength: 0)
+            .accessibilityHidden(true)
+            Text(progressText)
+                .font(.caption2.weight(.semibold))
+                .monospacedDigit()
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
         }
-        .padding(.horizontal, 3)
-        .frame(width: 50, height: 17)
+        .foregroundStyle(AnchorIOSStyle.text)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .frame(minWidth: 62)
         .background(color.opacity(0.18), in: .capsule)
+        .accessibilityElement(children: .ignore)
         .accessibilityLabel(L10n.taskProgress)
-        .accessibilityValue(progress?.formatted(.percent) ?? "—")
+        .accessibilityValue(progressText)
     }
 }
 #endif
