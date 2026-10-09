@@ -7,7 +7,7 @@ import SwiftUI
 struct ConnectionSettingsView: View {
     let projection: SessionProjection
     let controller: (any LocalLinkControlling)?
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
+    @AnchorReducedMotion private var reduceMotion
     @State private var logoRevealed = false
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.dismiss) private var dismiss

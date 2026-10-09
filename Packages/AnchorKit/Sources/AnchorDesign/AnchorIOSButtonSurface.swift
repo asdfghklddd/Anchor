@@ -5,7 +5,7 @@ import SwiftUI
 struct AnchorIOSButtonSurface: View {
     let configuration: ButtonStyleConfiguration
     @Environment(\.isEnabled) private var isEnabled
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
+    @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
         configuration.label

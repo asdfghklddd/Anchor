@@ -6,7 +6,7 @@ import SwiftUI
 struct HandoffView: View {
     let model: AnchorSessionModel
 
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
+    @AnchorReducedMotion private var reduceMotion
     @State private var secured = false
     @State private var isGathering = false
 

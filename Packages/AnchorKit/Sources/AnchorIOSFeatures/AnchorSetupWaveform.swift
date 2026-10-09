@@ -5,7 +5,7 @@ import SwiftUI
 /// Actual microphone energy remains visible even with Reduce Motion enabled.
 struct AnchorSetupWaveform: View {
     let level: Double
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
+    @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
         let energy = min(1, max(0, level))

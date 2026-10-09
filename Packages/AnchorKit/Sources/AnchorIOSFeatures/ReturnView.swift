@@ -10,8 +10,7 @@ struct ReturnView: View {
     let model: AnchorSessionModel
 
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
+    @AnchorReducedMotion private var reduceMotion
     @State private var feedbackCount = 0
     @State private var cardsPresented = false
     @State private var animateEntrance = false
@@ -67,14 +66,13 @@ struct ReturnView: View {
     }
 
     private func enteringCard<Content: View>(_ content: Content, index: Int) -> some View {
-        let reducesMotion = reduceMotion || systemReduceMotion
-        return content
-            .scaleEffect(cardsPresented || reducesMotion ? 1 : 0.92)
-            .offset(y: cardsPresented || reducesMotion ? 0 : 22)
+        content
+            .scaleEffect(cardsPresented || reduceMotion ? 1 : 0.92)
+            .offset(y: cardsPresented || reduceMotion ? 0 : 22)
             .opacity(cardsPresented ? 1 : 0)
             .animation(
                 animateEntrance
-                    ? (reducesMotion
+                    ? (reduceMotion
                         ? .easeOut(duration: 0.16)
                         : .spring(duration: 0.36, bounce: 0.26).delay(Double(index) * 0.035))
                     : nil,

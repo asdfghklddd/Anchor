@@ -6,7 +6,7 @@ import SwiftUI
 struct ProcessDetailView: View {
     let process: AnchorProcess
 
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
+    @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
         ScrollView {

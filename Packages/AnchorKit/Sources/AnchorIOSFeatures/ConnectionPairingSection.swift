@@ -8,7 +8,7 @@ struct ConnectionPairingSection: View {
     let controller: any LocalLinkControlling
     let connection: ConnectionState
     let proximity: ProximityState
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
+    @AnchorReducedMotion private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @State private var isSubmitting = false
     @State private var pairingCode = ""

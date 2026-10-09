@@ -150,7 +150,9 @@ final class AnchorEdgePanelController {
         presentation.synchronize(
             activeSessionID: activeSessionID,
             isLoading: snapshot.2,
-            reduceMotion: UserDefaults.standard.bool(forKey: AnchorMotion.reduceMotionDefaultsKey)
+            // Match the views: either the system or the app setting reduces motion.
+            reduceMotion: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+                || UserDefaults.standard.bool(forKey: AnchorMotion.reduceMotionDefaultsKey)
         )
     }
 

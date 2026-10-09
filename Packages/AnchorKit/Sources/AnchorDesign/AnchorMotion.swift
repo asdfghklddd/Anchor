@@ -15,3 +15,15 @@ public enum AnchorMotion {
     public static let waterSplashDuration: Duration = .milliseconds(680)
     public static let anchorLift = Animation.spring(response: 0.40, dampingFraction: 1.00)
 }
+
+/// True when either the system or the app's own setting asks for reduced motion.
+/// The app toggle can add a reduction but never overrides the system preference.
+@propertyWrapper
+public struct AnchorReducedMotion: DynamicProperty {
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var appReduceMotion = false
+
+    public init() {}
+
+    public var wrappedValue: Bool { systemReduceMotion || appReduceMotion }
+}

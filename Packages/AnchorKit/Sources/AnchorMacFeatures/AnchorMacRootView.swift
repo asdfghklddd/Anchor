@@ -16,7 +16,7 @@ public struct AnchorMacRootView: View {
     @State private var isSidebarExpanded = false
     @State private var requestsSidebarToggleFocus = false
 
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
+    @AnchorReducedMotion private var reduceMotion
     @Environment(\.controlActiveState) private var controlActiveState
 
     public init(

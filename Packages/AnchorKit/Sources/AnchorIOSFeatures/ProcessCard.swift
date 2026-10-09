@@ -12,7 +12,7 @@ struct ProcessCard: View {
     var homeCardHeight: CGFloat? = nil
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
+    @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
         Group {

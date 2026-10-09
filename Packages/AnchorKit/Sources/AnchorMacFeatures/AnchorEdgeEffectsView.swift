@@ -4,7 +4,7 @@ import SwiftUI
 
 public struct AnchorEdgeEffectsView: View {
     private let presentation: AnchorEdgePresentationModel
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
+    @AnchorReducedMotion private var reduceMotion
 
     public init(presentation: AnchorEdgePresentationModel) {
         self.presentation = presentation

@@ -384,17 +384,16 @@ private struct AnchorFullScreenHost: View {
     let onNotifications: () -> Void
     let onLayout: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
+    @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
         ZStack {
             content
                 .id(item)
-                .transition(reduceMotion || systemReduceMotion || item == .returning
+                .transition(reduceMotion || item == .returning
                     ? .opacity : .move(edge: .bottom).combined(with: .opacity))
         }
-        .animation(reduceMotion || systemReduceMotion ? nil : AnchorMotion.panel, value: item)
+        .animation(reduceMotion ? nil : AnchorMotion.panel, value: item)
     }
 
     @ViewBuilder

@@ -75,7 +75,7 @@ struct ProfileView: View {
     let onRoute: (AnchorRoute) -> Void
     let onSheet: (AnchorSheet) -> Void
 
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
+    @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
         ZStack {
