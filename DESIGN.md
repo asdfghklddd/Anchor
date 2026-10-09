@@ -71,7 +71,7 @@ Codex 自动关联每两秒扫描已授权目录，以会话创建时间和本�
 | 连接 | 共用原生 sheet；竖屏 400pt、横屏 260pt，圆角 32pt；验证码按真实配对状态出现，错误在卡片内展示 |
 | 离开与返航 | 任一认证通道有效则继续工作；连续全部失联至少五分钟确认自动离开。手动离开立即生效。认证重连后在前台直接进入四卡摘要，无需横屏；Back 成功后再提示横屏 |
 | 返航反馈 | 四卡按 35ms 间隔弹入，一次成功触感；真实记录、事件、状态统计和下一步详情入口；迟到数据继续更新；系统或 App 减少动态效果时使用淡入 |
-| 启动 | 一次约 1.14 秒的锚落位、回弹、单圈涟漪与字标过渡；减少动态效果时约 0.4 秒静态标记与淡出 |
+| 启动 | 2026-10-08 按项目所有者要求改为“港湾投锚”：约 2.2 秒内海面升起、App 图标中的 A 字锚标抬起后落水、溅起水花与涟漪、下沉回稳，字标 ANCHOR 与标语“让思路靠岸”浮现，潮水上涨交接到首页；轻点可提前结束（约 0.26 秒）。减少动态效果时为静止港湾、锚标与标语，约 0.55 秒后 0.18 秒淡出。已在模拟器浅色／深色／减少动态效果录屏检查，未做真机验收 |
 
 主要入口：[AnchorIOSRootView](Packages/AnchorKit/Sources/AnchorIOSFeatures/AnchorIOSRootView.swift)、[HostedTaskCard](Packages/AnchorKit/Sources/AnchorIOSFeatures/HostedTaskCard.swift)、[HomeAnchorChart](Packages/AnchorKit/Sources/AnchorIOSFeatures/HomeAnchorChart.swift)、[ReturnView](Packages/AnchorKit/Sources/AnchorIOSFeatures/ReturnView.swift)、[ReturnReviewContent](Packages/AnchorKit/Sources/AnchorIOSFeatures/ReturnReviewContent.swift)。
 
@@ -173,6 +173,8 @@ Codex 自动关联每两秒扫描已授权目录，以会话创建时间和本�
 | `yellow` | `#F4C62F` | `#DABB48` | 关注提示、任务身份色之一 |
 | `pink` | `#E967D3` | `#D986CB` | 任务身份色之一 |
 | `violet` | `#8B7CF6` | `#A197F2` | 任务身份色之一（第 4 个任务色，取代原近似青色） |
+| `oceanSurface` | `#6FD8EF` | `#1E6F86` | 启动港湾的海面色 |
+| `oceanDeep` | `#2A8FC7` | `#0B2B3A` | 启动港湾的深水色 |
 | `success` | `#26764D` | `#8DDDAD` | 连接、完成状态文字 |
 | `border` | `#DCECF0` | `#3C5662` | 输入边界、细分隔 |
 
@@ -342,7 +344,7 @@ Codex 自动关联每两秒扫描已授权目录，以会话创建时间和本�
 | edgeRest／anchorLift | spring response 400ms、damping 1.00 | 边缘收起、收锚，不额外反复弹跳 |
 | Mac 落锚／水花 | 2,100ms／680ms | 真实锚点阶段变化的已有品牌反馈 |
 | iOS 返航 | duration 360ms、bounce 0.26；卡间 35ms | D08 的一次四卡入场 |
-| iOS 启动 | 约 1.14 秒；减少动态效果约 0.4 秒 | 一次启动过渡，见下方约束 |
+| iOS 启动 | 约 2.2 秒，轻点可提前结束；减少动态效果约 0.73 秒 | 一次启动过渡，见下方约束 |
 
 Spring 的 response／duration 是配置参数，不承诺所有设备上的最终收敛时刻完全一致。以上专项动画保留，不用通用技能的时长建议统一缩短品牌与返航效果。
 
@@ -362,8 +364,8 @@ Spring 的 response／duration 是配置参数，不承诺所有设备上的最�
 
 - 过渡可中断、取消、快速反向；视图关闭时取消尚未开始的动画任务。用户连续打开关闭面板后，不应有迟到图形或触感。
 - 主要阅读内容先可用；多个相关元素以一个短序列组织，不把每行、每个数字分别演出。加载等待由真实任务驱动，不能为观看效果人为延长。
-- 启动是已确认的专门过渡：蓄力、落位、轻压缩与回弹、单圈涟漪和字标、完整淡出。遮罩期间首页不接受触摸与辅助功能焦点；结束后立即释放。启动效果不在普通切页、刷新或回前台时重复播放。
-- 启动减少动态效果时仅静态标记与淡出，不替换原始应用图标或品牌资源。实现细节见 [IOS_LAUNCH_MOTION.md](Documentation/IOS_LAUNCH_MOTION.md)。
+- 启动是项目所有者确认的专门过渡（2026-10-08 修订）：海面升起与锚标蓄力、落水溅起水花与涟漪、下沉回稳与气泡、字标与标语浮现、潮水上涨交接。每帧由经过时间计算，可被轻点提前结束。遮罩期间首页不接受触摸与辅助功能焦点；结束后立即释放。启动效果不在普通切页、刷新或回前台时重复播放。
+- 启动减少动态效果时仅显示静止港湾、锚标与标语并淡出，不替换原始应用图标或品牌资源。实现细节见 [IOS_LAUNCH_MOTION.md](Documentation/IOS_LAUNCH_MOTION.md)。
 - 避免会改变整页布局的高频动画；检查长列表和多会话情况下的实际流畅度。不能仅凭动画参数或录屏帧率宣称真机无卡顿。
 
 ### D11 · 触感、声音、文案与错误恢复

@@ -2,13 +2,11 @@
 import SwiftUI
 
 public struct AnchorLaunchGate<Content: View>: View {
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
+    @AnchorReducedMotion private var reduceMotion
 
     @State private var isPresentingSplash = true
-    @State private var logoIsVisible = false
-    @State private var wordmarkIsVisible = false
-    @State private var rippleIsExpanded = false
-    @State private var isExiting = false
+    @State private var startedAt = Date.now
+    @State private var skippedAt: Double?
 
     private let content: Content
 
@@ -18,62 +16,42 @@ public struct AnchorLaunchGate<Content: View>: View {
 
     public var body: some View {
         ZStack {
+            // The workspace mounts underneath at once; it only waits for input and focus.
             content
                 .allowsHitTesting(!isPresentingSplash)
                 .accessibilityHidden(isPresentingSplash)
 
             if isPresentingSplash {
-                HarborLaunchSplash(
-                    logoIsVisible: logoIsVisible,
-                    wordmarkIsVisible: wordmarkIsVisible,
-                    rippleIsExpanded: rippleIsExpanded
-                )
-                .opacity(isExiting ? 0 : 1)
-                .zIndex(100)
-                .accessibilityIdentifier("launch.splash")
+                HarborLaunchSplash(startedAt: startedAt, timing: timing, onSkip: skip)
+                    .zIndex(100)
+                    .accessibilityIdentifier("launch.splash")
             }
         }
-        .task(id: reduceMotion) { await playLaunchSequence() }
+        // Start the clock when the scene is first shown, not when app setup began,
+        // so a slow cold start never skips the opening beats.
+        .onAppear { startedAt = .now }
+        .task(id: timing) { await dismissWhenFinished() }
+    }
+
+    private var timing: HarborLaunchChoreography.Timing {
+        HarborLaunchChoreography.Timing(reduceMotion: reduceMotion, skippedAt: skippedAt)
+    }
+
+    private func skip() {
+        guard skippedAt == nil else { return }
+        skippedAt = Date.now.timeIntervalSince(startedAt)
     }
 
     @MainActor
-    private func playLaunchSequence() async {
+    private func dismissWhenFinished() async {
         guard isPresentingSplash else { return }
-
-        // A cancelled presentation may be mounted again, or Reduce Motion may change.
-        var transaction = Transaction()
-        transaction.disablesAnimations = true
-        withTransaction(transaction) {
-            logoIsVisible = reduceMotion
-            wordmarkIsVisible = reduceMotion
-            rippleIsExpanded = false
-            isExiting = false
+        // Keep the overlay for the whole tide and fade; never truncate its last frames.
+        let remaining = timing.total - Date.now.timeIntervalSince(startedAt)
+        if remaining > 0 {
+            do { try await Task.sleep(for: .seconds(remaining)) } catch { return }
         }
-
-        if reduceMotion {
-            guard await wait(for: .milliseconds(220)) else { return }
-        } else {
-            withAnimation(AnchorMotion.continuity) { logoIsVisible = true }
-            guard await wait(for: .milliseconds(280)) else { return }
-            withAnimation(AnchorMotion.panel) { wordmarkIsVisible = true }
-            withAnimation(.easeOut(duration: 0.58)) { rippleIsExpanded = true }
-            guard await wait(for: .milliseconds(580)) else { return }
-        }
-
-        // Keep the overlay mounted for the entire fade; never truncate its last frames.
-        let fadeDuration = reduceMotion ? 0.18 : 0.28
-        withAnimation(.easeInOut(duration: fadeDuration)) { isExiting = true }
-        guard await wait(for: .seconds(fadeDuration)) else { return }
+        guard !Task.isCancelled else { return }
         isPresentingSplash = false
-    }
-
-    private func wait(for duration: Duration) async -> Bool {
-        do {
-            try await Task.sleep(for: duration)
-            return !Task.isCancelled
-        } catch {
-            return false
-        }
     }
 }
 #endif

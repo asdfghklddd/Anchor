@@ -621,6 +621,7 @@ public enum L10n {
     public static let voiceOver = AnchorStrings.value("accessibility.voiceover", default: "VoiceOver")
     public static let dynamicType = AnchorStrings.value("accessibility.dynamic.type", default: "Dynamic Type")
     public static let reduceMotion = AnchorStrings.value("accessibility.reduce.motion", default: "Reduce Motion")
+    public static let launchSlogan = AnchorStrings.value("launch.slogan", default: "Let your thinking come ashore")
     public static let increaseContrast = AnchorStrings.value("accessibility.increase.contrast", default: "Increase Contrast")
     public static let reduceTransparency = AnchorStrings.value("accessibility.reduce.transparency", default: "Reduce Transparency")
 

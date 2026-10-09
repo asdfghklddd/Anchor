@@ -23,6 +23,9 @@ public enum AnchorIOSStyle {
     public static let pageInset: CGFloat = 20
     public static let pink = adaptive(light: 0xE967D3, dark: 0xD986CB)
     public static let violet = adaptive(light: 0x8B7CF6, dark: 0xA197F2)
+    /// Launch harbor water: the surface tint and the depth it fades into.
+    public static let oceanSurface = adaptive(light: 0x6FD8EF, dark: 0x1E6F86)
+    public static let oceanDeep = adaptive(light: 0x2A8FC7, dark: 0x0B2B3A)
 
     public static var background: LinearGradient {
         LinearGradient(colors: [canvasTop, canvasBottom], startPoint: .top, endPoint: .bottom)

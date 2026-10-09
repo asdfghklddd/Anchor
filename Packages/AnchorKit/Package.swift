@@ -50,7 +50,7 @@ let package = Package(
         ),
         .testTarget(
             name: "AnchorIOSFeaturesTests",
-            dependencies: ["AnchorCore", "AnchorIOSFeatures"]
+            dependencies: ["AnchorCore", "AnchorDesign", "AnchorIOSFeatures"]
         ),
         .testTarget(
             name: "AnchorMacFeaturesTests",
