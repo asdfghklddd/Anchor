@@ -11,8 +11,15 @@ enum HostedTaskAppearance {
         case 0: return AnchorIOSStyle.yellow
         case 1: return AnchorIOSStyle.cyan
         case 2: return AnchorIOSStyle.pink
-        case 3: return Color(red: 0.30, green: 0.81, blue: 0.94)
-        default: return Color(hue: (Double(index) * 0.61803398875).truncatingRemainder(dividingBy: 1), saturation: 0.64, brightness: 0.88)
+        case 3: return AnchorIOSStyle.violet
+        // Hand-picked hues stay clear of the named colors and of status green/red.
+        case 4: return AnchorIOSStyle.generatedTaskColor(hue: 0.07)
+        case 5: return AnchorIOSStyle.generatedTaskColor(hue: 0.62)
+        case 6: return AnchorIOSStyle.generatedTaskColor(hue: 0.22)
+        default:
+            return AnchorIOSStyle.generatedTaskColor(
+                hue: (Double(index) * 0.61803398875).truncatingRemainder(dividingBy: 1)
+            )
         }
     }
 

@@ -22,6 +22,7 @@ public enum AnchorIOSStyle {
     public static let heroRadius: CGFloat = 20
     public static let pageInset: CGFloat = 20
     public static let pink = adaptive(light: 0xE967D3, dark: 0xD986CB)
+    public static let violet = adaptive(light: 0x8B7CF6, dark: 0xA197F2)
 
     public static var background: LinearGradient {
         LinearGradient(colors: [canvasTop, canvasBottom], startPoint: .top, endPoint: .bottom)
@@ -33,6 +34,18 @@ public enum AnchorIOSStyle {
         case "coral", "periwinkle", "blue": pink
         default: cyan
         }
+    }
+
+    /// Extra task identities beyond the named tokens, slightly dimmed on dark surfaces.
+    public static func generatedTaskColor(hue: Double) -> Color {
+        Color(uiColor: UIColor { traits in
+            UIColor(
+                hue: hue,
+                saturation: 0.64,
+                brightness: traits.userInterfaceStyle == .dark ? 0.78 : 0.88,
+                alpha: 1
+            )
+        })
     }
 
     private static func adaptive(light: UInt32, dark: UInt32) -> Color {
