@@ -10,6 +10,12 @@ struct HomeAnchorChart: View {
     private var lineLength: CGFloat { max(40, height - 102) }
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .caption2) private var labelSize: CGFloat = 8
+    @AnchorReducedMotion private var reduceMotion
+
+    /// The rope lowers to new progress; with reduced motion the value only fades in.
+    private var liveValueAnimation: Animation {
+        reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -31,8 +37,10 @@ struct HomeAnchorChart: View {
                         HStack(alignment: .top, spacing: 8) {
                             ForEach(tasks) { task in
                                 group(task, width: max(dynamicTypeSize.isAccessibilitySize ? 125 : 76, (geometry.size.width - 24) / 4))
+                                    .transition(.opacity)
                             }
                         }
+                        .animation(liveValueAnimation, value: tasks.map(\.id))
                     }
                     .scrollIndicators(.hidden)
                 }
@@ -121,6 +129,7 @@ struct HomeAnchorChart: View {
                     .frame(width: 19, height: 19).frame(width: 31, height: 31)
                     .background(tint, in: .circle)
             }
+            .animation(liveValueAnimation, value: progress)
         } else {
             VStack(spacing: 4) {
                 HarborAnchorGlyph(color: process.status == .queued ? AnchorIOSStyle.border : tint, lineWidth: 1.2).frame(width: 9, height: 16)
@@ -132,6 +141,7 @@ struct HomeAnchorChart: View {
                 }
             }
             .padding(.top, 8)
+            .animation(liveValueAnimation, value: progress)
         }
     }
 

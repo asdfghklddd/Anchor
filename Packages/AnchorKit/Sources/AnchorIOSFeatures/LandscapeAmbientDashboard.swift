@@ -9,6 +9,7 @@ struct LandscapeAmbientDashboard: View {
     let onTask: (UUID) -> Void
     let onManage: () -> Void
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
         GeometryReader { geometry in
@@ -40,12 +41,15 @@ struct LandscapeAmbientDashboard: View {
     }
 
     private func clock(height: CGFloat) -> some View {
-        TimelineView(.periodic(from: .now, by: 30)) { context in
+        // Tick on the minute boundary so the large clock never lags the real time.
+        TimelineView(.everyMinute) { context in
             HStack(alignment: .center, spacing: 16) {
                 Text(context.date.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits)))
                     .font(.system(size: height * 0.90, weight: .black, design: .default))
                     .italic().monospacedDigit().tracking(-4)
                     .minimumScaleFactor(0.5).lineLimit(1)
+                    .contentTransition(reduceMotion ? .opacity : .numericText())
+                    .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.micro, value: context.date)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityIdentifier("ambient.time")
                 VStack(alignment: .leading, spacing: 3) {
@@ -112,10 +116,16 @@ struct LandscapeAmbientDashboard: View {
                         }
                         .buttonStyle(AnchorPressButtonStyle())
                         .accessibilityIdentifier("hosted.task.\(task.id)")
+                        .transition(reduceMotion ? .opacity : .scale(scale: 0.95).combined(with: .opacity))
                     }
                 }.frame(maxWidth: .infinity)
             }
         }
+        // Only membership changes animate; ordinary refreshes keep cards still.
+        .animation(
+            reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity,
+            value: projection.hostedSessions.map(\.id)
+        )
     }
 
     private func focusMinutes(at date: Date) -> Int {

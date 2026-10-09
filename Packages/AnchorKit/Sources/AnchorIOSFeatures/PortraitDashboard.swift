@@ -12,6 +12,7 @@ struct PortraitDashboard: View {
     let onSheet: (AnchorSheet) -> Void
     let onTask: (UUID) -> Void
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
         ZStack {
@@ -83,10 +84,13 @@ struct PortraitDashboard: View {
                         }
                         .buttonStyle(AnchorPressButtonStyle())
                         .accessibilityIdentifier("hosted.task.\(task.id)")
+                        .transition(reduceMotion ? .opacity : .scale(scale: 0.95).combined(with: .opacity))
                     }
                 }.frame(maxWidth: .infinity)
             }
         }
+        // Only membership changes animate; ordinary refreshes keep cards still.
+        .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: tasks.map(\.id))
     }
 }
 
