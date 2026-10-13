@@ -227,3 +227,19 @@ Physical iPhone–Mac Bluetooth/Bonjour behavior, successful on-device speech tr
 - macOS 与 iOS Simulator Debug 构建通过（关闭签名）；`git diff --check` 与生产数据边界检查通过。
 - 本机 `~/.codex/sessions` 只读核对（只统计结构与数量，不输出内容）：210 个日志中 47 个用户对话、163 个 guardian／子代理会话；新逻辑候选全部为用户对话，提取的请求不含附带上下文标签。按旧逻辑模拟时，156 个 guardian 会话中有 106 个会被关联到其父对话的锚点，且有 4.3% 会匹配无关锚点；用户对话以输入文字为题时的自身匹配从 17／33 提升到 33／33。
 - 未做：与实体 iPhone 联调的边缘回执观感与音量、真实终端中 10 秒规则的使用感受、合并对话在手机图表上的视觉检查。
+
+## 2026-10-13：此刻总览、边缘浮标与前端打磨
+
+### 实现
+
+- iOS 首页 Anchors 进度图改为“此刻”总览（`TaskTide`／`WorkGlance`／`HomeTideCard`）：标题计数、按任务的状态轨道、最新变化；横屏使用紧凑版。任务卡三灯改为状态文字，进度胶囊仅在来源上报时出现。
+- Mac 以同一总览（`MacGlanceCard`，共享 `TideLaneView`、`AnchorTaskIdentity`）取代四列任务网格；边缘小船旁新增失败／等待／完成浮标（`EdgeBuoySignal`）。
+- 文案：Mac 失联改为灰色、权限问题琥珀色；Focus 改为“已进行”；返航 Back 改为“继续工作”主按钮；返航变化不再显示原始 Codex 事件名；移除退役的“Waiting for judgment”；Mac 来源设置去除工程用语；Mac 日期按中文界面格式化。
+
+### 验证与边界
+
+- Swift 测试：新增 `TaskTideTests`（8）、`EdgeBuoyTests`（3）、`DesignPreviewFixtureTests`、`MacDesignPreviewTests`，全部通过。全量运行中 `AnchorEdgePresentationModelTests` / `AnchorPhoneAnchorStateTests` 的计时类用例在并行负载下偶发失败，单独重跑 3 次均通过；此前未改动 Mac 代码时已出现同一现象。
+- iOS Simulator（iPhone 18 Pro，iOS 27）Debug 构建与 `DesignPreviewUITests` 通过：竖屏浅色／深色、横屏、AccessibilityXL 与空态截图已人工检查。`DashboardReadabilityUITests` 的未知进度断言同步改为“未上报进度”，本轮未重跑。
+- macOS Debug 构建通过；Mac 总览与浮标仅以 ImageRenderer 渲染检查（浅色／深色），未启动 Mac 应用做实机交互。
+- 测试数据只写入隔离的模拟器 UI 测试目录与临时目录；未访问生产存储或钥匙串。
+- 未做：真机一眼可读性、浮标在多显示器／全屏下的可见度与打扰程度、Live Activity／灵动岛（需新增扩展 target 与后台更新方案，另行决定）。

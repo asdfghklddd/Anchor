@@ -40,6 +40,10 @@ struct MacDesignPreviewTests {
         ]
     }
 
+    /// One fixed throwaway domain, removed after rendering, so runs leave no preference files.
+    private static let previewDefaultsName = "anchor.design-preview"
+    private static let previewDefaults = UserDefaults(suiteName: previewDefaultsName)!
+
     @Test("The glance and buoy render in both appearances")
     func renderPreviews() throws {
         let tasks = Self.tasks(now: .now)
@@ -57,7 +61,7 @@ struct MacDesignPreviewTests {
 
         let row = HStack(spacing: 24) {
             ForEach([EdgeBuoySignal.failed, .attention, .finished], id: \.self) { signal in
-                let model = AnchorEdgePresentationModel(defaults: UserDefaults(suiteName: "anchor.preview.\(UUID())")!)
+                let model = AnchorEdgePresentationModel(defaults: Self.previewDefaults)
                 let _ = model.showBuoy(signal)
                 AnchorEdgeControlView(presentation: model, onOpenDetails: {})
             }
@@ -65,6 +69,7 @@ struct MacDesignPreviewTests {
         .padding(20)
         .background(Color(red: 0.30, green: 0.42, blue: 0.40))
         try export(row, name: "mac-edge-buoys")
+        Self.previewDefaults.removePersistentDomain(forName: Self.previewDefaultsName)
     }
 
     private func export<Content: View>(_ view: Content, name: String) throws {
