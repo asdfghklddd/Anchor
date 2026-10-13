@@ -175,15 +175,22 @@ public struct StatusBadge: View {
             .frame(width: badgeWidth, height: 32 * badgeScale)
             .accessibilityHidden(true)
         } else {
-            Label(text, systemImage: symbol)
-                .font(.system(size: textSize, weight: .bold))
-                .foregroundStyle(.white)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
-                .background(AnchorPalette.deepSea, in: .capsule)
-                .overlay {
-                    Capsule().stroke(tint, lineWidth: 2)
-                }
+            // A soft chip: state is clear at a glance without outweighing the row's title.
+            Label {
+                Text(text)
+                    .foregroundStyle(AnchorPalette.ink)
+            } icon: {
+                Image(systemName: symbol)
+                    .foregroundStyle(tint)
+            }
+            .font(.system(size: textSize, weight: .semibold))
+            .labelStyle(.titleAndIcon)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 4)
+            .background(tint.opacity(0.16), in: .capsule)
+            .overlay {
+                Capsule().strokeBorder(tint.opacity(0.42), lineWidth: 1)
+            }
                 .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
                 .animation(
                     reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.micro,

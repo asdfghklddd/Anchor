@@ -2,6 +2,15 @@
 
 Last updated: 2026-10-02
 
+## Current results — macOS edge berth, boat, cues and window cards (2026-10-12)
+
+- Owner-requested changes: the edge boat moved to the lower-right corner above the Dock. It was redrawn in the app-icon language, the anchor now sinks a fixed 84 pt below the boat (drop 2.1 s → 1.5 s), the edge sounds are synthesized (four cues instead of Bottle/Tink), and the detail window was reorganized into a single card system without changing its skeleton or page order.
+- **Swift package: 246 tests passed** (Core 158, Transport 43, MacFeatures 27, IOSFeatures 18). New tests: fixed berth geometry (`AnchorEdgeEffectsMetricsTests`) and cue bounds, WAV encoding and pitch variation (`AnchorEdgeSoundSynthesizerTests`). The multiple-anchor tests now expect the dedicated `anchorJoined` / `anchorReleased` receipts.
+- **macOS and iOS Debug builds passed** with signing disabled.
+- One `ANCHOR_UI_TESTING=1` instance was launched, tracked by PID, terminated, and its temporary store and defaults suite were removed. Screenshots confirmed the berth in the lower-right corner above the Dock (tucked state) and the new current-work layout fitting above the fold. Populated cards (multiple tasks, attention, events) were checked in light and dark with `ImageRenderer` in a scratch package copy, not in the running app. The drop sequence was checked frame by frame the same way.
+- Cue loudness was measured offline: the former Bottle and Tink played at about -51 / -53 dBFS RMS at their configured volumes. The new landed and retrieved cues play at about -45 / -46 dBFS, and the joined and released receipts at about -49 / -50 dBFS.
+- **Not verified:** the live drop/splash/retrieve on a phone-anchored task; how the cues sound and how intrusive they are on real speakers; whether the panel's transparent area passes clicks through to apps underneath (synthetic input was not used against the user's desktop); multi-display and full-screen Spaces; VoiceOver for the new connection button and activity disclosure.
+
 ## Current results — iOS dashboard readability (2026-10-02)
 
 - Main-conversation capsules now show a ring plus integer percentage, or `? 未知` / `? Unknown` when progress is absent. Visible and accessibility values use the same joined-first conversation. Existing task colors, staggered card sizes, status lamps and completion seals are retained. Setup's cyan primary button now uses the adaptive `onAccent` text/spinner color. Calculated normal enabled text contrast is **6.56:1 light** and **8.05:1 dark** (previous light white-on-cyan: **1.72:1**); these calculations do not establish disabled, pressed or transparency acceptance.
@@ -201,3 +210,20 @@ Physical iPhone–Mac Bluetooth/Bonjour behavior, successful on-device speech tr
 - 可复现命令：先在指定模拟器安装 Debug App，再执行 `python3 scripts/validation/ios-populated-return.py --device SIMULATOR_UUID`。脚本生成临时事件仓库、运行两项 UI 测试，要求 2 passed／0 skipped，结束或失败后清理它拥有的目录，保留日志和 xcresult。清理覆盖 Xcode 重装后迁移到的新沙盒路径；本轮已确认临时仓库及当前模拟器中的两个保留 UUID 目录均不存在，测试 App 已退出。
 - 初轮视觉测试找到并修复了 sheet 空内容；最大字号测试改为先把点击中心滚到固定 Back 上方；横屏截图等待系统转屏动画结束，避免截取旋转中间帧。一次 Xcode 失败诊断收集超时，后续关闭冗长的 sysdiagnose 收集，保留测试截图与断言结果。
 - 本轮覆盖软件链路与模拟器 UI；实体 iPhone 的无线重连、后台唤醒和触感仍属于真机验收范围。
+
+## 2026-10-09：Mac 边缘锚多任务含义与 Codex／终端来源边界
+
+### 实现
+
+- 边缘锚改为“手机上至少有一个有效投锚”：手机投锚确认按任务集合保存；第一个投锚抛锚、最后一个结束收锚；中途新增任务只拉动绳索并溅起小水花，结束其中一个只轻提绳索；手机或 Mac 切换、查看任务不再收锚或重新抛锚。小船图形、抛锚与收锚动画参数未改。
+- Codex 发现只接受用户发起的对话（`thread_source` 为 user／chatgpt_handoff，且没有子代理来源或父线程）；扫描窗口放宽到 72 个最近文件后再截取 12 个候选。旧版自动绑定到子代理日志的记录在恢复时移除。
+- 自动关联只读取用户输入：去掉打开页面信封、提及文件与引用的 ChatGPT 对话等附带上下文，有“My request”段落时只取其后文字。
+- 同一 Codex 对话的多轮在看板展示层合并为一行（身份与位置取第一轮，状态取最新一轮，保留全部事件）；原始事件、运行记录与历史数据不改写。桌面端来源名为 ChatGPT，标题为工作区文件夹名。
+- 终端命令运行不足 10 秒的开始／结束成对移入 `.ignored`，不产生进程；新开始的命令满 10 秒才上报。退出码 129／130／131 记为中断，不计入失败与返航失败数。
+
+### 验证与边界
+
+- **243 项 Swift 测试通过**：158 Core、43 Transport、24 MacFeatures、18 IOSFeatures；1 项可选的本机 Codex 回放测试未提供样本而跳过。新增覆盖：多任务切换／新增／结束时的边缘行为、子代理过滤与候选挤占、附带上下文剥离、对话合并、短命令忽略、长命令先开始后结束、中断口径。
+- macOS 与 iOS Simulator Debug 构建通过（关闭签名）；`git diff --check` 与生产数据边界检查通过。
+- 本机 `~/.codex/sessions` 只读核对（只统计结构与数量，不输出内容）：210 个日志中 47 个用户对话、163 个 guardian／子代理会话；新逻辑候选全部为用户对话，提取的请求不含附带上下文标签。按旧逻辑模拟时，156 个 guardian 会话中有 106 个会被关联到其父对话的锚点，且有 4.3% 会匹配无关锚点；用户对话以输入文字为题时的自身匹配从 17／33 提升到 33／33。
+- 未做：与实体 iPhone 联调的边缘回执观感与音量、真实终端中 10 秒规则的使用感受、合并对话在手机图表上的视觉检查。

@@ -30,13 +30,17 @@ final class AnchorEdgePanelController {
         presentation = AnchorEdgePresentationModel(playSound: soundPlayer.play)
 
         controlPanel = AnchorControlPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 88, height: 88),
+            contentRect: NSRect(
+                x: 0, y: 0,
+                width: AnchorEdgeBerth.controlSide,
+                height: AnchorEdgeBerth.controlSide
+            ),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
         )
         effectsPanel = AnchorDecorativePanel(
-            contentRect: NSRect(x: 0, y: 0, width: 112, height: 700),
+            contentRect: NSRect(origin: .zero, size: AnchorEdgeBerth.effectsSize),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -66,22 +70,22 @@ final class AnchorEdgePanelController {
     func reposition() {
         guard let screen = targetScreen() else { return }
         let visibleFrame = screen.visibleFrame
+        let side = AnchorEdgeBerth.controlSide
+        let effects = AnchorEdgeBerth.effectsSize
+        // The boat berths in the lower-right corner, away from toolbar controls. Its
+        // short water column ends just above the Dock, so a dropped anchor sinks a
+        // fixed distance below the boat instead of crossing the whole screen.
+        let berthTop = visibleFrame.minY + effects.height
         controlPanel.setFrame(
-            NSRect(
-                x: visibleFrame.maxX - 88,
-                y: visibleFrame.maxY - 92,
-                width: 88,
-                height: 88
-            ),
+            NSRect(x: visibleFrame.maxX - side, y: berthTop - side, width: side, height: side),
             display: true
         )
         effectsPanel.setFrame(
             NSRect(
-                x: visibleFrame.maxX - 112,
-                // The waterline follows the physical screen edge, including the Dock area.
-                y: screen.frame.minY,
-                width: 112,
-                height: visibleFrame.maxY - screen.frame.minY
+                x: visibleFrame.maxX - effects.width,
+                y: berthTop - effects.height,
+                width: effects.width,
+                height: effects.height
             ),
             display: true
         )
@@ -134,10 +138,11 @@ final class AnchorEdgePanelController {
     }
 
     private func observeModel() {
+        // The edge follows whether any phone anchor is down, not the foreground task,
+        // so switching or viewing tasks on either device leaves it still.
         let snapshot = withObservationTracking {
             (
-                phoneAnchorState.activeSessionID(in: model.projection),
-                model.projection.session?.status,
+                phoneAnchorState.anchoredSessionIDs(in: model.projection),
                 model.isLoading
             )
         } onChange: { [weak self] in
@@ -146,10 +151,9 @@ final class AnchorEdgePanelController {
             }
         }
 
-        let activeSessionID = snapshot.1 == .active ? snapshot.0 : nil
         presentation.synchronize(
-            activeSessionID: activeSessionID,
-            isLoading: snapshot.2,
+            anchoredSessionIDs: snapshot.0,
+            isLoading: snapshot.1,
             // Match the views: either the system or the app setting reduces motion.
             reduceMotion: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
                 || UserDefaults.standard.bool(forKey: AnchorMotion.reduceMotionDefaultsKey)

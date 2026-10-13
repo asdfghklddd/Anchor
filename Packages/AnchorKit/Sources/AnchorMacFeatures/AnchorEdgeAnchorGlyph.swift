@@ -1,33 +1,35 @@
 #if os(macOS)
 import SwiftUI
 
-/// A slim blue metal anchor with a restrained bevel along its lit edge.
+/// A small anchor in the icon's azure gradient, sized to the boat, with a lit edge.
 struct AnchorEdgeAnchorGlyph: View {
     var body: some View {
         Canvas { context, size in
             let w = size.width
             let h = size.height
+            let ring = w * 0.17
             var path = Path()
-            path.addEllipse(in: CGRect(x: w / 2 - 3, y: 1, width: 6, height: 6))
-            path.move(to: CGPoint(x: w / 2, y: 7))
-            path.addLine(to: CGPoint(x: w / 2, y: h - 4))
-            path.move(to: CGPoint(x: w * 0.32, y: 13))
-            path.addLine(to: CGPoint(x: w * 0.68, y: 13))
-            path.move(to: CGPoint(x: 3, y: h * 0.62))
-            path.addCurve(to: CGPoint(x: w - 3, y: h * 0.62), control1: CGPoint(x: 4, y: h + 1), control2: CGPoint(x: w - 4, y: h + 1))
-            path.move(to: CGPoint(x: 2, y: h * 0.75))
-            path.addLine(to: CGPoint(x: 3, y: h * 0.62))
-            path.addLine(to: CGPoint(x: 7, y: h * 0.67))
-            path.move(to: CGPoint(x: w - 2, y: h * 0.75))
-            path.addLine(to: CGPoint(x: w - 3, y: h * 0.62))
-            path.addLine(to: CGPoint(x: w - 7, y: h * 0.67))
+            path.addEllipse(in: CGRect(x: w / 2 - ring, y: 1, width: ring * 2, height: ring * 2))
+            path.move(to: CGPoint(x: w / 2, y: 1 + ring * 2))
+            path.addLine(to: CGPoint(x: w / 2, y: h - 2))
+            path.move(to: CGPoint(x: w * 0.26, y: h * 0.36))
+            path.addLine(to: CGPoint(x: w * 0.74, y: h * 0.36))
+            path.move(to: CGPoint(x: w * 0.10, y: h * 0.60))
+            path.addQuadCurve(to: CGPoint(x: w * 0.90, y: h * 0.60), control: CGPoint(x: w / 2, y: h * 1.16))
+            // Flukes turn up at each arm.
+            path.move(to: CGPoint(x: w * 0.03, y: h * 0.70))
+            path.addLine(to: CGPoint(x: w * 0.10, y: h * 0.60))
+            path.addLine(to: CGPoint(x: w * 0.24, y: h * 0.64))
+            path.move(to: CGPoint(x: w * 0.97, y: h * 0.70))
+            path.addLine(to: CGPoint(x: w * 0.90, y: h * 0.60))
+            path.addLine(to: CGPoint(x: w * 0.76, y: h * 0.64))
             context.stroke(path, with: .linearGradient(
-                Gradient(colors: [Color(red: 0.63, green: 0.83, blue: 0.98),
-                                  Color(red: 0.24, green: 0.49, blue: 0.72)]),
+                Gradient(colors: [Color(red: 0.27, green: 0.82, blue: 0.97),
+                                  Color(red: 0.06, green: 0.40, blue: 0.84)]),
                 startPoint: .zero, endPoint: CGPoint(x: w, y: h)
-            ), style: StrokeStyle(lineWidth: 1.7, lineCap: .round, lineJoin: .round))
-            context.stroke(path.offsetBy(dx: -0.3, dy: -0.2),
-                           with: .color(Color.white.opacity(0.28)),
+            ), style: StrokeStyle(lineWidth: max(1.6, w * 0.11), lineCap: .round, lineJoin: .round))
+            context.stroke(path.offsetBy(dx: -0.35, dy: -0.35),
+                           with: .color(Color.white.opacity(0.35)),
                            style: StrokeStyle(lineWidth: 0.5, lineCap: .round, lineJoin: .round))
         }
         .accessibilityHidden(true)

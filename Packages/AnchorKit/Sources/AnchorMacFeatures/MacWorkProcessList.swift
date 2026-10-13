@@ -6,62 +6,85 @@ import SwiftUI
 struct MacWorkProcessList: View {
     let processes: [AnchorProcess]
     let onOpenProcess: (UUID) -> Void
+    var onOpenSources: (() -> Void)?
 
     @AnchorReducedMotion private var reduceMotion
     @State private var showsAllProcesses = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(L10n.currentTasks)
-                    .font(.headline)
-                    .foregroundStyle(AnchorPalette.ink)
-                Spacer(minLength: AnchorSpacing.medium)
+        MacCard(
+            L10n.currentTasks,
+            symbol: "list.bullet.rectangle",
+            insetContent: false,
+            accessory: {
                 Text(L10n.processCount(processes.count))
-                    .font(.callout)
+                    .font(.callout.monospacedDigit())
                     .foregroundStyle(AnchorPalette.secondaryInk)
             }
-
+        ) {
             if processes.isEmpty {
-                ContentUnavailableView(
-                    L10n.noEvents,
-                    systemImage: "point.3.connected.trianglepath.dotted",
-                    description: Text(L10n.emptyDetail)
-                )
-                .frame(maxWidth: .infinity, minHeight: 190)
-                .fluoriteSurface(cornerRadius: 16)
+                emptyState
             } else {
-                LazyVStack(spacing: 0) {
+                VStack(spacing: 0) {
                     ForEach(visibleProcesses) { process in
-                        if process.id != processes.first?.id {
-                            Divider().padding(.leading, 68)
-                        }
+                        Divider().padding(.leading, MacMetrics.cardPadding + 42)
                         MacWorkProcessRow(
                             process: process,
                             action: { onOpenProcess(process.id) }
                         )
                     }
-                }
-                .clipShape(.rect(cornerRadius: 16))
-                .fluoriteSurface(cornerRadius: 16)
-
-                if processes.count > collapsedProcessLimit {
-                    Button(action: toggleProcessList) {
-                        Label(
-                            showsAllProcesses
-                                ? L10n.showFewerProcesses
-                                : L10n.showAllProcesses(processes.count),
-                            systemImage: showsAllProcesses ? "chevron.up" : "chevron.down"
-                        )
-                        .frame(maxWidth: .infinity, minHeight: 36)
+                    if processes.count > collapsedProcessLimit {
+                        Divider()
+                        Button(action: toggleProcessList) {
+                            Label(
+                                showsAllProcesses
+                                    ? L10n.showFewerProcesses
+                                    : L10n.showAllProcesses(processes.count),
+                                systemImage: showsAllProcesses ? "chevron.up" : "chevron.down"
+                            )
+                            .font(.callout.weight(.medium))
+                            .frame(maxWidth: .infinity, minHeight: 36)
+                            .contentShape(.rect)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(AnchorPalette.interaction)
+                        .accessibilityIdentifier("mac.current.process-list.toggle")
                     }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
-                    .accessibilityIdentifier("mac.current.process-list.toggle")
                 }
+                .padding(.bottom, processes.count > collapsedProcessLimit ? 0 : 4)
             }
         }
         .accessibilityIdentifier("mac.current.process-list")
+    }
+
+    /// A one-line empty state that names the missing link and where to make it.
+    private var emptyState: some View {
+        HStack(alignment: .center, spacing: AnchorSpacing.medium) {
+            Image(systemName: "point.3.connected.trianglepath.dotted")
+                .font(.title3)
+                .foregroundStyle(AnchorPalette.interaction)
+                .frame(width: 36, height: 36)
+                .background(AnchorPalette.softBlue.opacity(0.34), in: .rect(cornerRadius: 10, style: .continuous))
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(MacWorkCopy.processesEmptyTitle)
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(AnchorPalette.ink)
+                Text(MacWorkCopy.processesEmptyDetail)
+                    .font(.caption)
+                    .foregroundStyle(AnchorPalette.secondaryInk)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: AnchorSpacing.small)
+            if let onOpenSources {
+                Button(MacWorkCopy.processesEmptyAction, action: onOpenSources)
+                    .controlSize(.small)
+                    .accessibilityIdentifier("mac.current.process-list.sources")
+            }
+        }
+        .padding(.horizontal, MacMetrics.cardPadding)
+        .padding(.vertical, 12)
+        .accessibilityElement(children: .contain)
     }
 
     private let collapsedProcessLimit = 6
@@ -99,10 +122,10 @@ private struct MacWorkProcessRow: View {
                     }
                 }
             }
-            .padding(.horizontal, AnchorSpacing.medium)
-            .padding(.vertical, AnchorSpacing.small)
-            .frame(maxWidth: .infinity, minHeight: 68, alignment: .leading)
-            .background(isHovering ? AnchorPalette.softBlue.opacity(0.34) : .clear)
+            .padding(.horizontal, MacMetrics.cardPadding)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+            .background(isHovering ? AnchorPalette.softBlue.opacity(0.28) : .clear)
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
@@ -124,8 +147,8 @@ private struct MacWorkProcessRow: View {
     }
 
     private var horizontalContent: some View {
-        HStack(alignment: .center, spacing: AnchorSpacing.medium) {
-            SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 36)
+        HStack(alignment: .center, spacing: 12) {
+            SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 30)
             processCopy
                 .frame(minWidth: 220, maxWidth: .infinity, alignment: .leading)
             // Stable trailing columns keep status and progress scannable across rows.
@@ -143,7 +166,7 @@ private struct MacWorkProcessRow: View {
     private var verticalContent: some View {
         VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
             HStack(alignment: .top, spacing: AnchorSpacing.small) {
-                SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 36)
+                SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 30)
                 processCopy
             }
             HStack(alignment: .top, spacing: AnchorSpacing.medium) {
@@ -155,7 +178,7 @@ private struct MacWorkProcessRow: View {
     }
 
     private var processCopy: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 2) {
             taskTitle
             HStack(alignment: .firstTextBaseline, spacing: AnchorSpacing.small) {
                 if process.sourceName != process.title {
@@ -164,7 +187,7 @@ private struct MacWorkProcessRow: View {
                 }
                 if !process.detail.isEmpty {
                     Text(process.detail)
-                        .font(.callout)
+                        .font(.caption)
                         .foregroundStyle(AnchorPalette.secondaryInk)
                         .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
                 }
@@ -174,7 +197,7 @@ private struct MacWorkProcessRow: View {
 
     private var taskTitle: some View {
         Text(process.title)
-            .font(.headline)
+            .font(.callout.weight(.semibold))
             .foregroundStyle(AnchorPalette.ink)
             .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
             .fixedSize(horizontal: false, vertical: true)
@@ -182,7 +205,7 @@ private struct MacWorkProcessRow: View {
 
     private var sourceLabel: some View {
         Text(process.sourceName)
-            .font(.caption)
+            .font(.caption2.weight(.medium))
             .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
             .foregroundStyle(AnchorPalette.brandDeep)
             .padding(.horizontal, AnchorSpacing.xSmall)

@@ -28,6 +28,8 @@ struct AnchorEdgeBoatArtwork: View {
             let release = reduceMotion ? 0 : sin(.pi * anchorTravel) * (1 - anchorTravel)
             HarborBoatGlyph(wind: reduceMotion ? 0 : wave * 0.5 + hoverBias * 0.3)
             .frame(width: 64, height: 64)
+            // A hairline shadow keeps the silhouette crisp on busy wallpapers.
+            .shadow(color: .black.opacity(0.22), radius: 1.2, y: 0.8)
             .offset(y: wave * 0.7 + release * 1.8)
             .rotationEffect(
                 .degrees(

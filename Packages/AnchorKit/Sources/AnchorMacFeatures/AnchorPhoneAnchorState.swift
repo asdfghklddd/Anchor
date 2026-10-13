@@ -3,11 +3,12 @@ import AnchorCore
 import Foundation
 import Observation
 
-/// Applied phone hosting or selection confirms which hosted task is in focus.
+/// Applied phone hosting or selection confirms that the phone holds an anchor.
+/// The edge shows whether any confirmed anchor is down, never which task is in focus.
 @MainActor
 @Observable
 public final class AnchorPhoneAnchorState {
-    public private(set) var confirmedSessionID: UUID?
+    public private(set) var confirmedSessionIDs: Set<UUID> = []
 
     public init() {}
 
@@ -16,20 +17,22 @@ public final class AnchorPhoneAnchorState {
               envelope.type == EventEnvelope.operationType,
               let operation = try? JSONDecoder.anchor.decode(SessionOperation.self, from: envelope.payload),
               operation.sessionID == envelope.sessionID,
-              projection.session?.id == envelope.sessionID,
-              projection.session?.status == .active else { return }
+              projection.hostedSessions.contains(where: {
+                  $0.id == envelope.sessionID && $0.status == .active
+              }) else { return }
         switch operation {
         case .createSession, .hostSession, .selectSession: break
         default: return
         }
-        // Reconnect replay confirms current state, but the same ID never replays an animation.
-        confirmedSessionID = envelope.sessionID
+        // Reconnect replay confirms current state, but a known ID never replays an animation.
+        confirmedSessionIDs.insert(envelope.sessionID)
     }
 
-    public func activeSessionID(in projection: SessionProjection) -> UUID? {
-        guard projection.session?.status == .active,
-              projection.session?.id == confirmedSessionID else { return nil }
-        return confirmedSessionID
+    /// Active hosted tasks the phone has anchored, independent of the foreground task.
+    public func anchoredSessionIDs(in projection: SessionProjection) -> Set<UUID> {
+        Set(projection.hostedSessions
+            .filter { $0.status == .active && confirmedSessionIDs.contains($0.id) }
+            .map(\.id))
     }
 }
 #endif

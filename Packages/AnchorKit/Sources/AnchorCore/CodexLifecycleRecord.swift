@@ -7,7 +7,12 @@ public struct CodexLifecycleRecord: Codable, Hashable, Sendable {
     public let turnID: String
     public let lifecycle: CodexLifecycle
 
-    public enum CodexLifecycle: String, Codable, Hashable, Sendable { case started = "task_started", completed = "task_complete", aborted = "turn_aborted" }
+    public enum CodexLifecycle: String, Codable, Hashable, Sendable, CaseIterable { case started = "task_started", completed = "task_complete", aborted = "turn_aborted" }
+
+    /// Stable event titles that mark a process as a Codex turn on every peer.
+    public static let eventTitles = Set(CodexLifecycle.allCases.map { "Codex " + $0.rawValue })
+    /// Process title written before conversations carried their workspace name.
+    public static let legacyTurnTitle = "Codex turn"
 
     public init?(json data: Data) {
         struct Envelope: Decodable { let timestamp: String; let type: String; let payload: Payload }
@@ -24,7 +29,12 @@ public struct CodexLifecycleRecord: Codable, Hashable, Sendable {
         timestamp = date; type = value.payload.type.rawValue; turnID = id; lifecycle = value.payload.type
     }
 
-    public func externalEvent(sessionID: UUID, sourceID: UUID) -> ExternalProcessEvent {
+    public func externalEvent(
+        sessionID: UUID,
+        sourceID: UUID,
+        sourceName: String = "Codex",
+        title: String = CodexLifecycleRecord.legacyTurnTitle
+    ) -> ExternalProcessEvent {
         let status: ProcessStatus = lifecycle == .started ? .running : (lifecycle == .completed ? .completed : .failed)
         let kind: ProcessEventKind = lifecycle == .started ? .created : (lifecycle == .completed ? .completed : .failed)
         let processID = StableProcessIdentity.id(namespace: "codex.turn", sessionID: sessionID, externalID: turnID)
@@ -38,8 +48,8 @@ public struct CodexLifecycleRecord: Codable, Hashable, Sendable {
                                     sourceID: sourceID, sequence: UInt64(max(0, timestamp.timeIntervalSince1970 * 1000)),
                                     occurredAt: timestamp,
                                     process: AnchorProcess(id: processID, sessionID: sessionID, sourceID: sourceID,
-                                                           externalID: turnID, sourceName: "Codex", sourceSymbol: "C",
-                                                           sourceTone: "cyan", title: "Codex turn", status: status,
+                                                           externalID: turnID, sourceName: sourceName, sourceSymbol: "C",
+                                                           sourceTone: "cyan", title: title, status: status,
                                                            progress: nil, updatedAt: timestamp),
                                     event: event, deduplicationKey: key,
                                     observedOutcome: lifecycle == .aborted ? .interrupted : nil)

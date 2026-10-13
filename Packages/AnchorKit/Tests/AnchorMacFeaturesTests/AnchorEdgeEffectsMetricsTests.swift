@@ -3,30 +3,32 @@ import Foundation
 import Testing
 @testable import AnchorMacFeatures
 
-@Test(
-    "The screen bottom is the water collision line and the anchor exits below it",
-    arguments: [CGFloat(480), CGFloat(760), CGFloat(1_080)]
-)
-func waterlineCollisionGeometry(height: CGFloat) {
-    let metrics = AnchorEdgeEffectsMetrics(height: height)
+@Test("The anchor meets the boat's waterline, then sinks a fixed depth out of sight")
+func waterlineCollisionGeometry() {
+    let metrics = AnchorEdgeEffectsMetrics()
+    let waterline = AnchorEdgeEffectsMetrics.waterlineY
     let impactRopeY = metrics.ropeEndY(at: metrics.waterImpactTravel)
     let anchorBottom = impactRopeY
         + AnchorEdgeEffectsMetrics.anchorCenterOffset
         + AnchorEdgeEffectsMetrics.anchorHalfHeight
-    let finalAnchorTop = metrics.ropeEndY(at: 1)
+    let stowedAnchorBottom = metrics.ropeEndY(at: 0)
         + AnchorEdgeEffectsMetrics.anchorCenterOffset
-        - AnchorEdgeEffectsMetrics.anchorHalfHeight
+        + AnchorEdgeEffectsMetrics.anchorHalfHeight
 
-    #expect(abs(anchorBottom - height) < 0.001)
+    #expect(abs(anchorBottom - waterline) < 0.001)
+    #expect(stowedAnchorBottom < waterline)
     #expect(metrics.waterImpactTravel > 0)
     #expect(metrics.waterImpactTravel < 1)
-    #expect(finalAnchorTop > height)
+    // The drop stays inside the berth's short water column, never the full screen.
+    #expect(abs(metrics.ropeEndY(at: 1) - waterline - AnchorEdgeEffectsMetrics.sinkDepth) < 0.001)
+    #expect(AnchorEdgeEffectsMetrics.height < 200)
+    #expect(AnchorEdgeEffectsMetrics.height >= metrics.ropeEndY(at: 1))
 
     #expect(metrics.travel(at: 0) == 0)
     #expect(abs(metrics.travel(at: 1) - 1) < 0.001)
     #expect(abs(metrics.travel(at: metrics.impactTime) - metrics.waterImpactTravel) < 0.001)
     #expect(metrics.travel(at: metrics.impactTime - 0.01) < metrics.waterImpactTravel)
-    // Drag must slow the submerged motion without reversing the rope.
+    // The rope pays out without reversing.
     let samples = (0...100).map { metrics.travel(at: CGFloat($0) / 100) }
     #expect(zip(samples, samples.dropFirst()).allSatisfy { $0 <= $1 })
 }

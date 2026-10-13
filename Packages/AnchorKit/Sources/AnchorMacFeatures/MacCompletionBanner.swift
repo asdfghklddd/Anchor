@@ -42,10 +42,11 @@ struct MacCompletionBanner: View {
                 .tint(AnchorPalette.interaction)
                 .accessibilityIdentifier("mac.completion.resume")
         }
-        .padding(AnchorSpacing.medium)
-        .background(AnchorPalette.seafoam.opacity(0.14), in: .rect(cornerRadius: 18, style: .continuous))
+        .padding(.horizontal, MacMetrics.cardPadding)
+        .padding(.vertical, 12)
+        .background(AnchorPalette.seafoam.opacity(0.14), in: .rect(cornerRadius: MacMetrics.cardRadius, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: MacMetrics.cardRadius, style: .continuous)
                 .stroke(AnchorPalette.seafoam.opacity(0.40), lineWidth: 1)
         }
         .accessibilityElement(children: .contain)

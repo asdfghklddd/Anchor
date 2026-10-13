@@ -3,106 +3,75 @@ import AnchorCore
 import AnchorDesign
 import SwiftUI
 
+/// Recent events as compact rows; the surrounding card owns the heading and timeline link.
 struct MacEventStrip: View {
     let events: [ProcessEvent]
     let processes: [AnchorProcess]
-    let onOpenTimeline: () -> Void
 
     private var processesByID: [UUID: AnchorProcess] {
         Dictionary(processes.map { ($0.id, $0) }, uniquingKeysWith: { _, latest in latest })
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
-            HStack(alignment: .bottom) {
-                VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
-                    Text(L10n.activityLog)
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(AnchorPalette.brandDeep)
-                        .textCase(.uppercase)
-                    Text(L10n.recentActivity)
-                        .font(.title2.bold())
+        if events.isEmpty {
+            Label(L10n.noEvents, systemImage: "waveform.path.ecg")
+                .font(.callout)
+                .foregroundStyle(AnchorPalette.secondaryInk)
+                .padding(.horizontal, MacMetrics.cardPadding)
+                .padding(.vertical, 12)
+        } else {
+            VStack(spacing: 0) {
+                ForEach(events) { event in
+                    Divider().padding(.leading, MacMetrics.cardPadding + 36)
+                    MacEventRow(
+                        event: event,
+                        process: event.processID.flatMap { processesByID[$0] }
+                    )
                 }
-                Spacer()
-                Button(L10n.timeline, systemImage: "waveform.path.ecg", action: onOpenTimeline)
-                    .font(.callout.weight(.semibold))
-                    .foregroundStyle(AnchorPalette.secondaryInk)
-                    .buttonStyle(.borderless)
-                    .accessibilityIdentifier("mac.timeline.open")
             }
-
-            if events.isEmpty {
-                ContentUnavailableView(L10n.noEvents, systemImage: "waveform.path.ecg", description: nil)
-                    .frame(maxWidth: .infinity, minHeight: 110)
-                    .background(AnchorPalette.fluoriteSurface.opacity(0.72), in: .rect(cornerRadius: 18, style: .continuous))
-            } else {
-                ScrollView(.horizontal) {
-                    HStack(alignment: .top, spacing: AnchorSpacing.medium) {
-                        ForEach(events) { event in
-                            MacEventCard(
-                                event: event,
-                                process: event.processID.flatMap { processesByID[$0] }
-                            )
-                            .frame(width: 250, alignment: .topLeading)
-                        }
-                    }
-                    .padding(.vertical, 2)
-                }
-                .scrollIndicators(.hidden)
-            }
+            .padding(.bottom, 4)
         }
     }
 }
 
-private struct MacEventCard: View {
+private struct MacEventRow: View {
     let event: ProcessEvent
     let process: AnchorProcess?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-            HStack {
-                Image(systemName: eventSymbol(event.kind))
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(eventTint(event.kind))
-                    .frame(width: 30, height: 30)
-                    .background(eventTint(event.kind).opacity(0.14), in: .circle)
-                    .accessibilityHidden(true)
-                Spacer()
-                Text(event.occurredAt, style: .relative)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            HStack(spacing: AnchorSpacing.xSmall) {
-                if let process {
-                    SourceMark(symbol: process.sourceSymbol, tone: process.sourceTone, size: 22)
-                    Text(process.sourceName)
-                        .foregroundStyle(AnchorPalette.sourceInk(process.sourceTone))
-                } else {
-                    Image(systemName: "scope")
-                        .foregroundStyle(AnchorPalette.brandDeep)
-                    Text(L10n.appName)
-                        .foregroundStyle(AnchorPalette.brandDeep)
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Image(systemName: eventSymbol(event.kind))
+                .font(.caption.weight(.bold))
+                .foregroundStyle(eventTint(event.kind))
+                .frame(width: 24, height: 24)
+                .background(eventTint(event.kind).opacity(0.14), in: .circle)
+                .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(event.title)
+                    .font(.callout.weight(.medium))
+                    .foregroundStyle(AnchorPalette.ink)
+                    .lineLimit(1)
+                HStack(spacing: 4) {
+                    Text(process?.sourceName ?? L10n.appName)
+                        .foregroundStyle(process.map { AnchorPalette.sourceInk($0.sourceTone) } ?? AnchorPalette.brandDeep)
+                    if !event.detail.isEmpty {
+                        Text("·")
+                        Text(event.detail).lineLimit(1)
+                    }
                 }
+                .font(.caption)
+                .foregroundStyle(AnchorPalette.secondaryInk)
             }
-            .font(.caption.weight(.semibold))
-            Text(event.title)
-                .font(.callout.weight(.semibold))
-                .foregroundStyle(AnchorPalette.ink)
-                .lineLimit(3)
-            if !event.detail.isEmpty {
-                Text(event.detail)
-                    .font(.caption)
-                    .foregroundStyle(AnchorPalette.secondaryInk)
-                    .lineLimit(3)
-            }
+            Spacer(minLength: AnchorSpacing.small)
+            Text(event.occurredAt, format: .relative(presentation: .named, unitsStyle: .abbreviated))
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(AnchorPalette.secondaryInk)
+                .lineLimit(1)
         }
-        .padding(AnchorSpacing.medium)
-        .frame(minHeight: 156, alignment: .topLeading)
-        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
-        }
+        .padding(.horizontal, MacMetrics.cardPadding)
+        .padding(.vertical, 8)
+        .help([event.title, event.detail].filter { !$0.isEmpty }.joined(separator: "\n"))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
     }

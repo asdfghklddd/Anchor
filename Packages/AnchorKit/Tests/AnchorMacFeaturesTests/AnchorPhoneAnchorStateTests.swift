@@ -11,10 +11,10 @@ func cachedWorkWaitsForPhoneAnchor() throws {
     let session = AnchorSession(goal: AnchorGoal(title: "Focus", completionCriteria: "Done"))
     let projection = SessionProjection(session: session)
     let gate = AnchorPhoneAnchorState()
-    #expect(gate.activeSessionID(in: projection) == nil)
+    #expect(gate.anchoredSessionIDs(in: projection).isEmpty)
     let envelope = try phoneCreate(session, sourceID: localID)
     gate.receive(envelope, projection: projection, localSourceID: localID)
-    #expect(gate.activeSessionID(in: projection) == nil)
+    #expect(gate.anchoredSessionIDs(in: projection).isEmpty)
 }
 
 @MainActor
@@ -28,13 +28,13 @@ func phoneAnchorControlsEdgePresentation() async throws {
     let envelope = try phoneCreate(session, sourceID: UUID())
     let gate = AnchorPhoneAnchorState()
     let model = AnchorEdgePresentationModel(defaults: UserDefaults(suiteName: UUID().uuidString)!)
-    model.synchronize(activeSessionID: nil, isLoading: false, reduceMotion: true)
+    model.synchronize(anchoredSessionIDs: [], isLoading: false, reduceMotion: true)
     #expect(model.phase == .harbored)
 
     try await repository.applyRemote(envelope)
     let projection = await repository.currentProjection()
     gate.receive(envelope, projection: projection, localSourceID: localID)
-    model.synchronize(activeSessionID: gate.activeSessionID(in: projection), isLoading: false, reduceMotion: false)
+    model.synchronize(anchoredSessionIDs: gate.anchoredSessionIDs(in: projection), isLoading: false, reduceMotion: false)
     #expect(model.phase == .deploying)
 
     // An identical retransmission must not reset the in-flight throw.
@@ -42,14 +42,14 @@ func phoneAnchorControlsEdgePresentation() async throws {
     let progress = model.throwProgress
     try await repository.applyRemote(envelope)
     gate.receive(envelope, projection: projection, localSourceID: localID)
-    model.synchronize(activeSessionID: gate.activeSessionID(in: projection), isLoading: false, reduceMotion: false)
+    model.synchronize(anchoredSessionIDs: gate.anchoredSessionIDs(in: projection), isLoading: false, reduceMotion: false)
     #expect(model.throwProgress >= progress)
     #expect(model.throwProgress > 0)
 
     let restartedGate = AnchorPhoneAnchorState()
-    #expect(restartedGate.activeSessionID(in: projection) == nil)
+    #expect(restartedGate.anchoredSessionIDs(in: projection).isEmpty)
     try await repository.send(.completeSession)
-    model.synchronize(activeSessionID: gate.activeSessionID(in: await repository.currentProjection()),
+    model.synchronize(anchoredSessionIDs: gate.anchoredSessionIDs(in: await repository.currentProjection()),
                       isLoading: false, reduceMotion: true)
     #expect(model.phase == .harbored)
     #expect(model.showsSplashParticles == false)
@@ -62,7 +62,7 @@ func stalePhoneAnchorIsIgnored() throws {
     let current = AnchorSession(goal: AnchorGoal(title: "Current", completionCriteria: "Done"))
     let gate = AnchorPhoneAnchorState()
     gate.receive(try phoneCreate(old, sourceID: UUID()), projection: SessionProjection(session: current), localSourceID: UUID())
-    #expect(gate.activeSessionID(in: SessionProjection(session: current)) == nil)
+    #expect(gate.anchoredSessionIDs(in: SessionProjection(session: current)).isEmpty)
 }
 
 private func phoneCreate(_ session: AnchorSession, sourceID: UUID) throws -> EventEnvelope {

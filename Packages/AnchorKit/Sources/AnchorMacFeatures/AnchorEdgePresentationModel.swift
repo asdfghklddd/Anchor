@@ -16,8 +16,7 @@ public final class AnchorEdgePresentationModel {
     public private(set) var isTucked = false
     public private(set) var anchorSway: CGFloat = 0
     public private(set) var ropeBend: CGFloat = 0
-    private(set) var waterImpactTravel: CGFloat
-    @ObservationIgnored private var effectsMetrics = AnchorEdgeEffectsMetrics(height: 700)
+    @ObservationIgnored private let effectsMetrics = AnchorEdgeEffectsMetrics()
     private(set) var waterImpactIntensity: CGFloat = 0
     private(set) var waterImpactXOffset: CGFloat = 0
     private(set) var splashStartedAt: Date?
@@ -27,7 +26,7 @@ public final class AnchorEdgePresentationModel {
 
     private let tuckDelay: Duration
     private let playSound: @MainActor (AnchorEdgeSoundCue) -> Void
-    private var activeSessionID: UUID?
+    private var anchoredSessionIDs: Set<UUID> = []
     private var hasSynchronizedInitialProjection = false
     private var reduceMotion = false
     private var isPointerInside = false
@@ -36,14 +35,22 @@ public final class AnchorEdgePresentationModel {
     private var tuckTask: Task<Void, Never>?
 
     private static let deployedSessionKey = "anchor.mac.edge.deployed-session-id"
+    // Receipts nudge the settled rope; they stay well below the throw (70) and lift (-35).
+    private static let addedAnchorImpulse: Double = 40
+    private static let finishedAnchorImpulse: Double = -24
+    private static let addedAnchorSplashIntensity: CGFloat = 0.55
+    /// The anchor arcs off the transom before it falls.
+    private static let throwSeconds = 0.30
 
     var throwOffset: CGSize {
         guard phase == .deploying else { return .zero }
         return CGSize(
-            width: -18 * sin(.pi * throwProgress / 2) * pow(1 - anchorTravel, 2),
-            height: -12 * sin(.pi * throwProgress)
+            width: -10 * sin(.pi * throwProgress / 2) * pow(1 - anchorTravel, 2),
+            height: -9 * sin(.pi * throwProgress)
         )
     }
+
+    var waterImpactTravel: CGFloat { effectsMetrics.waterImpactTravel }
 
     public init(
         defaults: UserDefaults = .standard,
@@ -54,11 +61,25 @@ public final class AnchorEdgePresentationModel {
         defaults.removeObject(forKey: Self.deployedSessionKey)
         self.tuckDelay = tuckDelay
         self.playSound = playSound
-        waterImpactTravel = AnchorEdgeEffectsMetrics(height: 700).waterImpactTravel
     }
 
     public func synchronize(
         activeSessionID incomingSessionID: UUID?,
+        isLoading: Bool,
+        reduceMotion: Bool
+    ) {
+        synchronize(
+            anchoredSessionIDs: incomingSessionID.map { [$0] } ?? [],
+            isLoading: isLoading,
+            reduceMotion: reduceMotion
+        )
+    }
+
+    /// The anchor means "work is anchored": the first anchor is thrown and the last
+    /// one lifted. Anchors added or finished in between only tug the settled rope,
+    /// and focus changes between anchored tasks leave the edge still.
+    public func synchronize(
+        anchoredSessionIDs incomingSessionIDs: Set<UUID>,
         isLoading: Bool,
         reduceMotion: Bool
     ) {
@@ -67,20 +88,24 @@ public final class AnchorEdgePresentationModel {
 
         if !hasSynchronizedInitialProjection {
             synchronizeInitialState(
-                activeSessionID: incomingSessionID,
+                anchoredSessionIDs: incomingSessionIDs,
                 reduceMotion: reduceMotion
             )
             return
         }
 
-        guard incomingSessionID != activeSessionID else { return }
+        let previousSessionIDs = anchoredSessionIDs
+        guard incomingSessionIDs != previousSessionIDs else { return }
+        anchoredSessionIDs = incomingSessionIDs
 
-        if let incomingSessionID {
-            activeSessionID = incomingSessionID
+        if previousSessionIDs.isEmpty {
             beginDeployment(reduceMotion: reduceMotion)
-        } else if activeSessionID != nil {
-            activeSessionID = nil
+        } else if incomingSessionIDs.isEmpty {
             beginRetrieval(reduceMotion: reduceMotion)
+        } else if !incomingSessionIDs.isSubset(of: previousSessionIDs) {
+            acknowledgeAddedAnchor(reduceMotion: reduceMotion)
+        } else {
+            acknowledgeFinishedAnchor(reduceMotion: reduceMotion)
         }
     }
 
@@ -107,12 +132,6 @@ public final class AnchorEdgePresentationModel {
         scheduleTuck()
     }
 
-    func updateEffectsHeight(_ height: CGFloat) {
-        guard height.isFinite, height > 0 else { return }
-        effectsMetrics = AnchorEdgeEffectsMetrics(height: height)
-        waterImpactTravel = effectsMetrics.waterImpactTravel
-    }
-
     public func scheduleTuck() {
         tuckTask?.cancel()
         guard phase == .harbored, !hasActiveInteraction else { return }
@@ -131,13 +150,13 @@ public final class AnchorEdgePresentationModel {
     }
 
     private func synchronizeInitialState(
-        activeSessionID incomingSessionID: UUID?,
+        anchoredSessionIDs incomingSessionIDs: Set<UUID>,
         reduceMotion: Bool
     ) {
         hasSynchronizedInitialProjection = true
-        activeSessionID = incomingSessionID
+        anchoredSessionIDs = incomingSessionIDs
 
-        guard incomingSessionID != nil else {
+        guard !incomingSessionIDs.isEmpty else {
             resetToHarboredState()
             scheduleTuck()
             return
@@ -181,14 +200,14 @@ public final class AnchorEdgePresentationModel {
 
                 let elapsed = Self.seconds(in: startedAt.duration(to: clock.now))
                 let timeProgress = min(1, max(0, elapsed / duration))
-                self.throwProgress = min(1, CGFloat(elapsed / 0.36))
-                let fallProgress = max(0, (elapsed - 0.36) / (duration - 0.36))
+                self.throwProgress = min(1, CGFloat(elapsed / Self.throwSeconds))
+                let fallProgress = max(0, (elapsed - Self.throwSeconds) / (duration - Self.throwSeconds))
                 let travel = self.effectsMetrics.travel(at: CGFloat(fallProgress))
                 self.anchorTravel = travel
 
                 if !didImpactWater, travel >= self.waterImpactTravel {
                     didImpactWater = true
-                    self.registerWaterImpact(normalizedVelocity: sqrt(self.waterImpactTravel))
+                    self.registerWaterImpact(normalizedVelocity: 1)
                 }
                 if timeProgress >= 1 { break }
             }
@@ -241,6 +260,29 @@ public final class AnchorEdgePresentationModel {
         }
     }
 
+    /// Another task joined anchored work: the rope takes the new weight and the
+    /// water answers, without throwing the settled anchor again.
+    private func acknowledgeAddedAnchor(reduceMotion: Bool) {
+        startSway(reduceMotion: reduceMotion, impulse: Self.addedAnchorImpulse)
+        // A throw still in flight ends in its own splash and sound.
+        guard phase == .deployed else { return }
+        transitionTask?.cancel()
+        registerWaterImpact(normalizedVelocity: Self.addedAnchorSplashIntensity, cue: .anchorJoined)
+        transitionTask = Task { [weak self] in
+            try? await Task.sleep(for: AnchorMotion.waterSplashDuration)
+            guard !Task.isCancelled, let self else { return }
+            self.showsSplashParticles = false
+        }
+    }
+
+    /// One of several anchored tasks finished: a small lift on the rope, while
+    /// the remaining work keeps the anchor down.
+    private func acknowledgeFinishedAnchor(reduceMotion: Bool) {
+        startSway(reduceMotion: reduceMotion, impulse: Self.finishedAnchorImpulse)
+        guard phase == .deployed else { return }
+        playSound(.anchorReleased)
+    }
+
     private func revealControl() {
         tuckTask?.cancel()
         guard isTucked else { return }
@@ -253,13 +295,16 @@ public final class AnchorEdgePresentationModel {
         isPointerInside || isKeyboardFocused
     }
 
-    private func registerWaterImpact(normalizedVelocity: CGFloat) {
+    private func registerWaterImpact(
+        normalizedVelocity: CGFloat,
+        cue: AnchorEdgeSoundCue = .anchorLanded
+    ) {
         waterImpactIntensity = min(1, max(0, normalizedVelocity))
         waterImpactXOffset = anchorSway + throwOffset.width
         splashTrigger += 1
         splashStartedAt = .now
         showsSplashParticles = true
-        playSound(.anchorLanded)
+        playSound(cue)
         withAnimation(AnchorMotion.micro) {
             waterVisibility = 1
         }

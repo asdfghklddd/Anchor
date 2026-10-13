@@ -43,7 +43,7 @@ public struct FileProcessSource: ProcessSource, Sendable {
                 do {
                     try makeInboxDirectories()
                     while !Task.isCancelled {
-                        for fileURL in try pendingFiles() {
+                        for fileURL in try filesReadyToConsume(now: .now) {
                             try Task.checkCancellation()
                             do {
                                 if let event = try await readAndConsume(fileURL) {
@@ -138,6 +138,63 @@ public struct FileProcessSource: ProcessSource, Sendable {
         )
         .filter { $0.pathExtension.lowercased() == "json" }
         .sorted { $0.lastPathComponent < $1.lastPathComponent }
+    }
+
+    /// Terminal commands that finish within `minimumTaskDuration` (ls, cd,
+    /// git status) never describe task work. A start waits in the inbox until it
+    /// is old enough, and a pending start and finish that are close together are
+    /// set aside without becoming a process. Other inbox items pass through.
+    private func filesReadyToConsume(now: Date) throws -> [URL] {
+        var ready: [URL] = []
+        var commands: [(url: URL, signal: CLIProcessSignal)] = []
+        for fileURL in try pendingFiles() {
+            if let signal = commandSignal(at: fileURL) {
+                commands.append((fileURL, signal))
+            } else {
+                ready.append(fileURL)
+            }
+        }
+        func pending(_ phase: CLICommandPhase) -> [UUID: CLIProcessSignal] {
+            Dictionary(
+                commands.filter { $0.signal.phase == phase }.map { ($0.signal.commandID, $0.signal) },
+                uniquingKeysWith: { first, _ in first }
+            )
+        }
+        let starts = pending(.started), finishes = pending(.finished)
+        var settled: [(url: URL, signal: CLIProcessSignal)] = []
+        for command in commands {
+            // A finish whose start was already reported belongs to a long command.
+            guard let start = starts[command.signal.commandID] else {
+                settled.append(command)
+                continue
+            }
+            if let finish = finishes[command.signal.commandID] {
+                if finish.occurredAt.timeIntervalSince(start.occurredAt) < CLIProcessSignal.minimumTaskDuration {
+                    try move(command.url, to: ".ignored")
+                } else {
+                    settled.append(command)
+                }
+            } else if now.timeIntervalSince(start.occurredAt) >= CLIProcessSignal.minimumTaskDuration {
+                settled.append(command)
+            }
+        }
+        // A command's start is always reported before its finish.
+        settled.sort {
+            ($0.signal.occurredAt, $0.signal.phase == .finished ? 1 : 0)
+                < ($1.signal.occurredAt, $1.signal.phase == .finished ? 1 : 0)
+        }
+        return ready + settled.map(\.url)
+    }
+
+    private func commandSignal(at fileURL: URL) -> CLIProcessSignal? {
+        guard let values = try? fileURL.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey]),
+              values.isRegularFile == true,
+              (values.fileSize ?? 0) <= maximumFileSize,
+              let data = try? Data(contentsOf: fileURL),
+              (try? JSONDecoder.anchorExternal.decode(ExternalProcessEvent.self, from: data)) == nil else {
+            return nil
+        }
+        return try? JSONDecoder.anchorExternal.decode(CLIProcessSignal.self, from: data)
     }
 
     private func readAndConsume(_ fileURL: URL) async throws -> ExternalProcessEvent? {

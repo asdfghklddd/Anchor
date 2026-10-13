@@ -9,6 +9,11 @@ public enum CLICommandPhase: String, Codable, CaseIterable, Sendable {
 /// It stores no command arguments and reduces working directories to a basename.
 public struct CLIProcessSignal: Identifiable, Codable, Hashable, Sendable {
     public static let schemaIdentifier = "anchor.cli.command.v1"
+    /// Shell exit codes for a command the person stopped: hang-up (terminal
+    /// closed), Ctrl-C and Ctrl-\. Other non-zero codes remain failures.
+    public static let interruptionExitCodes: Set<String> = ["129", "130", "131"]
+    /// Commands that finish sooner never describe task work (ls, cd, git status).
+    public static let minimumTaskDuration: TimeInterval = 10
     private static let maximumDisplayLength = 120
 
     public let id: UUID
@@ -97,17 +102,22 @@ public struct CLIProcessSignal: Identifiable, Codable, Hashable, Sendable {
         case .finished:
             let exitCode = exitCode ?? -1
             let succeeded = exitCode == 0
+            let interrupted = Self.interruptionExitCodes.contains(String(exitCode))
             status = succeeded ? .completed : .failed
             eventKind = succeeded ? .completed : .failed
             progress = succeeded ? 1 : nil
             metric = String(exitCode)
             metricLabel = CLIProcessStrings.exitCode
-            detail = succeeded
-                ? CLIProcessStrings.completedDetail(executableName)
-                : CLIProcessStrings.failedDetail(executableName, exitCode: exitCode)
-            eventTitle = succeeded
-                ? CLIProcessStrings.completed(executableName)
-                : CLIProcessStrings.failed(executableName)
+            if succeeded {
+                detail = CLIProcessStrings.completedDetail(executableName)
+                eventTitle = CLIProcessStrings.completed(executableName)
+            } else if interrupted {
+                detail = CLIProcessStrings.interruptedDetail(executableName)
+                eventTitle = CLIProcessStrings.interrupted(executableName)
+            } else {
+                detail = CLIProcessStrings.failedDetail(executableName, exitCode: exitCode)
+                eventTitle = CLIProcessStrings.failed(executableName)
+            }
         }
 
         let sourceName = terminalName ?? CLIProcessStrings.terminal
@@ -148,7 +158,9 @@ public struct CLIProcessSignal: Identifiable, Codable, Hashable, Sendable {
                 detail: detail,
                 updatedAt: occurredAt
             ),
-            event: event
+            event: event,
+            observedOutcome: phase == .finished && Self.interruptionExitCodes.contains(metric)
+                ? .interrupted : nil
         )
     }
 
@@ -224,6 +236,14 @@ private enum CLIProcessStrings {
 
     static func failed(_ executable: String) -> String {
         format("cli.event.failed", default: "%@ failed", executable)
+    }
+
+    static func interrupted(_ executable: String) -> String {
+        format("cli.event.interrupted", default: "%@ interrupted", executable)
+    }
+
+    static func interruptedDetail(_ executable: String) -> String {
+        format("cli.detail.interrupted", default: "%@ was stopped from the terminal.", executable)
     }
 
     static func runningDetail(_ executable: String, workspaceName: String?) -> String {

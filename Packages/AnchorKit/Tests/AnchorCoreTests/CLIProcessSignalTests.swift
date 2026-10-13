@@ -138,9 +138,11 @@ struct CLIProcessSignalTests {
 
         let sessionID = UUID()
         let commandID = UUID()
+        // Started long enough ago to count as task work.
         let signal = CLIProcessSignal(
             commandID: commandID,
             phase: .started,
+            occurredAt: .now.addingTimeInterval(-11),
             executableName: "ffmpeg",
             workspaceName: "/Users/example/Movies"
         )
@@ -176,7 +178,7 @@ struct CLIProcessSignalTests {
         try FileManager.default.createDirectory(at: inbox, withIntermediateDirectories: true)
 
         let sessionID = UUID()
-        let sessionStartedAt = Date.now
+        let sessionStartedAt = Date.now.addingTimeInterval(-30)
         let stale = CLIProcessSignal(
             commandID: UUID(),
             phase: .started,
@@ -227,7 +229,8 @@ struct CLIProcessSignalTests {
         let legacy = #"{"id":"01A23B45-C678-4901-A234-56789BCDEF01","schema":"anchor.web.activity.v1","activityID":"11A23B45-C678-4901-A234-56789BCDEF02","sequence":42,"state":"active","occurredAt":"2026-08-25T10:00:00Z","siteHost":"docs.example.com","browserName":"Safari"}"#
         try Data(legacy.utf8).write(to: inbox.appending(path: "000-web.json"))
         let sessionID = UUID()
-        let signal = CLIProcessSignal(commandID: UUID(), phase: .started, executableName: "swift")
+        let signal = CLIProcessSignal(commandID: UUID(), phase: .started,
+                                      occurredAt: .now.addingTimeInterval(-11), executableName: "swift")
         try JSONEncoder.anchorExternal.encode(signal).write(to: inbox.appending(path: "001-cli.json"))
         let source = FileProcessSource(directoryURL: inbox, pollInterval: 0.02,
             sessionContextProvider: {

@@ -46,24 +46,14 @@ public struct CodexTaskCandidate: Identifiable, Hashable, Sendable {
 public actor CodexTaskSupervisor {
     private struct CacheEntry {
         let metadata: CodexSessionFileMetadata
-        let candidate: CodexTaskCandidate
-    }
-
-    private struct SessionMetadataEnvelope: Decodable {
-        struct Payload: Decodable {
-            let id: String
-            let cwd: String?
-            let originator: String?
-        }
-
-        let type: String
-        let timestamp: String?
-        let payload: Payload
+        /// `nil` for subagent or unreadable logs, so each is inspected once per change.
+        let candidate: CodexTaskCandidate?
     }
 
     private let locator: CodexSessionFileLocator
     private let pollInterval: TimeInterval
     private let candidateLimit: Int
+    private let discoveryWindow: Int
     private let maximumTailBytes: UInt64
     private var cache: [URL: CacheEntry] = [:]
 
@@ -71,27 +61,34 @@ public actor CodexTaskSupervisor {
         rootURL: URL,
         pollInterval: TimeInterval = 2,
         candidateLimit: Int = 12,
+        discoveryWindow: Int? = nil,
         maximumTailBytes: UInt64 = 4 * 1_024 * 1_024
     ) {
         locator = CodexSessionFileLocator(rootURL: rootURL)
         self.pollInterval = max(0.25, pollInterval)
         self.candidateLimit = max(1, candidateLimit)
+        // Guardian and subagent logs can outnumber user threads several times over.
+        self.discoveryWindow = max(self.candidateLimit, discoveryWindow ?? self.candidateLimit * 6)
         self.maximumTailBytes = max(1_024, maximumTailBytes)
     }
 
     public func snapshot() -> [CodexTaskCandidate] {
-        let files = locator.recentSessionFiles(limit: candidateLimit)
+        let files = locator.recentSessionFiles(limit: discoveryWindow)
         let activeURLs = Set(files.map(\.fileURL))
         cache = cache.filter { activeURLs.contains($0.key) }
 
-        return files.compactMap { metadata in
+        var candidates: [CodexTaskCandidate] = []
+        for metadata in files where candidates.count < candidateLimit {
+            let candidate: CodexTaskCandidate?
             if let cached = cache[metadata.fileURL], cached.metadata == metadata {
-                return cached.candidate
+                candidate = cached.candidate
+            } else {
+                candidate = self.candidate(for: metadata)
+                cache[metadata.fileURL] = CacheEntry(metadata: metadata, candidate: candidate)
             }
-            guard let candidate = candidate(for: metadata) else { return nil }
-            cache[metadata.fileURL] = CacheEntry(metadata: metadata, candidate: candidate)
-            return candidate
+            if let candidate { candidates.append(candidate) }
         }
+        return candidates
     }
 
     public func snapshots() -> AsyncStream<[CodexTaskCandidate]> {
@@ -119,7 +116,8 @@ public actor CodexTaskSupervisor {
     }
 
     private func candidate(for metadata: CodexSessionFileMetadata) -> CodexTaskCandidate? {
-        guard let sessionMetadata = readSessionMetadata(from: metadata.fileURL) else {
+        guard let session = CodexSessionMetadata.read(from: metadata.fileURL),
+              session.isUserConversation else {
             return nil
         }
         let lifecycle = readLatestLifecycle(
@@ -127,38 +125,15 @@ public actor CodexTaskSupervisor {
             fileSize: metadata.fileSize
         )
         return CodexTaskCandidate(
-            id: sessionMetadata.payload.id,
+            id: session.id,
             fileURL: metadata.fileURL,
-            workspaceName: sessionMetadata.payload.cwd.map {
-                URL(filePath: $0, directoryHint: .isDirectory).lastPathComponent
-            },
-            originator: sessionMetadata.payload.originator,
+            workspaceName: session.workspaceName,
+            originator: session.originator,
             modifiedAt: metadata.contentModificationDate,
             activity: lifecycle.map(Self.activity) ?? .unknown,
             activityObservedAt: lifecycle?.timestamp,
-            createdAt: sessionMetadata.timestamp.flatMap { value in
-                let parser = ISO8601DateFormatter()
-                parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                return parser.date(from: value) ?? ISO8601DateFormatter().date(from: value)
-            }
+            createdAt: session.createdAt
         )
-    }
-
-    private func readSessionMetadata(from url: URL) -> SessionMetadataEnvelope? {
-        guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
-        defer { try? handle.close() }
-        let data = try? handle.read(upToCount: 64 * 1_024)
-        guard let data,
-              let newline = data.firstIndex(of: 10),
-              let envelope = try? JSONDecoder().decode(
-                SessionMetadataEnvelope.self,
-                from: data[..<newline]
-              ),
-              envelope.type == "session_meta",
-              !envelope.payload.id.isEmpty else {
-            return nil
-        }
-        return envelope
     }
 
     private func readLatestLifecycle(

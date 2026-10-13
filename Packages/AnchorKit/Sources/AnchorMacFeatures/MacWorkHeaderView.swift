@@ -5,44 +5,85 @@ import SwiftUI
 
 struct MacWorkHeaderView: View {
     let projection: SessionProjection
+    var onOpenSettings: (() -> Void)?
+
+    @AnchorReducedMotion private var reduceMotion
+    @State private var isHoveringConnection = false
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: AnchorSpacing.large) {
+            HStack(alignment: .center, spacing: AnchorSpacing.medium) {
                 heading
-                Spacer(minLength: AnchorSpacing.large)
+                Spacer(minLength: AnchorSpacing.medium)
                 connectionStatus
             }
 
-            VStack(alignment: .leading, spacing: AnchorSpacing.medium) {
+            VStack(alignment: .leading, spacing: AnchorSpacing.small) {
                 heading
                 connectionStatus
             }
         }
-        .accessibilityElement(children: .combine)
     }
 
     private var heading: some View {
-        VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
+        // One compact line: the greeting no longer pushes the work below the fold.
+        HStack(alignment: .firstTextBaseline, spacing: AnchorSpacing.small) {
             Text(greeting)
-                .font(.largeTitle.bold())
+                .font(.title.bold())
                 .foregroundStyle(AnchorPalette.brandDeep)
+                .accessibilityAddTraits(.isHeader)
             Text(MacWorkCopy.subtitle)
                 .font(.callout)
                 .foregroundStyle(AnchorPalette.secondaryInk)
+                .lineLimit(1)
         }
     }
 
+    @ViewBuilder
     private var connectionStatus: some View {
-        Label(connectionLabel, systemImage: connectionSymbol)
-            .font(.callout.bold())
-            .foregroundStyle(connectionColor)
-            .padding(.horizontal, AnchorSpacing.small)
-            .padding(.vertical, AnchorSpacing.xSmall)
-            .background(AnchorPalette.fluoriteSurface, in: .capsule)
-            .overlay {
-                Capsule().stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
+        if let onOpenSettings {
+            // The label looks like a control because it is one: it leads to the repair path.
+            Button(action: onOpenSettings) {
+                connectionLabelView(showsChevron: true)
             }
+            .buttonStyle(.plain)
+            .onHover { hovering in
+                withAnimation(reduceMotion ? nil : AnchorMotion.micro) {
+                    isHoveringConnection = hovering
+                }
+            }
+            .help(MacWorkCopy.connectionHelp)
+            .accessibilityHint(MacWorkCopy.connectionHelp)
+            .accessibilityIdentifier("mac.header.connection")
+        } else {
+            connectionLabelView(showsChevron: false)
+        }
+    }
+
+    private func connectionLabelView(showsChevron: Bool) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: connectionSymbol)
+                .foregroundStyle(connectionColor)
+            Text(connectionLabel)
+                .foregroundStyle(AnchorPalette.ink)
+            if showsChevron {
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(AnchorPalette.secondaryInk)
+                    .accessibilityHidden(true)
+            }
+        }
+        .font(.callout.weight(.semibold))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(
+            isHoveringConnection ? AnchorPalette.softBlue.opacity(0.45) : AnchorPalette.fluoriteSurface,
+            in: .capsule
+        )
+        .overlay {
+            Capsule().strokeBorder(AnchorPalette.fluoriteBorder, lineWidth: 1)
+        }
+        .contentShape(.capsule)
     }
 
     private var greeting: String {

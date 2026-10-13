@@ -43,6 +43,7 @@ public actor CodexSessionBinder {
             title: "Codex conversation",
             createdAt: session.startedAt
         )
+        let conversation = CodexSessionMetadata.read(from: fileURL)
         try await taskRunStore.host(task: task)
         try await taskRunStore.upsert(workItem: workItem)
         let repository = self.repository
@@ -56,13 +57,14 @@ public actor CodexSessionBinder {
             checkpointStore: checkpointStore,
             descriptor: SourceDescriptor(
                 id: sourceID,
-                name: "Codex",
+                name: conversation?.sourceName ?? "Codex",
                 kind: .integration,
                 symbol: "C",
                 tone: "cyan",
                 capabilities: [.observe],
                 permission: .granted
-            )
+            ),
+            conversationTitle: conversation?.workspaceName
         )
         try await coordinator.setAssociation(
             AnchorEventAssociation(taskID: task.id, workItemID: workItem.id, confirmedByUser: !automaticallyMatched, automaticallyMatched: automaticallyMatched),

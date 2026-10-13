@@ -19,16 +19,18 @@ struct MacFocusDashboard: View {
                 model: model,
                 session: session,
                 onOpenProcess: onOpenProcess,
-                onOpenTimeline: onOpenTimeline
+                onOpenTimeline: onOpenTimeline,
+                onOpenSettings: onOpenSettings
             )
         } else if !model.projection.hostedSessions.isEmpty {
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    MacWorkHeaderView(projection: model.projection)
+                VStack(alignment: .leading, spacing: MacMetrics.pageSpacing) {
+                    MacWorkHeaderView(projection: model.projection, onOpenSettings: onOpenSettings)
                     MacHostedTaskLibrary(model: model, selectedSessionID: nil)
                 }
-                .frame(maxWidth: 1120, alignment: .leading)
-                .padding(32)
+                .frame(maxWidth: MacMetrics.contentWidth, alignment: .leading)
+                .padding(.horizontal, MacMetrics.pageInset)
+                .padding(.bottom, MacMetrics.pageInset)
             }
             .accessibilityIdentifier("mac.current.screen")
         } else {

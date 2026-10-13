@@ -22,10 +22,11 @@ struct MacTimelineView: View {
                     ForEach(events) { event in
                         let process = process(for: event)
                         timelineRow(event, process: process)
-                        .padding(AnchorSpacing.medium)
-                        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 16, style: .continuous))
+                        .padding(.horizontal, MacMetrics.cardPadding)
+                        .padding(.vertical, 12)
+                        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: MacMetrics.cardRadius, style: .continuous))
                         .overlay {
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            RoundedRectangle(cornerRadius: MacMetrics.cardRadius, style: .continuous)
                                 .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
                         }
                         .accessibilityElement(children: .ignore)
@@ -36,7 +37,8 @@ struct MacTimelineView: View {
                 }
             }
             .frame(maxWidth: 980, alignment: .leading)
-            .padding(AnchorSpacing.xLarge)
+            .padding(.horizontal, MacMetrics.pageInset)
+            .padding(.bottom, MacMetrics.pageInset)
         }
         .background(.clear)
         .navigationTitle(L10n.timeline)
@@ -48,7 +50,7 @@ struct MacTimelineView: View {
             Image(systemName: macEventSymbol(event.kind))
                 .font(.body.weight(.semibold))
                 .foregroundStyle(process.map { AnchorPalette.sourceInk($0.sourceTone) } ?? AnchorPalette.deepSeaInk)
-                .frame(width: 36, height: 36)
+                .frame(width: 30, height: 30)
                 .background(
                     (process.map { AnchorPalette.source($0.sourceTone) } ?? AnchorPalette.cyan).opacity(0.20),
                     in: .circle
@@ -70,7 +72,7 @@ struct MacTimelineView: View {
                 }
 
                 Text(event.title)
-                    .font(.headline)
+                    .font(.callout.weight(.semibold))
                 if !event.detail.isEmpty {
                     Text(event.detail)
                         .font(.callout)
@@ -263,7 +265,10 @@ struct MacSettingsView: View {
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
         .background(.clear)
-        .padding(AnchorSpacing.large)
+        // A readable column, like System Settings, instead of rows stretched across the window.
+        .frame(maxWidth: 760)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, AnchorSpacing.medium)
         .navigationTitle(L10n.settings)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("mac.settings.screen")

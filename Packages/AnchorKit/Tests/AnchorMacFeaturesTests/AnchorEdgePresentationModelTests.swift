@@ -151,7 +151,7 @@ func idleBoatRestingBehavior() async throws {
 }
 
 @MainActor
-@Test("Water impact is emitted during descent at the screen edge")
+@Test("Water impact is emitted during descent at the boat's waterline")
 func waterImpactOccursDuringDescent() async throws {
     var impactTravel: CGFloat?
     var impactPhase: AnchorEdgePhase?
@@ -164,7 +164,6 @@ func waterImpactOccursDuringDescent() async throws {
         impactPhase = observedModel?.phase
     }
     observedModel = model
-    model.updateEffectsHeight(480)
     model.synchronize(activeSessionID: UUID(), isLoading: false, reduceMotion: false)
 
     // Inspect the state captured by the impact event, not a guessed animation frame.

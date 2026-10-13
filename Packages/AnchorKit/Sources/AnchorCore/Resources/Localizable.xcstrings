@@ -1,6 +1,27 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "cli.detail.interrupted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ was stopped from the terminal." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 已在终端中停止。" } }
+      }
+    },
+    "cli.event.interrupted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ interrupted" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 已中断" } }
+      }
+    },
+    "codex.conversation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Conversation" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "对话" } }
+      }
+    },
     "web.detail.active" : {
       "extractionState" : "manual",
       "localizations" : {

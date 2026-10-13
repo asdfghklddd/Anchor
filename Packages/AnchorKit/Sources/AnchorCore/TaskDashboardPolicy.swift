@@ -35,14 +35,17 @@ public enum TaskDashboardPolicy {
                 $0.kind == .decisionRequired || $0.kind == .decisionResolved || removedEventIDs.contains($0.id)
             }
             summary.completedCount = summary.changes.filter { $0.kind == .completed || $0.kind == .outputReady }.count
-            summary.failedCount = summary.changes.filter { $0.kind == .failed && $0.title != "Codex turn_aborted" }.count
+            let interruptionIDs = Set(result.timeline.filter(\.isInterruption).map(\.id))
+            summary.failedCount = summary.changes.filter {
+                $0.kind == .failed && $0.title != "Codex turn_aborted" && !interruptionIDs.contains($0.id)
+            }.count
             summary.newDecisionCount = 0
             if let id = summary.recommendedProcessID, excludedIDs.contains(id) {
                 summary.recommendedProcessID = nil
             }
             result.returnSummary = summary
         }
-        return result
+        return result.foldingCodexTurnsIntoConversations()
     }
 
     static func allows(_ command: SessionCommand) -> Bool {

@@ -1,12 +1,13 @@
 import AnchorMacFeatures
 import AppKit
+import AVFoundation
 
-/// Plays very quiet system cues only for rare anchor state changes.
+/// Plays quiet, synthesized water and wood cues only for rare anchor state changes.
 @MainActor
 final class AnchorEdgeSoundPlayer {
     private let defaults: UserDefaults
     private let isUITesting: Bool
-    private var activeSound: NSSound?
+    private var activeSound: AVAudioPlayer?
 
     init(
         defaults: UserDefaults = .standard,
@@ -20,13 +21,17 @@ final class AnchorEdgeSoundPlayer {
         guard !isUITesting, isEnabled else { return }
 
         activeSound?.stop()
-        guard let source = NSSound(named: soundName(for: cue)),
-              let sound = source.copy() as? NSSound else {
+        // A slight pitch drift keeps repeated cues from sounding mechanical.
+        let pitch = Double.random(in: 0.975...1.025)
+        guard let sound = try? AVAudioPlayer(
+            data: AnchorEdgeSoundSynthesizer.wavData(for: cue, pitch: pitch)
+        ) else {
             return
         }
 
         sound.volume = volume(for: cue)
-        sound.loops = false
+        // The cue comes from the boat's corner of the screen.
+        sound.pan = 0.35
         activeSound = sound
         sound.play()
     }
@@ -40,21 +45,14 @@ final class AnchorEdgeSoundPlayer {
         defaults.object(forKey: AnchorEdgeSoundCue.enabledDefaultsKey) as? Bool ?? true
     }
 
-    private func soundName(for cue: AnchorEdgeSoundCue) -> NSSound.Name {
-        switch cue {
-        case .anchorLanded:
-            NSSound.Name("Bottle")
-        case .anchorRetrieved:
-            NSSound.Name("Tink")
-        }
-    }
-
     private func volume(for cue: AnchorEdgeSoundCue) -> Float {
+        // Calibrated against the former Bottle/Tink cues (about -51 dB RMS at their
+        // volumes): landing and retrieval sit about 6 dB above them, receipts below.
         switch cue {
-        case .anchorLanded:
-            0.035
-        case .anchorRetrieved:
-            0.025
+        case .anchorLanded: 0.027
+        case .anchorJoined: 0.038
+        case .anchorReleased: 0.016
+        case .anchorRetrieved: 0.025
         }
     }
 }

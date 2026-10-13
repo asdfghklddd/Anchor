@@ -66,7 +66,8 @@ public struct AnchorMacRootView: View {
                         }
                 }
                 .toolbar(.hidden, for: .windowToolbar)
-                .contentMargins(.top, 72, for: .scrollContent)
+                // Clears the window controls; the page header lines up with the navigation trigger.
+                .contentMargins(.top, 40, for: .scrollContent)
             }
             .ignoresSafeArea(.container, edges: .top)
             // Keep scrolling text clear of the fixed navigation trigger and window controls.

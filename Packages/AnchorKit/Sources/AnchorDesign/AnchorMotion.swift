@@ -11,7 +11,7 @@ public enum AnchorMotion {
     public static let continuity = Animation.spring(response: 0.40, dampingFraction: 0.90)
     public static let boatDeparture = Animation.timingCurve(0.45, 0, 0.20, 1, duration: 0.72)
     public static let edgeRest = Animation.spring(response: 0.40, dampingFraction: 1.00)
-    public static let anchorDropDuration: Duration = .milliseconds(2_100)
+    public static let anchorDropDuration: Duration = .milliseconds(1_500)
     public static let waterSplashDuration: Duration = .milliseconds(680)
     public static let anchorLift = Animation.spring(response: 0.40, dampingFraction: 1.00)
 }

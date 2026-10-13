@@ -53,6 +53,8 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
     public let pollInterval: TimeInterval
     public let maximumReadBytes: Int
     public let descriptor: SourceDescriptor
+    /// Shown as the conversation's title, typically its workspace folder name.
+    public let conversationTitle: String?
     private let checkpointStore: CodexLifecycleCheckpointStore?
     private let sessionContextProvider: @Sendable () async -> ProcessSourceSessionContext?
     private let deliveryState = CodexLifecycleDeliveryState()
@@ -63,8 +65,10 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                 checkpointStore: CodexLifecycleCheckpointStore? = nil,
                 descriptor: SourceDescriptor = SourceDescriptor(
                     id: CodexLifecycleFileSource.defaultSourceID, name: "Codex", kind: .integration,
-                    symbol: "C", tone: "cyan", capabilities: [.observe])) {
+                    symbol: "C", tone: "cyan", capabilities: [.observe]),
+                conversationTitle: String? = nil) {
         self.fileURL = fileURL; self.pollInterval = max(0.05, pollInterval)
+        self.conversationTitle = conversationTitle
         self.maximumReadBytes = max(1, maximumReadBytes)
         self.sessionContextProvider = sessionContextProvider; self.checkpointStore = checkpointStore; self.descriptor = descriptor
     }
@@ -138,7 +142,9 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
 
                                 let event = scanned.record.externalEvent(
                                     sessionID: context.sessionID,
-                                    sourceID: descriptor.id
+                                    sourceID: descriptor.id,
+                                    sourceName: descriptor.name,
+                                    title: conversationTitle ?? CodexLifecycleRecord.legacyTurnTitle
                                 )
                                 if let identity, checkpointStore != nil {
                                     await deliveryState.prepare(

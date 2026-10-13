@@ -313,7 +313,15 @@ public final class MacSourceSetupModel {
         let selectedID = await currentAnchorSessionID?()
         let activeIDs = Set(sessions.filter { $0.status == .active }.map(\.id))
         trackedCodexSessionIDs = []
-        for binding in loadTrackedCodexSessions() where activeIDs.contains(binding.anchorSessionID) {
+        // Earlier builds could auto-match guardian or subagent logs; stop observing them.
+        let bindings = loadTrackedCodexSessions()
+        let retained = bindings.filter { binding in
+            binding.automaticallyMatched != true
+                || CodexSessionMetadata.read(from: rootURL.appending(path: binding.relativePath))?
+                    .isUserConversation != false
+        }
+        if retained.count != bindings.count { saveTrackedCodexSessions(retained) }
+        for binding in retained where activeIDs.contains(binding.anchorSessionID) {
             let url = rootURL.appending(path: binding.relativePath)
             guard Self.relativePath(for: url, under: rootURL) != nil,
                   FileManager.default.fileExists(atPath: url.path) else { continue }

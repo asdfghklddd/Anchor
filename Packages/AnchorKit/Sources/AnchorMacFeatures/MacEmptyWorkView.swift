@@ -10,14 +10,19 @@ struct MacEmptyWorkView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: AnchorSpacing.xLarge) {
+            VStack(spacing: AnchorSpacing.large) {
                 emptyState
-                workspaceStatus
-                privacyFooter
+                MacCard(insetContent: false) {
+                    workspaceStatus
+                    Divider()
+                    privacyFooter
+                        .padding(.horizontal, MacMetrics.cardPadding)
+                        .padding(.vertical, 12)
+                }
             }
-            .frame(maxWidth: 760)
-            .padding(.horizontal, AnchorSpacing.xLarge)
-            .padding(.vertical, 56)
+            .frame(maxWidth: 640)
+            .padding(.horizontal, MacMetrics.pageInset)
+            .padding(.vertical, AnchorSpacing.xLarge)
             .frame(maxWidth: .infinity)
         }
         .background(.clear)
@@ -27,19 +32,16 @@ struct MacEmptyWorkView: View {
 
     private var emptyState: some View {
         VStack(spacing: AnchorSpacing.medium) {
-            HarborBrandMark(size: 64)
+            HarborBrandMark(size: 56)
 
-            VStack(spacing: AnchorSpacing.small) {
-                Text(L10n.focusSession)
-                    .font(.caption.bold())
-                    .foregroundStyle(AnchorPalette.interaction)
-                    .textCase(.uppercase)
+            VStack(spacing: 6) {
                 Text(L10n.emptyTitle)
-                    .font(.largeTitle.bold())
+                    .font(.title.bold())
                     .foregroundStyle(AnchorPalette.brandDeep)
                     .multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.isHeader)
                 Text(L10n.emptyDetail)
-                    .font(.title3)
+                    .font(.body)
                     .foregroundStyle(AnchorPalette.secondaryInk)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -66,19 +68,15 @@ struct MacEmptyWorkView: View {
                 Divider()
                     .padding(.vertical, AnchorSpacing.small)
                 processStatusItem
-                Divider()
-                    .padding(.vertical, AnchorSpacing.small)
             }
 
             VStack(spacing: 0) {
                 connectionStatusItem
                 Divider()
                 processStatusItem
-                Divider()
             }
         }
-        .padding(.vertical, AnchorSpacing.small)
-        .fluoriteSurface(cornerRadius: 14)
+        .padding(.vertical, 4)
     }
 
     private var privacyFooter: some View {
@@ -173,9 +171,9 @@ private struct MacEmptyStatusItem: View {
     var body: some View {
         HStack(spacing: AnchorSpacing.small) {
             Image(systemName: symbol)
-                .font(.title3)
+                .font(.body)
                 .foregroundStyle(tint)
-                .frame(width: 36, height: 36)
+                .frame(width: 32, height: 32)
                 .background(tint.opacity(0.12), in: .circle)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
@@ -190,8 +188,8 @@ private struct MacEmptyStatusItem: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, AnchorSpacing.medium)
-        .frame(maxWidth: .infinity, minHeight: 68, alignment: .leading)
+        .padding(.horizontal, MacMetrics.cardPadding)
+        .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
         .accessibilityElement(children: .combine)
     }
 }

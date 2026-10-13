@@ -34,11 +34,12 @@ struct MacWorkPresenceBanner: View {
                     .tint(AnchorPalette.interaction)
             }
         }
-        .padding(AnchorSpacing.medium)
+        .padding(.horizontal, MacMetrics.cardPadding)
+        .padding(.vertical, 12)
         .fluoriteSurface(
             fill: tint.opacity(0.10),
             border: tint.opacity(0.32),
-            cornerRadius: 14
+            cornerRadius: MacMetrics.cardRadius
         )
         .accessibilityElement(children: .contain)
     }

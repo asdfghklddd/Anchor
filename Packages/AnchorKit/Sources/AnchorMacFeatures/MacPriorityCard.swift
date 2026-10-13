@@ -42,7 +42,7 @@ struct MacPriorityCard: View {
             Image(systemName: symbol)
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(iconTint)
-                .frame(width: 40, height: 40)
+                .frame(width: 36, height: 36)
                 .background(tint.opacity(0.18), in: .circle)
                 .accessibilityHidden(true)
 
@@ -74,11 +74,12 @@ struct MacPriorityCard: View {
                 .accessibilityIdentifier("mac.priority.open")
             }
         }
-        .padding(AnchorSpacing.medium)
+        .padding(.horizontal, MacMetrics.cardPadding)
+        .padding(.vertical, 12)
         .fluoriteSurface(
             fill: tint.opacity(0.11),
             border: tint.opacity(0.32),
-            cornerRadius: 14
+            cornerRadius: MacMetrics.cardRadius
         )
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("mac.priority.card")

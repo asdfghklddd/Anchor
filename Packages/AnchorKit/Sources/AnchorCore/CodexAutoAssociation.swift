@@ -45,26 +45,43 @@ public enum CodexAutoAssociation {
             for line in data.split(separator: 10) {
                 guard let object = try? JSONSerialization.jsonObject(with: Data(line)) as? [String: Any],
                       let payload = object["payload"] as? [String: Any] else { continue }
-                let message: String?
-                if object["type"] as? String == "event_msg", payload["type"] as? String == "user_message" {
-                    message = payload["message"] as? String
+                let items: [String]
+                if object["type"] as? String == "event_msg", payload["type"] as? String == "user_message",
+                   let message = payload["message"] as? String {
+                    items = [message]
                 } else if object["type"] as? String == "response_item",
                           payload["type"] as? String == "message", payload["role"] as? String == "user",
                           let content = payload["content"] as? [[String: Any]] {
-                    message = content.filter { $0["type"] as? String == "input_text" }
-                        .compactMap { $0["text"] as? String }.joined(separator: "\n")
-                } else { message = nil }
-                guard let message else { continue }
-                let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty,
-                      !trimmed.hasPrefix("<environment_context>"),
-                      !trimmed.hasPrefix("# AGENTS.md instructions"),
-                      !trimmed.hasPrefix("<permissions instructions>"),
-                      !trimmed.hasPrefix("<turn_aborted>") else { continue }
-                return String(trimmed.prefix(8_000))
+                    items = content.filter { $0["type"] as? String == "input_text" }
+                        .compactMap { $0["text"] as? String }
+                } else { continue }
+                let request = items.compactMap(userWords(in:)).joined(separator: "\n")
+                guard !request.isEmpty else { continue }
+                return String(request.prefix(8_000))
             }
         }
         return nil
+    }
+
+    private static let injectedPrefixes = [
+        "<environment_context>", "# AGENTS.md instructions", "<permissions instructions>", "<turn_aborted>",
+        "# Files mentioned by the user", "## Referenced ChatGPT conversation",
+    ]
+
+    /// The words a person typed in one message item. Codex attaches context as
+    /// tagged envelopes (an open page) or headed sections (mentioned files, a
+    /// referenced ChatGPT chat); a section that ends in "## My request…" carries
+    /// the request after that heading.
+    static func userWords(in text: String) -> String? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let heading = trimmed.ranges(of: /(?m)^#{1,3} My request[^\n]*\n/).last {
+            let request = trimmed[heading.upperBound...].trimmingCharacters(in: .whitespacesAndNewlines)
+            return request.isEmpty ? nil : request
+        }
+        guard !trimmed.isEmpty,
+              !injectedPrefixes.contains(where: trimmed.hasPrefix),
+              trimmed.wholeMatch(of: /<([A-Za-z_][\w\-]*)>[\s\S]*<\/\1>/) == nil else { return nil }
+        return trimmed
     }
 
     private static func tokens(_ text: String) -> Set<String> {

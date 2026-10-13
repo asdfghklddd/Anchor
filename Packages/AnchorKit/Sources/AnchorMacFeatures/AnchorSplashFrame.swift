@@ -6,6 +6,8 @@ struct AnchorSplashFrame: View {
     let elapsed: TimeInterval
     let intensity: CGFloat
 
+    static let scale: CGFloat = 0.72
+
     private let water = Color(red: 0.38, green: 0.70, blue: 0.88)
     private let highlight = Color(red: 0.84, green: 0.96, blue: 1)
 
@@ -13,6 +15,10 @@ struct AnchorSplashFrame: View {
         Canvas { context, size in
             guard elapsed >= 0, elapsed < 0.68 else { return }
             let origin = CGPoint(x: size.width / 2, y: size.height - 4)
+            // The splash is modeled at full size, then scaled to the small berth boat.
+            context.translateBy(x: origin.x, y: origin.y)
+            context.scaleBy(x: Self.scale, y: Self.scale)
+            context.translateBy(x: -origin.x, y: -origin.y)
             let strength = min(1, max(0, intensity))
             guard strength > 0 else { return }
             drawRipples(in: context, origin: origin, strength: strength)
