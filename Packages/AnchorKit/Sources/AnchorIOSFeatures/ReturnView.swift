@@ -197,7 +197,7 @@ struct ReturnView: View {
                 .padding(.top, 3)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
-                Text(interrupted ? L10n.returnInterrupted : change.title)
+                Text(changeTitle(change, interrupted: interrupted))
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(ink)
                     .lineLimit(expanded || dynamicTypeSize.isAccessibilitySize ? nil : 2)
@@ -220,6 +220,13 @@ struct ReturnView: View {
             }
         }
         .accessibilityElement(children: .combine)
+    }
+
+    /// Raw lifecycle names ("Codex task_complete") become a readable sentence.
+    private func changeTitle(_ change: ReturnChange, interrupted: Bool) -> String {
+        guard CodexLifecycleRecord.eventTitles.contains(change.title) else { return change.title }
+        let subject = review.process(for: change)?.title ?? "Codex"
+        return "\(subject) \(L10n.eventVerb(change.kind, interrupted: interrupted))"
     }
 
     private var changesSheet: some View {
@@ -399,22 +406,24 @@ struct ReturnView: View {
                 if await model.continueWorking() == false { isContinuing = false }
             }
         } label: {
-            HStack(spacing: 5) {
-                Text(L10n.returnBack)
-                Image(systemName: "play.fill")
-                    .font(.system(size: 7))
+            HStack(spacing: 8) {
+                if isContinuing {
+                    ProgressView().tint(AnchorIOSStyle.onAccent)
+                }
+                Text(L10n.continueWorking)
+                Image(systemName: "arrow.right")
+                    .font(.subheadline.weight(.bold))
+                    .accessibilityHidden(true)
             }
-            .font(.caption.weight(.medium))
-            .foregroundStyle(secondaryInk)
-            .frame(minWidth: 88, minHeight: 44)
-            .contentShape(.rect)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AnchorIOSPrimaryButtonStyle())
         .disabled(isContinuing)
-        .accessibilityHint(L10n.continueWorking)
         .accessibilityIdentifier("return.back.button")
+        .padding(.horizontal, 22)
+        .padding(.top, 10)
+        .padding(.bottom, 6)
+        .frame(maxWidth: 560)
         .frame(maxWidth: .infinity)
-        .padding(.bottom, 2)
         .background(Color(red: 0.975, green: 0.982, blue: 0.984).opacity(0.93))
     }
 

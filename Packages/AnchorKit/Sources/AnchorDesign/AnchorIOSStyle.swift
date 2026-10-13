@@ -11,6 +11,8 @@ public enum AnchorIOSStyle {
     public static let heading = adaptive(light: 0x315E8B, dark: 0xB5E2F6)
     public static let cyan = adaptive(light: 0x36D1ED, dark: 0x289CB8)
     public static let yellow = adaptive(light: 0xF4C62F, dark: 0xDABB48)
+    /// Readable attention text and symbols; `yellow` stays for fills and identity.
+    public static let attentionInk = adaptive(light: 0x8A5A00, dark: 0xF2D16B)
     public static let text = adaptive(light: 0x183F52, dark: 0xDFEFF5)
     public static let secondaryText = adaptive(light: 0x526979, dark: 0xB6CAD5)
     public static let action = adaptive(light: 0x176E87, dark: 0x87DCEC)

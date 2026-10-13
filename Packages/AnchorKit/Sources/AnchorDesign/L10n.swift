@@ -216,10 +216,6 @@ public enum L10n {
     public static let returnChanges = AnchorStrings.value("return.changes", default: "Changes while you were away")
     public static let returnResultsUpdated = AnchorStrings.value("return.results.updated", default: "Results updated")
     public static let returnStillRunning = AnchorStrings.value("return.still.running", default: "Still running")
-    public static let returnWaitingJudgment = AnchorStrings.value(
-        "return.waiting.judgment",
-        default: "Waiting for judgment"
-    )
     public static func returnChangesSummary(_ count: Int) -> String {
         String.localizedStringWithFormat(
             AnchorStrings.value("return.changes.summary", default: "View %lld specific changes"),

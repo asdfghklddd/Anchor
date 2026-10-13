@@ -3,48 +3,99 @@ import AnchorCore
 import AnchorDesign
 import SwiftUI
 
+/// A hosted task in the library. The identity color matches its lane in the
+/// glance card; the status line names every state its conversations report.
 struct HostedTaskCard: View {
     let task: AnchorSession
     let height: CGFloat
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
     @ScaledMetric(relativeTo: .headline) private var titleSize: CGFloat = 20
     @AnchorReducedMotion private var reduceMotion
-    // Indicators grow with the text they sit beside.
-    @ScaledMetric(relativeTo: .caption2) private var dotSize: CGFloat = 12
     @ScaledMetric(relativeTo: .caption2) private var ringSize: CGFloat = 13
 
+    /// Tall cards have room to say what last happened.
+    private var showsLatest: Bool { dynamicTypeSize.isAccessibilitySize || height >= 160 }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(alignment: .top, spacing: 4) {
+        let tint = HostedTaskAppearance.tint(task)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top, spacing: 6) {
                 Text(task.goal.title).font(.system(size: titleSize, weight: .semibold))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(AnchorIOSStyle.text)
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
-                status
+                if summary.isComplete {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(AnchorIOSStyle.success)
+                        .frame(width: 26, height: 26)
+                        .transition(reduceMotion ? .opacity : .scale(scale: 0.6).combined(with: .opacity))
+                        .accessibilityHidden(true)
+                }
+            }
+            .animation(reduceMotion ? .easeOut(duration: 0.16) : .spring(duration: 0.36, bounce: 0.3),
+                       value: summary.isComplete)
+            if showsLatest, let latest = latestEvent {
+                latestLine(latest)
             }
             Spacer(minLength: 0)
-            HStack {
-                Spacer()
-                progressCapsule
+            HStack(alignment: .center, spacing: 6) {
+                statusLine(tint: tint)
+                Spacer(minLength: 4)
+                if let progress = displayedProgress {
+                    progressCapsule(progress, tint: tint)
+                }
             }
         }
-        .padding(12)
+        .padding(14)
         .frame(maxWidth: .infinity)
         .frame(minHeight: height, maxHeight: dynamicTypeSize.isAccessibilitySize ? nil : height, alignment: .topLeading)
-        .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: 16))
+        .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: AnchorIOSStyle.cardRadius))
+        .overlay(alignment: .topLeading) {
+            // Identity tab: ties the card to its lane without a thick border.
+            Capsule().fill(tint).frame(width: 22, height: 4).padding(.leading, 14).padding(.top, 7)
+                .accessibilityHidden(true)
+        }
         .shadow(color: AnchorIOSStyle.heading.opacity(0.10), radius: 9, y: 5)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(task.goal.title)
         .accessibilityValue(accessibleStatus)
     }
 
-    private var accessibleStatus: String {
-        let states = HostedTaskAppearance.isComplete(task)
-            ? L10n.completed
-            : task.taskProcesses.map { L10n.processStatus($0) }.joined(separator: ", ")
-        return "\(states), \(L10n.taskProgress) \(progressText)"
+    // MARK: State
+
+    private struct Summary {
+        var running = 0, attention = 0, failed = 0, interrupted = 0, completed = 0
+        var isComplete = false
+        var hasSources = false
+    }
+
+    private var summary: Summary {
+        let processes = task.taskProcesses
+        var result = Summary()
+        result.hasSources = !processes.isEmpty
+        result.isComplete = HostedTaskIndicator(task: task).isComplete
+        for process in processes {
+            if process.isInterrupted { result.interrupted += 1; continue }
+            switch process.status {
+            case .running: result.running += 1
+            case .needsDecision, .blocked, .disconnected: result.attention += 1
+            case .failed: result.failed += 1
+            case .completed: result.completed += 1
+            case .queued: break
+            }
+        }
+        return result
+    }
+
+    private var latestEvent: (event: ProcessEvent, process: AnchorProcess)? {
+        task.taskProcesses
+            .flatMap { process in
+                process.events.filter { [.created, .outputReady, .decisionRequired, .completed, .failed].contains($0.kind) }
+                    .map { ($0, process) }
+            }
+            .max { $0.0.occurredAt < $1.0.occurredAt }
     }
 
     private var displayedProgress: Double? {
@@ -52,98 +103,93 @@ struct HostedTaskCard: View {
         return min(1, max(0, value))
     }
 
-    private var progressText: String {
-        displayedProgress?.formatted(.percent.precision(.fractionLength(0))) ?? L10n.unknown
-    }
-
-    /// Progress and status refresh in place; spatial easing is dropped when motion is reduced.
-    private var liveValueAnimation: Animation {
-        reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity
-    }
-
-    private var status: some View {
-        let indicator = HostedTaskIndicator(task: task)
-        return ZStack(alignment: .topTrailing) {
-            if indicator.isComplete {
-                Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(AnchorIOSStyle.success)
-                    .frame(width: 26, height: 26)
-                    .accessibilityLabel(L10n.completed)
-                    .transition(reduceMotion ? .opacity : .scale(scale: 0.6).combined(with: .opacity))
-            } else {
-                HStack(spacing: 3) {
-                    dot(active: indicator.isRunning, color: .green, symbol: "play.fill")
-                    dot(active: indicator.hasFailure, color: .red, symbol: "xmark")
-                    dot(active: indicator.hasWarning, color: AnchorIOSStyle.yellow, symbol: "pause.fill")
-                }
-                .padding(.top, 3)
-                .transition(.opacity)
-            }
+    private var accessibleStatus: String {
+        var parts = [statusText]
+        if let progress = displayedProgress {
+            parts.append("\(L10n.taskProgress) \(progress.formatted(.percent.precision(.fractionLength(0))))")
+        } else if summary.hasSources {
+            parts.append(L10n.cardProgressUnreported)
         }
-        // One short cue when completion arrives; the seal then stays still.
-        .animation(reduceMotion ? .easeOut(duration: 0.16) : .spring(duration: 0.36, bounce: 0.3),
-                   value: indicator.isComplete)
+        return parts.joined(separator: ", ")
     }
 
-    private func dot(active: Bool, color: Color, symbol: String) -> some View {
-        Circle().fill(active ? color : AnchorIOSStyle.border)
-            .frame(width: dotSize, height: dotSize)
-            .overlay {
-                if active && differentiateWithoutColor {
-                    Image(systemName: symbol).font(.system(size: dotSize * 0.58, weight: .heavy))
-                        .foregroundStyle(AnchorIOSStyle.onAccent)
-                }
-            }
-            // A light turning on pulses once. Turning off, refreshes and the first
-            // appearance stay still, so repeated syncs never re-announce a state.
-            .keyframeAnimator(initialValue: CGFloat(1), trigger: active) { light, scale in
-                light.scaleEffect(scale)
-            } keyframes: { _ in
-                KeyframeTrack {
-                    CubicKeyframe(active && !reduceMotion ? 1.45 : 1, duration: 0.12)
-                    SpringKeyframe(1, duration: 0.32, spring: .bouncy)
-                }
-            }
-            .animation(AnchorMotion.micro, value: active)
+    private var statusText: String {
+        let summary = summary
+        if summary.isComplete { return L10n.tideState(.completed) }
+        if !summary.hasSources { return L10n.cardAwaitingSource }
+        let text = L10n.cardStateSummary(running: summary.running, attention: summary.attention,
+                                         failed: summary.failed, interrupted: summary.interrupted)
+        return text.isEmpty ? L10n.glanceQuiet : text
     }
 
-    private var progressCapsule: some View {
-        let progress = displayedProgress
-        let color = HostedTaskAppearance.tint(task)
+    private var statusSymbol: (name: String, color: Color) {
+        let summary = summary
+        if summary.isComplete { return ("checkmark.circle.fill", AnchorIOSStyle.success) }
+        if !summary.hasSources { return ("circle.dashed", AnchorIOSStyle.secondaryText) }
+        if summary.failed > 0 { return ("xmark.octagon.fill", .red) }
+        if summary.attention > 0 { return ("exclamationmark.circle.fill", AnchorIOSStyle.attentionInk) }
+        if summary.interrupted > 0 && summary.running == 0 { return ("pause.circle.fill", AnchorIOSStyle.secondaryText) }
+        if summary.running > 0 { return ("play.circle.fill", .green) }
+        return ("moon.zzz.fill", AnchorIOSStyle.secondaryText)
+    }
+
+    // MARK: Pieces
+
+    private func statusLine(tint: Color) -> some View {
+        let symbol = statusSymbol
         return HStack(spacing: 5) {
-            Group {
-                if let progress {
-                    ZStack {
-                        Circle().stroke(color.opacity(0.25), lineWidth: 2)
-                        Circle().trim(from: 0, to: progress)
-                            .stroke(color, style: StrokeStyle(lineWidth: 2, lineCap: .round))
-                            .rotationEffect(.degrees(-90))
-                            .animation(liveValueAnimation, value: progress)
-                    }
-                } else {
-                    Image(systemName: "questionmark")
-                        .font(.caption2.weight(.semibold))
-                }
+            Image(systemName: symbol.name)
+                .foregroundStyle(symbol.color)
+                .contentTransition(.symbolEffect(.replace))
+            Text(statusText)
+                .foregroundStyle(AnchorIOSStyle.text)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .font(.caption.weight(.semibold))
+        .animation(AnchorMotion.micro, value: statusText)
+    }
+
+    private func latestLine(_ latest: (event: ProcessEvent, process: AnchorProcess)) -> some View {
+        let interrupted = latest.event.isInterruption
+        return VStack(alignment: .leading, spacing: 2) {
+            Text("\(latest.process.title) \(L10n.eventVerb(latest.event.kind, interrupted: interrupted))")
+                .font(.footnote)
+                .foregroundStyle(AnchorIOSStyle.text)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 3)
+            Text("\(latest.process.sourceName) · \(latest.event.occurredAt.formatted(.relative(presentation: .named, unitsStyle: .abbreviated)))")
+                .font(.caption2)
+                .foregroundStyle(AnchorIOSStyle.secondaryText)
+                .lineLimit(1)
+        }
+        .padding(.top, 2)
+    }
+
+    private func progressCapsule(_ progress: Double, tint: Color) -> some View {
+        let text = progress.formatted(.percent.precision(.fractionLength(0)))
+        let animation = reduceMotion ? Animation.easeOut(duration: 0.16) : AnchorMotion.continuity
+        return HStack(spacing: 5) {
+            ZStack {
+                Circle().stroke(tint.opacity(0.25), lineWidth: 2)
+                Circle().trim(from: 0, to: progress)
+                    .stroke(tint, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .animation(animation, value: progress)
             }
             .frame(width: ringSize, height: ringSize)
             .accessibilityHidden(true)
-            Text(progressText)
+            Text(text)
                 .font(.caption2.weight(.semibold))
                 .monospacedDigit()
-                .contentTransition(reduceMotion ? .opacity : .numericText(value: progress ?? 0))
-                .animation(liveValueAnimation, value: progressText)
+                .contentTransition(reduceMotion ? .opacity : .numericText(value: progress))
+                .animation(animation, value: text)
                 .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
+                .fixedSize()
         }
         .foregroundStyle(AnchorIOSStyle.text)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .frame(minWidth: 62)
-        .background(color.opacity(0.18), in: .capsule)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(L10n.taskProgress)
-        .accessibilityValue(progressText)
+        .background(tint.opacity(0.18), in: .capsule)
     }
 }
 #endif

@@ -41,7 +41,8 @@ final class DashboardReadabilityUITests: XCTestCase {
     }
 
     @MainActor private func assertProgress(in app: XCUIApplication) {
-        for (index, expected) in ["未知", "0%", "63%", "100%"].enumerated() {
+        // Sources report no percentage for the first task, so the card says so instead of "?".
+        for (index, expected) in ["未上报进度", "0%", "63%", "100%"].enumerated() {
             let task = card(index + 1, in: app)
             XCTAssertTrue(task.exists)
             XCTAssertTrue((task.value as? String ?? "").contains(expected), "\(index): \(task.debugDescription)")

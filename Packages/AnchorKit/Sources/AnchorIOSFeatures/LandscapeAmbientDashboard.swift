@@ -18,15 +18,17 @@ struct LandscapeAmbientDashboard: View {
                 ScrollView {
                     VStack(spacing: 16) {
                         clock(height: 110)
-                        HomeAnchorChart(tasks: projection.hostedSessions)
+                        HomeTideCard(tasks: projection.hostedSessions, connection: projection.connection, onTask: onTask)
                         library(height: 480)
                     }.padding(16)
                 }
             } else {
                 HStack(alignment: .top, spacing: 20) {
                     VStack(spacing: 12) {
-                        clock(height: height * 0.28)
-                        HomeAnchorChart(tasks: projection.hostedSessions, height: height * 0.72 - 12)
+                        clock(height: height * 0.22)
+                        HomeTideCard(tasks: projection.hostedSessions, connection: projection.connection,
+                                     maxLanes: 4, fillsHeight: true, onTask: onTask)
+                            .frame(height: height * 0.78 - 12)
                     }
                     .frame(width: max(0, (geometry.size.width - 52) * 0.55))
                     library(height: height)
@@ -53,13 +55,15 @@ struct LandscapeAmbientDashboard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityIdentifier("ambient.time")
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Focus").font(.system(.headline, design: .rounded, weight: .heavy))
-                    Text("\(focusMinutes(at: context.date)) min")
+                    Text(L10n.ambientElapsed).font(.system(.headline, design: .rounded, weight: .heavy))
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                    Text(L10n.minutesShort(focusMinutes(at: context.date)))
                         .font(.system(.title2, design: .rounded, weight: .heavy))
                         .monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
                 }
                 .frame(width: 100, alignment: .leading)
                 .accessibilityElement(children: .combine)
+                .accessibilityHint(L10n.ambientElapsedHint)
                 .accessibilityIdentifier("ambient.focus")
             }
             .foregroundStyle(AnchorIOSStyle.heading)
@@ -75,7 +79,8 @@ struct LandscapeAmbientDashboard: View {
                 Spacer(minLength: 4)
                 Button(action: onManage) {
                     HStack(spacing: 4) {
-                        Circle().fill(AnchorIOSStyle.success).frame(width: 7, height: 7)
+                        Circle().fill(projection.hostedSessions.isEmpty ? AnchorIOSStyle.border : AnchorIOSStyle.success)
+                                .frame(width: 7, height: 7)
                         Text("\(projection.hostedSessions.count)")
                         HarborAnchorGlyph(color: AnchorIOSStyle.secondaryText, lineWidth: 1.2)
                             .frame(width: 12, height: 12)

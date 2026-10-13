@@ -19,14 +19,15 @@ struct PortraitDashboard: View {
             HarborBackground()
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    HomeAnchorChart(tasks: projection.hostedSessions)
+                    HomeTideCard(tasks: projection.hostedSessions, connection: projection.connection, onTask: onTask)
                     HStack {
                         Text(AnchorStrings.value("home.task.library", default: "Task library"))
                             .font(.title2.bold()).foregroundStyle(AnchorIOSStyle.heading)
                         Spacer()
                         Button { onSheet(.hostedTasks) } label: {
                             HStack(spacing: 4) {
-                                Circle().fill(AnchorIOSStyle.success).frame(width: 7, height: 7)
+                                Circle().fill(projection.hostedSessions.isEmpty ? AnchorIOSStyle.border : AnchorIOSStyle.success)
+                                .frame(width: 7, height: 7)
                                 Text("\(projection.hostedSessions.count)")
                                 HarborAnchorGlyph(color: AnchorIOSStyle.secondaryText, lineWidth: 1.2)
                                     .frame(width: 12, height: 12)
@@ -36,11 +37,12 @@ struct PortraitDashboard: View {
                         }
                         .accessibilityLabel(AnchorStrings.value("home.tasks.manage", default: "Manage hosted tasks"))
                     }
-                    .padding(.top, 16)
+                    .padding(.top, 20)
                     if projection.hostedSessions.isEmpty {
                         Text(AnchorStrings.value("home.empty.tasks", default: "Drop an anchor to host your first task"))
-                            .font(.caption).foregroundStyle(AnchorIOSStyle.secondaryText)
-                            .frame(maxWidth: .infinity, minHeight: 190)
+                            .font(.subheadline).foregroundStyle(AnchorIOSStyle.secondaryText)
+                            .multilineTextAlignment(.center).padding(20)
+                            .frame(maxWidth: .infinity, minHeight: 120)
                             .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: 16))
                             .accessibilityIdentifier("workspace.empty.processes")
                     } else {
@@ -63,6 +65,7 @@ struct PortraitDashboard: View {
             Button { onSheet(.setup) } label: {
                 HarborAnchorGlyph(color: .white, lineWidth: 3).frame(width: 36, height: 36)
                     .frame(width: 76, height: 76).background(AnchorIOSStyle.cyan, in: .circle)
+                    .shadow(color: AnchorIOSStyle.heading.opacity(0.22), radius: 14, y: 6)
             }
             .buttonStyle(AnchorPressButtonStyle())
             .accessibilityLabel(L10n.establishAnchor)

@@ -115,9 +115,11 @@ struct HarborTopBar: View {
                 }
             }
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(AnchorIOSStyle.action)
         .frame(width: 44, height: 44)
-        .background(AnchorIOSStyle.cyan.opacity(0.45), in: .circle)
+        .background(AnchorIOSStyle.surface, in: .circle)
+        .overlay { Circle().strokeBorder(AnchorIOSStyle.border, lineWidth: 1) }
+        .shadow(color: AnchorIOSStyle.heading.opacity(0.08), radius: 6, y: 3)
         .buttonStyle(AnchorPressButtonStyle())
         .accessibilityLabel(L10n.notifications)
         .accessibilityValue(unreadCount == 0 ? "" : "\(unreadCount)")
@@ -147,7 +149,10 @@ struct HarborTopBar: View {
         switch connection {
         case .connected: AnchorIOSStyle.success
         case .pairing: AnchorPalette.interaction
-        case .disconnected, .unavailable, .permissionDenied, .failed: Color.red
+        // A sleeping or closed Mac is ordinary; only actionable problems get warm colors (P2).
+        case .disconnected, .unavailable: AnchorIOSStyle.secondaryText
+        case .permissionDenied: AnchorIOSStyle.attentionInk
+        case .failed: Color.red
         }
     }
 }
