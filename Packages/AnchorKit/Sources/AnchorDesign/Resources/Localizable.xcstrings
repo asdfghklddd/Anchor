@@ -1,6 +1,54 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+  "edge.buoy.failed": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Something failed since you last looked"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "有任务失败了，打开看看"
+        }
+      }
+    }
+  },
+  "edge.buoy.attention": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Something is waiting for you"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "有任务在等你"
+        }
+      }
+    }
+  },
+  "edge.buoy.finished": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Work finished since you last looked"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "有工作完成了"
+        }
+      }
+    }
+  },
   "home.glance.window.minutes": {
     "localizations": {
       "en": {
@@ -7715,13 +7763,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Current task observation"
+            "value" : "What Anchor sees now"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "当前任务观测"
+            "value" : "Anchor 此刻看到的"
           }
         }
       }
@@ -7731,13 +7779,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Read-only state derived from observed runs. Finishing observed work does not end the task."
+            "value" : "Anchor only reads status. A conversation or command finishing never ends your anchor; you do."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "由已观测执行只读推导；执行完成不会自动结束整体任务。"
+            "value" : "Anchor 只读取状态；对话或命令结束不会替你结束锚点。"
           }
         }
       }
@@ -7785,7 +7833,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "需要关注"
+            "value" : "需要留意"
           }
         }
       }
@@ -7827,13 +7875,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld work items · %2$lld runs"
+            "value" : "%1$lld conversations and commands · %2$lld runs"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld 个工作项 · %2$lld 次执行"
+            "value" : "%1$lld 段对话与命令 · 共运行 %2$lld 次"
           }
         }
       }
@@ -7843,13 +7891,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Execution"
+            "value" : "Right now"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "执行状态"
+            "value" : "当前状态"
           }
         }
       }
@@ -7923,13 +7971,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Task lifecycle"
+            "value" : "Anchor"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "任务生命周期"
+            "value" : "锚点状态"
           }
         }
       }
@@ -7987,13 +8035,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Observed result"
+            "value" : "Last result"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "观测结果"
+            "value" : "最近结果"
           }
         }
       }
@@ -8099,13 +8147,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Set up observation"
+            "value" : "Connect your sources"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "配置状态获取"
+            "value" : "连接工作来源"
           }
         }
       }

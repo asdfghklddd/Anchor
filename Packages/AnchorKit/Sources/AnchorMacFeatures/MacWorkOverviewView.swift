@@ -22,9 +22,12 @@ struct MacWorkOverviewView: View {
                 )
                 .padding(.bottom, 2)
 
-                if model.projection.hostedSessions.count > 1 {
-                    MacHostedTaskLibrary(model: model, selectedSessionID: session.id)
-                }
+                MacGlanceCard(
+                    tasks: model.projection.hostedSessions,
+                    connection: model.projection.connection,
+                    selectedTaskID: session.id,
+                    onSelectTask: { id in Task { await model.selectHostedTask(id) } }
+                )
 
                 if session.status == .completed {
                     MacCompletionBanner(
@@ -134,97 +137,6 @@ struct MacWorkOverviewView: View {
 
     private func resumeSession() {
         Task { await model.send(.resumeSession) }
-    }
-}
-
-struct MacHostedTaskLibrary: View {
-    let model: AnchorSessionModel
-    let selectedSessionID: UUID?
-
-    var body: some View {
-        MacCard(
-            AnchorStrings.value("home.task.library", default: "Task library"),
-            symbol: "square.grid.2x2"
-        ) {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
-                ForEach(Array(model.projection.hostedSessions.reversed())) { task in
-                    MacHostedTaskTile(
-                        task: task,
-                        isSelected: task.id == selectedSessionID,
-                        action: { Task { await model.selectHostedTask(task.id) } }
-                    )
-                }
-            }
-        }
-        .accessibilityIdentifier("mac.hosted.task-library")
-    }
-}
-
-private struct MacHostedTaskTile: View {
-    let task: AnchorSession
-    let isSelected: Bool
-    let action: () -> Void
-
-    @AnchorReducedMotion private var reduceMotion
-    @State private var isHovering = false
-
-    private var needsAttention: Bool {
-        task.processes.contains(where: \.requiresAttention)
-    }
-
-    var body: some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(task.goal.title)
-                    .font(.callout.weight(isSelected ? .semibold : .medium))
-                    .foregroundStyle(AnchorPalette.ink)
-                    .lineLimit(2)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                HStack(spacing: 5) {
-                    Circle()
-                        .fill(statusColor)
-                        .frame(width: 6, height: 6)
-                        .accessibilityHidden(true)
-                    Text(statusText)
-                        .font(.caption)
-                        .foregroundStyle(AnchorPalette.secondaryInk)
-                        .lineLimit(1)
-                }
-            }
-            .frame(maxWidth: .infinity, minHeight: 48, alignment: .topLeading)
-            .padding(10)
-            .background(background, in: .rect(cornerRadius: 10, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(
-                        isSelected ? AnchorPalette.interaction : AnchorPalette.fluoriteBorder,
-                        lineWidth: isSelected ? 1.5 : 1
-                    )
-            }
-            .contentShape(.rect(cornerRadius: 10))
-        }
-        .buttonStyle(AnchorPressButtonStyle())
-        .onHover { hovering in
-            withAnimation(reduceMotion ? nil : AnchorMotion.micro) { isHovering = hovering }
-        }
-        .help(task.goal.title)
-        .accessibilityIdentifier("mac.hosted.task.\(task.id)")
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-    }
-
-    private var background: Color {
-        if isSelected { return AnchorPalette.softBlue.opacity(0.42) }
-        return isHovering ? AnchorPalette.softBlue.opacity(0.22) : AnchorPalette.canvas.opacity(0.55)
-    }
-
-    private var statusText: String {
-        if needsAttention { return MacWorkCopy.metricAttention }
-        return task.status == .active ? MacWorkCopy.active : MacWorkCopy.draft
-    }
-
-    private var statusColor: Color {
-        if needsAttention { return AnchorPalette.sand }
-        return task.status == .active ? AnchorPalette.mintInk : AnchorPalette.secondaryInk
     }
 }
 #endif

@@ -1,4 +1,5 @@
 #if os(macOS)
+import AnchorCore
 import AnchorDesign
 import SwiftUI
 
@@ -44,6 +45,17 @@ public struct AnchorEdgeControlView: View {
                 )
         }
         .buttonStyle(AnchorPressButtonStyle())
+        .overlay(alignment: .topLeading) {
+            // The buoy floats toward the screen, outside the boat's sailing
+            // motion, so it stays readable while the boat rests at the edge.
+            if let buoy = presentation.buoy {
+                AnchorEdgeBuoyView(signal: buoy, reduceMotion: reduceMotion)
+                    .padding(.leading, 6)
+                    .padding(.top, 10)
+                    .transition(reduceMotion ? .opacity : .scale(scale: 0.4).combined(with: .opacity))
+                    .allowsHitTesting(false)
+            }
+        }
         .focused($isKeyboardFocused)
         .animation(reduceMotion ? nil : AnchorMotion.micro, value: presentation.phase)
         .frame(width: 88, height: 88)
@@ -58,11 +70,13 @@ public struct AnchorEdgeControlView: View {
         .accessibilityValue(accessibilityState)
         .accessibilityInputLabels([L10n.openDetails, L10n.appName])
         .accessibilityIdentifier("mac.edge.entry")
-        .help(L10n.openDetails)
+        .help(presentation.buoy.map(L10n.edgeBuoy) ?? L10n.openDetails)
     }
 
     private var accessibilityState: String {
-        presentation.phase.isWorking ? L10n.currentWork : L10n.emptyTitle
+        let state = presentation.phase.isWorking ? L10n.currentWork : L10n.emptyTitle
+        guard let buoy = presentation.buoy else { return state }
+        return state + ", " + L10n.edgeBuoy(buoy)
     }
 
     private func openDetails() {

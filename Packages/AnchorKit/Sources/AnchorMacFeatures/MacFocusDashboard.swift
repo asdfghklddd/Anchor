@@ -1,5 +1,6 @@
 #if os(macOS)
 import AnchorCore
+import AnchorDesign
 import SwiftUI
 
 struct MacFocusDashboard: View {
@@ -26,7 +27,12 @@ struct MacFocusDashboard: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: MacMetrics.pageSpacing) {
                     MacWorkHeaderView(projection: model.projection, onOpenSettings: onOpenSettings)
-                    MacHostedTaskLibrary(model: model, selectedSessionID: nil)
+                    MacGlanceCard(
+                        tasks: model.projection.hostedSessions,
+                        connection: model.projection.connection,
+                        selectedTaskID: nil,
+                        onSelectTask: { id in Task { await model.selectHostedTask(id) } }
+                    )
                 }
                 .frame(maxWidth: MacMetrics.contentWidth, alignment: .leading)
                 .padding(.horizontal, MacMetrics.pageInset)

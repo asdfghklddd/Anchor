@@ -1,5 +1,6 @@
 import AnchorCore
 import AnchorMacFeatures
+import AnchorDesign
 import AppKit
 import SwiftUI
 
@@ -21,6 +22,7 @@ final class AnchorMacDetailWindowController: NSWindowController {
         )
         let hostingController = NSHostingController(
             rootView: rootView.defaultAppStorage(defaults ?? .standard)
+                .environment(\.locale, AnchorStrings.interfaceLocale)
         )
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Anchor"

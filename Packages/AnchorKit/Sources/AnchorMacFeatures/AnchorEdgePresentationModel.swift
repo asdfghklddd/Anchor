@@ -1,4 +1,5 @@
 #if os(macOS)
+import AnchorCore
 import AnchorDesign
 import Foundation
 import Observation
@@ -16,6 +17,9 @@ public final class AnchorEdgePresentationModel {
     public private(set) var isTucked = false
     public private(set) var anchorSway: CGFloat = 0
     public private(set) var ropeBend: CGFloat = 0
+    /// Something happened since the person last opened Anchor (finished,
+    /// waiting, failed). It floats beside the boat until they look.
+    public private(set) var buoy: EdgeBuoySignal?
     @ObservationIgnored private let effectsMetrics = AnchorEdgeEffectsMetrics()
     private(set) var waterImpactIntensity: CGFloat = 0
     private(set) var waterImpactXOffset: CGFloat = 0
@@ -106,6 +110,20 @@ public final class AnchorEdgePresentationModel {
             acknowledgeAddedAnchor(reduceMotion: reduceMotion)
         } else {
             acknowledgeFinishedAnchor(reduceMotion: reduceMotion)
+        }
+    }
+
+    /// A new or stronger signal brings a tucked boat back once; the same
+    /// signal arriving again, or a weaker one, leaves the edge still.
+    public func showBuoy(_ signal: EdgeBuoySignal?) {
+        guard signal != buoy else { return }
+        let isNews = signal.map { incoming in buoy.map { incoming > $0 } ?? true } ?? false
+        withAnimation(reduceMotion ? .easeOut(duration: 0.20) : AnchorMotion.continuity) {
+            buoy = signal
+        }
+        if isNews {
+            revealControl()
+            scheduleTuck()
         }
     }
 

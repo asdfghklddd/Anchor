@@ -16,6 +16,15 @@ final class AnchorEdgePanelController {
     private let controlPanel: AnchorControlPanel
     private let effectsPanel: AnchorDecorativePanel
     private var isStarted = false
+    private var activationObserver: NSObjectProtocol?
+
+    /// The last time the person looked at Anchor. Persisted so a relaunch does
+    /// not re-announce work they already saw.
+    private static let buoySeenKey = "anchor.mac.edge.buoy.seen-at"
+    private var buoySeenAt: Date {
+        get { UserDefaults.standard.object(forKey: Self.buoySeenKey) as? Date ?? .distantPast }
+        set { UserDefaults.standard.set(newValue, forKey: Self.buoySeenKey) }
+    }
 
     init(
         model: AnchorSessionModel,
@@ -25,6 +34,9 @@ final class AnchorEdgePanelController {
         self.model = model
         self.phoneAnchorState = phoneAnchorState
         self.onOpenDetails = onOpenDetails
+        if UserDefaults.standard.object(forKey: Self.buoySeenKey) == nil {
+            UserDefaults.standard.set(Date.now, forKey: Self.buoySeenKey)
+        }
         let soundPlayer = AnchorEdgeSoundPlayer()
         self.soundPlayer = soundPlayer
         presentation = AnchorEdgePresentationModel(playSound: soundPlayer.play)
@@ -58,10 +70,18 @@ final class AnchorEdgePanelController {
         effectsPanel.orderFrontRegardless()
         controlPanel.orderFrontRegardless()
         observeModel()
+        // Bringing Anchor forward (Dock, window, or the boat) counts as looking.
+        activationObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.markBuoySeen() }
+        }
         Task { await MacNotificationSettings.removeRetiredDecisionNotifications() }
     }
 
     func stop() {
+        if let activationObserver { NotificationCenter.default.removeObserver(activationObserver) }
+        activationObserver = nil
         soundPlayer.stop()
         controlPanel.orderOut(nil)
         effectsPanel.orderOut(nil)
@@ -122,7 +142,10 @@ final class AnchorEdgePanelController {
     private func installContent() {
         let controlView = AnchorEdgeControlView(
             presentation: presentation,
-            onOpenDetails: onOpenDetails
+            onOpenDetails: { [weak self] in
+                self?.markBuoySeen()
+                self?.onOpenDetails()
+            }
         )
         let controlHost = NSHostingController(rootView: controlView)
         controlHost.view.wantsLayer = true
@@ -143,7 +166,8 @@ final class AnchorEdgePanelController {
         let snapshot = withObservationTracking {
             (
                 phoneAnchorState.anchoredSessionIDs(in: model.projection),
-                model.isLoading
+                model.isLoading,
+                model.projection.hostedSessions
             )
         } onChange: { [weak self] in
             Task { @MainActor in
@@ -158,6 +182,15 @@ final class AnchorEdgePanelController {
             reduceMotion: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
                 || UserDefaults.standard.bool(forKey: AnchorMotion.reduceMotionDefaultsKey)
         )
+        latestHostedSessions = snapshot.2
+        presentation.showBuoy(EdgeBuoySignal.unseen(in: snapshot.2, since: buoySeenAt))
+    }
+
+    private var latestHostedSessions: [AnchorSession] = []
+
+    private func markBuoySeen() {
+        buoySeenAt = .now
+        presentation.showBuoy(EdgeBuoySignal.unseen(in: latestHostedSessions, since: buoySeenAt))
     }
 
     private func targetScreen() -> NSScreen? {
