@@ -242,14 +242,16 @@ final class AnchorIOSUITests: XCTestCase {
         app.terminate()
         app.launch()
 
-        let restoredGoal = app.buttons["Production UI test task"]
+        // The task is both a library card and a lane in the glance; check the card.
+        let restoredGoal = app.buttons.matching(NSPredicate(
+            format: "identifier BEGINSWITH 'hosted.task.' AND label == %@", "Production UI test task"
+        )).firstMatch
         XCTAssertTrue(restoredGoal.waitForExistence(timeout: 8))
         XCTAssertEqual(restoredGoal.label, "Production UI test task")
-        XCTAssertTrue(app.buttons["Production UI test task"].exists)
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "hosted.task.")).count, 1)
         XCUIDevice.shared.orientation = .landscapeRight
         XCTAssertTrue(element("ambient.screen", in: app).waitForExistence(timeout: 8))
-        XCTAssertTrue(app.buttons["Production UI test task"].exists)
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label == %@", "Production UI test task")).firstMatch.exists)
         XCTAssertTrue(app.buttons["ambient.tasks.manage"].exists)
         app.buttons["ambient.tasks.manage"].tap()
         XCTAssertTrue(app.buttons["hosted.tasks.create"].waitForExistence(timeout: 5))

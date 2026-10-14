@@ -236,6 +236,7 @@
             userPlan: AnchorUserPlan(steps: draft.steps, localImageNames: names))
           // A personal plan can start without any linked computer process.
           if await model.hostTask(id: draft.hostedTaskID, goal: goal, processes: []) {
+            draft.wasCreated = true
             draft.isConsumed = true
             dismiss()
           } else {

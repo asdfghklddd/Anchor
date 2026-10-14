@@ -21,6 +21,10 @@ public struct AnchorIOSRootView: View {
     @State private var invitation = WorkInvitation()
     @State private var harborMode: WorkInvitationHarbor.Mode?
     @State private var arrivalPending = false
+    @State private var invitationDeferred = false
+    @State private var anchorDrops = 0
+    @State private var anchorWeighs = 0
+    @State private var gravity = DeviceGravityMonitor()
     @State private var posture = DevicePosture.unknown
     @State private var promptedRecoverySessionID: UUID?
     @Namespace private var processTransition
@@ -62,7 +66,10 @@ public struct AnchorIOSRootView: View {
                             onSheet: { sheet = $0 },
                             onTask: openHostedTask,
                             invitation: harborMode,
-                            onInvitationEnd: endHarbor
+                            onInvitationEnd: endHarbor,
+                            anchorDrops: anchorDrops,
+                            anchorWeighs: anchorWeighs,
+                            gravity: gravity
                         )
                     }
                 }
@@ -136,6 +143,10 @@ public struct AnchorIOSRootView: View {
         .onChange(of: sheet) { previousSheet, presentedSheet in
             if presentedSheet == .setup { suspendedSetup = false }
             guard presentedSheet == nil else { return }
+            // The success ending plays first; a waiting invitation follows it.
+            let dropped = previousSheet == .setup && setupDraft.wasCreated
+            if dropped { anchorDrops += 1 }
+            presentDeferredInvitation(after: dropped ? 1.1 : 0.4)
             if suspendedSetup, posture == .portrait {
                 suspendedSetup = false
                 sheet = .setup
@@ -148,6 +159,7 @@ public struct AnchorIOSRootView: View {
         }
         .onChange(of: fullScreen) { _, presentedCover in
             guard presentedCover == nil else { return }
+            presentDeferredInvitation(after: 0.4)
             evaluateRecoveryReview(for: model.projection.session?.id)
         }
         .alert(
@@ -194,7 +206,8 @@ public struct AnchorIOSRootView: View {
         )
         switch event {
         case .offered:
-            harborMode = .inviting
+            // Never over a sheet or cover: wait until the home is in view.
+            if sheet != nil || fullScreen != nil { invitationDeferred = true } else { harborMode = .inviting }
         case .arrived:
             harborMode = nil
             arrivalPending = true
@@ -205,14 +218,32 @@ public struct AnchorIOSRootView: View {
             }
         case .weighed:
             harborMode = .weighing
+            anchorWeighs += 1
         case nil:
-            if harborMode == .inviting, !invitation.isOffered { harborMode = nil }
+            if !invitation.isOffered {
+                invitationDeferred = false
+                if harborMode == .inviting { harborMode = nil }
+            }
+        }
+        // One motion sensor, read only while the invitation is on screen.
+        if harborMode == .inviting { gravity.start() } else { gravity.stop() }
+    }
+
+    private func presentDeferredInvitation(after delay: Double) {
+        guard invitationDeferred else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(delay))
+            guard invitationDeferred, invitation.isOffered, sheet == nil, fullScreen == nil, posture == .portrait else { return }
+            invitationDeferred = false
+            harborMode = .inviting
+            gravity.start()
         }
     }
 
     private func endHarbor() {
         if harborMode == .inviting { invitation.expire() }
         harborMode = nil
+        gravity.stop()
     }
 
     @ViewBuilder

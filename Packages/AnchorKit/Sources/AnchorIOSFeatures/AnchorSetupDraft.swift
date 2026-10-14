@@ -19,6 +19,8 @@ final class AnchorSetupDraft {
     var isReviewing = false
     var editingReview = false
     var isConsumed = false
+    /// The anchor was dropped (not discarded); the home plays its success ending.
+    var wasCreated = false
 
     var hasContent: Bool {
         !originalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !imageData.isEmpty

@@ -2,24 +2,21 @@
 import AnchorDesign
 import SwiftUI
 
-/// The portrait invitation to the landscape work desk, told without text.
+/// The harbor water behind the anchor button during the landscape invitation.
 ///
-/// A band of harbor water sits at the bottom of the home screen with an anchor
-/// hanging on its rope. The deck rolls gently, like standing on a boat; real
-/// gravity from the motion sensor keeps the water level and swings the rope;
-/// and a few times a slow current tugs the anchor toward the left edge, the
-/// way to turn. After about twenty seconds the anchor sinks and the band
-/// leaves quietly. `weighing` plays the reverse when work moves back to
-/// portrait: the anchor rises out of the water and the band fades.
+/// The anchor itself is the bottom button (`HarborAnchorButton`), which grows
+/// into a rocking anchor. This band is only its sea: the deck rolls gently,
+/// like standing on a boat, and real gravity keeps the water level. After
+/// about twenty seconds it leaves quietly. `weighing` shows the water briefly
+/// while the anchor rises back into the button.
 struct WorkInvitationHarbor: View {
     enum Mode: Equatable { case inviting, weighing }
 
     let mode: Mode
+    let gravity: DeviceGravityMonitor
     let onEnd: () -> Void
 
     @AnchorReducedMotion private var reduceMotion
-    @State private var gravity = DeviceGravityMonitor()
-    @State private var pendulum = Pendulum()
     @State private var startedAt = Date.now
     @State private var didEnd = false
 
@@ -33,10 +30,6 @@ struct WorkInvitationHarbor: View {
             let elapsed = context.date.timeIntervalSince(startedAt)
             Canvas { canvas, size in
                 draw(in: &canvas, size: size, elapsed: elapsed)
-            } symbols: {
-                HarborAnchorGlyph(color: AnchorIOSStyle.onAccent, lineWidth: 2.6)
-                    .frame(width: 34, height: 34)
-                    .tag("anchor")
             }
             .opacity(bandOpacity(elapsed))
             .onChange(of: elapsed >= endTime) { _, ended in if ended { finish() } }
@@ -50,10 +43,8 @@ struct WorkInvitationHarbor: View {
         .accessibilityIdentifier("work.invitation")
         .onAppear {
             startedAt = .now
-            if !reduceMotion { gravity.start() }
             if reduceMotion { scheduleStaticEnd() }
         }
-        .onDisappear { gravity.stop() }
     }
 
     private var endTime: TimeInterval {
@@ -67,7 +58,7 @@ struct WorkInvitationHarbor: View {
         let tilt = (gravity.isAvailable ? gravity.angle : 0) + roll
         let waterTop = size.height * 0.58
 
-        // A calm backdrop so the rope never crosses card text.
+        // A calm backdrop so the grown anchor reads against water, not card text.
         let calm = AnchorIOSStyle.canvasBottom
         canvas.fill(Path(CGRect(origin: .zero, size: CGSize(width: size.width, height: size.height + 40))),
                     with: .linearGradient(Gradient(stops: [.init(color: calm.opacity(0), location: 0),
@@ -92,47 +83,6 @@ struct WorkInvitationHarbor: View {
         canvas.fill(body, with: .color(AnchorIOSStyle.oceanSurface.opacity(0.55)))
         canvas.stroke(water, with: .color(.white.opacity(0.8)), lineWidth: 1.5)
         canvas.fill(body.offsetBy(dx: 0, dy: 26), with: .color(AnchorIOSStyle.oceanDeep.opacity(0.22)))
-
-        // The rope hangs from a mooring ring and follows gravity, the deck roll
-        // and, a few times, the current toward the left edge.
-        let pivot = CGPoint(x: size.width * 0.24, y: 34)
-        let target = reduceMotion ? -0.26 : tilt + currentTug(elapsed)
-        let angle = reduceMotion ? target : pendulum.step(toward: target, at: elapsed)
-        var rope = 58.0
-        var anchorOpacity = 1.0
-        switch mode {
-        case .inviting:
-            let sink = max(0, elapsed - Self.inviteDuration) / Self.sinkDuration
-            rope += 70 * eased(min(1, sink))
-            anchorOpacity = 1 - min(1, sink)
-        case .weighing:
-            let rise = min(1, elapsed / 0.8)
-            rope += 70 * (1 - eased(rise))
-        }
-        let end = CGPoint(x: pivot.x + rope * sin(angle), y: pivot.y + rope * cos(angle))
-
-        var ropePath = Path()
-        ropePath.move(to: pivot)
-        ropePath.addLine(to: end)
-        canvas.stroke(ropePath, with: .color(AnchorIOSStyle.secondaryText.opacity(0.75 * anchorOpacity)), lineWidth: 1.4)
-        canvas.stroke(Path(ellipseIn: CGRect(x: pivot.x - 4, y: pivot.y - 4, width: 8, height: 8)),
-                      with: .color(AnchorIOSStyle.secondaryText.opacity(0.8)), lineWidth: 1.6)
-
-        if let glyph = canvas.resolveSymbol(id: "anchor") {
-            var anchor = canvas
-            anchor.opacity = anchorOpacity
-            anchor.translateBy(x: end.x, y: end.y)
-            anchor.rotate(by: .radians(-angle))
-            anchor.draw(glyph, at: CGPoint(x: 0, y: 15), anchor: .center)
-        }
-    }
-
-    /// Three slow pulls toward the left in the first fourteen seconds, then calm.
-    private func currentTug(_ elapsed: TimeInterval) -> Double {
-        guard mode == .inviting, elapsed > 1.2, elapsed < 15 else { return 0 }
-        let phase = (elapsed - 1.2).truncatingRemainder(dividingBy: 4.6)
-        guard phase < 1.6 else { return 0 }
-        return -0.32 * sin(.pi * phase / 1.6)
     }
 
     private func bandOpacity(_ elapsed: TimeInterval) -> Double {
@@ -142,11 +92,10 @@ struct WorkInvitationHarbor: View {
             let leave = max(0, elapsed - Self.inviteDuration - Self.sinkDuration * 0.4) / (Self.sinkDuration * 0.6)
             return appear * (1 - min(1, leave))
         case .weighing:
-            return appear * (1 - min(1, max(0, elapsed - 1.1) / 0.5))
+            return appear * (1 - min(1, max(0, elapsed - 1.0) / 0.6))
         }
     }
 
-    private func eased(_ t: Double) -> Double { t * t * (3 - 2 * t) }
 
     // MARK: Text only where the gesture cannot work
 
@@ -168,7 +117,6 @@ struct WorkInvitationHarbor: View {
     private func finish() {
         guard !didEnd else { return }
         didEnd = true
-        gravity.stop()
         onEnd()
     }
 
@@ -180,21 +128,4 @@ struct WorkInvitationHarbor: View {
     }
 }
 
-/// A damped pendulum stepped once per frame. Reference state on purpose: it
-/// integrates between frames and must not trigger view updates itself.
-private final class Pendulum {
-    private var angle = 0.0
-    private var velocity = 0.0
-    private var lastTime: TimeInterval?
-
-    func step(toward target: Double, at time: TimeInterval) -> Double {
-        let dt = min(1.0 / 20, max(0, time - (lastTime ?? time)))
-        lastTime = time
-        // Stiffness and damping give a rope that swings past once and settles.
-        let acceleration = -26 * (angle - target) - 3.4 * velocity
-        velocity += acceleration * dt
-        angle += velocity * dt
-        return angle
-    }
-}
 #endif

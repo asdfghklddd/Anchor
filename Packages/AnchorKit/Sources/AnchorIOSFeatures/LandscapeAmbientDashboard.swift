@@ -219,6 +219,7 @@ struct LandscapeAmbientDashboard: View {
         .buttonStyle(AnchorPressButtonStyle())
         .accessibilityElement(children: .combine)
         .accessibilityLabel(L10n.glanceLatest)
+        .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("ambient.latest")
     }
 
@@ -310,6 +311,7 @@ struct LandscapeAmbientDashboard: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(task.goal.title)
         .accessibilityValue(accessibleValue(task, status: status))
+        .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("hosted.task.\(task.id)")
     }
 

@@ -14,6 +14,9 @@ struct PortraitDashboard: View {
     /// The wordless invitation to turn into the landscape work desk, if any.
     var invitation: WorkInvitationHarbor.Mode? = nil
     var onInvitationEnd: () -> Void = {}
+    var anchorDrops = 0
+    var anchorWeighs = 0
+    var gravity = DeviceGravityMonitor()
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AnchorReducedMotion private var reduceMotion
 
@@ -61,7 +64,7 @@ struct PortraitDashboard: View {
                 // Behind the anchor button, which floats on the water.
                 VStack {
                     Spacer()
-                    WorkInvitationHarbor(mode: invitation, onEnd: onInvitationEnd)
+                    WorkInvitationHarbor(mode: invitation, gravity: gravity, onEnd: onInvitationEnd)
                         .id(invitation)
                 }
                 .ignoresSafeArea(edges: .bottom)
@@ -75,14 +78,13 @@ struct PortraitDashboard: View {
                 onConnection: { onSheet(.connections) })
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            Button { onSheet(.setup) } label: {
-                HarborAnchorGlyph(color: AnchorIOSStyle.onAccent, lineWidth: 3).frame(width: 36, height: 36)
-                    .frame(width: 76, height: 76).background(AnchorIOSStyle.cyan, in: .circle)
-                    .shadow(color: AnchorIOSStyle.heading.opacity(0.22), radius: 14, y: 6)
-            }
-            .buttonStyle(AnchorPressButtonStyle())
-            .accessibilityLabel(L10n.establishAnchor)
-            .accessibilityIdentifier("anchor.note.button")
+            HarborAnchorButton(
+                isInviting: invitation == .inviting,
+                drops: anchorDrops,
+                weighs: anchorWeighs,
+                gravity: gravity,
+                action: { onSheet(.setup) }
+            )
             .padding(.top, 8).padding(.bottom, 4)
         }
         .toolbar(.hidden, for: .navigationBar)
