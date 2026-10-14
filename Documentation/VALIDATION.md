@@ -263,3 +263,9 @@ Physical iPhone–Mac Bluetooth/Bonjour behavior, successful on-device speech tr
 - 修正：水流方向起初把锚底推向右侧（旋转符号相反），已在录制检查中发现并改为向左；横屏任务行与最新变化恢复按钮朗读属性（`accessibilityElement(children: .ignore)` 会去掉按钮属性）。
 - 测试：全量 Swift 271 项通过；iOS UI 测试 创建并恢复正式任务、草稿保留、横屏跟随、横屏暂存草稿、离开与返航、设计预览通过。`testCreatesAndRestoresAFormalTask` 原先按任务名查找按钮，因此刻总览轨道同名（上一轮总览改版引入）而改为按卡片标识查找。
 - 录屏：`Build/Previews/Landscape-20261013/anchor-button-invitation-flow.mp4` 由 UI 测试驱动真实流程录制；录制期间临时启用“视为 Mac 已连接”开关与录制测试，均已删除。手机外框转动为后期合成；模拟器无重力与触感。
+
+## 2026-10-13：自查修正两处
+
+- 同屏状态用词不一致：横屏任务行的运行状态读作“进行中”（`status.running`），旁边的总览计数读作“项运行中”。状态词改用 `tide.running`（运行中），新增 `StateWordingTests` 约束总览计数与状态词一致；该测试在修正前失败、修正后通过。
+- 邀请在弹层后继续：“有弹层时等待”只在邀请出现时检查。邀请中点按长大的锚新建任务时，邀请会在表单后继续计时并可能悄悄用掉，投锚收尾也会落进仍是锚形的按钮。现在弹层或全屏页打开时暂停邀请（不计为放弃），关闭后按收尾顺序重新出现。
+- 验证：全量 Swift 272 项通过；iOS UI 测试 6 项通过；macOS 构建通过。第二项依赖已连接的 Mac，UI 测试无法覆盖，按代码路径检查。

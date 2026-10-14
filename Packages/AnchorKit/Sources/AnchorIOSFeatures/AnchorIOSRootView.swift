@@ -142,7 +142,10 @@ public struct AnchorIOSRootView: View {
         }
         .onChange(of: sheet) { previousSheet, presentedSheet in
             if presentedSheet == .setup { suspendedSetup = false }
-            guard presentedSheet == nil else { return }
+            guard presentedSheet == nil else {
+                holdInvitationBehindCover()
+                return
+            }
             // The success ending plays first; a waiting invitation follows it.
             let dropped = previousSheet == .setup && setupDraft.wasCreated
             if dropped { anchorDrops += 1 }
@@ -158,7 +161,10 @@ public struct AnchorIOSRootView: View {
             evaluateRecoveryReview(for: model.projection.session?.id)
         }
         .onChange(of: fullScreen) { _, presentedCover in
-            guard presentedCover == nil else { return }
+            guard presentedCover == nil else {
+                holdInvitationBehindCover()
+                return
+            }
             presentDeferredInvitation(after: 0.4)
             evaluateRecoveryReview(for: model.projection.session?.id)
         }
@@ -227,6 +233,16 @@ public struct AnchorIOSRootView: View {
         }
         // One motion sensor, read only while the invitation is on screen.
         if harborMode == .inviting { gravity.start() } else { gravity.stop() }
+    }
+
+    /// A sheet or cover opened over a running invitation (for example the
+    /// grown anchor was tapped to drop another one): pause it, unseen time
+    /// must not use it up, and bring it back once the home is in view.
+    private func holdInvitationBehindCover() {
+        guard harborMode == .inviting else { return }
+        harborMode = nil
+        invitationDeferred = true
+        gravity.stop()
     }
 
     private func presentDeferredInvitation(after delay: Double) {

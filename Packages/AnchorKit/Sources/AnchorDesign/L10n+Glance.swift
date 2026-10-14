@@ -60,7 +60,9 @@ public extension L10n {
 
     static func tideState(_ state: TideState) -> String {
         switch state {
-        case .running: AnchorStrings.value("status.running", default: "Running")
+        // Same word as the glance headline ("运行中"), so one screen never names
+        // the running state two ways.
+        case .running: AnchorStrings.value("tide.running", default: "Running")
         case .attention: AnchorStrings.value("status.attention", default: "Needs a look")
         case .failed: AnchorStrings.value("status.failed", default: "Failed")
         case .interrupted: AnchorStrings.value("status.interrupted", default: "Interrupted")

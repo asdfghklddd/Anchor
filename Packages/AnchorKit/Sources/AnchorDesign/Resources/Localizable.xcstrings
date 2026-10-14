@@ -1,6 +1,22 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+  "tide.running": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Running"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "运行中"
+        }
+      }
+    }
+  },
   "work.invitation": {
     "localizations": {
       "en": {
