@@ -79,6 +79,13 @@ public extension L10n {
         return parts.joined(separator: " · ")
     }
 
+    /// Read by VoiceOver for the wordless landscape invitation.
+    static let workInvitation = AnchorStrings.value(
+        "work.invitation", default: "Turn your phone to the left to open the work desk."
+    )
+    static let workInvitationLock = AnchorStrings.value(
+        "work.invitation.lock", default: "Orientation lock is on. Turn it off in Control Center, then turn your phone."
+    )
     static let ambientElapsed = AnchorStrings.value("ambient.elapsed", default: "Since start")
     static let ambientElapsedHint = AnchorStrings.value(
         "ambient.elapsed.hint",

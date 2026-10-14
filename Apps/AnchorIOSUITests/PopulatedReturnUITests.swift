@@ -80,7 +80,8 @@ final class PopulatedReturnUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
         back.tap()
         XCTAssertTrue(screen.waitForNonExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["return.landscape.hint"].waitForExistence(timeout: 5))
+        // Without a connected Mac there is no landscape invitation (WorkInvitationTests).
+        XCTAssertFalse(app.descendants(matching: .any)["work.invitation"].exists)
     }
 
     @MainActor

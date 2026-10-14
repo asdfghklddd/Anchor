@@ -45,6 +45,12 @@ public struct TideSegment: Hashable, Sendable {
 /// (started, finished, failed, stopped), not percentages, so this is what the
 /// glance view shows.
 public enum TaskTide {
+    /// The visible window: back to the earliest anchor, rounded up to a readable span.
+    public static func windowSpan(for tasks: [AnchorSession], now: Date) -> TimeInterval {
+        let needed = now.timeIntervalSince(tasks.map(\.startedAt).min() ?? now)
+        return [1_800, 3_600, 5_400, 7_200, 10_800, 14_400, 21_600, 28_800].first { $0 >= needed } ?? 28_800
+    }
+
     public static func segments(for session: AnchorSession, now: Date) -> [TideSegment] {
         session.taskProcesses
             .flatMap { segments(for: $0, now: now) }

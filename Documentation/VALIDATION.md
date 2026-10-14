@@ -249,3 +249,10 @@ Physical iPhone–Mac Bluetooth/Bonjour behavior, successful on-device speech tr
 - 新增 `AnchorColorTokens`（iPhone 与 Mac 唯一色值来源）与 `AnchorStateTone`；删除 Mac 资源目录中 21 个独立 colorset 与依赖它们的 `check-mac-contrast.py`；`AccentColor`、`AnchorLaunchBackground` 与令牌同步。规范见 [COLOR_SYSTEM.md](COLOR_SYSTEM.md)。
 - `AnchorColorTokenTests`（6 项）检查文字 4.5:1、状态填充与控件边界 3:1、品牌／操作底上内容 4.5:1、身份色 2.5:1 且远离状态色相、令牌唯一；全部通过。全量 Swift 测试 265 项通过（本轮未出现计时类偶发失败）。
 - iOS Simulator 与 macOS Debug 构建通过；iPhone 首页浅色／深色截图与 Mac 总览浅色／深色渲染已人工检查。未做：真机、增强对比度与减少透明度下的截图，`DashboardReadabilityUITests` 未重跑。
+
+## 2026-10-13：横屏工作台、无文字邀请与到达动效
+
+- 新增 `WorkInvitation`（邀请条件与桌前时段）、`WorkInvitationHarbor`（竖屏水面带）、`DeviceGravityMonitor`（仅邀请期间读取重力）与共享 `HostedTaskStatus`；横屏 `LandscapeAmbientDashboard` 按桌面阅读距离重建；删除返航后的文字横屏提示。
+- Swift 测试：`WorkInvitationTests` 6 项，全量 271 项通过。iOS UI 测试：横屏跟随、横屏暂存草稿、离开与返航（含减少动态效果）、设计预览通过；有数据返航两项因未导入其夹具而跳过，与以往相同。离开与返航测试原先按任务名点按卡片，因此刻总览轨道同名而改为按卡片标识定位（该同名问题自上一轮总览改版即存在）。
+- 模拟器截图检查：竖屏邀请水面带、横屏到达与就位、转回竖屏起锚。验证邀请画面时使用了临时的“视为 Mac 已连接”启动开关与临时截图测试，均已删除，不在提交中。
+- 未做：真机上的重力摆动、横摇手感、方向锁定提示、触感强度与 landscapeLeft 实际握持；模拟器无运动传感器，只能看到无重力时的横摇与水流动画。

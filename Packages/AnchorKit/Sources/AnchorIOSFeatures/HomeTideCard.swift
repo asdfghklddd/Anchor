@@ -182,10 +182,7 @@ struct HomeTideCard: View {
     // MARK: Lanes
 
     private func window(now: Date) -> TimeInterval {
-        let earliest = tasks.map(\.startedAt).min() ?? now
-        let needed = now.timeIntervalSince(earliest)
-        // Round up to a readable span so the axis label stays simple.
-        return [1_800, 3_600, 5_400, 7_200, 10_800, 14_400, 21_600, 28_800].first { $0 >= needed } ?? 28_800
+        TaskTide.windowSpan(for: tasks, now: now)
     }
 
     @ViewBuilder

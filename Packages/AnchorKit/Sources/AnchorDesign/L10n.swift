@@ -204,7 +204,6 @@ public enum L10n {
     }
     public static let returnWhileAway = AnchorStrings.value("return.while.away", default: "While you were away...")
     public static let returnSubtitle = AnchorStrings.value("return.subtitle", default: "Here’s what happened in Anchor")
-    public static let returnLandscapeHint = AnchorStrings.value("return.landscape.hint", default: "Turn your phone sideways to continue with the work dashboard.")
     public static let returnBack = AnchorStrings.value("return.back", default: "Back")
     public static let returnNoChanges = AnchorStrings.value("return.no.changes", default: "No new changes while you were away.")
     public static let returnWorkNow = AnchorStrings.value("return.work.now", default: "Work now")

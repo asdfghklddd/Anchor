@@ -414,7 +414,10 @@ final class AnchorIOSUITests: XCTestCase {
         type("检查 iOS 与 Mac 的任务状态", into: element("setup.steps.field", in: app))
         advanceSetup(in: app)
         app.buttons["setup.start.button"].tap()
-        let card = app.buttons["Anchor 工作看板"]
+        // The task appears as a library card and as a lane in the glance; open the card.
+        let card = app.buttons.matching(NSPredicate(
+            format: "identifier BEGINSWITH 'hosted.task.' AND label == %@", "Anchor 工作看板"
+        )).firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 5))
         card.tap()
         let leave = app.buttons["profile.session.leave.button"]
@@ -432,17 +435,19 @@ final class AnchorIOSUITests: XCTestCase {
         comeBack.tap()
         XCTAssertTrue(element("return.screen", in: app).waitForExistence(timeout: 5))
         XCTAssertTrue(element("return.task.card", in: app).exists)
-        XCTAssertFalse(element("return.landscape.hint", in: app).exists)
+        XCTAssertFalse(element("work.invitation", in: app).exists)
         capture("02-return-in-portrait", app: app)
         let back = app.buttons["return.back.button"]
         if !back.isHittable { app.swipeUp() }
         back.tap()
         XCTAssertTrue(card.waitForExistence(timeout: 5))
         XCTAssertFalse(element("return.screen", in: app).exists)
-        XCTAssertTrue(element("return.landscape.hint", in: app).waitForExistence(timeout: 5))
-        capture("03-landscape-hint-after-review", app: app)
-        XCUIDevice.shared.orientation = .landscapeRight
-        XCTAssertFalse(element("return.landscape.hint", in: app).exists)
+        // The wordless landscape invitation needs a connected Mac, which UI tests
+        // never have; it is covered by WorkInvitationTests instead.
+        XCTAssertFalse(element("work.invitation", in: app).exists)
+        capture("03-workspace-after-review", app: app)
+        XCUIDevice.shared.orientation = .landscapeLeft
+        XCTAssertTrue(element("ambient.screen", in: app).waitForExistence(timeout: 5))
         XCUIDevice.shared.orientation = .portrait
     }
 

@@ -10,9 +10,12 @@ public struct TideLaneView: View {
     /// Accessibility sizes put the name above a full-width lane.
     let stacked: Bool
     let reduceMotion: Bool
+    /// Rows that already show the task name draw the lane alone.
+    let showsLabel: Bool
 
     public init(task: AnchorSession, now: Date, span: TimeInterval, labelWidth: CGFloat,
-                stacked: Bool, reduceMotion: Bool) {
+                stacked: Bool, reduceMotion: Bool, showsLabel: Bool = true) {
+        self.showsLabel = showsLabel
         self.task = task
         self.now = now
         self.span = span
@@ -27,6 +30,7 @@ public struct TideLaneView: View {
         let segments = TaskTide.segments(for: task, now: now)
         let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4)) : AnyLayout(HStackLayout(spacing: 8))
         layout {
+            if showsLabel {
             HStack(spacing: 6) {
                 Circle().fill(tint).frame(width: 8, height: 8)
                 Text(task.goal.title)
@@ -35,6 +39,7 @@ public struct TideLaneView: View {
                     .lineLimit(1)
             }
             .frame(width: stacked ? nil : labelWidth, alignment: .leading)
+            }
             GeometryReader { geometry in
                 let width = geometry.size.width
                 let start = now.addingTimeInterval(-span)

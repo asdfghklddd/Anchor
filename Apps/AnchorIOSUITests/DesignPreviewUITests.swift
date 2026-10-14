@@ -22,12 +22,12 @@ final class DesignPreviewUITests: XCTestCase {
         }
         capture("glance-portrait")
 
-        XCUIDevice.shared.orientation = .landscapeRight
+        XCUIDevice.shared.orientation = .landscapeLeft
         let landscape = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             app.frame.width > app.frame.height
         }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [landscape], timeout: 5), .completed)
-        XCTAssertTrue(app.descendants(matching: .any)["home.glance"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.descendants(matching: .any)["ambient.glance"].waitForExistence(timeout: 4))
         capture("glance-landscape")
 
         app.terminate()

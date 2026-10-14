@@ -1,6 +1,38 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+  "work.invitation": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Turn your phone to the left to open the work desk."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "向左横放手机，进入工作台。"
+        }
+      }
+    }
+  },
+  "work.invitation.lock": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Orientation lock is on. Turn it off in Control Center, then turn your phone."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "竖排方向锁定已开启，请在控制中心关闭后再横放手机。"
+        }
+      }
+    }
+  },
   "edge.buoy.failed": {
     "localizations": {
       "en": {

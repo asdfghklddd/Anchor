@@ -120,8 +120,7 @@ struct MacGlanceCard: View {
     // MARK: Lanes
 
     private func window(now: Date) -> TimeInterval {
-        let needed = now.timeIntervalSince(tasks.map(\.startedAt).min() ?? now)
-        return [1_800, 3_600, 5_400, 7_200, 10_800, 14_400, 21_600, 28_800].first { $0 >= needed } ?? 28_800
+        TaskTide.windowSpan(for: tasks, now: now)
     }
 
     private func lanes(now: Date) -> some View {

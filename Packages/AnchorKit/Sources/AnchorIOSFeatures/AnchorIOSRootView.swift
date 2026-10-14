@@ -18,7 +18,9 @@ public struct AnchorIOSRootView: View {
     @State private var setupDraft = AnchorSetupDraft()
     @State private var suspendedSetup = false
     @State private var fullScreen: AnchorFullScreen?
-    @State private var showsLandscapeHint = false
+    @State private var invitation = WorkInvitation()
+    @State private var harborMode: WorkInvitationHarbor.Mode?
+    @State private var arrivalPending = false
     @State private var posture = DevicePosture.unknown
     @State private var promptedRecoverySessionID: UUID?
     @Namespace private var processTransition
@@ -46,6 +48,7 @@ public struct AnchorIOSRootView: View {
                     if shouldShowLandscapeDashboard {
                         LandscapeAmbientDashboard(
                             projection: model.projection,
+                            playsArrival: arrivalPending,
                             onTask: openHostedTask,
                             onManage: { sheet = .hostedTasks }
                         )
@@ -57,14 +60,10 @@ public struct AnchorIOSRootView: View {
                             transitionNamespace: processTransition,
                             onRoute: { path.append($0) },
                             onSheet: { sheet = $0 },
-                            onTask: openHostedTask
+                            onTask: openHostedTask,
+                            invitation: harborMode,
+                            onInvitationEnd: endHarbor
                         )
-                    }
-                }
-                .safeAreaInset(edge: .bottom) {
-                    if showsLandscapeHint, posture == .portrait,
-                       model.projection.session?.presence == .atDesk {
-                        landscapeHint
                     }
                 }
                 .navigationDestination(for: AnchorRoute.self) { route in
@@ -101,7 +100,7 @@ public struct AnchorIOSRootView: View {
         } action: { newPosture in
             guard newPosture != posture else { return }
             posture = newPosture
-            if newPosture == .landscape { showsLandscapeHint = false }
+            synchronizeInvitation()
             // A rotation pauses setup without discarding its input or task identity.
             if newPosture == .landscape, sheet == .setup {
                 suspendedSetup = true
@@ -116,8 +115,10 @@ public struct AnchorIOSRootView: View {
             Task { await model.updatePosture(newPosture) }
         }
         .onChange(of: model.projection.session?.presence, initial: true) { previous, presence in
-            showsLandscapeHint = previous == .returning && presence == .atDesk && posture != .landscape
+            // Coming back to the desk after being away invites again (D08).
+            if previous == .returning, presence == .atDesk { invitation.beginDeskSession() }
             synchronizeCover(with: presence)
+            synchronizeInvitation()
         }
         .onChange(of: model.projection.session?.returnSummary?.generatedAt) { _, generatedAt in
             guard generatedAt != nil, model.projection.session?.presence == .returning else { return }
@@ -125,8 +126,8 @@ public struct AnchorIOSRootView: View {
             suspendedSetup = false
             fullScreen = .returning
         }
+        .onChange(of: invitationInputs) { _, _ in synchronizeInvitation() }
         .onChange(of: model.projection.session?.id) { _, sessionID in
-            showsLandscapeHint = false
             if sessionID != nil {
                 Task { await model.updatePosture(posture) }
             }
@@ -165,26 +166,53 @@ public struct AnchorIOSRootView: View {
         .task { model.start() }
     }
 
-    private var landscapeHint: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "iphone.gen3.landscape")
-                .font(.title3)
-            Text(L10n.returnLandscapeHint)
-                .font(.subheadline)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityIdentifier("return.landscape.hint")
-            Button { showsLandscapeHint = false } label: {
-                Image(systemName: "xmark")
-                    .frame(width: 44, height: 44)
-            }
-            .accessibilityLabel(L10n.close)
-            .accessibilityIdentifier("return.landscape.dismiss")
+    // MARK: Landscape invitation
+
+    /// Everything the invitation depends on besides posture.
+    private var invitationInputs: [Bool] {
+        [!model.projection.hostedSessions.isEmpty, isMacConnected, isAtDesk]
+    }
+
+    private var isMacConnected: Bool {
+        model.projection.connection == .connected
+    }
+
+    /// Away, handing off and the return review all take precedence (D08).
+    private var isAtDesk: Bool {
+        switch model.projection.session?.presence {
+        case .away, .handingOff, .returning: false
+        case .atDesk, .unknown, nil: true
         }
-        .foregroundStyle(AnchorIOSStyle.action)
-        .padding(.leading, 16)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20))
-        .padding(.horizontal, 20)
-        .padding(.bottom, 8)
+    }
+
+    private func synchronizeInvitation() {
+        let event = invitation.update(
+            hasAnchor: !model.projection.hostedSessions.isEmpty,
+            macConnected: isMacConnected,
+            atDesk: isAtDesk,
+            posture: posture
+        )
+        switch event {
+        case .offered:
+            harborMode = .inviting
+        case .arrived:
+            harborMode = nil
+            arrivalPending = true
+            // Play once for this turn, not again when a pushed detail returns.
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(1))
+                arrivalPending = false
+            }
+        case .weighed:
+            harborMode = .weighing
+        case nil:
+            if harborMode == .inviting, !invitation.isOffered { harborMode = nil }
+        }
+    }
+
+    private func endHarbor() {
+        if harborMode == .inviting { invitation.expire() }
+        harborMode = nil
     }
 
     @ViewBuilder

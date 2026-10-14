@@ -65,29 +65,7 @@ struct HostedTaskCard: View {
 
     // MARK: State
 
-    private struct Summary {
-        var running = 0, attention = 0, failed = 0, interrupted = 0, completed = 0
-        var isComplete = false
-        var hasSources = false
-    }
-
-    private var summary: Summary {
-        let processes = task.taskProcesses
-        var result = Summary()
-        result.hasSources = !processes.isEmpty
-        result.isComplete = HostedTaskIndicator(task: task).isComplete
-        for process in processes {
-            if process.isInterrupted { result.interrupted += 1; continue }
-            switch process.status {
-            case .running: result.running += 1
-            case .needsDecision, .blocked, .disconnected: result.attention += 1
-            case .failed: result.failed += 1
-            case .completed: result.completed += 1
-            case .queued: break
-            }
-        }
-        return result
-    }
+    private var summary: HostedTaskStatus { HostedTaskStatus(task: task) }
 
     private var latestEvent: (event: ProcessEvent, process: AnchorProcess)? {
         task.taskProcesses
@@ -113,25 +91,9 @@ struct HostedTaskCard: View {
         return parts.joined(separator: ", ")
     }
 
-    private var statusText: String {
-        let summary = summary
-        if summary.isComplete { return L10n.tideState(.completed) }
-        if !summary.hasSources { return L10n.cardAwaitingSource }
-        let text = L10n.cardStateSummary(running: summary.running, attention: summary.attention,
-                                         failed: summary.failed, interrupted: summary.interrupted)
-        return text.isEmpty ? L10n.glanceQuiet : text
-    }
+    private var statusText: String { summary.summary }
 
-    private var statusSymbol: (name: String, color: Color) {
-        let summary = summary
-        if summary.isComplete { return ("checkmark.circle.fill", AnchorStateTone.done.ink) }
-        if !summary.hasSources { return ("circle.dashed", AnchorIOSStyle.secondaryText) }
-        if summary.failed > 0 { return ("xmark.octagon.fill", AnchorStateTone.failed.ink) }
-        if summary.attention > 0 { return ("exclamationmark.circle.fill", AnchorStateTone.attention.ink) }
-        if summary.interrupted > 0 && summary.running == 0 { return ("pause.circle.fill", AnchorStateTone.attention.ink) }
-        if summary.running > 0 { return ("play.circle.fill", AnchorStateTone.running.ink) }
-        return ("moon.zzz.fill", AnchorIOSStyle.secondaryText)
-    }
+    private var statusSymbol: (name: String, color: Color) { summary.symbol }
 
     // MARK: Pieces
 

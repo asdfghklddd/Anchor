@@ -11,6 +11,9 @@ struct PortraitDashboard: View {
     let onRoute: (AnchorRoute) -> Void
     let onSheet: (AnchorSheet) -> Void
     let onTask: (UUID) -> Void
+    /// The wordless invitation to turn into the landscape work desk, if any.
+    var invitation: WorkInvitationHarbor.Mode? = nil
+    var onInvitationEnd: () -> Void = {}
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AnchorReducedMotion private var reduceMotion
 
@@ -54,6 +57,16 @@ struct PortraitDashboard: View {
             }
             .scrollIndicators(.hidden)
             .accessibilityIdentifier("workspace.screen")
+            if let invitation {
+                // Behind the anchor button, which floats on the water.
+                VStack {
+                    Spacer()
+                    WorkInvitationHarbor(mode: invitation, onEnd: onInvitationEnd)
+                        .id(invitation)
+                }
+                .ignoresSafeArea(edges: .bottom)
+                .transition(.opacity)
+            }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             HarborTopBar(connection: projection.connection, unreadCount: projection.unreadNotificationsCount,
