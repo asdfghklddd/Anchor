@@ -188,7 +188,9 @@ struct ReturnView: View {
     private func changeRow(_ change: ReturnChange, expanded: Bool) -> some View {
         let interrupted = change.title == "Codex turn_aborted"
         let symbol = interrupted ? "pause.circle.fill" : eventSymbol(change.kind)
-        let color: Color = interrupted ? .orange : (change.kind == .failed ? .red : (change.kind == .completed ? .green : AnchorIOSStyle.action))
+        let color: Color = interrupted ? AnchorStateTone.attention.ink
+            : (change.kind == .failed ? AnchorStateTone.failed.ink
+                : (change.kind == .completed ? AnchorStateTone.done.ink : AnchorIOSStyle.action))
         return HStack(alignment: .top, spacing: 9) {
             Image(systemName: symbol)
                 .font(.caption)
@@ -256,13 +258,13 @@ struct ReturnView: View {
             } else {
                 let columns = dynamicTypeSize.isAccessibilitySize ? 2 : 4
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), alignment: .leading), count: columns), alignment: .leading, spacing: 14) {
-                    metric(review.runningCount, label: L10n.returnRunning, symbol: "play.fill", color: .green)
+                    metric(review.runningCount, label: L10n.returnRunning, symbol: "play.fill", color: AnchorStateTone.running.ink)
                         .accessibilityIdentifier("return.work.running")
-                    metric(review.completedCount, label: L10n.returnCompleted, symbol: "checkmark.seal.fill", color: AnchorIOSStyle.action)
+                    metric(review.completedCount, label: L10n.returnCompleted, symbol: "checkmark.seal.fill", color: AnchorStateTone.done.ink)
                         .accessibilityIdentifier("return.work.completed")
-                    metric(review.failedCount, label: L10n.returnFailed, symbol: "xmark.octagon.fill", color: .red)
+                    metric(review.failedCount, label: L10n.returnFailed, symbol: "xmark.octagon.fill", color: AnchorStateTone.failed.ink)
                         .accessibilityIdentifier("return.work.failed")
-                    metric(review.attentionCount, label: L10n.returnAttention, symbol: "exclamationmark.circle.fill", color: .orange)
+                    metric(review.attentionCount, label: L10n.returnAttention, symbol: "exclamationmark.circle.fill", color: AnchorStateTone.attention.ink)
                         .accessibilityIdentifier("return.work.attention")
                 }
                 if review.queuedCount > 0 {

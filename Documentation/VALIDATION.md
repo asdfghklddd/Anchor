@@ -243,3 +243,9 @@ Physical iPhone–Mac Bluetooth/Bonjour behavior, successful on-device speech tr
 - macOS Debug 构建通过；Mac 总览与浮标仅以 ImageRenderer 渲染检查（浅色／深色），未启动 Mac 应用做实机交互。
 - 测试数据只写入隔离的模拟器 UI 测试目录与临时目录；未访问生产存储或钥匙串。
 - 未做：真机一眼可读性、浮标在多显示器／全屏下的可见度与打扰程度、Live Activity／灵动岛（需新增扩展 target 与后台更新方案，另行决定）。
+
+## 2026-10-13：统一色彩令牌
+
+- 新增 `AnchorColorTokens`（iPhone 与 Mac 唯一色值来源）与 `AnchorStateTone`；删除 Mac 资源目录中 21 个独立 colorset 与依赖它们的 `check-mac-contrast.py`；`AccentColor`、`AnchorLaunchBackground` 与令牌同步。规范见 [COLOR_SYSTEM.md](COLOR_SYSTEM.md)。
+- `AnchorColorTokenTests`（6 项）检查文字 4.5:1、状态填充与控件边界 3:1、品牌／操作底上内容 4.5:1、身份色 2.5:1 且远离状态色相、令牌唯一；全部通过。全量 Swift 测试 265 项通过（本轮未出现计时类偶发失败）。
+- iOS Simulator 与 macOS Debug 构建通过；iPhone 首页浅色／深色截图与 Mac 总览浅色／深色渲染已人工检查。未做：真机、增强对比度与减少透明度下的截图，`DashboardReadabilityUITests` 未重跑。

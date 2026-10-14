@@ -133,32 +133,30 @@ private struct TideMarker: View {
 public enum TideStyle {
     public static func fill(_ state: TideState, tint: Color) -> Color {
         switch state {
-        case .running: tint.opacity(0.85)
-        case .attention: AnchorPalette.attention
-        case .failed: .red
-        case .interrupted: AnchorPalette.secondaryInk.opacity(0.5)
-        case .completed: tint
+        case .running, .completed: tint.opacity(state == .running ? 0.85 : 1)
+        case .attention, .failed, .interrupted: AnchorStateTone(state).fill
         }
     }
 
     public static func marker(_ state: TideState, tint: Color) -> (name: String, color: Color) {
         switch state {
-        case .completed: ("checkmark", AnchorPalette.mintInk)
-        case .failed: ("xmark", .red)
-        case .interrupted: ("pause.fill", AnchorPalette.secondaryInk)
-        case .attention: ("exclamationmark", AnchorPalette.attention)
+        case .completed: ("checkmark", AnchorStateTone.done.fill)
+        case .failed: ("xmark", AnchorStateTone.failed.fill)
+        case .interrupted: ("pause.fill", AnchorStateTone.attention.fill)
+        case .attention: ("exclamationmark", AnchorStateTone.attention.fill)
         case .running: ("play.fill", tint)
         }
     }
 
     public static func symbol(for change: WorkGlance.Change) -> (name: String, color: Color) {
-        if change.isInterruption { return ("pause.circle.fill", AnchorPalette.secondaryInk) }
+        if change.isInterruption { return ("pause.circle.fill", AnchorStateTone.attention.ink) }
         switch change.event.kind {
-        case .completed: return ("checkmark.circle.fill", AnchorPalette.mintInk)
-        case .failed: return ("xmark.octagon.fill", .red)
-        case .decisionRequired: return ("exclamationmark.circle.fill", AnchorTaskIdentity.attentionInk)
+        case .completed: return ("checkmark.circle.fill", AnchorStateTone.done.ink)
+        case .failed: return ("xmark.octagon.fill", AnchorStateTone.failed.ink)
+        case .decisionRequired: return ("exclamationmark.circle.fill", AnchorStateTone.attention.ink)
         case .outputReady: return ("sparkles", AnchorPalette.interaction)
         default: return ("play.circle.fill", AnchorPalette.interaction)
         }
     }
+
 }

@@ -37,9 +37,10 @@ struct AnchorEdgeBuoyView: View {
 
     private var color: Color {
         switch signal {
-        case .failed: Color(red: 0.86, green: 0.20, blue: 0.20)
-        case .attention: Color(red: 0.90, green: 0.62, blue: 0.08)
-        case .finished: Color(red: 0.16, green: 0.62, blue: 0.38)
+        // The buoy floats on any wallpaper, so it keeps the light-appearance fills.
+        case .failed: Color(anchorHex: AnchorColorTokens.failedFill.light)
+        case .attention: Color(anchorHex: AnchorColorTokens.attentionFill.light)
+        case .finished: Color(anchorHex: AnchorColorTokens.doneFill.light)
         }
     }
 }

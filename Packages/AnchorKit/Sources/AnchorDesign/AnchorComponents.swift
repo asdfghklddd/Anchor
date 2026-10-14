@@ -219,12 +219,13 @@ public struct StatusBadge: View {
     }
 
     private var tint: Color {
-        if interrupted { return AnchorPalette.secondaryInk }
+        if interrupted { return AnchorStateTone.attention.fill }
         return switch status {
-        case .needsDecision, .blocked: AnchorPalette.sand
-        case .completed: AnchorPalette.seafoam
-        case .failed, .disconnected: AnchorPalette.coral
-        case .queued, .running: AnchorPalette.cyan
+        case .needsDecision, .blocked, .disconnected: AnchorStateTone.attention.fill
+        case .completed: AnchorStateTone.done.fill
+        case .failed: AnchorStateTone.failed.fill
+        case .running: AnchorStateTone.running.fill
+        case .queued: AnchorPalette.secondaryInk
         }
     }
 }

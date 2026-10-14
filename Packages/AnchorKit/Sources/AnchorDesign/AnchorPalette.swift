@@ -1,105 +1,52 @@
 import SwiftUI
 
+/// Names the iPhone and Mac screens already use. Every name now resolves through
+/// `AnchorColorTokens`, so both platforms share one palette. Several names are
+/// aliases kept for the discipline pass (see Documentation/COLOR_SYSTEM.md).
 public enum AnchorPalette {
-#if os(iOS)
-    public static let paper = AnchorIOSStyle.canvasTop
-    public static let surface = AnchorIOSStyle.surface
-    public static let ink = AnchorIOSStyle.text
-    public static let secondaryInk = AnchorIOSStyle.secondaryText
-    public static let canvas = AnchorIOSStyle.canvasTop
-    public static let fluoriteSurface = AnchorIOSStyle.surface
-    public static let brandDeep = AnchorIOSStyle.heading
-    public static let interaction = AnchorIOSStyle.action
-    public static let softBlue = AnchorIOSStyle.canvasBottom
-    public static let aiBlue = AnchorIOSStyle.cyan
-    public static let attention = AnchorIOSStyle.yellow
-    public static let fluoriteBorder = AnchorIOSStyle.border
-    public static let secondaryText = AnchorIOSStyle.secondaryText
-#else
-    public static let paper = Color("Paper", bundle: .module)
-    public static let surface = Color("Surface", bundle: .module)
-    public static let ink = Color("Ink", bundle: .module)
-    public static let secondaryInk = Color("SecondaryInk", bundle: .module)
-    public static let canvas = Color("Canvas", bundle: .module)
-    public static let fluoriteSurface = Color("FluoriteSurface", bundle: .module)
-    public static let brandDeep = Color("BrandDeep", bundle: .module)
-    public static let interaction = Color("Interaction", bundle: .module)
-    public static let softBlue = Color("SoftBlue", bundle: .module)
-    public static let aiBlue = Color("AIBlue", bundle: .module)
-    public static let attention = Color("Attention", bundle: .module)
-    public static let fluoriteBorder = Color("FluoriteBorder", bundle: .module)
-    public static let secondaryText = Color("SecondaryText", bundle: .module)
-#endif
-    public static let seafoam = Color(red: 0.57, green: 0.87, blue: 0.77)
-#if os(iOS)
-    public static let coral = AnchorIOSStyle.pink
-#else
-    public static let coral = Color(red: 1.00, green: 0.48, blue: 0.38)
-#endif
-#if os(iOS)
-    public static let sand = AnchorIOSStyle.yellow
-#else
-    public static let sand = Color(red: 0.97, green: 0.74, blue: 0.24)
-#endif
-#if os(iOS)
-    public static let cyan = AnchorIOSStyle.cyan
-#else
-    public static let cyan = Color(red: 0.35, green: 0.80, blue: 0.82)
-#endif
-#if os(iOS)
-    public static let periwinkle = AnchorIOSStyle.pink
-#else
-    public static let periwinkle = Color(red: 0.55, green: 0.52, blue: 0.97)
-#endif
-    // Keep artwork and fixed dark surfaces independent of adaptive foreground colors.
-    public static let deepSea = Color(red: 0.07, green: 0.23, blue: 0.33)
-#if os(macOS)
-    public static let deepSeaInk = Color("DeepSeaInk", bundle: .module)
-#endif
-#if os(iOS)
-    public static let link = AnchorIOSStyle.action
-#else
-    public static let link = Color(red: 0.13, green: 0.38, blue: 0.62)
-#endif
-#if os(iOS)
-    public static let harborWhite = AnchorIOSStyle.surface
-#else
-    public static let harborWhite = Color(red: 1.00, green: 0.99, blue: 0.97)
-#endif
-#if os(iOS)
-    public static let mintInk = AnchorIOSStyle.success
-#else
-    public static let mintInk = Color("MintInk", bundle: .module)
-#endif
-    public static let warmYellow = Color(red: 1.00, green: 0.96, blue: 0.71)
-    public static let oceanHighlight = Color(red: 0.66, green: 0.93, blue: 0.89)
-    public static let returnCanvas = Color("ReturnCanvas", bundle: .module)
+    public static let surface = Color(AnchorColorTokens.surface)
+    public static let ink = Color(AnchorColorTokens.text)
+    public static let secondaryInk = Color(AnchorColorTokens.textSecondary)
+    public static let canvas = Color(AnchorColorTokens.canvasTop)
+    public static let fluoriteSurface = Color(AnchorColorTokens.surface)
+    public static let brandDeep = Color(AnchorColorTokens.heading)
+    public static let interaction = Color(AnchorColorTokens.action)
+    public static let softBlue = Color(AnchorColorTokens.selection)
+    public static let aiBlue = Color(AnchorColorTokens.brand)
+    public static let attention = Color(AnchorColorTokens.attentionFill)
+    public static let fluoriteBorder = Color(AnchorColorTokens.border)
+    public static let secondaryText = Color(AnchorColorTokens.textSecondary)
+    public static let cyan = Color(AnchorColorTokens.brand)
+    public static let link = Color(AnchorColorTokens.action)
+    public static let harborWhite = Color(AnchorColorTokens.surface)
+    public static let mintInk = Color(AnchorColorTokens.doneInk)
+    public static let deepSeaInk = Color(AnchorColorTokens.text)
+    /// Category colors. They used to double as status colors (coral = failed,
+    /// sand = waiting); status now comes only from `AnchorStateTone`.
+    public static let coral = Color(AnchorColorTokens.identity[2])
+    public static let periwinkle = Color(AnchorColorTokens.identity[3])
+    public static let sand = Color(AnchorColorTokens.attentionFill)
+    // Fixed artwork colors that do not follow appearance.
+    public static let seafoam = Color(anchorHex: AnchorColorTokens.seafoam)
+    public static let deepSea = Color(anchorHex: AnchorColorTokens.deepSea)
+    public static let oceanHighlight = Color(anchorHex: AnchorColorTokens.oceanHighlight)
 
+    /// Only "cyan" is produced by current sources; the other tones are legacy
+    /// and map onto identity hues so they can never read as a status.
     public static func source(_ tone: String) -> Color {
         switch tone {
-        case "coral": coral
-        case "cyan": cyan
-        case "periwinkle", "blue": periwinkle
-        case "sand": sand
-        case "seafoam": seafoam
+        case "coral": Color(AnchorColorTokens.identity[2])
+        case "periwinkle", "blue": Color(AnchorColorTokens.identity[3])
+        case "sand": Color(AnchorColorTokens.identity[0])
+        case "seafoam": Color(AnchorColorTokens.identity[4])
+        case "cyan": Color(AnchorColorTokens.brand)
         default: ink
         }
     }
 
-    /// Source text colors adapt to the appearance of information surfaces.
+    /// Source labels read as links in both appearances.
     public static func sourceInk(_ tone: String) -> Color {
-#if os(iOS)
-        AnchorIOSStyle.heading
-#else
-        switch tone {
-        case "coral": Color("SourceCoralInk", bundle: .module)
-        case "cyan": Color("SourceCyanInk", bundle: .module)
-        case "periwinkle", "blue": Color("SourcePeriwinkleInk", bundle: .module)
-        case "sand": Color("SourceSandInk", bundle: .module)
-        case "seafoam": Color("SourceSeafoamInk", bundle: .module)
-        default: deepSeaInk
-        }
-#endif
+        Color(AnchorColorTokens.action)
     }
 
     /// Opaque pastel surfaces that keep black source initials above WCAG AA in both appearances.

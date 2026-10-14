@@ -63,7 +63,7 @@ struct PortraitDashboard: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             Button { onSheet(.setup) } label: {
-                HarborAnchorGlyph(color: .white, lineWidth: 3).frame(width: 36, height: 36)
+                HarborAnchorGlyph(color: AnchorIOSStyle.onAccent, lineWidth: 3).frame(width: 36, height: 36)
                     .frame(width: 76, height: 76).background(AnchorIOSStyle.cyan, in: .circle)
                     .shadow(color: AnchorIOSStyle.heading.opacity(0.22), radius: 14, y: 6)
             }

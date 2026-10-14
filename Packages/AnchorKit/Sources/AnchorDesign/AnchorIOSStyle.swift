@@ -5,64 +5,38 @@ import UIKit
 
 /// iOS visual tokens derived from the approved Figma homepage (204:573).
 public enum AnchorIOSStyle {
-    public static let canvasTop = adaptive(light: 0xF7FDFF, dark: 0x101F29)
-    public static let canvasBottom = adaptive(light: 0xD2F7FC, dark: 0x123641)
-    public static let surface = adaptive(light: 0xFFFFFF, dark: 0x20343E)
-    public static let heading = adaptive(light: 0x315E8B, dark: 0xB5E2F6)
-    public static let cyan = adaptive(light: 0x36D1ED, dark: 0x289CB8)
-    public static let yellow = adaptive(light: 0xF4C62F, dark: 0xDABB48)
-    /// Readable attention text and symbols; `yellow` stays for fills and identity.
-    public static let attentionInk = adaptive(light: 0x8A5A00, dark: 0xF2D16B)
-    public static let text = adaptive(light: 0x183F52, dark: 0xDFEFF5)
-    public static let secondaryText = adaptive(light: 0x526979, dark: 0xB6CAD5)
-    public static let action = adaptive(light: 0x176E87, dark: 0x87DCEC)
-    public static let onAction = adaptive(light: 0xFFFFFF, dark: 0x123F52)
-    public static let onAccent = adaptive(light: 0x123F52, dark: 0x082C38)
-    public static let success = adaptive(light: 0x26764D, dark: 0x8DDDAD)
-    public static let border = adaptive(light: 0xDCECF0, dark: 0x3C5662)
+    // Every value resolves through AnchorColorTokens, shared with the Mac.
+    public static let canvasTop = Color(AnchorColorTokens.canvasTop)
+    public static let canvasBottom = Color(AnchorColorTokens.canvasBottom)
+    public static let surface = Color(AnchorColorTokens.surface)
+    public static let heading = Color(AnchorColorTokens.heading)
+    public static let cyan = Color(AnchorColorTokens.brand)
+    /// Former attention yellow; now the attention fill. Identity no longer uses it.
+    public static let yellow = Color(AnchorColorTokens.attentionFill)
+    /// Readable attention text and symbols.
+    public static let attentionInk = Color(AnchorColorTokens.attentionInk)
+    public static let text = Color(AnchorColorTokens.text)
+    public static let secondaryText = Color(AnchorColorTokens.textSecondary)
+    public static let action = Color(AnchorColorTokens.action)
+    public static let onAction = Color(AnchorColorTokens.onAction)
+    public static let onAccent = Color(AnchorColorTokens.onBrand)
+    public static let success = Color(AnchorColorTokens.doneInk)
+    public static let border = Color(AnchorColorTokens.border)
     public static let cardRadius: CGFloat = 16
     public static let heroRadius: CGFloat = 20
     public static let pageInset: CGFloat = 20
-    public static let pink = adaptive(light: 0xE967D3, dark: 0xD986CB)
-    public static let violet = adaptive(light: 0x8B7CF6, dark: 0xA197F2)
+    public static let pink = Color(AnchorColorTokens.identity[2])
+    public static let violet = Color(AnchorColorTokens.identity[3])
     /// Launch harbor water: the surface tint and the depth it fades into.
-    public static let oceanSurface = adaptive(light: 0x6FD8EF, dark: 0x1E6F86)
-    public static let oceanDeep = adaptive(light: 0x2A8FC7, dark: 0x0B2B3A)
+    public static let oceanSurface = Color(AnchorColorTokens.oceanSurface)
+    public static let oceanDeep = Color(AnchorColorTokens.oceanDeep)
 
     public static var background: LinearGradient {
         LinearGradient(colors: [canvasTop, canvasBottom], startPoint: .top, endPoint: .bottom)
     }
 
     public static func tint(for process: AnchorProcess) -> Color {
-        switch process.sourceTone {
-        case "sand": yellow
-        case "coral", "periwinkle", "blue": pink
-        default: cyan
-        }
-    }
-
-    /// Extra task identities beyond the named tokens, slightly dimmed on dark surfaces.
-    public static func generatedTaskColor(hue: Double) -> Color {
-        Color(uiColor: UIColor { traits in
-            UIColor(
-                hue: hue,
-                saturation: 0.64,
-                brightness: traits.userInterfaceStyle == .dark ? 0.78 : 0.88,
-                alpha: 1
-            )
-        })
-    }
-
-    private static func adaptive(light: UInt32, dark: UInt32) -> Color {
-        Color(uiColor: UIColor { traits in
-            let value = traits.userInterfaceStyle == .dark ? dark : light
-            return UIColor(
-                red: CGFloat((value >> 16) & 255) / 255,
-                green: CGFloat((value >> 8) & 255) / 255,
-                blue: CGFloat(value & 255) / 255,
-                alpha: 1
-            )
-        })
+        AnchorPalette.source(process.sourceTone)
     }
 }
 #endif

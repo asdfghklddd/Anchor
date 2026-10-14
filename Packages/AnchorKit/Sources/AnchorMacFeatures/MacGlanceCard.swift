@@ -55,16 +55,16 @@ struct MacGlanceCard: View {
         case .awaitingSources:
             message(L10n.glanceAwaiting, detail: L10n.glanceAwaitingDetail)
         case .failed(let count):
-            counted(count, label: L10n.glanceFailed, tint: .red, symbol: "xmark.octagon.fill", glance: glance)
+            counted(count, label: L10n.glanceFailed, tint: AnchorStateTone.failed.ink, symbol: "xmark.octagon.fill", glance: glance)
         case .attention(let count):
-            counted(count, label: L10n.glanceAttention, tint: AnchorTaskIdentity.attentionInk,
+            counted(count, label: L10n.glanceAttention, tint: AnchorStateTone.attention.ink,
                     symbol: "exclamationmark.circle.fill", glance: glance)
         case .running(let count):
             counted(count, label: L10n.glanceRunning, tint: AnchorPalette.brandDeep, symbol: nil, glance: glance)
         case .allCompleted:
             Label(L10n.glanceAllDone, systemImage: "checkmark.seal.fill")
                 .font(.title2.weight(.bold))
-                .foregroundStyle(AnchorPalette.mintInk)
+                .foregroundStyle(AnchorStateTone.done.ink)
         case .quiet:
             Label(L10n.glanceQuiet, systemImage: "moon.zzz.fill")
                 .font(.title2.weight(.bold))

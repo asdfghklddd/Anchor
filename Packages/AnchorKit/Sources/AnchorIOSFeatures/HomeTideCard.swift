@@ -94,14 +94,14 @@ struct HomeTideCard: View {
         case .awaitingSources:
             message(L10n.glanceAwaiting, detail: L10n.glanceAwaitingDetail, symbol: "circle.dashed")
         case .failed(let count):
-            counted(count, label: L10n.glanceFailed, tint: .red, symbol: "xmark.octagon.fill", glance: glance)
+            counted(count, label: L10n.glanceFailed, tint: AnchorStateTone.failed.ink, symbol: "xmark.octagon.fill", glance: glance)
         case .attention(let count):
-            counted(count, label: L10n.glanceAttention, tint: AnchorIOSStyle.attentionInk,
+            counted(count, label: L10n.glanceAttention, tint: AnchorStateTone.attention.ink,
                     symbol: "exclamationmark.circle.fill", glance: glance)
         case .running(let count):
             counted(count, label: L10n.glanceRunning, tint: AnchorIOSStyle.heading, symbol: nil, glance: glance)
         case .allCompleted:
-            settled(L10n.glanceAllDone, symbol: "checkmark.seal.fill", tint: AnchorIOSStyle.success)
+            settled(L10n.glanceAllDone, symbol: "checkmark.seal.fill", tint: AnchorStateTone.done.ink)
         case .quiet:
             settled(L10n.glanceQuiet, symbol: "moon.zzz.fill", tint: AnchorIOSStyle.secondaryText)
         }

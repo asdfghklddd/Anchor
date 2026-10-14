@@ -28,7 +28,7 @@ struct HostedTaskCard: View {
                 if summary.isComplete {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(AnchorIOSStyle.success)
+                        .foregroundStyle(AnchorStateTone.done.ink)
                         .frame(width: 26, height: 26)
                         .transition(reduceMotion ? .opacity : .scale(scale: 0.6).combined(with: .opacity))
                         .accessibilityHidden(true)
@@ -124,12 +124,12 @@ struct HostedTaskCard: View {
 
     private var statusSymbol: (name: String, color: Color) {
         let summary = summary
-        if summary.isComplete { return ("checkmark.circle.fill", AnchorIOSStyle.success) }
+        if summary.isComplete { return ("checkmark.circle.fill", AnchorStateTone.done.ink) }
         if !summary.hasSources { return ("circle.dashed", AnchorIOSStyle.secondaryText) }
-        if summary.failed > 0 { return ("xmark.octagon.fill", .red) }
-        if summary.attention > 0 { return ("exclamationmark.circle.fill", AnchorIOSStyle.attentionInk) }
-        if summary.interrupted > 0 && summary.running == 0 { return ("pause.circle.fill", AnchorIOSStyle.secondaryText) }
-        if summary.running > 0 { return ("play.circle.fill", .green) }
+        if summary.failed > 0 { return ("xmark.octagon.fill", AnchorStateTone.failed.ink) }
+        if summary.attention > 0 { return ("exclamationmark.circle.fill", AnchorStateTone.attention.ink) }
+        if summary.interrupted > 0 && summary.running == 0 { return ("pause.circle.fill", AnchorStateTone.attention.ink) }
+        if summary.running > 0 { return ("play.circle.fill", AnchorStateTone.running.ink) }
         return ("moon.zzz.fill", AnchorIOSStyle.secondaryText)
     }
 

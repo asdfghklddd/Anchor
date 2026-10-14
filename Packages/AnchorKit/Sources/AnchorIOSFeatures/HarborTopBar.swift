@@ -151,8 +151,8 @@ struct HarborTopBar: View {
         case .pairing: AnchorPalette.interaction
         // A sleeping or closed Mac is ordinary; only actionable problems get warm colors (P2).
         case .disconnected, .unavailable: AnchorIOSStyle.secondaryText
-        case .permissionDenied: AnchorIOSStyle.attentionInk
-        case .failed: Color.red
+        case .permissionDenied: AnchorStateTone.attention.ink
+        case .failed: AnchorStateTone.failed.ink
         }
     }
 }
