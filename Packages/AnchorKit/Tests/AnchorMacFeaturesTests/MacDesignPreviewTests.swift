@@ -105,6 +105,55 @@ struct MacDesignPreviewTests {
         )
     }
 
+    @Test("Task cards and the unsorted list render in both appearances")
+    func renderTaskCards() throws {
+        let now = Date.now
+        func at(_ minutes: Double) -> Date { now.addingTimeInterval(-minutes * 60) }
+        func run(_ title: String, _ status: ProcessStatus, started: Double, ended: Double?) -> AnchorProcess {
+            let sourceID = UUID()
+            var events = [ProcessEvent(sourceID: sourceID, occurredAt: at(started), kind: .created, title: "Codex task_started")]
+            if let ended {
+                events.append(ProcessEvent(sourceID: sourceID, occurredAt: at(ended), kind: .completed, title: "Codex task_complete"))
+            }
+            return AnchorProcess(sourceID: sourceID, sourceName: "Codex", sourceSymbol: "C", sourceTone: "cyan",
+                                 title: title, status: status, updatedAt: at(ended ?? started), events: events)
+        }
+        let homeworkPlan = try #require(AnchorUserPlan(steps: ["实现插入", "实现删除操作", "补边界情况测试", "写实验报告"])
+            .marking(step: 0, done: true, at: at(45)))
+        let homework = AnchorSession(goal: AnchorGoal(title: "数据结构作业", completionCriteria: "红黑树的插入和删除都通过测试",
+                                                      userPlan: homeworkPlan),
+                                     status: .active, startedAt: at(120),
+                                     processes: [run("红黑树删除", .completed, started: 30, ended: 4)], taskColorIndex: 0)
+        let websitePlan = try #require(AnchorUserPlan(steps: ["整理项目清单", "做项目页", "部署上线"])
+            .marking(step: 0, done: true, at: at(90)))
+        let website = AnchorSession(goal: AnchorGoal(title: "个人网站", completionCriteria: "作品集上线", userPlan: websitePlan),
+                                    status: .active, startedAt: at(300), taskColorIndex: 1)
+        let deletion = codexConversation("rb-delete", .completed(at: at(4), duration: 1_560), modified: at(4),
+                                         title: "红黑树删除", workspace: "homework",
+                                         reply: "已实现 delete 和 fixup，所有测试通过。另外补了一个回归测试，覆盖删除根节点的情况。")
+        let notes = codexConversation("notes", .completed(at: at(20), duration: 95), modified: at(20),
+                                      title: "整理笔记格式", workspace: "notes", reply: "已把 12 篇笔记统一成同一种标题格式。")
+        let actions = MacTaskActions(setStep: { _, _, _ in }, markReviewed: { _ in }, open: { _ in },
+                                     assign: { _, _ in }, ignore: { _ in })
+        for scheme in [ColorScheme.light, .dark] {
+            let page = VStack(alignment: .leading, spacing: MacMetrics.pageSpacing) {
+                MacTaskCard(task: homework, conversations: [deletion],
+                            steps: ["rb-delete": homeworkPlan.items[1].id], otherTasks: [website],
+                            now: now, actions: actions)
+                MacTaskCard(task: website, conversations: [], steps: [:], otherTasks: [homework],
+                            now: now, actions: actions)
+                MacUnsortedCard(conversations: [notes], candidates: [:], tasks: [homework, website],
+                                now: now, actions: actions)
+            }
+            .padding(24)
+            .frame(width: 900)
+            .background(AnchorPalette.canvas)
+            .environment(\.colorScheme, scheme)
+            .environment(\.locale, AnchorStrings.interfaceLocale)
+            try export(page, name: "mac-task-cards-\(scheme == .dark ? "dark" : "light")")
+        }
+    }
+
     private func export<Content: View>(_ view: Content, name: String) throws {
         guard let destination = ProcessInfo.processInfo.environment["ANCHOR_DESIGN_PREVIEW_EXPORT"] else { return }
         let renderer = ImageRenderer(content: view)

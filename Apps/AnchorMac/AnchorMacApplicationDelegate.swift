@@ -82,7 +82,7 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         sourceSetupModel.onNeedsAttention = { [weak detailWindowController] in
             detailWindowController?.present()
         }
-        if sourceSetupModel.showsCodexOnboarding || sourceSetupModel.showsCodexReview {
+        if sourceSetupModel.showsCodexOnboarding {
             detailWindowController.present()
         }
         let codexTurnEndNotifier = MacCodexTurnEndNotifier(defaults: interfaceDefaults ?? .standard)

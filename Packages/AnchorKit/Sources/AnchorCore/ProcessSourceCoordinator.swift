@@ -124,6 +124,18 @@ public actor ProcessSourceCoordinator: SourceHealthProviding {
         if isStarted { start(sourceID: descriptor.id) }
     }
 
+    /// Stops one source for good, for example when the person moves its work to
+    /// another task. Events it already committed stay in history.
+    public func unregister(sourceID: UUID) {
+        sourceTasks[sourceID]?.cancel()
+        sourceTasks[sourceID] = nil
+        sourceGenerations[sourceID] = nil
+        sources[sourceID] = nil
+        healthByID[sourceID] = nil
+        associations = associations.filter { $0.key.sourceID != sourceID }
+        publishHealth()
+    }
+
     public func healthSnapshot() -> [SourceHealth] {
         healthByID.values.sorted { $0.descriptor.name < $1.descriptor.name }
     }

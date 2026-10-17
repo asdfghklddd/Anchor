@@ -116,8 +116,8 @@ public struct AnchorMacRootView: View {
         }
         .onAppear(perform: migrateStoredSection)
         .sheet(isPresented: Binding(
-            get: { sourceSetupModel.map { $0.showsCodexOnboarding || $0.showsCodexReview } ?? false },
-            set: { if !$0 { sourceSetupModel?.showsCodexOnboarding = false; sourceSetupModel?.showsCodexReview = false } }
+            get: { sourceSetupModel?.showsCodexOnboarding ?? false },
+            set: { if !$0 { sourceSetupModel?.showsCodexOnboarding = false } }
         )) {
             if let sourceSetupModel {
                 MacCodexConnectionSheet(model: sourceSetupModel)
@@ -164,7 +164,8 @@ public struct AnchorMacRootView: View {
                 showsCompletedSessionInCurrentWork: showsCompletedSessionInCurrentWork,
                 onOpenProcess: openProcess,
                 onOpenTimeline: openTimeline,
-                onOpenSettings: { selectSection(.settings) }
+                onOpenSettings: { selectSection(.settings) },
+                onOpenTask: openTask
             )
         case .history:
             MacHistoryTrackView(
@@ -194,6 +195,19 @@ public struct AnchorMacRootView: View {
                 projection: model.projection,
                 onOpenSettings: { selectSection(.settings) }
             )
+        case .task:
+            if let session = model.projection.session {
+                MacWorkOverviewView(
+                    model: model,
+                    session: session,
+                    conversations: sourceSetupModel.map { setup in
+                        setup.codexConversations.filter { setup.conversationTasks[$0.id] == session.id }
+                    },
+                    onOpenProcess: openProcess,
+                    onOpenTimeline: openTimeline,
+                    onOpenSettings: { selectSection(.settings) }
+                )
+            }
         }
     }
 
@@ -213,6 +227,12 @@ public struct AnchorMacRootView: View {
 
     private func openTimeline() {
         workPath.append(.timeline)
+    }
+
+    private func openTask(_ id: UUID) {
+        Task {
+            if await model.selectHostedTask(id) { workPath.append(.task) }
+        }
     }
 
     private func expandSidebar() {

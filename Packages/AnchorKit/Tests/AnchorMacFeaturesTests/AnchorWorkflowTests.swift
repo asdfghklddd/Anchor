@@ -6,7 +6,7 @@ import Testing
 @testable import AnchorMacFeatures
 
 @MainActor
-@Test("Phone anchor discovers a resumed Mac conversation, confirms, syncs, returns and archives")
+@Test("Phone anchor gets its Mac conversation placed by its words, syncs, returns and archives")
 func anchorFullWorkflow() async throws {
     let root = URL.temporaryDirectory.appending(path: "anchor-workflow-\(UUID())")
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -53,10 +53,8 @@ func anchorFullWorkflow() async throws {
     {"timestamp":"\(timestamp)","type":"event_msg","payload":{"type":"task_started","turn_id":"turn-1"}}
 
     """.utf8).write(to: file)
-    try await workflowWait { !firstSetup.codexSuggestions.isEmpty }
-    #expect(await mac.currentProjection().session?.processes.isEmpty == true)
-    let suggestion = try #require(firstSetup.codexSuggestions.first)
-    await firstSetup.confirmSuggestion(suggestion, taskID: taskID)
+    // "Fix the Anchor dashboard" shares two words with the task, so it attaches with no confirmation.
+    try await workflowWait { firstSetup.conversationTasks["conversation-1"] == taskID }
     try await workflowWait { await mac.currentProjection().session?.processes.first?.status == .running }
     await mac.flushPendingEvents()
     #expect(await phone.currentProjection().session?.processes.first?.status == .running)

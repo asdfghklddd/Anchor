@@ -14,13 +14,6 @@ struct MacCodexConnectionNotice: View {
                 Button("连接 Codex") { model.showsCodexOnboarding = true }
             }
             .padding(.top, 32)
-        } else if !model.codexSuggestions.isEmpty {
-            HStack {
-                Label("找到 \(model.codexSuggestions.count) 个可能相关的会话", systemImage: "bubble.left.and.text.bubble.right")
-                Spacer()
-                Button("确认或修改") { model.showsCodexReview = true }
-            }
-            .padding(.top, 32)
         }
     }
 }
@@ -30,11 +23,7 @@ struct MacCodexConnectionSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            if model.showsCodexOnboarding {
-                onboarding
-            } else {
-                review
-            }
+            onboarding
             if let error = model.errorMessage {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .foregroundStyle(AnchorPalette.sourceInk("coral"))
@@ -57,7 +46,7 @@ struct MacCodexConnectionSheet: View {
             VStack(alignment: .leading, spacing: 12) {
                 Label("授权读取 Codex 会话文件夹", systemImage: "1.circle")
                 Label("自动显示每个对话的进度和结束时的回复", systemImage: "2.circle")
-                Label("需要跟踪目标时，再把对话关联到锚点", systemImage: "3.circle")
+                Label("对话会自动归到你在 iPhone 上投的任务；拿不准的放进“未归类”", systemImage: "3.circle")
             }
             Text("点击后会打开 macOS 文件夹窗口。选择 sessions 文件夹并授权即可。对话内容只在这台 Mac 上显示，不会保存或同步到 iPhone。")
                 .font(.callout)
@@ -87,83 +76,6 @@ struct MacCodexConnectionSheet: View {
                 }
             }
         }
-    }
-
-    private var review: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("找到可能相关的会话").font(.title2.bold())
-            Text("已按任务关键词推荐归属。确认后开始追踪，也可以改选任务或忽略。")
-                .foregroundStyle(AnchorPalette.secondaryInk)
-            if model.codexSuggestions.isEmpty {
-                Label("已处理完当前匹配，Anchor 会继续查找新会话。", systemImage: "checkmark.circle")
-            } else {
-                ScrollView {
-                    VStack(spacing: 12) {
-                        ForEach(model.codexSuggestions) { suggestion in
-                            MacCodexSuggestionRow(model: model, suggestion: suggestion)
-                        }
-                    }
-                }
-                .frame(maxHeight: 360)
-            }
-            HStack {
-                Text("未确认的会话不会加入任务。")
-                    .font(.caption)
-                    .foregroundStyle(AnchorPalette.secondaryInk)
-                Spacer()
-                Button(model.codexSuggestions.isEmpty ? "完成" : "稍后确认") {
-                    model.showsCodexReview = false
-                    model.clearError()
-                }
-                .disabled(model.isWorking)
-                .keyboardShortcut(.cancelAction)
-            }
-        }
-    }
-}
-
-private struct MacCodexSuggestionRow: View {
-    let model: MacSourceSetupModel
-    let suggestion: MacSourceSetupModel.CodexSuggestion
-    @State private var selectedTaskID: UUID?
-
-    init(model: MacSourceSetupModel, suggestion: MacSourceSetupModel.CodexSuggestion) {
-        self.model = model
-        self.suggestion = suggestion
-        _selectedTaskID = State(initialValue: suggestion.suggestedTaskIDs.first)
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(suggestion.candidate.workspaceName ?? "Codex 会话")
-                .font(.headline)
-            HStack {
-                Text(suggestion.candidate.modifiedAt, format: .dateTime.month().day().hour().minute())
-                Text("· \(suggestion.candidate.id.suffix(8))")
-            }
-            .font(.caption)
-            .foregroundStyle(AnchorPalette.secondaryInk)
-            Picker("关联到任务", selection: $selectedTaskID) {
-                Text("选择任务").tag(nil as UUID?)
-                ForEach(model.activeTasks) { task in
-                    Text(task.goal.title + (suggestion.suggestedTaskIDs.contains(task.id) ? "（关键词匹配）" : ""))
-                        .tag(Optional(task.id))
-                }
-            }
-            HStack {
-                Button("忽略") { model.dismissSuggestion(suggestion) }
-                Spacer()
-                Button("确认追踪") {
-                    guard let selectedTaskID else { return }
-                    Task { await model.confirmSuggestion(suggestion, taskID: selectedTaskID) }
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(selectedTaskID == nil || !model.activeTasks.contains { $0.id == selectedTaskID })
-            }
-        }
-        .padding(16)
-        .background(AnchorPalette.fluoriteSurface, in: .rect(cornerRadius: 14))
-        .disabled(model.isWorking)
     }
 }
 #endif

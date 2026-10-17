@@ -106,9 +106,9 @@ struct HostedTaskCard: View {
 
     private var accessibleStatus: String {
         var parts = [statusText]
-        if let nextAction { parts.append(PlanCopy.line(for: nextAction)) }
+        if let nextAction { parts.append(PlanText.line(for: nextAction)) }
         if let planProgress {
-            parts.append(PlanCopy.stepsDone(planProgress.done, of: planProgress.total))
+            parts.append(PlanText.stepsDone(planProgress.done, of: planProgress.total))
         } else if let progress = displayedProgress {
             parts.append("\(L10n.taskProgress) \(progress.formatted(.percent.precision(.fractionLength(0))))")
         } else if summary.hasSources {
@@ -160,13 +160,13 @@ struct HostedTaskCard: View {
                 .foregroundStyle(symbol.color)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(PlanCopy.line(for: action))
+                Text(PlanText.line(for: action))
                     .foregroundStyle(AnchorIOSStyle.text)
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 3)
                     .fixedSize(horizontal: false, vertical: true)
                 if case let .wait(_, since) = action {
                     TimelineView(.periodic(from: .now, by: 30)) { context in
-                        Text(PlanCopy.running(since: since, now: context.date))
+                        Text(PlanText.running(since: since, now: context.date))
                             .font(.caption2)
                             .foregroundStyle(AnchorIOSStyle.secondaryText)
                     }
@@ -184,7 +184,7 @@ struct HostedTaskCard: View {
             Image(systemName: symbol.name)
                 .foregroundStyle(symbol.color)
                 .contentTransition(.symbolEffect(.replace))
-            Text(PlanCopy.line(for: action, compact: true))
+            Text(PlanText.line(for: action, compact: true))
                 .foregroundStyle(AnchorIOSStyle.text)
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
         }

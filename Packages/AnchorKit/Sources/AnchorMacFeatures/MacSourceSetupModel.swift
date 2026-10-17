@@ -23,20 +23,24 @@ public final class MacSourceSetupModel {
     public var errorMessage: String?
 
     public var showsCodexOnboarding = false
-    public var showsCodexReview = false
     public var onNeedsAttention: (@MainActor () -> Void)?
     /// Called with conversations whose latest turn just ended (see `CodexTurnEndDetector`).
     public var onCodexTurnsEnded: (@MainActor ([CodexConversationSummary]) -> Void)?
     private var turnEnds = CodexTurnEndDetector()
-    public private(set) var codexSuggestions: [CodexSuggestion] = []
     public private(set) var activeTasks: [AnchorSession] = []
-    private var announcedSuggestions = Set<String>()
-
-    public struct CodexSuggestion: Identifiable {
-        public var id: String { candidate.id }
-        public let candidate: CodexTaskCandidate
-        public let suggestedTaskIDs: [UUID]
-    }
+    /// Conversation ID to the task it is attached to.
+    public private(set) var conversationTasks: [String: UUID] = [:]
+    /// Conversation ID to the step it serves, when the request named one clearly.
+    public private(set) var conversationSteps: [String: UUID] = [:]
+    /// Recent conversations Anchor could not place with confidence, waiting for one click.
+    public private(set) var unsortedConversations: [CodexConversationSummary] = []
+    /// For an unsorted conversation, the tasks its words leaned towards, best first.
+    public private(set) var unsortedCandidates: [String: [UUID]] = [:]
+    private var matchMemory = TaskMatcher.Memory()
+    private var currentTask: (id: UUID, since: Date)?
+    /// Request text read for matching, kept in memory only and keyed by the log's change time.
+    private var requestCache: [String: (stamp: Date, text: String)] = [:]
+    private var lastPlacementOperation: Task<Void, Never>?
 
     public func presentCodexSetupIfNeeded() {
         guard codexSessionsFolderName == nil else { return }
@@ -46,42 +50,88 @@ public final class MacSourceSetupModel {
 
     public func finishCodexOnboarding() {
         showsCodexOnboarding = false
-        if !codexSuggestions.isEmpty { showsCodexReview = true }
     }
 
-    public func dismissSuggestion(_ suggestion: CodexSuggestion) {
-        var ignored = Set(defaults.stringArray(forKey: Self.codexIgnoredKey) ?? [])
-        for taskID in suggestion.suggestedTaskIDs {
-            ignored.insert(suggestion.id + ":" + taskID.uuidString)
+    /// The person files a conversation under a task, or moves it from another one.
+    public func assign(_ conversation: CodexConversationSummary, to taskID: UUID) async {
+        await serially { await self.performAssign(conversation, to: taskID) }
+    }
+
+    /// The person says a conversation is not part of any task: stop following it.
+    public func ignore(_ conversation: CodexConversationSummary) async {
+        await serially { await self.performIgnore(conversation) }
+    }
+
+    /// Placing, filing and ignoring run one at a time, so a scan and a click
+    /// can never bind the same conversation twice.
+    private func serially(_ operation: @escaping @MainActor () async -> Void) async {
+        let previous = lastPlacementOperation
+        let current = Task { @MainActor in
+            await previous?.value
+            await operation()
         }
-        defaults.set(Array(ignored), forKey: Self.codexIgnoredKey)
-        codexSuggestions.removeAll { $0.id == suggestion.id }
+        lastPlacementOperation = current
+        await current.value
     }
 
-    public func confirmSuggestion(_ suggestion: CodexSuggestion, taskID: UUID) async {
-        guard !isWorking, let root = codexSessionsRootURL,
-              let onCodexSessionAssociated else { return }
+    private func performAssign(_ conversation: CodexConversationSummary, to taskID: UUID) async {
+        guard !isWorking, let root = codexSessionsRootURL, let onCodexSessionAssociated,
+              let path = Self.relativePath(for: conversation.candidate.fileURL, under: root) else { return }
         isWorking = true
         errorMessage = nil
         defer { isWorking = false }
-        let sessions = await autoAssociationSessions?() ?? []
-        guard sessions.contains(where: { $0.id == taskID && $0.status == .active }),
-              !loadTrackedCodexSessions().contains(where: { $0.codexSessionID == suggestion.id }),
-              let path = Self.relativePath(for: suggestion.candidate.fileURL, under: root),
-              FileManager.default.isReadableFile(atPath: suggestion.candidate.fileURL.path) else {
-            errorMessage = "任务或会话已不可用，请重新查看匹配结果。"
-            return
-        }
+        let work = await work(for: conversation)
         do {
-            try await onCodexSessionAssociated(suggestion.candidate.fileURL, taskID, false)
-            let binding = TrackedCodexSession(anchorSessionID: taskID, codexSessionID: suggestion.id, relativePath: path)
             var bindings = loadTrackedCodexSessions()
+            if let old = bindings.first(where: { $0.codexSessionID == conversation.id }) {
+                guard old.anchorSessionID != taskID else { return }
+                try await onCodexSessionUnbound?(conversation.candidate.fileURL, old.anchorSessionID)
+                registeredBindings.remove(old)
+                bindings.removeAll { $0.codexSessionID == conversation.id }
+                saveTrackedCodexSessions(bindings)
+            }
+            matchMemory.correct(work, to: taskID)
+            saveMatchMemory()
+            var step: UUID?
+            if case let .task(_, matched, _) = TaskMatcher.place(work, tasks: activeTasks, current: nil, memory: matchMemory) {
+                step = matched
+            }
+            try await onCodexSessionAssociated(conversation.candidate.fileURL, taskID, false)
+            let binding = TrackedCodexSession(anchorSessionID: taskID, codexSessionID: conversation.id,
+                                              relativePath: path, automaticallyMatched: false, stepID: step)
             bindings.append(binding)
             saveTrackedCodexSessions(bindings)
             registeredBindings.insert(binding)
-            if await currentAnchorSessionID?() == taskID { trackedCodexSessionIDs.insert(suggestion.id) }
-            codexSuggestions.removeAll { $0.id == suggestion.id }
+            conversationTasks[conversation.id] = taskID
+            conversationSteps[conversation.id] = step
+            unsortedConversations.removeAll { $0.id == conversation.id }
+            unsortedCandidates[conversation.id] = nil
+            if taskID == observedAnchorSessionID { trackedCodexSessionIDs.insert(conversation.id) }
+            else { trackedCodexSessionIDs.remove(conversation.id) }
         } catch { errorMessage = error.localizedDescription }
+    }
+
+    private func performIgnore(_ conversation: CodexConversationSummary) async {
+        let work = await work(for: conversation)
+        var bindings = loadTrackedCodexSessions()
+        if let old = bindings.first(where: { $0.codexSessionID == conversation.id }) {
+            do {
+                try await onCodexSessionUnbound?(conversation.candidate.fileURL, old.anchorSessionID)
+            } catch { errorMessage = error.localizedDescription }
+            registeredBindings.remove(old)
+            bindings.removeAll { $0.codexSessionID == conversation.id }
+            saveTrackedCodexSessions(bindings)
+        }
+        matchMemory.ignore(work)
+        saveMatchMemory()
+        conversationTasks[conversation.id] = nil
+        conversationSteps[conversation.id] = nil
+        unsortedConversations.removeAll { $0.id == conversation.id }
+        unsortedCandidates[conversation.id] = nil
+    }
+
+    public func isIgnored(_ conversationID: String) -> Bool {
+        matchMemory.ignored.contains(conversationID)
     }
 
     public let isCommandBundled: Bool
@@ -92,6 +142,7 @@ public final class MacSourceSetupModel {
     private let onCodexSessionSelected: (@MainActor @Sendable (URL) async throws -> Void)?
     private let autoAssociationSessions: (@Sendable () async -> [AnchorSession])?
     private let onCodexSessionAssociated: (@MainActor @Sendable (URL, UUID, Bool) async throws -> Void)?
+    private let onCodexSessionUnbound: (@MainActor @Sendable (URL, UUID) async throws -> Void)?
     private let currentAnchorSessionID: (@Sendable () async -> UUID?)?
     private let taskStateProvider: (@Sendable () async -> AnchorTaskState?)?
     private var codexSecurityScopedURL: URL?
@@ -108,6 +159,7 @@ public final class MacSourceSetupModel {
         let codexSessionID: String
         let relativePath: String
         var automaticallyMatched: Bool? = nil
+        var stepID: UUID? = nil
     }
 
     public init(
@@ -117,7 +169,8 @@ public final class MacSourceSetupModel {
         currentAnchorSessionID: (@Sendable () async -> UUID?)? = nil,
         taskStateProvider: (@Sendable () async -> AnchorTaskState?)? = nil,
         autoAssociationSessions: (@Sendable () async -> [AnchorSession])? = nil,
-        onCodexSessionAssociated: (@MainActor @Sendable (URL, UUID, Bool) async throws -> Void)? = nil
+        onCodexSessionAssociated: (@MainActor @Sendable (URL, UUID, Bool) async throws -> Void)? = nil,
+        onCodexSessionUnbound: (@MainActor @Sendable (URL, UUID) async throws -> Void)? = nil
     ) {
         commandURL = bundle.bundleURL.appending(path: "Contents/Helpers/anchor")
         self.defaults = defaults
@@ -126,6 +179,11 @@ public final class MacSourceSetupModel {
         self.taskStateProvider = taskStateProvider
         self.autoAssociationSessions = autoAssociationSessions
         self.onCodexSessionAssociated = onCodexSessionAssociated
+        self.onCodexSessionUnbound = onCodexSessionUnbound
+        if let data = defaults.data(forKey: Self.matchMemoryKey),
+           let memory = try? JSONDecoder().decode(TaskMatcher.Memory.self, from: data) {
+            matchMemory = memory
+        }
         isCommandBundled = FileManager.default.isExecutableFile(atPath: commandURL.path)
         refreshCommandStatus()
     }
@@ -140,6 +198,7 @@ public final class MacSourceSetupModel {
         let sessionID = await currentAnchorSessionID?()
         if sessionID != observedAnchorSessionID {
             observedAnchorSessionID = sessionID
+            currentTask = sessionID.map { (id: $0, since: .now) }
             trackedCodexSessionIDs.removeAll()
             codexSessionFileName = nil
             await restoreTrackedCodexSessions()
@@ -448,48 +507,101 @@ public final class MacSourceSetupModel {
             while !Task.isCancelled {
                 guard let self else { return }
                 self.publish(await supervisor.summaries())
-                await self.automaticallyAssociate(self.codexCandidates)
+                await self.placeConversations(self.codexConversations)
                 do { try await Task.sleep(for: .seconds(2)) } catch { return }
             }
         }
     }
 
-    func automaticallyAssociate(_ candidates: [CodexTaskCandidate]) async {
+    /// Places every recent, unplaced conversation: attached to a task (and step)
+    /// when the evidence is clear, otherwise unsorted. Nothing opens a window.
+    func placeConversations(_ conversations: [CodexConversationSummary]) async {
+        await serially { await self.performPlacement(conversations) }
+    }
+
+    private func performPlacement(_ conversations: [CodexConversationSummary]) async {
         guard let root = codexSessionsRootURL, let autoAssociationSessions else { return }
         await refreshTaskState()
-        let sessions = await autoAssociationSessions().filter { $0.status == .active }
-        activeTasks = sessions
-        let ignored = Set(defaults.stringArray(forKey: Self.codexIgnoredKey) ?? [])
-        var suggestions: [CodexSuggestion] = []
-        for candidate in candidates {
-            guard !Task.isCancelled,
-                  !loadTrackedCodexSessions().contains(where: { $0.codexSessionID == candidate.id }),
-                  sessions.contains(where: { candidate.modifiedAt >= $0.startedAt }),
-                  Self.relativePath(for: candidate.fileURL, under: root) != nil else { continue }
-            let request = await Task.detached(priority: .utility) {
-                CodexAutoAssociation.latestUserRequest(at: candidate.fileURL)
-            }.value
-            guard !Task.isCancelled, let request else { continue }
-            let matches = CodexAutoAssociation.suggestedSessionIDs(text: request, sessions: sessions)
-                .filter { !ignored.contains(candidate.id + ":" + $0.uuidString) }
-            guard !matches.isEmpty else { continue }
-            suggestions.append(CodexSuggestion(candidate: candidate, suggestedTaskIDs: matches))
+        let tasks = await autoAssociationSessions().filter { $0.status == .active }
+        activeTasks = tasks
+        let activeIDs = Set(tasks.map(\.id))
+        var bindings = loadTrackedCodexSessions()
+        var attached: [String: UUID] = [:]
+        var steps: [String: UUID] = [:]
+        for binding in bindings where activeIDs.contains(binding.anchorSessionID) {
+            attached[binding.codexSessionID] = binding.anchorSessionID
+            if let step = binding.stepID { steps[binding.codexSessionID] = step }
         }
-        // A confirmation may finish while the request is read off the main actor.
+        var unsorted: [CodexConversationSummary] = []
+        var candidates: [String: [UUID]] = [:]
+        let earliestStart = tasks.map(\.startedAt).min()
+        for conversation in conversations {
+            guard !Task.isCancelled else { return }
+            guard attached[conversation.id] == nil, !matchMemory.ignored.contains(conversation.id),
+                  let earliestStart, conversation.candidate.modifiedAt >= earliestStart,
+                  let path = Self.relativePath(for: conversation.candidate.fileURL, under: root) else { continue }
+            let work = await work(for: conversation)
+            switch TaskMatcher.place(work, tasks: tasks, current: currentTask, memory: matchMemory) {
+            case let .task(taskID, step, reason):
+                bindings = loadTrackedCodexSessions()
+                guard let onCodexSessionAssociated,
+                      !bindings.contains(where: { $0.codexSessionID == conversation.id }) else { continue }
+                do {
+                    let automatic = reason != .corrected
+                    try await onCodexSessionAssociated(conversation.candidate.fileURL, taskID, automatic)
+                    let binding = TrackedCodexSession(anchorSessionID: taskID, codexSessionID: conversation.id,
+                                                      relativePath: path, automaticallyMatched: automatic, stepID: step)
+                    bindings.removeAll { $0.codexSessionID == conversation.id }
+                    bindings.append(binding)
+                    saveTrackedCodexSessions(bindings)
+                    registeredBindings.insert(binding)
+                    matchMemory.learn(folder: work.folder, task: taskID)
+                    saveMatchMemory()
+                    attached[conversation.id] = taskID
+                    if let step { steps[conversation.id] = step }
+                    if taskID == observedAnchorSessionID { trackedCodexSessionIDs.insert(conversation.id) }
+                } catch { errorMessage = error.localizedDescription }
+            case let .unsorted(leaning):
+                unsorted.append(conversation)
+                candidates[conversation.id] = leaning
+            case .ignored:
+                continue
+            }
+        }
+        // A click may have filed something while requests were read off the main actor.
         guard !Task.isCancelled else { return }
-        let boundIDs = Set(loadTrackedCodexSessions().map(\.codexSessionID))
-        let latestIgnored = Set(defaults.stringArray(forKey: Self.codexIgnoredKey) ?? [])
-        codexSuggestions = suggestions.compactMap { suggestion in
-            guard !boundIDs.contains(suggestion.id) else { return nil }
-            let matches = suggestion.suggestedTaskIDs.filter { !latestIgnored.contains(suggestion.id + ":" + $0.uuidString) }
-            return matches.isEmpty ? nil : CodexSuggestion(candidate: suggestion.candidate, suggestedTaskIDs: matches)
+        for (id, task) in attached where conversationTasks[id] != task { conversationTasks[id] = task }
+        for id in conversationTasks.keys where attached[id] == nil { conversationTasks[id] = nil }
+        if conversationSteps != steps { conversationSteps = steps }
+        let stillUnsorted = unsorted.filter { conversationTasks[$0.id] == nil && !matchMemory.ignored.contains($0.id) }
+        if unsortedConversations != stillUnsorted { unsortedConversations = stillUnsorted }
+        if unsortedCandidates != candidates { unsortedCandidates = candidates }
+    }
+
+    private func work(for conversation: CodexConversationSummary) async -> TaskMatcher.Work {
+        let stamp = conversation.candidate.modifiedAt
+        let latest: String
+        if let cached = requestCache[conversation.id], cached.stamp == stamp {
+            latest = cached.text
+        } else {
+            let url = conversation.candidate.fileURL
+            latest = await Task.detached(priority: .utility) {
+                CodexAutoAssociation.latestUserRequest(at: url) ?? ""
+            }.value
+            requestCache[conversation.id] = (stamp, latest)
         }
-        let newIDs = Set(codexSuggestions.map(\.id)).subtracting(announcedSuggestions)
-        announcedSuggestions.formUnion(newIDs)
-        if !newIDs.isEmpty && !showsCodexOnboarding {
-            showsCodexReview = true
-            onNeedsAttention?()
-        }
+        return TaskMatcher.Work(
+            id: conversation.id,
+            folder: conversation.candidate.workspaceName,
+            request: [conversation.title ?? "", latest].joined(separator: "\n"),
+            startedAt: conversation.candidate.createdAt,
+            lastActivityAt: stamp
+        )
+    }
+
+    private func saveMatchMemory() {
+        guard let data = try? JSONEncoder().encode(matchMemory) else { return }
+        defaults.set(data, forKey: Self.matchMemoryKey)
     }
 
     private func loadTrackedCodexSessions() -> [TrackedCodexSession] {
@@ -584,7 +696,7 @@ public final class MacSourceSetupModel {
         return String(filePath.dropFirst(prefix.count))
     }
 
-    private static let codexIgnoredKey = "anchor.mac.source-setup.codex-ignored.v1"
+    private static let matchMemoryKey = "anchor.mac.source-setup.match-memory.v1"
     private static let commandBookmarkKey = "anchor.mac.source-setup.command"
     private static let codexBookmarkKey = "anchor.mac.source-setup.codex-session"
     private static let codexRootBookmarkKey = "anchor.mac.source-setup.codex-root.v1"

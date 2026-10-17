@@ -30,21 +30,21 @@ struct AnchorPlanEditor: View {
                             Image(systemName: item.isDone ? "checkmark.circle.fill" : "circle")
                                 .foregroundStyle(item.isDone ? AnchorStateTone.done.ink : AnchorIOSStyle.secondaryText)
                                 .accessibilityHidden(true)
-                            TextField(PlanCopy.stepPlaceholder, text: $item.text, axis: .vertical)
-                                .accessibilityValue(item.isDone ? PlanCopy.doneState : PlanCopy.openState)
+                            TextField(PlanText.stepPlaceholder, text: $item.text, axis: .vertical)
+                                .accessibilityValue(item.isDone ? PlanText.doneState : PlanText.openState)
                         }
                     }
                     .onDelete { items.remove(atOffsets: $0) }
                     .onMove { items.move(fromOffsets: $0, toOffset: $1) }
                 } footer: {
-                    Text(PlanCopy.editHint)
+                    Text(PlanText.editHint)
                 }
                 Section {
                     HStack(spacing: 10) {
                         Image(systemName: "plus.circle.fill")
                             .foregroundStyle(AnchorIOSStyle.action)
                             .accessibilityHidden(true)
-                        TextField(PlanCopy.addStepPlaceholder, text: $newStep, axis: .vertical)
+                        TextField(PlanText.addStepPlaceholder, text: $newStep, axis: .vertical)
                             .focused($addingStep)
                             .submitLabel(.done)
                             .onSubmit(addStep)
@@ -53,7 +53,7 @@ struct AnchorPlanEditor: View {
                 }
             }
             .environment(\.editMode, .constant(.active))
-            .navigationTitle(PlanCopy.editTitle)
+            .navigationTitle(PlanText.editTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

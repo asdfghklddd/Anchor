@@ -305,7 +305,7 @@ struct ReturnView: View {
                         Image(systemName: PlanCopy.symbol(for: action).name)
                             .foregroundStyle(PlanCopy.symbol(for: action).color)
                             .accessibilityHidden(true)
-                        Text(PlanCopy.line(for: action))
+                        Text(PlanText.line(for: action))
                             .foregroundStyle(ink)
                             .multilineTextAlignment(.leading)
                         Spacer(minLength: 8)
@@ -323,7 +323,7 @@ struct ReturnView: View {
             }
             if let current = plan.nextStepIndex {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(PlanCopy.step(current + 1))
+                    Text(PlanText.step(current + 1))
                         .font(.caption.weight(.medium))
                         .foregroundStyle(secondaryInk)
                     Text(plan.steps[current])
@@ -338,14 +338,14 @@ struct ReturnView: View {
                 }
                 copyButton(current)
                 if current + 1 < plan.steps.count {
-                    Text("\(PlanCopy.then) · \(PlanCopy.step(current + 2)) · \(plan.steps[current + 1])")
+                    Text("\(PlanText.then) · \(PlanText.step(current + 2)) · \(plan.steps[current + 1])")
                         .font(.caption)
                         .foregroundStyle(secondaryInk)
                         .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             } else {
-                Label(PlanCopy.allStepsDone, systemImage: "checkmark.seal.fill")
+                Label(PlanText.allStepsDone, systemImage: "checkmark.seal.fill")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(AnchorStateTone.done.ink)
                     .fixedSize(horizontal: false, vertical: true)
@@ -357,7 +357,7 @@ struct ReturnView: View {
 
     @ViewBuilder
     private func answerButtons(_ current: Int, action: TaskNextAction) -> some View {
-        Button(PlanCopy.stepDone, systemImage: "checkmark") {
+        Button(PlanText.stepDone, systemImage: "checkmark") {
             stepFeedback += 1
             copiedStep = nil
             guard let plan = review.session?.goal.userPlan, plan.items.indices.contains(current) else { return }
@@ -368,7 +368,7 @@ struct ReturnView: View {
         .accessibilityIdentifier("return.plan.done")
         // "Not yet" answers a finished or failed result; with none to judge, it would mean nothing.
         if Self.hasResultToJudge(action) {
-            Button(PlanCopy.notYet) {
+            Button(PlanText.notYet) {
                 Task { _ = await model.send(.markPlanReviewed) }
             }
             .buttonStyle(.bordered)
@@ -378,8 +378,8 @@ struct ReturnView: View {
 
     @ViewBuilder
     private func copyButton(_ current: Int) -> some View {
-        if let goal = review.session?.goal, let prompt = PlanCopy.prompt(goal: goal, step: current) {
-            Button(copiedStep == current ? PlanCopy.copied : PlanCopy.copyPrompt,
+        if let goal = review.session?.goal, let prompt = PlanText.prompt(goal: goal, step: current) {
+            Button(copiedStep == current ? PlanText.copied : PlanText.copyPrompt,
                    systemImage: copiedStep == current ? "checkmark" : "doc.on.doc") {
                 UIPasteboard.general.string = prompt
                 copiedStep = current

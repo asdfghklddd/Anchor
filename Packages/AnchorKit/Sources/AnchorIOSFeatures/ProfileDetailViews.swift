@@ -441,9 +441,9 @@ struct ProfileDetailSheet: View {
         if let session = projection.session, let action = TaskNextAction(task: session) {
             switch action {
             case .fix: return L10n.status(.failed)
-            case .review: return PlanCopy.toReview
+            case .review: return PlanText.toReview
             case .wait: return L10n.status(.running)
-            case .start: return PlanCopy.inProgress
+            case .start: return PlanText.inProgress
             case .finish: return L10n.status(.completed)
             }
         }

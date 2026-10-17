@@ -55,9 +55,11 @@ struct MacCodexConversationsCard: View {
     }
 }
 
-private struct MacCodexConversationRow: View {
+struct MacCodexConversationRow: View {
     let conversation: CodexConversationSummary
     let status: MacCodexConversationStatus
+    /// Extra context for the status line, such as the step this work serves.
+    var note: String? = nil
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
@@ -86,7 +88,7 @@ private struct MacCodexConversationRow: View {
                     Text(status.label)
                         .fontWeight(.semibold)
                         .foregroundStyle(status.tint)
-                    Text([status.fact, conversation.candidate.workspaceName]
+                    Text([status.fact, note, conversation.candidate.workspaceName]
                         .compactMap { $0 }
                         .map { " · " + $0 }
                         .joined())

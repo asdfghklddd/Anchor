@@ -25,10 +25,10 @@ struct AnchorSavedPlan: View {
                             .font(.subheadline.weight(.semibold).monospacedDigit())
                             .foregroundStyle(AnchorIOSStyle.secondaryText)
                             .contentTransition(.numericText(value: Double(plan.doneCount)))
-                            .accessibilityLabel(PlanCopy.stepsDone(plan.doneCount, of: plan.steps.count))
+                            .accessibilityLabel(PlanText.stepsDone(plan.doneCount, of: plan.steps.count))
                     }
                     if onEditSteps != nil {
-                        Button(PlanCopy.edit) { editing = true }
+                        Button(PlanText.edit) { editing = true }
                             .font(.subheadline.weight(.semibold))
                             .frame(minHeight: 44)
                             .accessibilityIdentifier("task.plan.edit")
@@ -77,7 +77,7 @@ struct AnchorSavedPlan: View {
                     .foregroundStyle(done ? AnchorIOSStyle.secondaryText : AnchorIOSStyle.text)
                     .fixedSize(horizontal: false, vertical: true)
                 if onToggleStep != nil, plan.nextStepIndex == index {
-                    Text(PlanCopy.nextTag).font(.caption2.weight(.semibold)).foregroundStyle(AnchorIOSStyle.action)
+                    Text(PlanText.nextTag).font(.caption2.weight(.semibold)).foregroundStyle(AnchorIOSStyle.action)
                 }
             }
             Spacer(minLength: 0)
@@ -92,13 +92,13 @@ struct AnchorSavedPlan: View {
             } label: { row }
             .buttonStyle(.plain)
             .accessibilityLabel("\(index + 1). \(text)")
-            .accessibilityValue(done ? PlanCopy.doneState : PlanCopy.openState)
-            .accessibilityHint(PlanCopy.toggleHint)
+            .accessibilityValue(done ? PlanText.doneState : PlanText.openState)
+            .accessibilityHint(PlanText.toggleHint)
             .accessibilityIdentifier("task.plan.step.\(index)")
         } else {
             row
                 .accessibilityElement(children: .combine)
-                .accessibilityValue(done ? PlanCopy.doneState : PlanCopy.openState)
+                .accessibilityValue(done ? PlanText.doneState : PlanText.openState)
         }
     }
 }

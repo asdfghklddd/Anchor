@@ -21,11 +21,7 @@ public actor CodexSessionBinder {
         guard let session = projection.hostedSessions.first(where: { $0.id == sessionID }) else {
             throw SessionRepositoryError.noActiveSession
         }
-        let sourceID = StableProcessIdentity.id(
-            namespace: "anchor.source.codex-session",
-            sessionID: session.id,
-            externalID: fileURL.lastPathComponent
-        )
+        let sourceID = Self.sourceID(fileURL: fileURL, sessionID: session.id)
         let task = AnchorTask(
             id: session.id,
             title: session.goal.title,
@@ -72,5 +68,25 @@ public actor CodexSessionBinder {
             sourceID: codexSource.descriptor.id
         )
         await coordinator.register(codexSource)
+    }
+
+    /// Stops observing a conversation for one task and removes its rows there,
+    /// as when the person moves it elsewhere. The task's history keeps what happened.
+    public func unbind(fileURL: URL, sessionID: UUID) async throws {
+        let sourceID = Self.sourceID(fileURL: fileURL, sessionID: sessionID)
+        await coordinator.unregister(sourceID: sourceID)
+        let projection = await repository.currentProjection()
+        guard let session = projection.hostedSessions.first(where: { $0.id == sessionID }) else { return }
+        for process in session.processes where process.sourceID == sourceID {
+            try await repository.send(.forSession(sessionID, .removeProcess(process.id)))
+        }
+    }
+
+    static func sourceID(fileURL: URL, sessionID: UUID) -> UUID {
+        StableProcessIdentity.id(
+            namespace: "anchor.source.codex-session",
+            sessionID: sessionID,
+            externalID: fileURL.lastPathComponent
+        )
     }
 }
