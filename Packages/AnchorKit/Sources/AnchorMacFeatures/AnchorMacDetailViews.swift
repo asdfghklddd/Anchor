@@ -133,6 +133,7 @@ struct MacSettingsView: View {
     let sourceSetupModel: MacSourceSetupModel?
     @State private var launchAtLogin = MacLaunchAtLogin.isEnabled
     @AppStorage(AnchorEdgeSoundCue.enabledDefaultsKey) private var edgeSoundEffects = true
+    @AppStorage(MacCodexTurnEndNotifier.enabledDefaultsKey) private var codexTurnEndNotifications = true
     @State private var notificationAuthorization: UNAuthorizationStatus = .notDetermined
     @State private var settingsMessage: String?
     @State private var isLoadingSettings = true
@@ -220,6 +221,11 @@ struct MacSettingsView: View {
                         applyLaunchAtLogin(enabled)
                     }
                 Toggle(L10n.edgeSoundEffects, isOn: $edgeSoundEffects)
+                Toggle(isOn: $codexTurnEndNotifications) {
+                    Text(MacCodexCopy.notifyOnEnd)
+                    Text(MacCodexCopy.notifyOnEndDetail)
+                }
+                .accessibilityIdentifier("settings.codexTurnEndNotifications")
                 if notificationAuthorization == .denied {
                     VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
                         Label(

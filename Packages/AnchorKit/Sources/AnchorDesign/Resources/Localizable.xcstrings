@@ -2737,6 +2737,40 @@
         }
       }
     },
+    "mac.codex.notify-on-end" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notify me when a Codex conversation ends"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codex 对话结束时通知我"
+          }
+        }
+      }
+    },
+    "mac.codex.notify-on-end.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the start of the reply. Stays quiet while you're looking at Codex."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示回复的开头。正在看 Codex 时不打扰。"
+          }
+        }
+      }
+    },
     "mac.codex.quiet" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3695,13 +3729,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Allow notifications in System Settings to receive decision requests."
+            "value" : "Allow notifications in System Settings to get a ping when a Codex conversation ends."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请在系统设置中允许通知，才能接收判断请求。"
+            "value" : "请在系统设置中允许通知，Codex 对话结束时才能提醒你。"
           }
         }
       }

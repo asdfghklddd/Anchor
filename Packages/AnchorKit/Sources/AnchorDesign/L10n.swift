@@ -273,7 +273,7 @@ public enum L10n {
     )
     public static let notificationPermissionDetail = AnchorStrings.value(
         "notifications.permission.detail",
-        default: "Allow notifications in System Settings to receive decision requests."
+        default: "Allow notifications in System Settings to get a ping when a Codex conversation ends."
     )
     public static let displaySupport = AnchorStrings.value("accessibility.display", default: "Display accommodations")
     public static let displaySupportDetail = AnchorStrings.value("accessibility.display.detail", default: "Full animations are enabled by default. You can enable Reduce Motion here. Anchor follows system Dynamic Type, VoiceOver, Increase Contrast, and Reduce Transparency settings.")

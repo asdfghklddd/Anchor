@@ -25,6 +25,9 @@ public final class MacSourceSetupModel {
     public var showsCodexOnboarding = false
     public var showsCodexReview = false
     public var onNeedsAttention: (@MainActor () -> Void)?
+    /// Called with conversations whose latest turn just ended (see `CodexTurnEndDetector`).
+    public var onCodexTurnsEnded: (@MainActor ([CodexConversationSummary]) -> Void)?
+    private var turnEnds = CodexTurnEndDetector()
     public private(set) var codexSuggestions: [CodexSuggestion] = []
     public private(set) var activeTasks: [AnchorSession] = []
     private var announcedSuggestions = Set<String>()
@@ -360,6 +363,8 @@ public final class MacSourceSetupModel {
         if codexConversations != summaries { codexConversations = summaries }
         let candidates = summaries.map(\.candidate)
         if codexCandidates != candidates { codexCandidates = candidates }
+        let endings = turnEnds.endings(in: summaries, now: .now)
+        if !endings.isEmpty { onCodexTurnsEnded?(endings) }
     }
 
     private func restoreCodexSessionsRoot() async {

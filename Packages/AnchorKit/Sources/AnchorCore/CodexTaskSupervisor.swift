@@ -40,6 +40,13 @@ public struct CodexTaskCandidate: Identifiable, Hashable, Sendable {
     }
 }
 
+public extension CodexTaskCandidate {
+    /// Started in the desktop app (branded ChatGPT) rather than the CLI or an editor.
+    var isFromDesktopApp: Bool {
+        originator?.localizedCaseInsensitiveContains("desktop") == true
+    }
+}
+
 /// Resident metadata supervisor for Codex Desktop session files. The stream is
 /// a discovery surface; the Mac coordinator applies manual or high-confidence
 /// automatic association separately.

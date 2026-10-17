@@ -1,6 +1,7 @@
 import AnchorCore
 import AnchorMacFeatures
 import AppKit
+import UserNotifications
 
 @MainActor
 final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
@@ -9,6 +10,7 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     private var sourceSetupModel: MacSourceSetupModel?
     private var detailWindowController: AnchorMacDetailWindowController?
     private var edgePanelController: AnchorEdgePanelController?
+    private var codexTurnEndNotifier: MacCodexTurnEndNotifier?
     private var phoneAnchorState: AnchorPhoneAnchorState?
     private var interfaceDefaults: UserDefaults?
     private var didFinishLaunching = false
@@ -26,6 +28,11 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         self.phoneAnchorState = phoneAnchorState
         interfaceDefaults = defaults
         startInterfaceIfReady()
+    }
+
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // Set before launch completes, so a click on a ping can open the app.
+        UNUserNotificationCenter.current().delegate = self
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -78,6 +85,11 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         if sourceSetupModel.showsCodexOnboarding || sourceSetupModel.showsCodexReview {
             detailWindowController.present()
         }
+        let codexTurnEndNotifier = MacCodexTurnEndNotifier(defaults: interfaceDefaults ?? .standard)
+        self.codexTurnEndNotifier = codexTurnEndNotifier
+        sourceSetupModel.onCodexTurnsEnded = { [weak codexTurnEndNotifier] endings in
+            codexTurnEndNotifier?.notify(endings)
+        }
 
         let edgePanelController = AnchorEdgePanelController(
             model: model,
@@ -88,5 +100,17 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         )
         self.edgePanelController = edgePanelController
         edgePanelController.start()
+    }
+}
+
+extension AnchorMacApplicationDelegate: UNUserNotificationCenterDelegate {
+    /// A Codex ping opens the dashboard, where its conversation row has the rest.
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse
+    ) async {
+        guard response.notification.request.identifier
+            .hasPrefix(MacCodexTurnEndNotifier.identifierPrefix) else { return }
+        await MainActor.run { self.detailWindowController?.present() }
     }
 }

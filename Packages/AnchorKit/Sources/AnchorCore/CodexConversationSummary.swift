@@ -18,6 +18,14 @@ public struct CodexConversationSummary: Identifiable, Hashable, Sendable {
         case interrupted(at: Date)
         /// The readable part of the log holds no turn yet.
         case unknown
+
+        /// When the latest turn ended; `nil` while it runs or before any turn.
+        public var endedAt: Date? {
+            switch self {
+            case .completed(let at, _), .failed(let at, _), .interrupted(let at): at
+            case .running, .unknown: nil
+            }
+        }
     }
 
     public let candidate: CodexTaskCandidate

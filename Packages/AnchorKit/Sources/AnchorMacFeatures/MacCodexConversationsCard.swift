@@ -242,6 +242,14 @@ enum MacCodexCopy {
         "mac.codex.anchor-hint",
         default: "Want to track a goal and its steps? Drop an anchor on iPhone."
     )
+    static let notifyOnEnd = AnchorStrings.value(
+        "mac.codex.notify-on-end",
+        default: "Notify me when a Codex conversation ends"
+    )
+    static let notifyOnEndDetail = AnchorStrings.value(
+        "mac.codex.notify-on-end.detail",
+        default: "Shows the start of the reply. Stays quiet while you're looking at Codex."
+    )
 
     static func took(_ duration: String) -> String {
         String.localizedStringWithFormat(AnchorStrings.value("mac.codex.took", default: "took %@"), duration)
