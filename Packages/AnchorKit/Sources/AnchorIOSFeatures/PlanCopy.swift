@@ -17,6 +17,12 @@ enum PlanCopy {
     static let copyPrompt = AnchorStrings.value("plan.prompt.copy", default: "Copy as prompt")
     static let copied = AnchorStrings.value("plan.prompt.copied", default: "Copied")
     static let toReview = AnchorStrings.value("plan.state.review", default: "To review")
+    static let edit = AnchorStrings.value("plan.edit", default: "Edit")
+    static let editTitle = AnchorStrings.value("plan.edit.title", default: "Edit steps")
+    static let editHint = AnchorStrings.value(
+        "plan.edit.hint", default: "Drag to reorder. Checked steps stay checked.")
+    static let stepPlaceholder = AnchorStrings.value("plan.edit.step", default: "Step")
+    static let addStepPlaceholder = AnchorStrings.value("plan.edit.add", default: "Add a step")
     static let inProgress = AnchorStrings.value("plan.state.in-progress", default: "In progress")
     static let allStepsDone = AnchorStrings.value(
         "plan.next.finish", default: "All steps done. Finish the task when you agree.")

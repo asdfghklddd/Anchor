@@ -142,9 +142,17 @@ public enum SessionOperation: Codable, Hashable, Sendable {
 
         // A plan change travels as the whole goal, like any goal edit, so
         // storage, sync and replay need no new operation.
-        case let .setPlanStep(index, done):
+        case let .setPlanStep(id, done):
             guard let session = projection.session else { throw SessionRepositoryError.noActiveSession }
-            guard let plan = session.goal.userPlan?.marking(step: index, done: done, at: now) else { return nil }
+            guard let plan = session.goal.userPlan?.marking(stepID: id, done: done, at: now) else { return nil }
+            var goal = session.goal
+            goal.userPlan = plan
+            return .updateGoal(goal, at: now)
+        case let .updatePlanSteps(steps):
+            guard let session = projection.session else { throw SessionRepositoryError.noActiveSession }
+            guard let plan = (session.goal.userPlan ?? AnchorUserPlan(items: [])).replacingSteps(with: steps) else {
+                return nil
+            }
             var goal = session.goal
             goal.userPlan = plan
             return .updateGoal(goal, at: now)

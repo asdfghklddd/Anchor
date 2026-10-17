@@ -50,7 +50,7 @@ public enum SessionReducer {
                 session.goal.note = note
             }
 
-        case .setPlanStep, .markPlanReviewed:
+        case .setPlanStep, .markPlanReviewed, .updatePlanSteps:
             guard let operation = try SessionOperation.make(from: command, projection: result, now: now) else {
                 return result
             }

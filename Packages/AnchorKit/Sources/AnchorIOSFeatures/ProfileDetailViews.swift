@@ -159,7 +159,9 @@ struct ProfileDetailSheet: View {
     let onFinish: () -> Void
     var onLeave: (() -> Void)? = nil
     /// Checks a step of the current task's plan on or off.
-    var onToggleStep: ((Int, Bool) -> Void)? = nil
+    var onToggleStep: ((UUID, Bool) -> Void)? = nil
+    /// Saves the current task's edited step list.
+    var onEditSteps: (([AnchorUserPlan.Step]) -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
 
@@ -176,7 +178,7 @@ struct ProfileDetailSheet: View {
                             sessionMetrics
                             if !processes.isEmpty { processPulse }
                             if let goal = projection.session?.goal, goal.userPlan != nil {
-                                AnchorSavedPlan(goal: goal, onToggleStep: onToggleStep)
+                                AnchorSavedPlan(goal: goal, onToggleStep: onToggleStep, onEditSteps: onEditSteps)
                                     .padding(16)
                                     .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: 18))
                             }

@@ -145,7 +145,7 @@ public final class AnchorSessionModel {
             // A peer changing selection cannot redirect an in-flight edit.
             let scoped: SessionCommand
             switch command {
-            case .updateGoal, .setPlanStep, .markPlanReviewed, .addNote, .resolveDecision, .addProcess, .updateProcess,
+            case .updateGoal, .setPlanStep, .markPlanReviewed, .updatePlanSteps, .addNote, .resolveDecision, .addProcess, .updateProcess,
                  .removeProcess, .reorderProcesses, .updateTileSize, .recordEvent,
                  .completeSession, .archiveSession:
                 let id: UUID?

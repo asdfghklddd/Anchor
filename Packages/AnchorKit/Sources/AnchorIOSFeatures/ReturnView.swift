@@ -360,7 +360,9 @@ struct ReturnView: View {
         Button(PlanCopy.stepDone, systemImage: "checkmark") {
             stepFeedback += 1
             copiedStep = nil
-            Task { _ = await model.send(.setPlanStep(index: current, done: true)) }
+            guard let plan = review.session?.goal.userPlan, plan.items.indices.contains(current) else { return }
+            let stepID = plan.items[current].id
+            Task { _ = await model.send(.setPlanStep(id: stepID, done: true)) }
         }
         .buttonStyle(.bordered)
         .accessibilityIdentifier("return.plan.done")

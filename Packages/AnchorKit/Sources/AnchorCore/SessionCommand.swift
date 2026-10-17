@@ -7,9 +7,11 @@ public enum SessionCommand: Sendable {
     case createSession(goal: AnchorGoal, processes: [AnchorProcess])
     case updateGoal(title: String, completionCriteria: String, note: String)
     /// The person marks one step of their plan done or not done.
-    case setPlanStep(index: Int, done: Bool)
+    case setPlanStep(id: UUID, done: Bool)
     /// The person looked at the latest results and the current step stays open.
     case markPlanReviewed
+    /// The person's edited step list: added, renamed, reordered or removed steps.
+    case updatePlanSteps([AnchorUserPlan.Step])
     case addNote(String)
     case resolveDecision(decisionID: UUID, optionID: UUID)
     case addProcess(AnchorProcess)
