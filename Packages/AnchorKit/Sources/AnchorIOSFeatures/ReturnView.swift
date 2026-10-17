@@ -2,6 +2,7 @@
 import AnchorCore
 import AnchorDesign
 import SwiftUI
+import UIKit
 
 /// The return is a review step between being away and resuming the workspace.
 /// It presents the current task and real changes in the four-card layout.
@@ -19,6 +20,8 @@ struct ReturnView: View {
     @State private var showsContext = false
     @State private var isContinuing = false
     @State private var showAllChanges = false
+    @State private var stepFeedback = 0
+    @State private var copiedStep: Int?
 
     private let ink = Color(red: 0.11, green: 0.15, blue: 0.17)
     private let secondaryInk = Color(red: 0.43, green: 0.48, blue: 0.50)
@@ -35,7 +38,7 @@ struct ReturnView: View {
                     enteringCard(taskCard, index: 0)
                     enteringCard(changesCard, index: 1)
                     enteringCard(workCard, index: 2)
-                    enteringCard(nextStepCard, index: 3)
+                    enteringCard(nextCard, index: 3)
                 }
                 .padding(.horizontal, 22)
                 .padding(.top, 22)
@@ -51,6 +54,7 @@ struct ReturnView: View {
         .sheet(isPresented: $showAllChanges) { changesSheet }
         .preferredColorScheme(.light)
         .sensoryFeedback(.success, trigger: feedbackCount)
+        .sensoryFeedback(.success, trigger: stepFeedback)
         .onAppear { presentReturnIfActive() }
         .onChange(of: scenePhase) { _, _ in presentReturnIfActive() }
     }
@@ -274,6 +278,120 @@ struct ReturnView: View {
             }
         }
         .accessibilityIdentifier("return.work.card")
+    }
+
+    /// With written steps, the next step is the person's own: answer for it, then see what follows.
+    @ViewBuilder
+    private var nextCard: some View {
+        if let plan = review.session?.goal.userPlan, !plan.steps.isEmpty,
+           let action = review.session.flatMap(TaskNextAction.init(task:)) {
+            planStepCard(plan, action: action)
+        } else {
+            nextStepCard
+        }
+    }
+
+    private func planStepCard(_ plan: AnchorUserPlan, action: TaskNextAction) -> some View {
+        returnCard {
+            cardHeading(L10n.yourNextStep)
+            switch action {
+            case .fix, .review, .wait:
+                Button {
+                    if let process = review.nextProcess ?? review.processes.max(by: { $0.updatedAt < $1.updatedAt }) {
+                        selectedProcess = process
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: PlanCopy.symbol(for: action).name)
+                            .foregroundStyle(PlanCopy.symbol(for: action).color)
+                            .accessibilityHidden(true)
+                        Text(PlanCopy.line(for: action))
+                            .foregroundStyle(ink)
+                            .multilineTextAlignment(.leading)
+                        Spacer(minLength: 8)
+                        Image(systemName: "chevron.right").foregroundStyle(secondaryInk)
+                    }
+                    .font(.caption.weight(.semibold))
+                    .frame(minHeight: 44)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint(L10n.returnViewRecord)
+                .accessibilityIdentifier("return.plan.result")
+            case .start, .finish:
+                EmptyView()
+            }
+            if let current = plan.nextStepIndex {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(PlanCopy.step(current + 1))
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(secondaryInk)
+                    Text(plan.steps[current])
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("return.plan.step")
+                }
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 10) { answerButtons(current, action: action) }
+                    VStack(alignment: .leading, spacing: 8) { answerButtons(current, action: action) }
+                }
+                copyButton(current)
+                if current + 1 < plan.steps.count {
+                    Text("\(PlanCopy.then) · \(PlanCopy.step(current + 2)) · \(plan.steps[current + 1])")
+                        .font(.caption)
+                        .foregroundStyle(secondaryInk)
+                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            } else {
+                Label(PlanCopy.allStepsDone, systemImage: "checkmark.seal.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AnchorStateTone.done.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .animation(reduceMotion ? nil : AnchorMotion.micro, value: plan.completedSteps)
+        .accessibilityIdentifier("return.plan.card")
+    }
+
+    @ViewBuilder
+    private func answerButtons(_ current: Int, action: TaskNextAction) -> some View {
+        Button(PlanCopy.stepDone, systemImage: "checkmark") {
+            stepFeedback += 1
+            copiedStep = nil
+            Task { _ = await model.send(.setPlanStep(index: current, done: true)) }
+        }
+        .buttonStyle(.bordered)
+        .accessibilityIdentifier("return.plan.done")
+        // "Not yet" answers a finished or failed result; with none to judge, it would mean nothing.
+        if Self.hasResultToJudge(action) {
+            Button(PlanCopy.notYet) {
+                Task { _ = await model.send(.markPlanReviewed) }
+            }
+            .buttonStyle(.bordered)
+            .accessibilityIdentifier("return.plan.not-yet")
+        }
+    }
+
+    @ViewBuilder
+    private func copyButton(_ current: Int) -> some View {
+        if let goal = review.session?.goal, let prompt = PlanCopy.prompt(goal: goal, step: current) {
+            Button(copiedStep == current ? PlanCopy.copied : PlanCopy.copyPrompt,
+                   systemImage: copiedStep == current ? "checkmark" : "doc.on.doc") {
+                UIPasteboard.general.string = prompt
+                copiedStep = current
+            }
+            .buttonStyle(.borderless)
+            .accessibilityIdentifier("return.plan.copy")
+        }
+    }
+
+    private static func hasResultToJudge(_ action: TaskNextAction) -> Bool {
+        switch action {
+        case .fix, .review: true
+        case .wait, .start, .finish: false
+        }
     }
 
     private var nextStepCard: some View {

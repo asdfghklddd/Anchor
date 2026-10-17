@@ -25,7 +25,10 @@ struct HostedTaskCard: View {
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
-                if summary.isComplete {
+                if !summary.isComplete, !showsLatest, let planProgress {
+                    // A short card gives the step line the full width below.
+                    stepsCapsule(planProgress, tint: tint)
+                } else if summary.isComplete {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 22, weight: .semibold))
                         .foregroundStyle(AnchorStateTone.done.ink)
@@ -36,15 +39,27 @@ struct HostedTaskCard: View {
             }
             .animation(reduceMotion ? .easeOut(duration: 0.16) : .spring(duration: 0.36, bounce: 0.3),
                        value: summary.isComplete)
-            if showsLatest, let latest = latestEvent {
-                latestLine(latest)
+            // The person's own next move leads; the last event is the fallback for a task without steps.
+            if showsLatest {
+                if let nextAction {
+                    nextActionBlock(nextAction)
+                } else if let latest = latestEvent {
+                    latestLine(latest)
+                }
             }
             Spacer(minLength: 0)
             HStack(alignment: .center, spacing: 6) {
-                statusLine(tint: tint)
+                // With a plan, the next action already names the state that matters.
+                if !showsLatest, let nextAction {
+                    nextActionLine(nextAction)
+                } else if nextAction == nil {
+                    statusLine(tint: tint)
+                }
                 Spacer(minLength: 4)
-                if let progress = displayedProgress {
-                    progressCapsule(progress, tint: tint)
+                if let planProgress {
+                    if showsLatest, !summary.isComplete { stepsCapsule(planProgress, tint: tint) }
+                } else if let progress = displayedProgress {
+                    capsule(progress, text: progress.formatted(.percent.precision(.fractionLength(0))), tint: tint)
                 }
             }
         }
@@ -76,6 +91,14 @@ struct HostedTaskCard: View {
             .max { $0.0.occurredAt < $1.0.occurredAt }
     }
 
+    private var nextAction: TaskNextAction? { TaskNextAction(task: task) }
+
+    /// Steps the person checked off: a progress basis they own, unlike a source's percentage.
+    private var planProgress: (done: Int, total: Int)? {
+        guard let plan = task.goal.userPlan, !plan.steps.isEmpty else { return nil }
+        return (plan.doneCount, plan.steps.count)
+    }
+
     private var displayedProgress: Double? {
         guard let value = task.conversationsInJoiningOrder.first?.progress, value.isFinite else { return nil }
         return min(1, max(0, value))
@@ -83,7 +106,10 @@ struct HostedTaskCard: View {
 
     private var accessibleStatus: String {
         var parts = [statusText]
-        if let progress = displayedProgress {
+        if let nextAction { parts.append(PlanCopy.line(for: nextAction)) }
+        if let planProgress {
+            parts.append(PlanCopy.stepsDone(planProgress.done, of: planProgress.total))
+        } else if let progress = displayedProgress {
             parts.append("\(L10n.taskProgress) \(progress.formatted(.percent.precision(.fractionLength(0))))")
         } else if summary.hasSources {
             parts.append(L10n.cardProgressUnreported)
@@ -127,8 +153,50 @@ struct HostedTaskCard: View {
         .padding(.top, 2)
     }
 
-    private func progressCapsule(_ progress: Double, tint: Color) -> some View {
-        let text = progress.formatted(.percent.precision(.fractionLength(0)))
+    private func nextActionBlock(_ action: TaskNextAction) -> some View {
+        let symbol = PlanCopy.symbol(for: action)
+        return HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Image(systemName: symbol.name)
+                .foregroundStyle(symbol.color)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(PlanCopy.line(for: action))
+                    .foregroundStyle(AnchorIOSStyle.text)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 3)
+                    .fixedSize(horizontal: false, vertical: true)
+                if case let .wait(_, since) = action {
+                    TimelineView(.periodic(from: .now, by: 30)) { context in
+                        Text(PlanCopy.running(since: since, now: context.date))
+                            .font(.caption2)
+                            .foregroundStyle(AnchorIOSStyle.secondaryText)
+                    }
+                }
+            }
+        }
+        .font(.footnote.weight(.medium))
+        .padding(.top, 2)
+        .animation(AnchorMotion.micro, value: action)
+    }
+
+    private func nextActionLine(_ action: TaskNextAction) -> some View {
+        let symbol = PlanCopy.symbol(for: action)
+        return HStack(spacing: 5) {
+            Image(systemName: symbol.name)
+                .foregroundStyle(symbol.color)
+                .contentTransition(.symbolEffect(.replace))
+            Text(PlanCopy.line(for: action, compact: true))
+                .foregroundStyle(AnchorIOSStyle.text)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
+        }
+        .font(.caption.weight(.semibold))
+        .animation(AnchorMotion.micro, value: action)
+    }
+
+    private func stepsCapsule(_ steps: (done: Int, total: Int), tint: Color) -> some View {
+        capsule(Double(steps.done) / Double(steps.total), text: "\(steps.done)/\(steps.total)", tint: tint)
+    }
+
+    private func capsule(_ progress: Double, text: String, tint: Color) -> some View {
         let animation = reduceMotion ? Animation.easeOut(duration: 0.16) : AnchorMotion.continuity
         return HStack(spacing: 5) {
             ZStack {

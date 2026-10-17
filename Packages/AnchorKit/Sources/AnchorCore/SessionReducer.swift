@@ -50,6 +50,12 @@ public enum SessionReducer {
                 session.goal.note = note
             }
 
+        case .setPlanStep, .markPlanReviewed:
+            guard let operation = try SessionOperation.make(from: command, projection: result, now: now) else {
+                return result
+            }
+            return try reduce(result, operation: operation, now: now)
+
         case let .addNote(text):
             let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else { return result }

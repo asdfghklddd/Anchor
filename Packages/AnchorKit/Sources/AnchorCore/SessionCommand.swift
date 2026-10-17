@@ -6,6 +6,10 @@ public enum SessionCommand: Sendable {
     case selectSession(UUID)
     case createSession(goal: AnchorGoal, processes: [AnchorProcess])
     case updateGoal(title: String, completionCriteria: String, note: String)
+    /// The person marks one step of their plan done or not done.
+    case setPlanStep(index: Int, done: Bool)
+    /// The person looked at the latest results and the current step stays open.
+    case markPlanReviewed
     case addNote(String)
     case resolveDecision(decisionID: UUID, optionID: UUID)
     case addProcess(AnchorProcess)

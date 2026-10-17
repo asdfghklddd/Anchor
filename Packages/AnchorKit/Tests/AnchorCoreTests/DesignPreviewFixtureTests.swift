@@ -77,4 +77,80 @@ struct DesignPreviewFixtureTests {
             try Data(contentsOf: storage).write(to: output.appending(path: "session-repository.json"))
         }
     }
+
+    @Test("Live plans keep each task's next action across a reload and a return")
+    func livePlanNextActions() async throws {
+        let directory = URL.temporaryDirectory.appending(path: "anchor-live-plan-preview-\(UUID())")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let storage = directory.appending(path: "session-repository.json")
+        let repository = LocalSessionRepository(storageURL: storage, sourceID: UUID())
+        let now = Date.now
+
+        func at(_ minutesAgo: Double) -> Date { now.addingTimeInterval(-minutesAgo * 60) }
+        func id(_ index: Int) -> UUID { UUID(uuidString: String(format: "1A7E0000-7215-40E0-8B0B-%012d", index))! }
+        func codex(_ title: String, task: UUID, status: ProcessStatus, started: Double, ended: Double? = nil) -> AnchorProcess {
+            let processID = UUID(), sourceID = UUID()
+            var events = [ProcessEvent(sessionID: task, processID: processID, sourceID: sourceID,
+                                       occurredAt: at(started), kind: .created, title: "Codex task_started", metric: nil)]
+            if let ended {
+                events.append(ProcessEvent(sessionID: task, processID: processID, sourceID: sourceID, occurredAt: at(ended),
+                                           kind: status == .completed ? .completed : .failed,
+                                           title: status == .completed ? "Codex task_complete" : "Codex task_failed", metric: nil))
+            }
+            return AnchorProcess(id: processID, sessionID: task, sourceID: sourceID, sourceName: "Codex", sourceSymbol: "C",
+                                 sourceTone: "cyan", title: title, status: status,
+                                 updatedAt: events.map(\.occurredAt).max() ?? now, events: events)
+        }
+        func plan(_ steps: [String], done: [Int], reviewed: Double?) -> AnchorUserPlan {
+            AnchorUserPlan(steps: steps, completedSteps: done, reviewedAt: reviewed.map(at))
+        }
+
+        let homework = AnchorSession(id: id(1), goal: AnchorGoal(
+            title: "数据结构作业", completionCriteria: "红黑树的插入和删除都通过测试",
+            userPlan: plan(["实现插入", "实现删除操作", "补边界情况测试", "写实验报告"], done: [0], reviewed: 45)),
+            startedAt: at(120), processes: [codex("红黑树删除", task: id(1), status: .completed, started: 32, ended: 4)],
+            taskColorIndex: 0)
+        let website = AnchorSession(id: id(2), goal: AnchorGoal(
+            title: "个人网站", completionCriteria: "作品集页面上线",
+            userPlan: plan(["整理项目清单", "做项目页", "部署上线"], done: [0], reviewed: 90)),
+            startedAt: at(300), processes: [codex("portfolio", task: id(2), status: .completed, started: 150, ended: 120)],
+            taskColorIndex: 1)
+        let anchor = AnchorSession(id: id(3), goal: AnchorGoal(
+            title: "Anchor", completionCriteria: "每天都愿意用",
+            userPlan: plan(["自动显示对话", "完成提醒", "活的计划", "手机端提醒", "可靠连接"], done: [0, 1, 2], reviewed: 20)),
+            startedAt: at(240), processes: [codex("Anchor", task: id(3), status: .running, started: 12)],
+            taskColorIndex: 2)
+        let notes = AnchorSession(id: id(4), goal: AnchorGoal(
+            title: "研究笔记", completionCriteria: "整理好推荐系统论文",
+            userPlan: plan(["读第 3 篇论文", "整理笔记"], done: [], reviewed: nil)),
+            startedAt: at(60), taskColorIndex: 3)
+        for task in [website, anchor, notes, homework] { try await repository.send(.hostSession(task)) }
+        try await repository.send(.selectSession(homework.id))
+
+        let atDesk = await LocalSessionRepository(storageURL: storage, sourceID: UUID()).currentProjection()
+        let actions = Dictionary(uniqueKeysWithValues: atDesk.hostedSessions.map { ($0.id, TaskNextAction(task: $0)) })
+        #expect(actions[homework.id] == .review(process: "红黑树删除"))
+        #expect(actions[website.id] == .start(step: 1, text: "做项目页"))
+        #expect(actions[anchor.id]??.needsPerson == false)
+        #expect(actions[notes.id] == .start(step: 0, text: "读第 3 篇论文"))
+        let export = ProcessInfo.processInfo.environment["ANCHOR_DESIGN_PREVIEW_EXPORT"].map { URL(fileURLWithPath: $0) }
+        if let export {
+            let output = export.appending(path: "live-plan-home")
+            try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+            try Data(contentsOf: storage).write(to: output.appending(path: "session-repository.json"))
+        }
+
+        try await repository.send(.updatePresence(.away, at: at(40), awaySince: at(40)))
+        try await repository.send(.updatePresence(.returning, at: now))
+        let returned = await LocalSessionRepository(storageURL: storage, sourceID: UUID()).currentProjection()
+        #expect(returned.session?.id == homework.id)
+        #expect(returned.session?.presence == .returning)
+        #expect(returned.session.flatMap(TaskNextAction.init(task:)) == .review(process: "红黑树删除"))
+        if let export {
+            let output = export.appending(path: "live-plan-return")
+            try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+            try Data(contentsOf: storage).write(to: output.appending(path: "session-repository.json"))
+        }
+    }
 }

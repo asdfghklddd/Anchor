@@ -326,6 +326,9 @@ public struct AnchorIOSRootView: View {
                     Task {
                         if await model.leaveDesk() { sheet = nil }
                     }
+                },
+                onToggleStep: { index, done in
+                    Task { _ = await model.send(.setPlanStep(index: index, done: done)) }
                 }
             )
             .presentationDetents([.large])

@@ -158,6 +158,8 @@ struct ProfileDetailSheet: View {
     let onManage: () -> Void
     let onFinish: () -> Void
     var onLeave: (() -> Void)? = nil
+    /// Checks a step of the current task's plan on or off.
+    var onToggleStep: ((Int, Bool) -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
 
@@ -174,7 +176,7 @@ struct ProfileDetailSheet: View {
                             sessionMetrics
                             if !processes.isEmpty { processPulse }
                             if let goal = projection.session?.goal, goal.userPlan != nil {
-                                AnchorSavedPlan(goal: goal)
+                                AnchorSavedPlan(goal: goal, onToggleStep: onToggleStep)
                                     .padding(16)
                                     .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: 18))
                             }
@@ -282,7 +284,7 @@ struct ProfileDetailSheet: View {
 
     private var sessionMetrics: some View {
         HStack(spacing: 0) {
-            profileMetric(projection.session?.conversationsInJoiningOrder.first?.progress?.formatted(.percent.precision(.fractionLength(0))) ?? "—", label: L10n.taskProgress)
+            profileMetric(taskProgress, label: L10n.taskProgress)
             Divider().padding(.vertical, 8)
             profileMetric(sessionStatus, label: L10n.currentStatus)
             Divider().padding(.vertical, 8)
@@ -423,7 +425,26 @@ struct ProfileDetailSheet: View {
         Array((projection.session?.timeline ?? []).sorted { $0.occurredAt > $1.occurredAt }.prefix(6))
     }
 
+    /// The person's own checked steps when they wrote some; a source's percentage otherwise.
+    private var taskProgress: String {
+        if let plan = projection.session?.goal.userPlan, !plan.steps.isEmpty {
+            return "\(plan.doneCount)/\(plan.steps.count)"
+        }
+        return projection.session?.conversationsInJoiningOrder.first?.progress?
+            .formatted(.percent.precision(.fractionLength(0))) ?? "—"
+    }
+
     private var sessionStatus: String {
+        // Finished runs are not a finished task; a plan's state follows the person's next move.
+        if let session = projection.session, let action = TaskNextAction(task: session) {
+            switch action {
+            case .fix: return L10n.status(.failed)
+            case .review: return PlanCopy.toReview
+            case .wait: return L10n.status(.running)
+            case .start: return PlanCopy.inProgress
+            case .finish: return L10n.status(.completed)
+            }
+        }
         if !projection.openDecisions.isEmpty { return L10n.status(.needsDecision) }
         for status in [ProcessStatus.failed, .blocked, .disconnected, .running] {
             if processes.contains(where: { $0.status == status }) { return L10n.status(status) }
