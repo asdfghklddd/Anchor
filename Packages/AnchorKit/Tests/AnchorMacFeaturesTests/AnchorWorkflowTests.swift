@@ -6,7 +6,7 @@ import Testing
 @testable import AnchorMacFeatures
 
 @MainActor
-@Test("Phone anchor discovers Mac conversation, syncs, returns and archives")
+@Test("Phone anchor discovers a resumed Mac conversation, confirms, syncs, returns and archives")
 func anchorFullWorkflow() async throws {
     let root = URL.temporaryDirectory.appending(path: "anchor-workflow-\(UUID())")
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -46,12 +46,17 @@ func anchorFullWorkflow() async throws {
     defer { firstSetup.stopObserving() }
     let file = sourceRoot.appending(path: "new-conversation.jsonl")
     let timestamp = ISO8601DateFormatter().string(from: .now)
+    let created = ISO8601DateFormatter().string(from: .now.addingTimeInterval(-86_400))
     try Data("""
-    {"timestamp":"\(timestamp)","type":"session_meta","payload":{"id":"conversation-1","cwd":"/tmp/Anchor","originator":"Codex Desktop"}}
+    {"timestamp":"\(created)","type":"session_meta","payload":{"id":"conversation-1","cwd":"/tmp/Anchor","originator":"Codex Desktop"}}
     {"type":"event_msg","payload":{"type":"user_message","message":"Fix the Anchor dashboard"}}
     {"timestamp":"\(timestamp)","type":"event_msg","payload":{"type":"task_started","turn_id":"turn-1"}}
 
     """.utf8).write(to: file)
+    try await workflowWait { !firstSetup.codexSuggestions.isEmpty }
+    #expect(await mac.currentProjection().session?.processes.isEmpty == true)
+    let suggestion = try #require(firstSetup.codexSuggestions.first)
+    await firstSetup.confirmSuggestion(suggestion, taskID: taskID)
     try await workflowWait { await mac.currentProjection().session?.processes.first?.status == .running }
     await mac.flushPendingEvents()
     #expect(await phone.currentProjection().session?.processes.first?.status == .running)

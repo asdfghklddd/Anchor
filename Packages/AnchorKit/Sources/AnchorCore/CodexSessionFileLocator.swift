@@ -22,7 +22,11 @@ public struct CodexSessionFileLocator: Sendable {
 #if os(macOS)
     /// Codex Desktop stores local session metadata under the current Mac user's home directory.
     public init() {
-        rootURL = FileManager.default.homeDirectoryForCurrentUser.appending(path: ".codex/sessions")
+        // The unnamed home directory is the app container in a sandboxed build.
+        // This is only a picker hint; reading still requires the user's grant.
+        let home = NSHomeDirectoryForUser(NSUserName()).map { URL(filePath: $0) }
+            ?? FileManager.default.homeDirectoryForCurrentUser
+        rootURL = home.appending(path: ".codex/sessions")
     }
 #endif
 

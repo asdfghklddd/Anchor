@@ -77,3 +77,24 @@ private func autoTask(_ title: String, at: Date = anchorTime) -> AnchorSession {
     #expect(CodexAutoAssociation.matchingSession(text: "Fix the Anchor dashboard", conversationStartedAt: later, sessions: [completed], now: later) == nil)
     #expect(CodexAutoAssociation.matchingSession(text: "Fix another project", conversationStartedAt: later, sessions: [task], now: later) == nil)
 }
+
+@Test func codexSuggestionsIncludeAmbiguousTasksForUserReview() {
+    let first = autoTask("Anchor")
+    let second = autoTask("Anchor")
+    #expect(Set(CodexAutoAssociation.suggestedSessionIDs(text: "Fix Anchor", sessions: [first, second])) == [first.id, second.id])
+    #expect(CodexAutoAssociation.suggestedSessionIDs(text: "Fix another project", sessions: [first]).isEmpty)
+}
+
+@Test func codexLatestRequestIgnoresInjectedContextAndOldTopic() throws {
+    let file = URL.temporaryDirectory.appending(path: "latest-match-\(UUID()).jsonl")
+    defer { try? FileManager.default.removeItem(at: file) }
+    let lines = [
+        #"{"type":"event_msg","payload":{"type":"user_message","message":"Old topic"}}"#,
+        #"{"type":"event_msg","payload":{"type":"user_message","message":"Fix Anchor"}}"#,
+        #"{"type":"event_msg","payload":{"type":"user_message","message":"<external_codex_apps_open_page>context</external_codex_apps_open_page>"}}"#,
+        #"{"type":"event_msg","payload":{"type":"agent_message","message":"Ignore this assistant reply"}}"#
+    ]
+    try Data((lines.joined(separator: "\n") + "\n").utf8).write(to: file)
+    #expect(CodexAutoAssociation.latestUserRequest(at: file) == "Fix Anchor")
+    #expect(CodexAutoAssociation.firstUserRequest(at: file) == "Old topic")
+}

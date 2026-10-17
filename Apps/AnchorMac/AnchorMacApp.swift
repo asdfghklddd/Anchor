@@ -285,6 +285,9 @@ struct AnchorMacApp: App {
             await sourceCoordinator.start()
             await setupModel.restoreCodexSession()
 #endif
+            if !isUITesting && validationRootURL == nil {
+                setupModel.presentCodexSetupIfNeeded()
+            }
             if !isUITesting {
                 await cloudSyncRunner?.start()
             }

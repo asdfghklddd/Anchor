@@ -19,6 +19,65 @@ public final class MacSourceSetupModel {
     public private(set) var taskState: AnchorTaskState?
     public var errorMessage: String?
 
+    public var showsCodexOnboarding = false
+    public var showsCodexReview = false
+    public var onNeedsAttention: (@MainActor () -> Void)?
+    public private(set) var codexSuggestions: [CodexSuggestion] = []
+    public private(set) var activeTasks: [AnchorSession] = []
+    private var announcedSuggestions = Set<String>()
+
+    public struct CodexSuggestion: Identifiable {
+        public var id: String { candidate.id }
+        public let candidate: CodexTaskCandidate
+        public let suggestedTaskIDs: [UUID]
+    }
+
+    public func presentCodexSetupIfNeeded() {
+        guard codexSessionsFolderName == nil else { return }
+        showsCodexOnboarding = true
+        onNeedsAttention?()
+    }
+
+    public func finishCodexOnboarding() {
+        showsCodexOnboarding = false
+        if !codexSuggestions.isEmpty { showsCodexReview = true }
+    }
+
+    public func dismissSuggestion(_ suggestion: CodexSuggestion) {
+        var ignored = Set(defaults.stringArray(forKey: Self.codexIgnoredKey) ?? [])
+        for taskID in suggestion.suggestedTaskIDs {
+            ignored.insert(suggestion.id + ":" + taskID.uuidString)
+        }
+        defaults.set(Array(ignored), forKey: Self.codexIgnoredKey)
+        codexSuggestions.removeAll { $0.id == suggestion.id }
+    }
+
+    public func confirmSuggestion(_ suggestion: CodexSuggestion, taskID: UUID) async {
+        guard !isWorking, let root = codexSessionsRootURL,
+              let onCodexSessionAssociated else { return }
+        isWorking = true
+        errorMessage = nil
+        defer { isWorking = false }
+        let sessions = await autoAssociationSessions?() ?? []
+        guard sessions.contains(where: { $0.id == taskID && $0.status == .active }),
+              !loadTrackedCodexSessions().contains(where: { $0.codexSessionID == suggestion.id }),
+              let path = Self.relativePath(for: suggestion.candidate.fileURL, under: root),
+              FileManager.default.isReadableFile(atPath: suggestion.candidate.fileURL.path) else {
+            errorMessage = "任务或会话已不可用，请重新查看匹配结果。"
+            return
+        }
+        do {
+            try await onCodexSessionAssociated(suggestion.candidate.fileURL, taskID, false)
+            let binding = TrackedCodexSession(anchorSessionID: taskID, codexSessionID: suggestion.id, relativePath: path)
+            var bindings = loadTrackedCodexSessions()
+            bindings.append(binding)
+            saveTrackedCodexSessions(bindings)
+            registeredBindings.insert(binding)
+            if await currentAnchorSessionID?() == taskID { trackedCodexSessionIDs.insert(suggestion.id) }
+            codexSuggestions.removeAll { $0.id == suggestion.id }
+        } catch { errorMessage = error.localizedDescription }
+    }
+
     public let isCommandBundled: Bool
 
     private let commandURL: URL
@@ -168,6 +227,10 @@ public final class MacSourceSetupModel {
     }
 
     public func authorizeCodexSessionsFolder() async {
+        guard !isWorking else { return }
+        isWorking = true
+        errorMessage = nil
+        defer { isWorking = false }
         let panel = NSOpenPanel()
         panel.title = L10n.sourceSetupCodexFolderPanelTitle
         panel.message = L10n.sourceSetupCodexFolderPanelMessage
@@ -175,10 +238,10 @@ public final class MacSourceSetupModel {
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.directoryURL = CodexSessionFileLocator().rootURL
+        panel.showsHiddenFiles = true
+        panel.prompt = "授权并开始查找"
         guard await panel.begin() == .OK, let url = panel.url else { return }
 
-        isWorking = true
-        defer { isWorking = false }
         do {
             let bookmark = try url.bookmarkData(
                 options: .withSecurityScope,
@@ -187,6 +250,16 @@ public final class MacSourceSetupModel {
             )
             guard url.startAccessingSecurityScopedResource() else {
                 throw CocoaError(.fileReadNoPermission)
+            }
+            do {
+                let sessionsURL = url.lastPathComponent == ".codex" ? url.appending(path: "sessions") : url
+                _ = try FileManager.default.contentsOfDirectory(at: sessionsURL, includingPropertiesForKeys: nil)
+                guard url.lastPathComponent == "sessions" || url.lastPathComponent == ".codex" else {
+                    throw NSError(domain: "Anchor.CodexSetup", code: 1, userInfo: [NSLocalizedDescriptionKey: "请选择 Codex 的 sessions 文件夹或 .codex 文件夹。"])
+                }
+            } catch {
+                url.stopAccessingSecurityScopedResource()
+                throw error
             }
             codexSessionsRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
             codexSessionsRootSecurityScopedURL = url
@@ -284,6 +357,14 @@ public final class MacSourceSetupModel {
               url.startAccessingSecurityScopedResource() else {
             return
         }
+        let sessionsURL = url.lastPathComponent == ".codex" ? url.appending(path: "sessions") : url
+        do {
+            _ = try FileManager.default.contentsOfDirectory(at: sessionsURL, includingPropertiesForKeys: nil)
+        } catch {
+            url.stopAccessingSecurityScopedResource()
+            errorMessage = "之前连接的 Codex 文件夹已无法读取，请重新授权。"
+            return
+        }
         codexSessionsRootSecurityScopedURL = url
         await observeAuthorizedCodexFolder(url)
     }
@@ -291,10 +372,11 @@ public final class MacSourceSetupModel {
     /// Called only after the system picker grants folder access, or with a
     /// disposable test directory. Discovery does not depend on the settings UI.
     func observeAuthorizedCodexFolder(_ url: URL) async {
-        codexSessionsRootURL = url
-        codexSessionsFolderName = url.lastPathComponent
+        let root = url.lastPathComponent == ".codex" ? url.appending(path: "sessions") : url
+        codexSessionsRootURL = root
+        codexSessionsFolderName = root.lastPathComponent
         await restoreTrackedCodexSessions()
-        restartCodexDiscovery(at: url)
+        restartCodexDiscovery(at: root)
     }
 
     public func stopObserving() {
@@ -357,32 +439,41 @@ public final class MacSourceSetupModel {
         }
     }
 
-    private func automaticallyAssociate(_ candidates: [CodexTaskCandidate]) async {
-        guard let root = codexSessionsRootURL, let autoAssociationSessions, let onCodexSessionAssociated else { return }
+    func automaticallyAssociate(_ candidates: [CodexTaskCandidate]) async {
+        guard let root = codexSessionsRootURL, let autoAssociationSessions else { return }
         await refreshTaskState()
-        let sessions = await autoAssociationSessions()
+        let sessions = await autoAssociationSessions().filter { $0.status == .active }
+        activeTasks = sessions
+        let ignored = Set(defaults.stringArray(forKey: Self.codexIgnoredKey) ?? [])
+        var suggestions: [CodexSuggestion] = []
         for candidate in candidates {
             guard !Task.isCancelled,
                   !loadTrackedCodexSessions().contains(where: { $0.codexSessionID == candidate.id }),
-                  let started = candidate.createdAt,
-                  sessions.contains(where: { $0.status == .active && started >= $0.startedAt }),
-                  let path = Self.relativePath(for: candidate.fileURL, under: root) else { continue }
+                  sessions.contains(where: { candidate.modifiedAt >= $0.startedAt }),
+                  Self.relativePath(for: candidate.fileURL, under: root) != nil else { continue }
             let request = await Task.detached(priority: .utility) {
-                CodexAutoAssociation.firstUserRequest(at: candidate.fileURL)
+                CodexAutoAssociation.latestUserRequest(at: candidate.fileURL)
             }.value
-            guard let request,
-                  let sessionID = CodexAutoAssociation.matchingSession(text: request, conversationStartedAt: started, sessions: sessions) else { continue }
-            do {
-                try await onCodexSessionAssociated(candidate.fileURL, sessionID, true)
-                var bindings = loadTrackedCodexSessions()
-                let binding = TrackedCodexSession(anchorSessionID: sessionID, codexSessionID: candidate.id, relativePath: path, automaticallyMatched: true)
-                bindings.append(binding)
-                registeredBindings.insert(binding)
-                saveTrackedCodexSessions(bindings)
-                if await currentAnchorSessionID?() == sessionID {
-                    trackedCodexSessionIDs.insert(candidate.id)
-                }
-            } catch { errorMessage = error.localizedDescription }
+            guard !Task.isCancelled, let request else { continue }
+            let matches = CodexAutoAssociation.suggestedSessionIDs(text: request, sessions: sessions)
+                .filter { !ignored.contains(candidate.id + ":" + $0.uuidString) }
+            guard !matches.isEmpty else { continue }
+            suggestions.append(CodexSuggestion(candidate: candidate, suggestedTaskIDs: matches))
+        }
+        // A confirmation may finish while the request is read off the main actor.
+        guard !Task.isCancelled else { return }
+        let boundIDs = Set(loadTrackedCodexSessions().map(\.codexSessionID))
+        let latestIgnored = Set(defaults.stringArray(forKey: Self.codexIgnoredKey) ?? [])
+        codexSuggestions = suggestions.compactMap { suggestion in
+            guard !boundIDs.contains(suggestion.id) else { return nil }
+            let matches = suggestion.suggestedTaskIDs.filter { !latestIgnored.contains(suggestion.id + ":" + $0.uuidString) }
+            return matches.isEmpty ? nil : CodexSuggestion(candidate: suggestion.candidate, suggestedTaskIDs: matches)
+        }
+        let newIDs = Set(codexSuggestions.map(\.id)).subtracting(announcedSuggestions)
+        announcedSuggestions.formUnion(newIDs)
+        if !newIDs.isEmpty && !showsCodexOnboarding {
+            showsCodexReview = true
+            onNeedsAttention?()
         }
     }
 
@@ -478,6 +569,7 @@ public final class MacSourceSetupModel {
         return String(filePath.dropFirst(prefix.count))
     }
 
+    private static let codexIgnoredKey = "anchor.mac.source-setup.codex-ignored.v1"
     private static let commandBookmarkKey = "anchor.mac.source-setup.command"
     private static let codexBookmarkKey = "anchor.mac.source-setup.codex-session"
     private static let codexRootBookmarkKey = "anchor.mac.source-setup.codex-root.v1"

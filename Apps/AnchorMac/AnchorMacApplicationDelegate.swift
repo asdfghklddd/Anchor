@@ -50,6 +50,7 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        sourceSetupModel?.stopObserving()
         edgePanelController?.stop()
         model?.stop()
     }
@@ -71,6 +72,12 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
             defaults: interfaceDefaults
         )
         self.detailWindowController = detailWindowController
+        sourceSetupModel.onNeedsAttention = { [weak detailWindowController] in
+            detailWindowController?.present()
+        }
+        if sourceSetupModel.showsCodexOnboarding || sourceSetupModel.showsCodexReview {
+            detailWindowController.present()
+        }
 
         let edgePanelController = AnchorEdgePanelController(
             model: model,

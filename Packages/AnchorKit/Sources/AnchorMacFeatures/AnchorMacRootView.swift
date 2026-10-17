@@ -52,6 +52,10 @@ public struct AnchorMacRootView: View {
                         .padding(.top, AnchorSpacing.small)
                         .accessibilityIdentifier("mac.navigation.current")
                     }
+                    if let sourceSetupModel {
+                        MacCodexConnectionNotice(model: sourceSetupModel)
+                            .padding(.horizontal, AnchorSpacing.xLarge)
+                    }
                     MacRootStatusBanners(
                         model: model
                     )
@@ -111,6 +115,14 @@ public struct AnchorMacRootView: View {
             }
         }
         .onAppear(perform: migrateStoredSection)
+        .sheet(isPresented: Binding(
+            get: { sourceSetupModel.map { $0.showsCodexOnboarding || $0.showsCodexReview } ?? false },
+            set: { if !$0 { sourceSetupModel?.showsCodexOnboarding = false; sourceSetupModel?.showsCodexReview = false } }
+        )) {
+            if let sourceSetupModel {
+                MacCodexConnectionSheet(model: sourceSetupModel)
+            }
+        }
         // NavigationStack can recreate a native toolbar after the window is configured.
         // Keep its background and scroll-edge material out of the custom header.
         .toolbar(.hidden, for: .windowToolbar)

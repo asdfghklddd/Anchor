@@ -1,1074 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-  "tide.running": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Running"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "运行中"
-        }
-      }
-    }
-  },
-  "work.invitation": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Turn your phone to the left to open the work desk."
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "向左横放手机，进入工作台。"
-        }
-      }
-    }
-  },
-  "work.invitation.lock": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Orientation lock is on. Turn it off in Control Center, then turn your phone."
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "竖排方向锁定已开启，请在控制中心关闭后再横放手机。"
-        }
-      }
-    }
-  },
-  "edge.buoy.failed": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Something failed since you last looked"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "有任务失败了，打开看看"
-        }
-      }
-    }
-  },
-  "edge.buoy.attention": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Something is waiting for you"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "有任务在等你"
-        }
-      }
-    }
-  },
-  "edge.buoy.finished": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Work finished since you last looked"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "有工作完成了"
-        }
-      }
-    }
-  },
-  "home.glance.window.minutes": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "%lld min ago"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "%lld 分钟前"
-        }
-      }
-    }
-  },
-  "home.glance.window.hours": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "%lld h ago"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "%lld 小时前"
-        }
-      }
-    }
-  },
-  "home.glance.title": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Now"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "此刻"
-        }
-      }
-    }
-  },
-  "home.glance.empty": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "A quiet harbor"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "港湾很安静"
-        }
-      }
-    }
-  },
-  "home.glance.empty.detail": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Drop an anchor and its AI conversations and terminal commands will appear here."
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "投下一只锚，它的 AI 对话与终端命令会在这里出现。"
-        }
-      }
-    }
-  },
-  "home.glance.awaiting": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Waiting for the first record"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "等待第一条记录"
-        }
-      }
-    }
-  },
-  "home.glance.awaiting.detail": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Start a Codex conversation or a terminal command on your Mac."
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "在 Mac 上开始一段 Codex 对话或终端命令。"
-        }
-      }
-    }
-  },
-  "home.glance.done": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "All done"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "全部完成"
-        }
-      }
-    }
-  },
-  "home.glance.quiet": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Nothing running"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "暂无运行"
-        }
-      }
-    }
-  },
-  "home.glance.running": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "running"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "项运行中"
-        }
-      }
-    }
-  },
-  "home.glance.attention": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "need a look"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "项需要留意"
-        }
-      }
-    }
-  },
-  "home.glance.failed": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "failed"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "项失败"
-        }
-      }
-    }
-  },
-  "home.glance.completed": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "done"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "项已完成"
-        }
-      }
-    }
-  },
-  "home.glance.interrupted": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "stopped"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "项已中断"
-        }
-      }
-    }
-  },
-  "home.glance.now": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "now"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "现在"
-        }
-      }
-    }
-  },
-  "home.glance.saved": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Saved records"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "已保存的记录"
-        }
-      }
-    }
-  },
-  "home.glance.no.records": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "No records yet"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "尚无记录"
-        }
-      }
-    }
-  },
-  "home.glance.latest": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Latest"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "最新"
-        }
-      }
-    }
-  },
-  "home.glance.more": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "+%lld more anchors"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "另有 %lld 只锚"
-        }
-      }
-    }
-  },
-  "event.verb.interrupted": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "stopped"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "已中断"
-        }
-      }
-    }
-  },
-  "event.verb.started": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "started"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "开始运行"
-        }
-      }
-    }
-  },
-  "event.verb.progress": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "made progress"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "有新进展"
-        }
-      }
-    }
-  },
-  "event.verb.output": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "has new output"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "有新结果"
-        }
-      }
-    }
-  },
-  "event.verb.waiting": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "is waiting for input"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "等待输入"
-        }
-      }
-    }
-  },
-  "event.verb.resumed": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "resumed"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "已恢复"
-        }
-      }
-    }
-  },
-  "event.verb.completed": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "finished"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "已完成"
-        }
-      }
-    }
-  },
-  "event.verb.failed": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "failed"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "失败"
-        }
-      }
-    }
-  },
-  "event.verb.note": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "saved a note"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "记录了上下文"
-        }
-      }
-    }
-  },
-  "event.verb.updated": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "updated"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "已更新"
-        }
-      }
-    }
-  },
-  "status.attention": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Needs a look"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "需要留意"
-        }
-      }
-    }
-  },
-  "card.awaiting.source": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Waiting for a source"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "等待来源"
-        }
-      }
-    }
-  },
-  "card.progress.unreported": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Progress not reported"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "未上报进度"
-        }
-      }
-    }
-  },
-  "ambient.elapsed": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Since start"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "已进行"
-        }
-      }
-    }
-  },
-  "ambient.elapsed.hint": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Time since the selected task started, including breaks."
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "所选任务开始至今的时间，包含离开的时段。"
-        }
-      }
-    }
-  },
-  "ambient.minutes": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "%lld min"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "%lld 分钟"
-        }
-      }
-    }
-  },
-  "launch.slogan": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Let your thinking come ashore"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "让思路靠岸"
-        }
-      }
-    }
-  },
-  "return.saved.records": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Mac is disconnected. Showing saved records."
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Mac 未连接，先显示已保存的记录。"
-        }
-      }
-    }
-  },
-  "return.no.received.changes": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "No changes received yet. This summary updates as records arrive."
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "暂未收到离开期间的变化，新记录同步后会自动更新。"
-        }
-      }
-    }
-  },
-  "return.no.task.records": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "No task status has been received from Mac yet."
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "尚未收到 Mac 的任务状态。"
-        }
-      }
-    }
-  },
-  "return.anchor.record": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Last anchor note"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "上次投锚记录"
-        }
-      }
-    }
-  },
-  "return.interrupted": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Codex task interrupted"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Codex 任务已中断"
-        }
-      }
-    }
-  },
-  "return.metric.running": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Running"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "运行中"
-        }
-      }
-    }
-  },
-  "return.metric.completed": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Completed"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "已完成"
-        }
-      }
-    }
-  },
-  "return.metric.failed": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Failed"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "失败"
-        }
-      }
-    }
-  },
-  "return.metric.attention": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Attention"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "需留意"
-        }
-      }
-    }
-  },
-  "return.view.record": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "View the full task record"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "查看完整任务记录"
-        }
-      }
-    }
-  },
-  "return.check.completion": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Review the results against your completion criteria"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "对照完成标准，确认工作结果"
-        }
-      }
-    }
-  },
-  "return.resume.context": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Pick up from your anchor note"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "接着投锚记录继续"
-        }
-      }
-    }
-  },
-  "return.review.failure": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Check the failed task on Mac first"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "先回 Mac 检查失败的任务"
-        }
-      }
-    }
-  },
-  "return.review.attention": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Check the interrupted or waiting task"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "先查看中断或等待中的任务"
-        }
-      }
-    }
-  },
-  "return.follow.running": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Check the work still in progress"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "查看仍在进行的工作"
-        }
-      }
-    }
-  },
-  "return.review.queued": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Review the task waiting to start"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "查看等待开始的任务"
-        }
-      }
-    }
-  },
-  "return.away.short": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Away for less than a minute"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "离开不到 1 分钟"
-        }
-      }
-    }
-  },
-  "return.away.minutes": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Away for %lld min"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "离开 %lld 分钟"
-        }
-      }
-    }
-  },
-  "return.metric.queued": {
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "%lld waiting to start"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "另有 %lld 个任务等待开始"
-        }
-      }
-    }
-  }
-,
-    "return.landscape.hint" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Turn your phone sideways to continue with the work dashboard." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将手机横放，继续查看工作看板。" } }
-      }
-    },
-  "session.leave": {
-    "extractionState": "manual",
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Step away"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "暂时离开"
-        }
-      }
-    }
-  },
-  "note.save.failed": {
-    "extractionState": "manual",
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Could not save this note. Your text is still here. Please try again."
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "记录保存失败，文字已保留，请重试。"
-        }
-      }
-    }
-  },
-  "setup.draft.discard.question": {
-    "extractionState": "manual",
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Discard this draft and its images?"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "放弃这份草稿及其中的图片？"
-        }
-      }
-    }
-  },
-  "setup.draft.discard": {
-    "extractionState": "manual",
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Discard draft"
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "放弃草稿"
-        }
-      }
-    }
-  },
-  "setup.draft.kept": {
-    "extractionState": "manual",
-    "localizations": {
-      "en": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "Close and reopen to continue this draft."
-        }
-      },
-      "zh-Hans": {
-        "stringUnit": {
-          "state": "translated",
-          "value": "关闭后可在本次使用中继续填写"
-        }
-      }
-    }
-  },
     "%1$@ · %2$@ %3$@ awaiting judgment" : {
 
     },
@@ -1105,6 +37,15 @@
     "%lld from Mac" : {
 
     },
+    "%lld h ago" : {
+
+    },
+    "%lld min" : {
+
+    },
+    "%lld min ago" : {
+
+    },
     "%lld notes" : {
 
     },
@@ -1117,10 +58,19 @@
     "%lld routes running" : {
 
     },
+    "%lld waiting to start" : {
+
+    },
     "%lldm" : {
 
     },
+    "+%lld more anchors" : {
+
+    },
     "A judgment, next step, or context worth preserving" : {
+
+    },
+    "A quiet harbor" : {
 
     },
     "accessibility" : {
@@ -1342,6 +292,9 @@
     "After your choice, Anchor will resume the workflow." : {
 
     },
+    "All done" : {
+
+    },
     "All processes keep running" : {
 
     },
@@ -1450,6 +403,38 @@
         }
       }
     },
+    "ambient.elapsed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Since start"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已进行"
+          }
+        }
+      }
+    },
+    "ambient.elapsed.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time since the selected task started, including breaks."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所选任务开始至今的时间，包含离开的时段。"
+          }
+        }
+      }
+    },
     "ambient.latest.completed" : {
       "localizations" : {
         "en" : {
@@ -1494,6 +479,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "最新进展"
+          }
+        }
+      }
+    },
+    "ambient.minutes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 分钟"
           }
         }
       }
@@ -1603,6 +604,9 @@
     "Authorize the Codex sessions folder once. Anchor discovers task metadata, then tracks only tasks you associate." : {
 
     },
+    "Authorize the local Codex sessions folder once to discover matching new tasks, including Codex tasks in the ChatGPT app. Terminal commands use the shell connection below." : {
+
+    },
     "Automatic pairing is unavailable. Enter the six-digit code shown on your Mac." : {
 
     },
@@ -1631,7 +635,13 @@
         }
       }
     },
+    "Away for %lld min" : {
+
+    },
     "Away for %lld minutes" : {
+
+    },
+    "Away for less than a minute" : {
 
     },
     "away.current.anchor" : {
@@ -1748,7 +758,48 @@
     "Capture a judgment, next step, or context marker." : {
 
     },
+    "card.awaiting.source" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for a source"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待来源"
+          }
+        }
+      }
+    },
+    "card.progress.unreported" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress not reported"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未上报进度"
+          }
+        }
+      }
+    },
     "Changes while you were away" : {
+
+    },
+    "Check the failed task on Mac first" : {
+
+    },
+    "Check the interrupted or waiting task" : {
+
+    },
+    "Check the work still in progress" : {
 
     },
     "Choose a folder already included in your shell PATH." : {
@@ -1792,6 +843,9 @@
 
     },
     "Codex" : {
+
+    },
+    "Codex task interrupted" : {
 
     },
     "Collapse navigation" : {
@@ -1857,9 +911,6 @@
 
     },
     "Confirmed" : {
-
-    },
-    "Authorize the local Codex sessions folder once to discover matching new tasks, including Codex tasks in the ChatGPT app. Terminal commands use the shell connection below." : {
 
     },
     "connected" : {
@@ -2360,11 +1411,65 @@
     "Drop an anchor" : {
 
     },
+    "Drop an anchor and its AI conversations and terminal commands will appear here." : {
+
+    },
     "Drop anchor" : {
 
     },
     "Dynamic Type" : {
 
+    },
+    "edge.buoy.attention" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something is waiting for you"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有任务在等你"
+          }
+        }
+      }
+    },
+    "edge.buoy.failed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something failed since you last looked"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有任务失败了，打开看看"
+          }
+        }
+      }
+    },
+    "edge.buoy.finished" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work finished since you last looked"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有工作完成了"
+          }
+        }
+      }
     },
     "Edit goal" : {
 
@@ -2432,6 +1537,166 @@
         }
       }
     },
+    "event.verb.completed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "finished"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成"
+          }
+        }
+      }
+    },
+    "event.verb.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "失败"
+          }
+        }
+      }
+    },
+    "event.verb.interrupted" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "stopped"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已中断"
+          }
+        }
+      }
+    },
+    "event.verb.note" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "saved a note"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录了上下文"
+          }
+        }
+      }
+    },
+    "event.verb.output" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "has new output"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有新结果"
+          }
+        }
+      }
+    },
+    "event.verb.progress" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "made progress"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有新进展"
+          }
+        }
+      }
+    },
+    "event.verb.resumed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "resumed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已恢复"
+          }
+        }
+      }
+    },
+    "event.verb.started" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "started"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始运行"
+          }
+        }
+      }
+    },
+    "event.verb.updated" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "updated"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已更新"
+          }
+        }
+      }
+    },
+    "event.verb.waiting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "is waiting for input"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待输入"
+          }
+        }
+      }
+    },
     "events.none" : {
       "localizations" : {
         "en" : {
@@ -2452,6 +1717,9 @@
 
     },
     "Expand navigation" : {
+
+    },
+    "failed" : {
 
     },
     "Failed" : {
@@ -2510,6 +1778,9 @@
           }
         }
       }
+    },
+    "finished" : {
+
     },
     "FOCUS SESSION" : {
 
@@ -2824,6 +2095,9 @@
         }
       }
     },
+    "has new output" : {
+
+    },
     "Here is what changed while you were away." : {
 
     },
@@ -2917,6 +2191,310 @@
         }
       }
     },
+    "home.glance.attention" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "need a look"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "项需要留意"
+          }
+        }
+      }
+    },
+    "home.glance.awaiting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for the first record"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待第一条记录"
+          }
+        }
+      }
+    },
+    "home.glance.awaiting.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start a Codex conversation or a terminal command on your Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Mac 上开始一段 Codex 对话或终端命令。"
+          }
+        }
+      }
+    },
+    "home.glance.completed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "done"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "项已完成"
+          }
+        }
+      }
+    },
+    "home.glance.done" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All done"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部完成"
+          }
+        }
+      }
+    },
+    "home.glance.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A quiet harbor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "港湾很安静"
+          }
+        }
+      }
+    },
+    "home.glance.empty.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop an anchor and its AI conversations and terminal commands will appear here."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "投下一只锚，它的 AI 对话与终端命令会在这里出现。"
+          }
+        }
+      }
+    },
+    "home.glance.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "项失败"
+          }
+        }
+      }
+    },
+    "home.glance.interrupted" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "stopped"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "项已中断"
+          }
+        }
+      }
+    },
+    "home.glance.latest" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Latest"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新"
+          }
+        }
+      }
+    },
+    "home.glance.more" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld more anchors"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另有 %lld 只锚"
+          }
+        }
+      }
+    },
+    "home.glance.no.records" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No records yet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚无记录"
+          }
+        }
+      }
+    },
+    "home.glance.now" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "现在"
+          }
+        }
+      }
+    },
+    "home.glance.quiet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing running"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无运行"
+          }
+        }
+      }
+    },
+    "home.glance.running" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "running"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "项运行中"
+          }
+        }
+      }
+    },
+    "home.glance.saved" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved records"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存的记录"
+          }
+        }
+      }
+    },
+    "home.glance.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此刻"
+          }
+        }
+      }
+    },
+    "home.glance.window.hours" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld h ago"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 小时前"
+          }
+        }
+      }
+    },
+    "home.glance.window.minutes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min ago"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 分钟前"
+          }
+        }
+      }
+    },
     "home.task.library" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3003,10 +2581,16 @@
     "Interrupted" : {
 
     },
+    "is waiting for input" : {
+
+    },
     "Keep your attention for judgment." : {
 
     },
     "Large" : {
+
+    },
+    "Last anchor note" : {
 
     },
     "Last updated" : {
@@ -3028,11 +2612,30 @@
         }
       }
     },
+    "Latest" : {
+
+    },
     "Latest event" : {
 
     },
     "LATEST PROGRESS" : {
 
+    },
+    "launch.slogan" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Let your thinking come ashore"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "让思路靠岸"
+          }
+        }
+      }
     },
     "layout" : {
       "localizations" : {
@@ -3049,6 +2652,9 @@
           }
         }
       }
+    },
+    "Let your thinking come ashore" : {
+
     },
     "Listening" : {
 
@@ -3072,6 +2678,9 @@
 
     },
     "Mac disconnected" : {
+
+    },
+    "Mac is disconnected. Showing saved records." : {
 
     },
     "Mac online" : {
@@ -3385,6 +2994,23 @@
         }
       }
     },
+    "mac.work.peer.disconnected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device disconnected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设备未连接"
+          }
+        }
+      }
+    },
     "mac.work.processes.empty.action" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3432,23 +3058,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "还没有关联的会话"
-          }
-        }
-      }
-    },
-    "mac.work.peer.disconnected" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Device disconnected"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "设备未连接"
           }
         }
       }
@@ -3572,6 +3181,9 @@
         }
       }
     },
+    "made progress" : {
+
+    },
     "Manage processes" : {
 
     },
@@ -3624,6 +3236,12 @@
     "Nearby" : {
 
     },
+    "need a look" : {
+
+    },
+    "Needs a look" : {
+
+    },
     "Needs decision" : {
 
     },
@@ -3642,16 +3260,25 @@
     "No active anchor" : {
 
     },
+    "No changes received yet. This summary updates as records arrive." : {
+
+    },
     "No events yet" : {
 
     },
     "No new changes while you were away." : {
 
     },
+    "No records yet" : {
+
+    },
     "No result yet" : {
 
     },
     "No saved snapshots yet" : {
+
+    },
+    "No task status has been received from Mac yet." : {
 
     },
     "None" : {
@@ -3804,6 +3431,23 @@
         }
       }
     },
+    "note.save.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not save this note. Your text is still here. Please try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录保存失败，文字已保留，请重试。"
+          }
+        }
+      }
+    },
     "note.saved" : {
       "localizations" : {
         "en" : {
@@ -3837,6 +3481,9 @@
       }
     },
     "Nothing needs your attention" : {
+
+    },
+    "Nothing running" : {
 
     },
     "notifications" : {
@@ -3939,6 +3586,12 @@
         }
       }
     },
+    "now" : {
+
+    },
+    "Now" : {
+
+    },
     "Observed result" : {
 
     },
@@ -3967,6 +3620,9 @@
 
     },
     "Open System Settings" : {
+
+    },
+    "Orientation lock is on. Turn it off in Control Center, then turn your phone." : {
 
     },
     "Out of range" : {
@@ -4231,6 +3887,9 @@
       }
     },
     "PERSONAL ANCHOR" : {
+
+    },
+    "Pick up from your anchor note" : {
 
     },
     "Preparing" : {
@@ -5505,6 +5164,9 @@
     "Progress" : {
 
     },
+    "Progress not reported" : {
+
+    },
     "progress.overall" : {
       "localizations" : {
         "en" : {
@@ -5638,6 +5300,9 @@
     "Resume session" : {
 
     },
+    "resumed" : {
+
+    },
     "retry" : {
       "localizations" : {
         "en" : {
@@ -5656,6 +5321,54 @@
     },
     "Return" : {
 
+    },
+    "return.anchor.record" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last anchor note"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次投锚记录"
+          }
+        }
+      }
+    },
+    "return.away.minutes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Away for %lld min"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开 %lld 分钟"
+          }
+        }
+      }
+    },
+    "return.away.short" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Away for less than a minute"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开不到 1 分钟"
+          }
+        }
+      }
     },
     "return.back" : {
       "localizations" : {
@@ -5701,6 +5414,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "查看 %lld 条具体变化"
+          }
+        }
+      }
+    },
+    "return.check.completion" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review the results against your completion criteria"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "对照完成标准，确认工作结果"
           }
         }
       }
@@ -5753,6 +5482,22 @@
         }
       }
     },
+    "return.follow.running" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check the work still in progress"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看仍在进行的工作"
+          }
+        }
+      }
+    },
     "return.headline" : {
       "localizations" : {
         "en" : {
@@ -5781,6 +5526,119 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "离开期间总影响"
+          }
+        }
+      }
+    },
+    "return.interrupted" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codex task interrupted"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codex 任务已中断"
+          }
+        }
+      }
+    },
+    "return.landscape.hint" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn your phone sideways to continue with the work dashboard."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将手机横放，继续查看工作看板。"
+          }
+        }
+      }
+    },
+    "return.metric.attention" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attention"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需留意"
+          }
+        }
+      }
+    },
+    "return.metric.completed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成"
+          }
+        }
+      }
+    },
+    "return.metric.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "失败"
+          }
+        }
+      }
+    },
+    "return.metric.queued" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld waiting to start"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另有 %lld 个任务等待开始"
+          }
+        }
+      }
+    },
+    "return.metric.running" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Running"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "运行中"
           }
         }
       }
@@ -5829,6 +5687,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "离开期间没有新的变化。"
+          }
+        }
+      }
+    },
+    "return.no.received.changes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No changes received yet. This summary updates as records arrive."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂未收到离开期间的变化，新记录同步后会自动更新。"
+          }
+        }
+      }
+    },
+    "return.no.task.records" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No task status has been received from Mac yet."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未收到 Mac 的任务状态。"
           }
         }
       }
@@ -5897,6 +5787,86 @@
         }
       }
     },
+    "return.resume.context" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick up from your anchor note"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接着投锚记录继续"
+          }
+        }
+      }
+    },
+    "return.review.attention" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check the interrupted or waiting task"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先查看中断或等待中的任务"
+          }
+        }
+      }
+    },
+    "return.review.failure" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check the failed task on Mac first"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先回 Mac 检查失败的任务"
+          }
+        }
+      }
+    },
+    "return.review.queued" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review the task waiting to start"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看等待开始的任务"
+          }
+        }
+      }
+    },
+    "return.saved.records" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac is disconnected. Showing saved records."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 未连接，先显示已保存的记录。"
+          }
+        }
+      }
+    },
     "return.still.running" : {
       "localizations" : {
         "en" : {
@@ -5945,7 +5915,24 @@
         }
       }
     },
+    "return.view.record" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View the full task record"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看完整任务记录"
+          }
+        }
+      }
+    },
     "return.waiting.judgment" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5993,7 +5980,16 @@
         }
       }
     },
+    "Review the results against your completion criteria" : {
+
+    },
+    "Review the task waiting to start" : {
+
+    },
     "Run now" : {
+
+    },
+    "running" : {
 
     },
     "Running" : {
@@ -6021,7 +6017,13 @@
     "Save" : {
 
     },
+    "saved a note" : {
+
+    },
     "Saved contexts" : {
+
+    },
+    "Saved records" : {
 
     },
     "Search history" : {
@@ -6047,6 +6049,23 @@
     },
     "Session summary" : {
 
+    },
+    "session.leave" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Step away"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂时离开"
+          }
+        }
+      }
     },
     "session.started.at" : {
       "localizations" : {
@@ -6163,6 +6182,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "需要听写时，可直接使用系统键盘上的麦克风。"
+          }
+        }
+      }
+    },
+    "setup.draft.discard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard draft"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放弃草稿"
+          }
+        }
+      }
+    },
+    "setup.draft.discard.question" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard this draft and its images?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放弃这份草稿及其中的图片？"
+          }
+        }
+      }
+    },
+    "setup.draft.kept" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close and reopen to continue this draft."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭后可在本次使用中继续填写"
           }
         }
       }
@@ -7138,6 +7208,9 @@
     "Show fewer processes" : {
 
     },
+    "Since start" : {
+
+    },
     "snapshot.running.waiting" : {
       "localizations" : {
         "en" : {
@@ -7353,7 +7426,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "一次性授权 Codex 会话文件夹。Anchor 会发现任务元数据，但只跟踪你确认关联的任务。"
+            "value" : "连接一次，Anchor 会按任务关键词自动查找会话。确认或修改匹配结果后开始追踪。"
           }
         }
       }
@@ -7363,13 +7436,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Allow local matching of new Codex conversations to tasks anchored within the preceding 30 minutes. Conversation text is not stored or synced."
+            "value" : "Allow local keyword matching of Codex conversations. Review or change suggested tasks before tracking. Conversation text is not stored or synced."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "允许 Anchor 在本地匹配投锚后 30 分钟内新建的 Codex 对话。匹配时读取的文字不保存、不同步。"
+            "value" : "授权读取 Codex 会话文件夹。Anchor 会按任务关键词查找相关会话，供你确认或修改；匹配时读取的文字不保存、不同步。"
           }
         }
       }
@@ -7459,13 +7532,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "New conversations with strongly matching task keywords are linked automatically. Ambiguous conversations remain available for manual tracking."
+            "value" : "Matching conversations appear for review. Confirm, change the task, or ignore a suggestion. You can also select other conversations here."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "投锚后新建、且与任务关键词高度匹配的对话会自动关联。匹配不明确的对话可手动跟踪。"
+            "value" : "相关会话会自动出现在确认窗口中，你可以确认、修改任务或忽略。也可以在这里手动选择其他会话。"
           }
         }
       }
@@ -8332,6 +8405,9 @@
     "Standard" : {
 
     },
+    "Start a Codex conversation or a terminal command on your Mac." : {
+
+    },
     "Start a session to build a clear record of your work and decisions." : {
 
     },
@@ -8357,8 +8433,27 @@
         }
       }
     },
+    "started" : {
+
+    },
     "Started %@" : {
 
+    },
+    "status.attention" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs a look"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要留意"
+          }
+        }
+      }
     },
     "status.blocked" : {
       "localizations" : {
@@ -8734,6 +8829,9 @@
     "Stop listening" : {
 
     },
+    "stopped" : {
+
+    },
     "summary" : {
       "localizations" : {
         "en" : {
@@ -9077,6 +9175,22 @@
     "THIS SESSION" : {
 
     },
+    "tide.running" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Running"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "运行中"
+          }
+        }
+      }
+    },
     "tile.compact" : {
       "localizations" : {
         "en" : {
@@ -9141,6 +9255,9 @@
         }
       }
     },
+    "Time since the selected task started, including breaks." : {
+
+    },
     "timeline" : {
       "localizations" : {
         "en" : {
@@ -9188,6 +9305,9 @@
     "Try again" : {
 
     },
+    "Turn your phone to the left to open the work desk." : {
+
+    },
     "Unavailable in this build" : {
 
     },
@@ -9210,6 +9330,9 @@
     "Unknown" : {
 
     },
+    "updated" : {
+
+    },
     "Use keyboard dictation" : {
 
     },
@@ -9228,10 +9351,16 @@
     "View output" : {
 
     },
+    "View the full task record" : {
+
+    },
     "VoiceOver" : {
 
     },
-    "Waiting for judgment" : {
+    "Waiting for a source" : {
+
+    },
+    "Waiting for the first record" : {
 
     },
     "Waiting for you" : {
@@ -9322,6 +9451,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "当前工作"
+          }
+        }
+      }
+    },
+    "work.invitation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn your phone to the left to open the work desk."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "向左横放手机，进入工作台。"
+          }
+        }
+      }
+    },
+    "work.invitation.lock" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orientation lock is on. Turn it off in Control Center, then turn your phone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "竖排方向锁定已开启，请在控制中心关闭后再横放手机。"
           }
         }
       }

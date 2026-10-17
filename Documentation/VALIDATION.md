@@ -1,6 +1,15 @@
 # Anchor native validation record
 
-Last updated: 2026-10-02
+Last updated: 2026-10-15
+
+## Current results — Codex first connection and suggested tracking (2026-10-15)
+
+- First connection now opens the Mac detail window with a Codex folder authorization guide after bookmark restoration. The picker shows hidden folders and targets the user's home instead of the sandbox container. Release and CloudKit entitlements include app-scoped bookmarks; CloudKit also includes user-selected file access.
+- Discovery proposes matches from the latest user request, including conversations created before the anchor and updated afterwards. Suggestions require explicit confirmation, allow choosing another active task, and can be ignored or reviewed later. Existing bindings keep their owner. Conversation text remains transient and local.
+- Core regression: **178 tests passed**. Mac feature regression: **39 tests passed with `--no-parallel`**. In the initial concurrent run, the existing `idleBoatRestingBehavior` test failed its 40 ms timing assertion; no boat implementation or timing assertion was changed. The serial Mac rerun passed. New tests cover explicit confirmation, corrected ownership, duplicate confirmation, ignored-pair persistence, completed-task rejection, latest-request filtering, ambiguous suggestions, and a resumed-conversation phone/Mac lifecycle journey.
+- **macOS Release build passed for arm64 and x86_64 with signing disabled**, using `xcodebuild -project Anchor.xcodeproj -scheme 'Anchor macOS' -configuration Release -destination 'platform=macOS' -derivedDataPath /tmp/anchor-codex-derived CODE_SIGNING_ALLOWED=NO build`. Both entitlement plists pass `plutil -lint`.
+- Onboarding and review views were rendered through `NSHostingView` with disposable data and visually checked in light/dark. The preview helper uses `ANCHOR_DESIGN_PREVIEW_EXPORT`; files for this run are `/tmp/anchor-codex-previews`. Initial ImageRenderer output omitted the AppKit scroll content, so final inspection used NSHostingView snapshots. No production Anchor app was launched or replaced.
+- **Not verified:** a fresh signed installation's system folder picker, granting and reopening a real security-scoped bookmark, real phone pairing, keyboard/VoiceOver interaction, or runtime popup focus. Unsigned compilation and model tests do not constitute distribution permission acceptance. No new installer was published.
 
 ## Current results — macOS edge berth, boat, cues and window cards (2026-10-12)
 

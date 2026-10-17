@@ -8,10 +8,22 @@ public enum CodexAutoAssociation {
         text: String, conversationStartedAt: Date, sessions: [AnchorSession], now: Date = .now
     ) -> UUID? {
         guard conversationStartedAt <= now else { return nil }
+        let ranked = rankedSessions(text: text, sessions: sessions.filter { conversationStartedAt >= $0.startedAt })
+        guard let best = ranked.first else { return nil }
+        // Similar tasks remain candidates rather than silently choosing one.
+        if ranked.count > 1 && best.1 - ranked[1].1 < 0.15 { return nil }
+        return best.0
+    }
+
+    /// Suggestions require confirmation, so existing conversations and ambiguous
+    /// task names can be offered without silently assigning an owner.
+    public static func suggestedSessionIDs(text: String, sessions: [AnchorSession]) -> [UUID] {
+        rankedSessions(text: text, sessions: sessions).map(\.0)
+    }
+
+    private static func rankedSessions(text: String, sessions: [AnchorSession]) -> [(UUID, Double)] {
         let words = tokens(text)
-        let ranked = sessions.filter {
-            $0.status == .active && conversationStartedAt >= $0.startedAt
-        }.compactMap { session -> (UUID, Double)? in
+        return sessions.filter { $0.status == .active }.compactMap { session -> (UUID, Double)? in
             let title = tokens(session.goal.title)
             let shared = title.intersection(words).count
             guard !title.isEmpty, shared >= min(3, title.count) else { return nil }
@@ -20,14 +32,18 @@ public enum CodexAutoAssociation {
             let context = tokens(session.goal.completionCriteria + " " + (session.goal.userPlan?.steps.joined(separator: " ") ?? ""))
             let contextCoverage = context.isEmpty ? 0 : Double(context.intersection(words).count) / Double(context.count)
             return (session.id, coverage * 0.85 + contextCoverage * 0.15)
-        }.sorted { $0.1 > $1.1 }
-        guard let best = ranked.first else { return nil }
-        // Similar tasks remain candidates rather than silently choosing one.
-        if ranked.count > 1 && best.1 - ranked[1].1 < 0.15 { return nil }
-        return best.0
+        }.sorted { $0.1 == $1.1 ? $0.0.uuidString < $1.0.uuidString : $0.1 > $1.1 }
+    }
+
+    public static func latestUserRequest(at url: URL) -> String? {
+        userRequest(at: url, latest: true)
     }
 
     public static func firstUserRequest(at url: URL) -> String? {
+        userRequest(at: url, latest: false)
+    }
+
+    private static func userRequest(at url: URL, latest: Bool) -> String? {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
         // Bounded header + tail covers large injected setup context. Only a
@@ -41,8 +57,9 @@ public enum CodexAutoAssociation {
             if offset > 0, let newline = data.firstIndex(of: 10) { data.removeSubrange(...newline) }
             chunks.append(data)
         }
-        for data in chunks {
-            for line in data.split(separator: 10) {
+        for data in (latest ? Array(chunks.reversed()) : chunks) {
+            let lines = data.split(separator: 10)
+            for line in (latest ? Array(lines.reversed()) : Array(lines)) {
                 guard let object = try? JSONSerialization.jsonObject(with: Data(line)) as? [String: Any],
                       let payload = object["payload"] as? [String: Any] else { continue }
                 let items: [String]
