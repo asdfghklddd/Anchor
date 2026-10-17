@@ -35,6 +35,41 @@ struct LocalSessionRepositoryTests {
         #expect(await restored.currentProjection().archivedSessions.map(\.id) == [firstID])
     }
 
+    @Test("Changes made here count as unsent until the peer acknowledges them")
+    func countsUnsentChanges() async throws {
+        let storage = URL.temporaryDirectory.appending(path: "anchor-unsent-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: storage) }
+        let repository = LocalSessionRepository(storageURL: storage, sourceID: UUID())
+        try await repository.send(.createSession(goal: AnchorGoal(title: "Homework", completionCriteria: ""), processes: []))
+
+        #expect(await repository.currentProjection().freshness == .behind(lastContact: nil, unsent: 1))
+
+        let pending = try #require(await repository.pendingEvents().first)
+        try await repository.markDelivered(pending.id)
+        let projection = await repository.currentProjection()
+        #expect(projection.unsentChanges == 0)
+        #expect(projection.peerContactAt != nil)
+    }
+
+    @Test("A connected signal is contact, the drop is not, and the last contact survives relaunch")
+    func lastContactSurvivesRelaunch() async throws {
+        let storage = URL.temporaryDirectory.appending(path: "anchor-contact-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: storage) }
+        let connectedAt = Date(timeIntervalSince1970: 1_792_137_600)
+        let repository = LocalSessionRepository(storageURL: storage, sourceID: UUID())
+
+        try await repository.send(.updateSignals(connection: .connected, proximity: .unknown, at: connectedAt))
+        #expect(await repository.currentProjection().freshness == .live)
+
+        // A suspended app hears of the drop only when it wakes, an hour later.
+        try await repository.send(.updateSignals(connection: .disconnected, proximity: .unknown,
+                                                 at: connectedAt.addingTimeInterval(3_600)))
+        #expect(await repository.currentProjection().freshness == .behind(lastContact: connectedAt, unsent: 0))
+
+        let restored = LocalSessionRepository(storageURL: storage, sourceID: UUID())
+        #expect(await restored.currentProjection().peerContactAt == connectedAt)
+    }
+
     @Test("User-created empty workspace state survives relaunch")
     func persistsUserSession() async throws {
         let storage = URL.temporaryDirectory.appending(path: "anchor-local-\(UUID().uuidString).json")
@@ -174,7 +209,11 @@ struct LocalSessionRepositoryTests {
         let before = await repository.currentProjection()
         try await repository.applyRemote(lateEnvelope)
         try await repository.applyRemote(lateEnvelope)
-        #expect(await repository.currentProjection() == before)
+        var after = await repository.currentProjection()
+        // The peer was heard, which is all that changed.
+        #expect(after.peerContactAt != nil)
+        after.peerContactAt = before.peerContactAt
+        #expect(after == before)
         #expect(await repository.currentProjection().session == nil)
         #expect(await repository.currentProjection().archivedSessions.first?.notes.isEmpty == true)
     }

@@ -16,7 +16,7 @@ public actor CodexSessionBinder {
         self.checkpointStore = checkpointStore
     }
 
-    public func bind(fileURL: URL, sessionID: UUID, automaticallyMatched: Bool) async throws {
+    public func bind(fileURL: URL, sessionID: UUID, automaticallyMatched: Bool, stepID: UUID? = nil) async throws {
         let projection = await repository.currentProjection()
         guard let session = projection.hostedSessions.first(where: { $0.id == sessionID }) else {
             throw SessionRepositoryError.noActiveSession
@@ -60,7 +60,8 @@ public actor CodexSessionBinder {
                 capabilities: [.observe],
                 permission: .granted
             ),
-            conversationTitle: conversation?.workspaceName
+            conversationTitle: conversation?.workspaceName,
+            stepID: stepID
         )
         try await coordinator.setAssociation(
             AnchorEventAssociation(taskID: task.id, workItemID: workItem.id, confirmedByUser: !automaticallyMatched, automaticallyMatched: automaticallyMatched),

@@ -59,6 +59,9 @@ struct MacGlanceCard: View {
         case .attention(let count):
             counted(count, label: L10n.glanceAttention, tint: AnchorStateTone.attention.ink,
                     symbol: "exclamationmark.circle.fill", glance: glance)
+        case .needsYou(let count):
+            counted(count, label: PlanText.glanceNeedsYou, tint: AnchorStateTone.attention.ink,
+                    symbol: "eye.fill", glance: glance)
         case .running(let count):
             counted(count, label: L10n.glanceRunning, tint: AnchorPalette.brandDeep, symbol: nil, glance: glance)
         case .allCompleted:
@@ -93,7 +96,7 @@ struct MacGlanceCard: View {
                 (glance.failed, L10n.glanceFailed),
                 (glance.attention, L10n.glanceAttention),
                 (glance.running, L10n.glanceRunning),
-                (glance.completed, L10n.glanceCompleted)
+                (glance.needsYou, PlanText.glanceNeedsYou)
             ].filter { $0.0 > 0 }.dropFirst()
             if !rest.isEmpty {
                 Text(rest.map { "\($0.0) \($0.1)" }.joined(separator: " · "))

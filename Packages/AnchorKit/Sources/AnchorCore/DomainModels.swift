@@ -96,6 +96,8 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
     public var updatedAt: Date
     public var tileSize: ProcessTileSize
     public var events: [ProcessEvent]
+    /// The step of the task's plan this work serves, when its request named one clearly.
+    public var stepID: UUID?
 
     public init(
         id: UUID = UUID(),
@@ -115,7 +117,8 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
         estimatedCompletion: String = "",
         updatedAt: Date = .now,
         tileSize: ProcessTileSize = .standard,
-        events: [ProcessEvent] = []
+        events: [ProcessEvent] = [],
+        stepID: UUID? = nil
     ) {
         self.id = id
         self.sessionID = sessionID
@@ -135,6 +138,7 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
         self.updatedAt = updatedAt
         self.tileSize = tileSize
         self.events = events
+        self.stepID = stepID
     }
 }
 

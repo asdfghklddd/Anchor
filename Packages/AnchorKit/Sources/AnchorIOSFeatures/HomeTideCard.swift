@@ -8,7 +8,7 @@ import SwiftUI
 /// lifecycle state over time, because sources report moments, not percentages.
 struct HomeTideCard: View {
     let tasks: [AnchorSession]
-    let connection: ConnectionState
+    let freshness: SyncFreshness
     var maxLanes = 5
     /// Landscape gives the lanes the remaining height instead of a fixed rhythm.
     var fillsHeight = false
@@ -45,10 +45,10 @@ struct HomeTideCard: View {
                 HStack(alignment: .center) {
                     headline(glance)
                     Spacer(minLength: 8)
-                    savedRecordsLabel
+                    freshnessLabel(now: now)
                 }
             } else {
-                header
+                header(now: now)
                 headline(glance)
             }
             if !tasks.isEmpty {
@@ -62,25 +62,26 @@ struct HomeTideCard: View {
         }
     }
 
-    private var header: some View {
+    private func header(now: Date) -> some View {
         HStack(alignment: .firstTextBaseline) {
             Text(L10n.glanceTitle)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(AnchorIOSStyle.secondaryText)
                 .accessibilityAddTraits(.isHeader)
             Spacer(minLength: 8)
-            savedRecordsLabel
+            freshnessLabel(now: now)
         }
     }
 
+    /// Whether this copy is current. Disconnection is common and not urgent: name it quietly.
     @ViewBuilder
-    private var savedRecordsLabel: some View {
-        if !connection.isAuthenticatedAndHealthy && !tasks.isEmpty {
-            // Disconnection is common and not urgent: name it quietly.
-            Label(L10n.glanceSavedRecords, systemImage: "clock.arrow.circlepath")
+    private func freshnessLabel(now: Date) -> some View {
+        if !tasks.isEmpty {
+            Label(SyncText.line(for: freshness, now: now), systemImage: SyncText.symbol(for: freshness))
                 .font(.caption2.weight(.medium))
                 .foregroundStyle(AnchorIOSStyle.secondaryText)
-                .accessibilityIdentifier("home.glance.saved")
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
+                .accessibilityIdentifier(freshness == .live ? "home.glance.synced" : "home.glance.saved")
         }
     }
 
@@ -98,6 +99,8 @@ struct HomeTideCard: View {
         case .attention(let count):
             counted(count, label: L10n.glanceAttention, tint: AnchorStateTone.attention.ink,
                     symbol: "exclamationmark.circle.fill", glance: glance)
+        case .needsYou(let count):
+            counted(count, label: PlanText.glanceNeedsYou, tint: AnchorStateTone.attention.ink, symbol: "eye.fill", glance: glance)
         case .running(let count):
             counted(count, label: L10n.glanceRunning, tint: AnchorIOSStyle.heading, symbol: nil, glance: glance)
         case .allCompleted:
@@ -141,7 +144,7 @@ struct HomeTideCard: View {
             (glance.failed, L10n.glanceFailed),
             (glance.attention, L10n.glanceAttention),
             (glance.running, L10n.glanceRunning),
-            (glance.completed, L10n.glanceCompleted)
+            (glance.needsYou, PlanText.glanceNeedsYou)
         ].filter { $0.0 > 0 }
         let rest = parts.dropFirst()
         if !rest.isEmpty {

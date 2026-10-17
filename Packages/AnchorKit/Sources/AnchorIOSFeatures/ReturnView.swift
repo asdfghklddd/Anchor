@@ -21,7 +21,7 @@ struct ReturnView: View {
     @State private var isContinuing = false
     @State private var showAllChanges = false
     @State private var stepFeedback = 0
-    @State private var copiedStep: Int?
+    @State private var copiedStep: UUID?
 
     private let ink = Color(red: 0.11, green: 0.15, blue: 0.17)
     private let secondaryInk = Color(red: 0.43, green: 0.48, blue: 0.50)
@@ -36,9 +36,22 @@ struct ReturnView: View {
                         .padding(.bottom, 10)
 
                     enteringCard(taskCard, index: 0)
-                    enteringCard(changesCard, index: 1)
-                    enteringCard(workCard, index: 2)
-                    enteringCard(nextCard, index: 3)
+                    if review.overview.items.isEmpty {
+                        enteringCard(changesCard, index: 1)
+                        enteringCard(workCard, index: 2)
+                        enteringCard(nextCard, index: 3)
+                    } else {
+                        ForEach(Array(review.overview.items.enumerated()), id: \.element.id) { index, item in
+                            enteringCard(taskReturnCard(item), index: index + 1)
+                        }
+                        if review.overview.unchangedCount > 0 {
+                            Text(PlanText.othersUnchanged(review.overview.unchangedCount))
+                                .font(.caption)
+                                .foregroundStyle(secondaryInk)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .accessibilityIdentifier("return.unchanged")
+                        }
+                    }
                 }
                 .padding(.horizontal, 22)
                 .padding(.top, 22)
@@ -131,6 +144,26 @@ struct ReturnView: View {
                 }
             }
             .frame(maxWidth: .infinity)
+            if let first = review.overview.first, let action = first.action, action.needsPerson,
+               action.asksForALook || review.overview.items.count > 1 {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Image(systemName: PlanCopy.symbol(for: action).name)
+                        .foregroundStyle(PlanCopy.symbol(for: action).color)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(PlanText.doFirst)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(secondaryInk)
+                        Text("\(first.task.goal.title) · \(PlanText.line(for: action))")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("return.first")
+            }
             if let context = review.context {
                 Button { showsContext = true } label: {
                     VStack(alignment: .leading, spacing: 4) {
@@ -321,78 +354,158 @@ struct ReturnView: View {
             case .start, .finish:
                 EmptyView()
             }
-            if let current = plan.nextStepIndex {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(PlanText.step(current + 1))
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(secondaryInk)
-                    Text(plan.steps[current])
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(ink)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityIdentifier("return.plan.step")
-                }
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 10) { answerButtons(current, action: action) }
-                    VStack(alignment: .leading, spacing: 8) { answerButtons(current, action: action) }
-                }
-                copyButton(current)
-                if current + 1 < plan.steps.count {
-                    Text("\(PlanText.then) · \(PlanText.step(current + 2)) · \(plan.steps[current + 1])")
-                        .font(.caption)
-                        .foregroundStyle(secondaryInk)
-                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            } else {
-                Label(PlanText.allStepsDone, systemImage: "checkmark.seal.fill")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AnchorStateTone.done.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            if let task = review.session { stepBlock(task: task, plan: plan, action: action) }
         }
         .animation(reduceMotion ? nil : AnchorMotion.micro, value: plan.completedSteps)
         .accessibilityIdentifier("return.plan.card")
     }
 
+    /// One task that changed while the person was away: what happened, then its step question.
+    private func taskReturnCard(_ item: ReturnOverview.Item) -> some View {
+        returnCard {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Circle()
+                    .fill(AnchorTaskIdentity.color(for: item.task))
+                    .frame(width: 8, height: 8)
+                    .accessibilityHidden(true)
+                Text(item.task.goal.title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 8)
+                if let plan = item.task.goal.userPlan, !plan.steps.isEmpty {
+                    Text("\(plan.doneCount)/\(plan.steps.count)")
+                        .font(.caption.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(secondaryInk)
+                        .accessibilityLabel(PlanText.stepsDone(plan.doneCount, of: plan.steps.count))
+                }
+            }
+            ForEach(item.changes.prefix(3)) { process in resultRow(process) }
+            if item.changes.count > 3 {
+                Text(PlanText.moreChanges(item.changes.count - 3))
+                    .font(.caption)
+                    .foregroundStyle(secondaryInk)
+            }
+            if let plan = item.task.goal.userPlan, !plan.steps.isEmpty, let action = item.action {
+                Divider()
+                stepBlock(task: item.task, plan: plan, action: action)
+            }
+        }
+        .animation(reduceMotion ? nil : AnchorMotion.micro, value: item.task.goal.userPlan?.completedSteps)
+        .accessibilityIdentifier("return.task.\(item.task.id)")
+    }
+
+    /// A piece of work and what it reported, with the opening of its reply when there is one.
+    private func resultRow(_ process: AnchorProcess) -> some View {
+        Button { selectedProcess = process } label: {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Image(systemName: Self.symbol(for: process).name)
+                    .foregroundStyle(Self.symbol(for: process).color)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(process.title) · \(Self.word(for: process))")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(ink)
+                    if !process.detail.isEmpty {
+                        Text(process.detail)
+                            .font(.caption)
+                            .foregroundStyle(secondaryInk)
+                            .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                            .multilineTextAlignment(.leading)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .frame(minHeight: 36)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityHint(L10n.returnViewRecord)
+    }
+
+    private static func symbol(for process: AnchorProcess) -> (name: String, color: Color) {
+        if process.isInterrupted { return ("pause.circle.fill", AnchorIOSStyle.secondaryText) }
+        switch process.status {
+        case .completed: return ("checkmark.circle.fill", AnchorStateTone.done.ink)
+        case .failed: return ("xmark.octagon.fill", AnchorStateTone.failed.ink)
+        case .running: return ("play.circle.fill", AnchorStateTone.running.ink)
+        case .needsDecision, .blocked, .disconnected: return ("exclamationmark.circle.fill", AnchorStateTone.attention.ink)
+        case .queued: return ("circle.dashed", AnchorIOSStyle.secondaryText)
+        }
+    }
+
+    /// The glance's state words, so one screen never names a state two ways.
+    private static func word(for process: AnchorProcess) -> String {
+        if process.isInterrupted { return L10n.tideState(.interrupted) }
+        switch process.status {
+        case .running: return L10n.tideState(.running)
+        case .completed: return L10n.tideState(.completed)
+        case .failed: return L10n.tideState(.failed)
+        case .needsDecision, .blocked, .disconnected: return L10n.tideState(.attention)
+        case .queued: return L10n.status(.queued)
+        }
+    }
+
+    /// The current step of a task's plan with its answers, the copy button and what follows.
     @ViewBuilder
-    private func answerButtons(_ current: Int, action: TaskNextAction) -> some View {
+    private func stepBlock(task: AnchorSession, plan: AnchorUserPlan, action: TaskNextAction) -> some View {
+        if let current = plan.nextStepIndex {
+            let step = plan.items[current]
+            VStack(alignment: .leading, spacing: 3) {
+                Text(PlanText.step(current + 1))
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(secondaryInk)
+                Text(step.text)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("return.plan.step")
+            }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) { answerButtons(task: task, step: step.id, action: action) }
+                VStack(alignment: .leading, spacing: 8) { answerButtons(task: task, step: step.id, action: action) }
+            }
+            if let prompt = PlanText.prompt(goal: task.goal, step: current) {
+                Button(copiedStep == step.id ? PlanText.copied : PlanText.copyPrompt,
+                       systemImage: copiedStep == step.id ? "checkmark" : "doc.on.doc") {
+                    UIPasteboard.general.string = prompt
+                    copiedStep = step.id
+                }
+                .buttonStyle(.borderless)
+                .accessibilityIdentifier("return.plan.copy")
+            }
+            if current + 1 < plan.steps.count {
+                Text("\(PlanText.then) · \(PlanText.step(current + 2)) · \(plan.steps[current + 1])")
+                    .font(.caption)
+                    .foregroundStyle(secondaryInk)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        } else {
+            Label(PlanText.allStepsDone, systemImage: "checkmark.seal.fill")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(AnchorStateTone.done.ink)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    @ViewBuilder
+    private func answerButtons(task: AnchorSession, step: UUID, action: TaskNextAction) -> some View {
         Button(PlanText.stepDone, systemImage: "checkmark") {
             stepFeedback += 1
             copiedStep = nil
-            guard let plan = review.session?.goal.userPlan, plan.items.indices.contains(current) else { return }
-            let stepID = plan.items[current].id
-            Task { _ = await model.send(.setPlanStep(id: stepID, done: true)) }
+            Task { _ = await model.send(.forSession(task.id, .setPlanStep(id: step, done: true))) }
         }
         .buttonStyle(.bordered)
         .accessibilityIdentifier("return.plan.done")
         // "Not yet" answers a finished or failed result; with none to judge, it would mean nothing.
-        if Self.hasResultToJudge(action) {
+        if action.asksForALook {
             Button(PlanText.notYet) {
-                Task { _ = await model.send(.markPlanReviewed) }
+                Task { _ = await model.send(.forSession(task.id, .markPlanReviewed)) }
             }
             .buttonStyle(.bordered)
             .accessibilityIdentifier("return.plan.not-yet")
-        }
-    }
-
-    @ViewBuilder
-    private func copyButton(_ current: Int) -> some View {
-        if let goal = review.session?.goal, let prompt = PlanText.prompt(goal: goal, step: current) {
-            Button(copiedStep == current ? PlanText.copied : PlanText.copyPrompt,
-                   systemImage: copiedStep == current ? "checkmark" : "doc.on.doc") {
-                UIPasteboard.general.string = prompt
-                copiedStep = current
-            }
-            .buttonStyle(.borderless)
-            .accessibilityIdentifier("return.plan.copy")
-        }
-    }
-
-    private static func hasResultToJudge(_ action: TaskNextAction) -> Bool {
-        switch action {
-        case .fix, .review: true
-        case .wait, .start, .finish: false
         }
     }
 

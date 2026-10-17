@@ -45,6 +45,7 @@ extension AnchorSession {
             conversation.detail = latest.detail
             conversation.estimatedCompletion = latest.estimatedCompletion
             conversation.deepLink = latest.deepLink
+            conversation.stepID = latest.stepID ?? first.stepID
             conversation.updatedAt = latest.updatedAt
             var seenEventIDs = Set<UUID>()
             conversation.events = turns.flatMap(\.events)

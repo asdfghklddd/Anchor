@@ -69,6 +69,8 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     /// the isolation boundary for all mutable Network.framework state.
     public var onEvent: (@Sendable (EventEnvelope) async throws -> Void)?
     public var onConnectionState: (@Sendable (ConnectionState) -> Void)?
+    /// Every authenticated frame from the Mac, heartbeat answers included.
+    public var onPeerContact: (@Sendable () -> Void)?
 
     public init(
         identityStore: PairingIdentityStore = PairingIdentityStore(),
@@ -751,6 +753,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     }
 
     private func didAuthenticatePeer() {
+        onPeerContact?()
         cancelAutomaticPairingWork()
         setConnection(.connected)
         setPairingStatus(DevicePairingStatus(phase: .connected, route: authenticatedRoute))

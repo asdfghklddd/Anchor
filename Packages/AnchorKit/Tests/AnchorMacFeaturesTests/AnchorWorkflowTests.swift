@@ -37,8 +37,8 @@ func anchorFullWorkflow() async throws {
         MacSourceSetupModel(defaults: defaults,
             currentAnchorSessionID: { await mac.currentProjection().session?.id },
             autoAssociationSessions: { await mac.currentProjection().hostedSessions },
-            onCodexSessionAssociated: { url, owner, automatic in
-                try await binder.bind(fileURL: url, sessionID: owner, automaticallyMatched: automatic)
+            onCodexSessionAssociated: { url, owner, automatic, step in
+                try await binder.bind(fileURL: url, sessionID: owner, automaticallyMatched: automatic, stepID: step)
             })
     }
     let firstSetup = setup()

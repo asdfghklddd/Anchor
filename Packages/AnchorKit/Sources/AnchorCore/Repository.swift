@@ -63,6 +63,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         var events: [EventEnvelope]
         var outbox: [EventEnvelope]
         var nextSequence: UInt64
+        var peerContactAt: Date?
     }
 
     private struct LegacyPersistedState: Codable, Sendable {
@@ -78,6 +79,8 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
     private var outbox: [EventEnvelope]
     private var nextSequence: UInt64
     private var projection: SessionProjection
+    /// The last moment the peer was heard: while connected, a delivery or a remote event.
+    private var peerContactAt: Date?
     private let storageURL: URL
     private var continuations: [UUID: AsyncStream<SessionProjection>.Continuation] = [:]
 
@@ -88,9 +91,11 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
 
         let storedData = try? Data(contentsOf: resolvedURL)
         var startupError: String?
+        var restoredContact: Date?
         if let data = storedData,
            let persisted = Self.decodePersistedState(data),
            persisted.schemaVersion == Self.schemaVersion {
+            restoredContact = persisted.peerContactAt
             baseProjection = persisted.baseProjection
             events = persisted.events
             outbox = persisted.outbox
@@ -133,7 +138,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
                 }
                 let cleaned = PersistedState(schemaVersion: Self.schemaVersion,
                     baseProjection: cleanedBase, events: cleanedEvents, outbox: cleanedOutbox,
-                    nextSequence: nextSequence)
+                    nextSequence: nextSequence, peerContactAt: restoredContact)
                 try JSONEncoder.anchor.encode(cleaned).write(to: resolvedURL, options: .atomic)
                 baseProjection = cleanedBase
                 events = cleanedEvents
@@ -143,6 +148,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
             }
         }
 
+        peerContactAt = restoredContact
         projection = Self.replay(
             baseProjection: baseProjection,
             events: events,
@@ -156,21 +162,48 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         }
     }
 
-    public func currentProjection() -> SessionProjection { projection }
+    public func currentProjection() -> SessionProjection { published }
 
     public func projections() -> AsyncStream<SessionProjection> {
         let id = UUID()
         return AsyncStream { continuation in
             continuations[id] = continuation
-            continuation.yield(projection)
+            continuation.yield(published)
             continuation.onTermination = { [weak self] _ in
                 Task { await self?.removeContinuation(id) }
             }
         }
     }
 
+    /// The projection with how current it is next to the peer.
+    private var published: SessionProjection {
+        var result = projection
+        result.peerContactAt = peerContactAt
+        result.unsentChanges = outbox.count
+        return result
+    }
+
+    /// Records that the peer was heard, such as its answer to a heartbeat. While
+    /// connected nothing on screen depends on it, so nothing is broadcast.
+    public func notePeerContact(at date: Date = .now) {
+        peerContactAt = max(peerContactAt ?? date, date)
+    }
+
+    /// A connected signal is contact. The drop itself is not: a suspended app
+    /// learns of it only when it wakes, long after the last contact, which is
+    /// saved then so a relaunch can still say how old this copy is.
+    private func noteSignals(_ command: SessionCommand) {
+        guard case let .updateSignals(connection, _, at) = command else { return }
+        if connection.isAuthenticatedAndHealthy {
+            notePeerContact(at: at)
+        } else if projection.connection.isAuthenticatedAndHealthy {
+            try? write(baseProjection: baseProjection, events: events, outbox: outbox, nextSequence: nextSequence)
+        }
+    }
+
     public func send(_ command: SessionCommand) throws {
         let now = Date.now
+        noteSignals(command)
         if let operation = try SessionOperation.make(
             from: command,
             projection: projection,
@@ -257,6 +290,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
     }
 
     public func applyRemote(_ envelope: EventEnvelope) throws {
+        notePeerContact()
         if RetiredRecordingCleanup.sessionIDs.contains(envelope.sessionID) { return }
         if let operation = try? JSONDecoder.anchor.decode(SessionOperation.self, from: envelope.payload),
            case let .observeProcess(observation) = RetiredRecordingCleanup.unscoped(operation),
@@ -391,6 +425,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
     }
 
     public func markDelivered(_ eventID: UUID) throws {
+        notePeerContact()
         let previousCount = outbox.count
         let nextOutbox = outbox.filter { $0.id != eventID }
         guard nextOutbox.count != previousCount else { return }
@@ -401,6 +436,8 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
             nextSequence: nextSequence
         )
         outbox = nextOutbox
+        // The count of changes still on their way is on screen.
+        broadcast()
     }
 
     private func shouldPersist(_ command: SessionCommand) -> Bool {
@@ -427,7 +464,8 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
             baseProjection: baseProjection,
             events: events,
             outbox: outbox,
-            nextSequence: nextSequence
+            nextSequence: nextSequence,
+            peerContactAt: peerContactAt
         )
         let data = try JSONEncoder.anchor.encode(state)
         try data.write(to: storageURL, options: .atomic)
@@ -438,8 +476,9 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
     }
 
     private func broadcast() {
+        let published = published
         for continuation in continuations.values {
-            continuation.yield(projection)
+            continuation.yield(published)
         }
     }
 

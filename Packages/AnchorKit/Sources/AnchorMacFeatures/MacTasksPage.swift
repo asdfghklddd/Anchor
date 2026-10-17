@@ -84,14 +84,7 @@ enum MacTaskOrder {
     }
 
     static func rank(_ action: TaskNextAction?) -> Int {
-        switch action {
-        case .fix?: 0
-        case .review?: 1
-        case .start?: 2
-        case .wait?: 3
-        case .finish?: 4
-        case nil: 5
-        }
+        action?.urgency ?? 5
     }
 
     private static func lastActivity(_ task: AnchorSession) -> Date {

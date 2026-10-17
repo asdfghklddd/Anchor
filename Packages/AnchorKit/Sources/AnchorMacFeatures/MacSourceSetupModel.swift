@@ -96,7 +96,7 @@ public final class MacSourceSetupModel {
             if case let .task(_, matched, _) = TaskMatcher.place(work, tasks: activeTasks, current: nil, memory: matchMemory) {
                 step = matched
             }
-            try await onCodexSessionAssociated(conversation.candidate.fileURL, taskID, false)
+            try await onCodexSessionAssociated(conversation.candidate.fileURL, taskID, false, step)
             let binding = TrackedCodexSession(anchorSessionID: taskID, codexSessionID: conversation.id,
                                               relativePath: path, automaticallyMatched: false, stepID: step)
             bindings.append(binding)
@@ -141,7 +141,7 @@ public final class MacSourceSetupModel {
     private let defaults: UserDefaults
     private let onCodexSessionSelected: (@MainActor @Sendable (URL) async throws -> Void)?
     private let autoAssociationSessions: (@Sendable () async -> [AnchorSession])?
-    private let onCodexSessionAssociated: (@MainActor @Sendable (URL, UUID, Bool) async throws -> Void)?
+    private let onCodexSessionAssociated: (@MainActor @Sendable (URL, UUID, Bool, UUID?) async throws -> Void)?
     private let onCodexSessionUnbound: (@MainActor @Sendable (URL, UUID) async throws -> Void)?
     private let currentAnchorSessionID: (@Sendable () async -> UUID?)?
     private let taskStateProvider: (@Sendable () async -> AnchorTaskState?)?
@@ -169,7 +169,7 @@ public final class MacSourceSetupModel {
         currentAnchorSessionID: (@Sendable () async -> UUID?)? = nil,
         taskStateProvider: (@Sendable () async -> AnchorTaskState?)? = nil,
         autoAssociationSessions: (@Sendable () async -> [AnchorSession])? = nil,
-        onCodexSessionAssociated: (@MainActor @Sendable (URL, UUID, Bool) async throws -> Void)? = nil,
+        onCodexSessionAssociated: (@MainActor @Sendable (URL, UUID, Bool, UUID?) async throws -> Void)? = nil,
         onCodexSessionUnbound: (@MainActor @Sendable (URL, UUID) async throws -> Void)? = nil
     ) {
         commandURL = bundle.bundleURL.appending(path: "Contents/Helpers/anchor")
@@ -214,7 +214,7 @@ public final class MacSourceSetupModel {
         guard !trackedCodexSessionIDs.contains(resolvedID) else { return }
         if let onCodexSessionAssociated {
             guard let owner = await currentAnchorSessionID?() else { throw SessionRepositoryError.noActiveSession }
-            try await onCodexSessionAssociated(url, owner, false)
+            try await onCodexSessionAssociated(url, owner, false, nil)
         } else {
             try await onCodexSessionSelected?(url)
         }
@@ -239,7 +239,7 @@ public final class MacSourceSetupModel {
            let url = resolveBookmarkedURL(for: Self.codexBookmarkKey),
            url.startAccessingSecurityScopedResource() {
             do {
-                try await onCodexSessionAssociated(url, owner, false)
+                try await onCodexSessionAssociated(url, owner, false, nil)
                 if await currentAnchorSessionID?() == owner {
                     trackedCodexSessionIDs.insert(Self.codexSessionID(from: url))
                     codexSessionFileName = url.lastPathComponent
@@ -484,7 +484,7 @@ public final class MacSourceSetupModel {
                   FileManager.default.fileExists(atPath: url.path) else { continue }
             do {
                 if !registeredBindings.contains(binding) {
-                    try await onCodexSessionAssociated(url, binding.anchorSessionID, binding.automaticallyMatched == true)
+                    try await onCodexSessionAssociated(url, binding.anchorSessionID, binding.automaticallyMatched == true, binding.stepID)
                     registeredBindings.insert(binding)
                 }
                 if binding.anchorSessionID == selectedID { trackedCodexSessionIDs.insert(binding.codexSessionID) }
@@ -548,7 +548,7 @@ public final class MacSourceSetupModel {
                       !bindings.contains(where: { $0.codexSessionID == conversation.id }) else { continue }
                 do {
                     let automatic = reason != .corrected
-                    try await onCodexSessionAssociated(conversation.candidate.fileURL, taskID, automatic)
+                    try await onCodexSessionAssociated(conversation.candidate.fileURL, taskID, automatic, step)
                     let binding = TrackedCodexSession(anchorSessionID: taskID, codexSessionID: conversation.id,
                                                       relativePath: path, automaticallyMatched: automatic, stepID: step)
                     bindings.removeAll { $0.codexSessionID == conversation.id }

@@ -107,6 +107,10 @@ struct AnchorIOSApp: App {
             try await repository.applyRemote(event)
         }
         client.onEvent = applyEvent
+        // Heartbeat answers keep "last synced" true while nothing else moves.
+        client.onPeerContact = { [weak localRepository] in
+            Task { await localRepository?.notePeerContact() }
+        }
         scanner.setEventHandler(applyEvent)
         client.onConnectionState = { [weak repository, weak scanner] state in
             guard state == .connected else { return }

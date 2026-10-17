@@ -10,7 +10,7 @@ func codexClearWorkAttachesItself() async throws {
     let fixture = try CodexPlacementFixture(request: "帮我实现红黑树的删除操作")
     defer { fixture.cleanup() }
     var calls: [(UUID, Bool)] = []
-    let model = fixture.model { _, owner, automatic in calls.append((owner, automatic)) }
+    let model = fixture.model { _, owner, automatic, _ in calls.append((owner, automatic)) }
     defer { model.stopObserving() }
     var attention = 0
     model.onNeedsAttention = { attention += 1 }
@@ -32,7 +32,7 @@ func codexUnclearWorkWaitsAndFilingIsRemembered() async throws {
     let fixture = try CodexPlacementFixture(request: "继续")
     defer { fixture.cleanup() }
     var calls: [(UUID, Bool)] = []
-    let model = fixture.model { _, owner, automatic in calls.append((owner, automatic)) }
+    let model = fixture.model { _, owner, automatic, _ in calls.append((owner, automatic)) }
     await model.observeAuthorizedCodexFolder(fixture.root)
     let conversations = try await fixture.conversations()
     await model.placeConversations(conversations)
@@ -47,7 +47,7 @@ func codexUnclearWorkWaitsAndFilingIsRemembered() async throws {
     #expect(model.unsortedConversations.isEmpty)
     model.stopObserving()
 
-    let restored = fixture.model { _, owner, automatic in calls.append((owner, automatic)) }
+    let restored = fixture.model { _, owner, automatic, _ in calls.append((owner, automatic)) }
     defer { restored.stopObserving() }
     await restored.observeAuthorizedCodexFolder(fixture.root)
     await restored.placeConversations(conversations)
@@ -62,7 +62,7 @@ func codexMoveAndIgnore() async throws {
     let fixture = try CodexPlacementFixture(request: "帮我实现红黑树的删除操作")
     defer { fixture.cleanup() }
     var unbound: [UUID] = []
-    let model = fixture.model(onBind: { _, _, _ in }, onUnbind: { _, owner in unbound.append(owner) })
+    let model = fixture.model(onBind: { _, _, _, _ in }, onUnbind: { _, owner in unbound.append(owner) })
     defer { model.stopObserving() }
     await model.observeAuthorizedCodexFolder(fixture.root)
     let conversations = try await fixture.conversations()
@@ -87,7 +87,7 @@ func codexFinishedTaskGetsNoWork() async throws {
     let fixture = try CodexPlacementFixture(request: "帮我实现红黑树的删除操作")
     defer { fixture.cleanup() }
     try await fixture.repository.send(.forSession(fixture.homework.id, .completeSession))
-    let model = fixture.model { _, owner, _ in
+    let model = fixture.model { _, owner, _, _ in
         if owner == fixture.homework.id { Issue.record("A finished task must not receive work") }
     }
     defer { model.stopObserving() }
@@ -135,7 +135,7 @@ private struct CodexPlacementFixture {
     }
 
     func model(
-        onBind: @escaping @MainActor @Sendable (URL, UUID, Bool) async throws -> Void,
+        onBind: @escaping @MainActor @Sendable (URL, UUID, Bool, UUID?) async throws -> Void,
         onUnbind: (@MainActor @Sendable (URL, UUID) async throws -> Void)? = nil
     ) -> MacSourceSetupModel {
         let repository = repository
@@ -162,7 +162,7 @@ import SwiftUI
     guard let destination = ProcessInfo.processInfo.environment["ANCHOR_DESIGN_PREVIEW_EXPORT"] else { return }
     let fixture = try CodexPlacementFixture(request: "继续")
     defer { fixture.cleanup() }
-    let model = fixture.model { _, _, _ in }
+    let model = fixture.model { _, _, _, _ in }
     defer { model.stopObserving() }
     model.presentCodexSetupIfNeeded()
     for scheme in [ColorScheme.light, .dark] {

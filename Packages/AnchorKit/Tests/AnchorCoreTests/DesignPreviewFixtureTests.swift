@@ -89,7 +89,8 @@ struct DesignPreviewFixtureTests {
 
         func at(_ minutesAgo: Double) -> Date { now.addingTimeInterval(-minutesAgo * 60) }
         func id(_ index: Int) -> UUID { UUID(uuidString: String(format: "1A7E0000-7215-40E0-8B0B-%012d", index))! }
-        func codex(_ title: String, task: UUID, status: ProcessStatus, started: Double, ended: Double? = nil) -> AnchorProcess {
+        func codex(_ title: String, task: UUID, status: ProcessStatus, started: Double, ended: Double? = nil,
+                   reply: String = "") -> AnchorProcess {
             let processID = UUID(), sourceID = UUID()
             var events = [ProcessEvent(sessionID: task, processID: processID, sourceID: sourceID,
                                        occurredAt: at(started), kind: .created, title: "Codex task_started", metric: nil)]
@@ -99,7 +100,7 @@ struct DesignPreviewFixtureTests {
                                            title: status == .completed ? "Codex task_complete" : "Codex task_failed", metric: nil))
             }
             return AnchorProcess(id: processID, sessionID: task, sourceID: sourceID, sourceName: "Codex", sourceSymbol: "C",
-                                 sourceTone: "cyan", title: title, status: status,
+                                 sourceTone: "cyan", title: title, status: status, detail: reply,
                                  updatedAt: events.map(\.occurredAt).max() ?? now, events: events)
         }
         func plan(_ steps: [String], done: [Int], reviewed: Double?) -> AnchorUserPlan {
@@ -109,7 +110,8 @@ struct DesignPreviewFixtureTests {
         let homework = AnchorSession(id: id(1), goal: AnchorGoal(
             title: "数据结构作业", completionCriteria: "红黑树的插入和删除都通过测试",
             userPlan: plan(["实现插入", "实现删除操作", "补边界情况测试", "写实验报告"], done: [0], reviewed: 45)),
-            startedAt: at(120), processes: [codex("红黑树删除", task: id(1), status: .completed, started: 32, ended: 4)],
+            startedAt: at(120), processes: [codex("红黑树删除", task: id(1), status: .completed, started: 32, ended: 4,
+                                         reply: "已实现 delete 和 fixup，所有测试通过。另外补了一个回归测试，覆盖删除根节点的情况。")],
             taskColorIndex: 0)
         let website = AnchorSession(id: id(2), goal: AnchorGoal(
             title: "个人网站", completionCriteria: "作品集页面上线",

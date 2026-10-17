@@ -25,7 +25,7 @@ struct PortraitDashboard: View {
             HarborBackground()
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    HomeTideCard(tasks: projection.hostedSessions, connection: projection.connection, onTask: onTask)
+                    HomeTideCard(tasks: projection.hostedSessions, freshness: projection.freshness, onTask: onTask)
                     HStack {
                         Text(AnchorStrings.value("home.task.library", default: "Task library"))
                             .font(.title2.bold()).foregroundStyle(AnchorIOSStyle.heading)

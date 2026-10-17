@@ -44,8 +44,9 @@ private actor CodexLifecycleDeliveryState {
     }
 }
 
-/// Read-only Codex lifecycle source. It observes JSONL growth and emits only
-/// sanitized lifecycle events; the source never forwards message bodies.
+/// Read-only Codex lifecycle source. It observes JSONL growth and emits
+/// lifecycle events; of a message body it forwards only the opening of a
+/// turn's final reply (or its error), bounded for a glance.
 public struct CodexLifecycleFileSource: ProcessSource, Sendable {
     public static let defaultSourceID = BuiltInProcessSourceID.codex
 
@@ -55,6 +56,8 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
     public let descriptor: SourceDescriptor
     /// Shown as the conversation's title, typically its workspace folder name.
     public let conversationTitle: String?
+    /// The plan step this conversation serves, carried on every event it emits.
+    public let stepID: UUID?
     private let checkpointStore: CodexLifecycleCheckpointStore?
     private let sessionContextProvider: @Sendable () async -> ProcessSourceSessionContext?
     private let deliveryState = CodexLifecycleDeliveryState()
@@ -66,9 +69,11 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                 descriptor: SourceDescriptor = SourceDescriptor(
                     id: CodexLifecycleFileSource.defaultSourceID, name: "Codex", kind: .integration,
                     symbol: "C", tone: "cyan", capabilities: [.observe]),
-                conversationTitle: String? = nil) {
+                conversationTitle: String? = nil,
+                stepID: UUID? = nil) {
         self.fileURL = fileURL; self.pollInterval = max(0.05, pollInterval)
         self.conversationTitle = conversationTitle
+        self.stepID = stepID
         self.maximumReadBytes = max(1, maximumReadBytes)
         self.sessionContextProvider = sessionContextProvider; self.checkpointStore = checkpointStore; self.descriptor = descriptor
     }
@@ -144,7 +149,9 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                                     sessionID: context.sessionID,
                                     sourceID: descriptor.id,
                                     sourceName: descriptor.name,
-                                    title: conversationTitle ?? CodexLifecycleRecord.legacyTurnTitle
+                                    title: conversationTitle ?? CodexLifecycleRecord.legacyTurnTitle,
+                                    end: scanned.end,
+                                    stepID: stepID
                                 )
                                 if let identity, checkpointStore != nil {
                                     await deliveryState.prepare(

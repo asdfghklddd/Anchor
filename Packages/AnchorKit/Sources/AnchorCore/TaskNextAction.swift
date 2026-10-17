@@ -47,3 +47,19 @@ public enum TaskNextAction: Hashable, Sendable {
         processes.max { ($0.updatedAt, $0.id.uuidString) < ($1.updatedAt, $1.id.uuidString) }
     }
 }
+
+public extension TaskNextAction {
+    /// One reading order for every screen: fix, check, start, wait, finish.
+    var urgency: Int {
+        switch self {
+        case .fix: 0
+        case .review: 1
+        case .start: 2
+        case .wait: 3
+        case .finish: 4
+        }
+    }
+
+    /// A failure or a finished result the person has not looked at.
+    var asksForALook: Bool { urgency <= 1 }
+}

@@ -35,22 +35,41 @@ public struct CodexLifecycleRecord: Codable, Hashable, Sendable {
         sourceName: String = "Codex",
         title: String = CodexLifecycleRecord.legacyTurnTitle
     ) -> ExternalProcessEvent {
-        let status: ProcessStatus = lifecycle == .started ? .running : (lifecycle == .completed ? .completed : .failed)
-        let kind: ProcessEventKind = lifecycle == .started ? .created : (lifecycle == .completed ? .completed : .failed)
+        externalEvent(sessionID: sessionID, sourceID: sourceID, sourceName: sourceName, title: title, end: nil)
+    }
+
+    /// `end` carries what the turn reported when it ended: the opening of its
+    /// final reply, or the error that made it fail. Only that short preview
+    /// leaves the Mac, over the local link.
+    func externalEvent(
+        sessionID: UUID,
+        sourceID: UUID,
+        sourceName: String = "Codex",
+        title: String = CodexLifecycleRecord.legacyTurnTitle,
+        end: CodexTurnEnd?,
+        stepID: UUID? = nil
+    ) -> ExternalProcessEvent {
+        let failedByError = lifecycle == .completed && end?.hasError == true
+        let finished = lifecycle == .completed && !failedByError
+        let status: ProcessStatus = lifecycle == .started ? .running : (finished ? .completed : .failed)
+        let kind: ProcessEventKind = lifecycle == .started ? .created : (finished ? .completed : .failed)
+        let detail = (failedByError ? end?.errorMessage : end?.reply)
+            .flatMap { CodexGlanceText.reply(from: $0) } ?? ""
         let processID = StableProcessIdentity.id(namespace: "codex.turn", sessionID: sessionID, externalID: turnID)
         // A run is stable across phases; each phase needs its own event identity.
         let key = sourceID.uuidString + ":" + turnID + ":" + lifecycle.rawValue
         let eventID = StableProcessIdentity.id(namespace: "codex.event", sessionID: sessionID, externalID: key)
         let event = ProcessEvent(id: eventID, sessionID: sessionID, processID: processID, sourceID: sourceID,
                                  externalID: turnID, occurredAt: timestamp, kind: kind,
-                                 title: "Codex " + lifecycle.rawValue, progress: nil)
+                                 title: "Codex " + lifecycle.rawValue, detail: detail, progress: nil)
         return ExternalProcessEvent(id: eventID, sessionID: sessionID,
                                     sourceID: sourceID, sequence: UInt64(max(0, timestamp.timeIntervalSince1970 * 1000)),
                                     occurredAt: timestamp,
                                     process: AnchorProcess(id: processID, sessionID: sessionID, sourceID: sourceID,
                                                            externalID: turnID, sourceName: sourceName, sourceSymbol: "C",
                                                            sourceTone: "cyan", title: title, status: status,
-                                                           progress: nil, updatedAt: timestamp),
+                                                           progress: nil, detail: detail, updatedAt: timestamp,
+                                                           stepID: stepID),
                                     event: event, deduplicationKey: key,
                                     observedOutcome: lifecycle == .aborted ? .interrupted : nil)
     }

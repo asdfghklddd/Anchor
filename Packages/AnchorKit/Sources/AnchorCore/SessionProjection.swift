@@ -17,6 +17,11 @@ public struct SessionProjection: Codable, Hashable, Sendable {
     /// to the UI but intentionally is not included in the event outbox.
     public var sourceHealth: [UUID: SourceHealth]
     public var durableSyncState: DurableSyncState
+    /// When this device last heard from its paired peer. Kept by the local
+    /// repository, never sent, so a disconnected screen can say how old it is.
+    public var peerContactAt: Date?
+    /// Changes made here that the peer has not acknowledged yet. Never sent.
+    public var unsentChanges: Int
 
     public init(
         session: AnchorSession? = nil,
@@ -28,7 +33,9 @@ public struct SessionProjection: Codable, Hashable, Sendable {
         dataObservedAt: Date? = nil,
         errorMessage: String? = nil,
         sourceHealth: [UUID: SourceHealth] = [:],
-        durableSyncState: DurableSyncState = .notConfigured
+        durableSyncState: DurableSyncState = .notConfigured,
+        peerContactAt: Date? = nil,
+        unsentChanges: Int = 0
     ) {
         self.session = session
         self.archivedSessions = archivedSessions
@@ -40,6 +47,8 @@ public struct SessionProjection: Codable, Hashable, Sendable {
         self.errorMessage = errorMessage
         self.sourceHealth = sourceHealth
         self.durableSyncState = durableSyncState
+        self.peerContactAt = peerContactAt
+        self.unsentChanges = unsentChanges
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -76,9 +85,19 @@ public struct SessionProjection: Codable, Hashable, Sendable {
             DurableSyncState.self,
             forKey: .durableSyncState
         ) ?? .notConfigured
+        peerContactAt = nil
+        unsentChanges = 0
     }
 
     public static let empty = SessionProjection()
+
+    /// Whether what this device shows is current, for a screen that must say when it may be behind.
+    public var freshness: SyncFreshness {
+        if connection.isAuthenticatedAndHealthy {
+            return unsentChanges > 0 ? .sending(unsentChanges) : .live
+        }
+        return .behind(lastContact: peerContactAt, unsent: unsentChanges)
+    }
 
     /// Inserts one terminal session by stable identity and keeps task history
     /// in a deterministic newest-first order.

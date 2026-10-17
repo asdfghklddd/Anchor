@@ -138,6 +138,8 @@ public struct WorkGlance: Hashable, Sendable {
         case awaitingSources
         case failed(Int)
         case attention(Int)
+        /// Tasks whose next action is to fix or check something (see `TaskNextAction`).
+        case needsYou(Int)
         case running(Int)
         case allCompleted
         case quiet
@@ -157,6 +159,10 @@ public struct WorkGlance: Hashable, Sendable {
     public let attention: Int
     public let failed: Int
     public let completed: Int
+    /// Tasks with a failure or finished result the person has not looked at.
+    public let needsYou: Int
+    /// Some task still has open steps in its plan, so finished runs are not "all done".
+    public let hasOpenPlan: Bool
     public let latestChange: Change?
 
     public init(tasks: [AnchorSession]) {
@@ -168,6 +174,8 @@ public struct WorkGlance: Hashable, Sendable {
             [.needsDecision, .blocked, .disconnected].contains($0.status) || $0.isInterrupted
         }.count
         completed = processes.filter { $0.status == .completed }.count
+        needsYou = tasks.filter { TaskNextAction(task: $0)?.asksForALook == true }.count
+        hasOpenPlan = tasks.contains { $0.goal.userPlan.map { !$0.steps.isEmpty && !$0.isFinished } == true }
 
         var latest: Change?
         for task in tasks {
@@ -188,8 +196,9 @@ public struct WorkGlance: Hashable, Sendable {
         if taskCount == 0 { return .empty }
         if failed > 0 { return .failed(failed) }
         if attention > 0 { return .attention(attention) }
+        if needsYou > 0 { return .needsYou(needsYou) }
         if running > 0 { return .running(running) }
-        if completed > 0 { return .allCompleted }
+        if completed > 0 && !hasOpenPlan { return .allCompleted }
         return running + attention + failed + completed == 0 ? .awaitingSources : .quiet
     }
 

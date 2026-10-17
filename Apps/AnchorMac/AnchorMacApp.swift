@@ -225,8 +225,9 @@ struct AnchorMacApp: App {
                 await taskRunStore.currentTaskRecord()?.state
             },
             autoAssociationSessions: { await repository.currentProjection().hostedSessions },
-            onCodexSessionAssociated: { url, sessionID, automaticallyMatched in
-                try await codexBinder.bind(fileURL: url, sessionID: sessionID, automaticallyMatched: automaticallyMatched)
+            onCodexSessionAssociated: { url, sessionID, automaticallyMatched, stepID in
+                try await codexBinder.bind(fileURL: url, sessionID: sessionID,
+                                           automaticallyMatched: automaticallyMatched, stepID: stepID)
             },
             onCodexSessionUnbound: { url, sessionID in
                 try await codexBinder.unbind(fileURL: url, sessionID: sessionID)

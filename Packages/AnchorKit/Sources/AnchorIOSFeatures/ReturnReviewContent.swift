@@ -7,10 +7,14 @@ struct ReturnReviewContent {
     let changes: [ReturnChange]
     let processes: [AnchorProcess]
 
+    /// Every task that changed while the person was away, what to look at first.
+    let overview: ReturnOverview
+
     init(projection: SessionProjection) {
         session = TaskDashboardPolicy.presentation(of: projection).session
         changes = session?.returnSummary?.changes ?? []
         processes = session?.taskProcesses ?? []
+        overview = ReturnOverview(tasks: projection.hostedSessions, awaySince: session?.returnSummary?.awaySince)
     }
 
     var runningCount: Int { processes.filter { $0.status == .running }.count }

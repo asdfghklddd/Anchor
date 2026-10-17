@@ -135,6 +135,8 @@ struct LandscapeAmbientDashboard: View {
             counted(count, label: L10n.glanceFailed, tone: .failed, symbol: "xmark.octagon.fill", glance: glance)
         case .attention(let count):
             counted(count, label: L10n.glanceAttention, tone: .attention, symbol: "exclamationmark.circle.fill", glance: glance)
+        case .needsYou(let count):
+            counted(count, label: PlanText.glanceNeedsYou, tone: .attention, symbol: "eye.fill", glance: glance)
         case .running(let count):
             counted(count, label: L10n.glanceRunning, tone: nil, symbol: nil, glance: glance)
         case .allCompleted:
@@ -147,7 +149,7 @@ struct LandscapeAmbientDashboard: View {
     private func counted(_ count: Int, label: String, tone: AnchorStateTone?, symbol: String?, glance: WorkGlance) -> some View {
         let color = tone?.ink ?? AnchorIOSStyle.heading
         let rest = [(glance.failed, L10n.glanceFailed), (glance.attention, L10n.glanceAttention),
-                    (glance.running, L10n.glanceRunning), (glance.completed, L10n.glanceCompleted)]
+                    (glance.running, L10n.glanceRunning), (glance.needsYou, PlanText.glanceNeedsYou)]
             .filter { $0.0 > 0 }.dropFirst()
         return VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {

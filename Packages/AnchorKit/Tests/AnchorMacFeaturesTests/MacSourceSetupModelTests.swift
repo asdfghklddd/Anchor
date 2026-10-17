@@ -57,7 +57,7 @@ func manualBindingRestoresOriginalOwner() async throws {
         MacSourceSetupModel(defaults: defaults,
             currentAnchorSessionID: { await repository.currentProjection().session?.id },
             autoAssociationSessions: { await repository.currentProjection().hostedSessions },
-            onCodexSessionAssociated: { _, id, automatic in calls.append((id, automatic)) })
+            onCodexSessionAssociated: { _, id, automatic, _ in calls.append((id, automatic)) })
     }
     let original = setup()
     await original.observeAuthorizedCodexFolder(root)

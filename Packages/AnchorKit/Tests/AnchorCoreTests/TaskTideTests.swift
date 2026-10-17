@@ -84,6 +84,24 @@ struct TaskTideTests {
         #expect(WorkGlance(tasks: [task([done])]).headline == .allCompleted)
     }
 
+    @Test("A finished result the person has not looked at needs them; an open plan is never all done")
+    func finishedResultNeedsYou() throws {
+        let done = process(.completed, updatedMinutesAgo: 5,
+                           events: [event(.created, minutesAgo: 30), event(.completed, minutesAgo: 5)])
+        func task(_ plan: AnchorUserPlan) -> AnchorSession {
+            AnchorSession(goal: AnchorGoal(title: "Homework", completionCriteria: "", userPlan: plan),
+                          startedAt: now.addingTimeInterval(-7_200), processes: [done])
+        }
+        let plan = AnchorUserPlan(steps: ["Insert", "Delete"])
+        #expect(WorkGlance(tasks: [task(plan)]).headline == .needsYou(1))
+
+        let looked = plan.markingReviewed(at: now)
+        #expect(WorkGlance(tasks: [task(looked)]).headline == .quiet)
+
+        let finished = try #require(looked.marking(step: 0, done: true, at: now)?.marking(step: 1, done: true, at: now))
+        #expect(WorkGlance(tasks: [task(finished)]).headline == .allCompleted)
+    }
+
     @Test("The latest change is the newest meaningful event across tasks")
     func latestChange() {
         let older = process(.completed, updatedMinutesAgo: 8, events: [event(.completed, minutesAgo: 8)])

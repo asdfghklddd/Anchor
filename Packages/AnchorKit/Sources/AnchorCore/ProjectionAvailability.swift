@@ -30,3 +30,13 @@ public enum ProjectionAvailability: Hashable, Sendable {
         }
     }
 }
+
+/// How current one device's copy is next to its peer.
+public enum SyncFreshness: Hashable, Sendable {
+    /// Connected, and the peer has everything made here.
+    case live
+    /// Connected, with changes still on their way.
+    case sending(Int)
+    /// Not connected: shown as of the last contact, with the changes waiting for the next one.
+    case behind(lastContact: Date?, unsent: Int)
+}

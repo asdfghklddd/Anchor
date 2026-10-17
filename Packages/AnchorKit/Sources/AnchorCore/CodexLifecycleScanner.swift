@@ -10,6 +10,8 @@ public enum CodexLifecycleScanner {
 struct CodexLifecycleScannedRecord: Sendable {
     let record: CodexLifecycleRecord
     let committedOffset: UInt64
+    /// For a `task_complete` line: its reply preview, duration and error.
+    var end: CodexTurnEnd? = nil
 }
 
 enum CodexLifecycleScannerError: Error {
@@ -72,6 +74,7 @@ public struct CodexIncrementalScanner: Codable, Sendable {
             offset += 1
             if byte == 10 {
                 let record = discardingOversizedLine ? nil : CodexLifecycleRecord(json: remainder)
+                let end = record?.lifecycle == .completed ? CodexTurnEnd(json: remainder) : nil
                 remainder.removeAll(keepingCapacity: true)
                 discardingOversizedLine = false
                 committedOffset = offset
@@ -79,7 +82,8 @@ public struct CodexIncrementalScanner: Codable, Sendable {
                     records.append(
                         CodexLifecycleScannedRecord(
                             record: record,
-                            committedOffset: committedOffset
+                            committedOffset: committedOffset,
+                            end: end
                         )
                     )
                 }

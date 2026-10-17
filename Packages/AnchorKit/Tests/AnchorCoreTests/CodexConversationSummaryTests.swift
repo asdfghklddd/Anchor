@@ -125,3 +125,30 @@ func trimsMarkdownForAGlance() {
 
     #expect(CodexGlanceText.title(from: "\n  - 帮我修复登录崩溃\n详细说明") == "帮我修复登录崩溃")
 }
+
+@Test("A synced turn end carries the opening of its reply and its step; a reported error makes it a failure")
+func syncedTurnEndsCarryTheirReply() throws {
+    let reply = #"## Done\n\nFixed the crash; **all tests pass**."#
+    let lines = [
+        #"{"timestamp":"2026-10-16T08:07:01.000Z","type":"event_msg","payload":{"type":"task_complete","turn_id":"t1","last_agent_message":"\#(reply)","duration_ms":420000,"error":null}}"#,
+        #"{"timestamp":"2026-10-16T08:09:01.000Z","type":"event_msg","payload":{"type":"task_complete","turn_id":"t2","last_agent_message":null,"error":{"message":"Context window exceeded"}}}"#,
+    ]
+    var scanner = CodexIncrementalScanner()
+    let scanned = scanner.appendWithOffsets(Data((lines.joined(separator: "\n") + "\n").utf8))
+    #expect(scanned.count == 2)
+    let session = UUID(), source = UUID(), step = UUID()
+
+    let done = scanned[0].record.externalEvent(sessionID: session, sourceID: source, end: scanned[0].end, stepID: step)
+    #expect(done.process.status == .completed)
+    #expect(done.event?.kind == .completed)
+    #expect(done.event?.detail == "Fixed the crash; all tests pass.")
+    #expect(done.process.detail == "Fixed the crash; all tests pass.")
+    #expect(done.process.stepID == step)
+
+    let failed = scanned[1].record.externalEvent(sessionID: session, sourceID: source, end: scanned[1].end)
+    #expect(failed.process.status == .failed)
+    #expect(failed.event?.kind == .failed)
+    #expect(failed.event?.detail == "Context window exceeded")
+    #expect(failed.event?.isInterruption == false)
+    #expect(failed.observedOutcome == nil)
+}
