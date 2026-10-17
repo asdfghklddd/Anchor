@@ -8,6 +8,8 @@ import SwiftUI
 struct HostedTaskCard: View {
     let task: AnchorSession
     let height: CGFloat
+    /// The task the person is on, marked when there is more than one.
+    var isCurrent = false
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .headline) private var titleSize: CGFloat = 20
     @AnchorReducedMotion private var reduceMotion
@@ -56,6 +58,7 @@ struct HostedTaskCard: View {
                     statusLine(tint: tint)
                 }
                 Spacer(minLength: 4)
+                if isCurrent { currentTag(tint: tint) }
                 if let planProgress {
                     if showsLatest, !summary.isComplete { stepsCapsule(planProgress, tint: tint) }
                 } else if let progress = displayedProgress {
@@ -105,7 +108,7 @@ struct HostedTaskCard: View {
     }
 
     private var accessibleStatus: String {
-        var parts = [statusText]
+        var parts = isCurrent ? [PlanText.current, statusText] : [statusText]
         if let nextAction { parts.append(PlanText.line(for: nextAction)) }
         if let planProgress {
             parts.append(PlanText.stepsDone(planProgress.done, of: planProgress.total))
@@ -122,6 +125,16 @@ struct HostedTaskCard: View {
     private var statusSymbol: (name: String, color: Color) { summary.symbol }
 
     // MARK: Pieces
+
+    private func currentTag(tint: Color) -> some View {
+        Text(PlanText.current)
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(tint.opacity(0.14), in: .capsule)
+            .accessibilityHidden(true)
+    }
 
     private func statusLine(tint: Color) -> some View {
         let symbol = statusSymbol

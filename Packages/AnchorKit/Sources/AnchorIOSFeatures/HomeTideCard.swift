@@ -140,15 +140,9 @@ struct HomeTideCard: View {
     /// Everything the headline did not already say, in a quiet line.
     @ViewBuilder
     private func secondaryCounts(_ glance: WorkGlance) -> some View {
-        let parts: [(Int, String)] = [
-            (glance.failed, L10n.glanceFailed),
-            (glance.attention, L10n.glanceAttention),
-            (glance.running, L10n.glanceRunning),
-            (glance.needsYou, PlanText.glanceNeedsYou)
-        ].filter { $0.0 > 0 }
-        let rest = parts.dropFirst()
+        let rest = L10n.glanceOtherCounts(glance)
         if !rest.isEmpty {
-            Text(rest.map { "\($0.0) \($0.1)" }.joined(separator: " · "))
+            Text(rest)
                 .font(.footnote)
                 .monospacedDigit()
                 .foregroundStyle(AnchorIOSStyle.secondaryText)

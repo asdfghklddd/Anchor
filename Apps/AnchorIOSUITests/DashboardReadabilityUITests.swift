@@ -33,8 +33,13 @@ final class DashboardReadabilityUITests: XCTestCase {
         XCTAssertTrue(unknown.waitForExistence(timeout: 8))
         app.swipeUp()
         capture("progress-accessibility")
-        // The first card has scrolled under the fixed header; open a fully visible card.
+        // The first card has scrolled under the fixed header; open a fully visible card,
+        // nudging the list in short drags until it clears the floating anchor button.
         let measured = card(3, in: app)
+        for _ in 0..<6 where !measured.isHittable {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7))
+                .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)))
+        }
         XCTAssertTrue(measured.isHittable)
         measured.tap()
         XCTAssertTrue(app.descendants(matching: .any)["profile.detail.session"].waitForExistence(timeout: 5))

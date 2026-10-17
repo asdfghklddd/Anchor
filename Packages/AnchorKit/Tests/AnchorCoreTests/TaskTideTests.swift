@@ -95,6 +95,14 @@ struct TaskTideTests {
         let plan = AnchorUserPlan(steps: ["Insert", "Delete"])
         #expect(WorkGlance(tasks: [task(plan)]).headline == .needsYou(1))
 
+        // Below the headline, only what it did not already say.
+        let running = AnchorSession(goal: AnchorGoal(title: "Website", completionCriteria: ""),
+                                    startedAt: now.addingTimeInterval(-3_600),
+                                    processes: [process(.running, updatedMinutesAgo: 2, events: [event(.created, minutesAgo: 2)])])
+        let both = WorkGlance(tasks: [task(plan), running])
+        #expect(both.headline == .needsYou(1))
+        #expect(both.otherCounts.map(\.kind) == [.running])
+
         let looked = plan.markingReviewed(at: now)
         #expect(WorkGlance(tasks: [task(looked)]).headline == .quiet)
 

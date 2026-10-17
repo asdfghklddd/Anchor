@@ -38,23 +38,27 @@ final class PopulatedReturnUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["先检查终端构建失败的原因；修复后重新运行回归测试，再确认返航摘要的内容。"].exists)
         snapshot("anchor-context", app)
         app.buttons["return.context.done"].tap()
+        // The unseen build failure is what to do first.
+        let first = app.descendants(matching: .any)["return.first"]
+        XCTAssertTrue(first.exists)
+        XCTAssertTrue(first.label.contains("Release 构建"), first.label)
+        // The task's card names every reported state, then lists its changes in full on request.
+        let summary = app.descendants(matching: .any)["return.task.summary"]
+        reveal(summary, in: app)
+        for expected in ["1 项失败", "1 项需要留意", "1 项已中断", "1 项运行中"] {
+            XCTAssertTrue(summary.label.contains(expected), summary.label)
+        }
         let allChanges = app.buttons["return.changes.all.button"]
         reveal(allChanges, in: app)
         allChanges.tap()
         XCTAssertTrue(app.descendants(matching: .any)["return.changes.list"].waitForExistence(timeout: 3))
         snapshot("all-return-changes", app)
         app.buttons["return.changes.done"].tap()
-        let failed = app.descendants(matching: .any)["return.work.failed"]
-        reveal(failed, in: app)
-        XCTAssertTrue(failed.label.contains("1"), failed.label)
-        let completed = app.descendants(matching: .any)["return.work.completed"]
-        XCTAssertTrue(completed.label.contains("2"), completed.label)
-        let attention = app.descendants(matching: .any)["return.work.attention"]
-        XCTAssertTrue(attention.label.contains("2"), attention.label)
-        let next = app.buttons["return.next.step"]
-        reveal(next, in: app)
+        let failure = app.buttons.matching(NSPredicate(
+            format: "identifier == 'return.result' AND label BEGINSWITH %@", "Release 构建")).firstMatch
+        reveal(failure, in: app)
         snapshot("populated-bottom", app)
-        next.tap()
+        failure.tap()
         XCTAssertTrue(app.descendants(matching: .any)["return.process.detail"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.staticTexts["Release 构建：检查签名配置与资源打包"].exists)
         snapshot("failed-task-detail", app)

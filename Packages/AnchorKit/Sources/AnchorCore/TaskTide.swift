@@ -192,6 +192,17 @@ public struct WorkGlance: Hashable, Sendable {
         latestChange = latest
     }
 
+    public enum Count: Hashable, Sendable { case failed, attention, needsYou, running }
+
+    /// The counts the headline did not already say, in the headline's own order,
+    /// so no screen repeats the headline's number below it.
+    public var otherCounts: [(kind: Count, value: Int)] {
+        let counts: [(kind: Count, value: Int)] = [
+            (.failed, failed), (.attention, attention), (.needsYou, needsYou), (.running, running)
+        ]
+        return Array(counts.filter { $0.value > 0 }.dropFirst())
+    }
+
     public var headline: Headline {
         if taskCount == 0 { return .empty }
         if failed > 0 { return .failed(failed) }

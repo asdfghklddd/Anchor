@@ -25,6 +25,20 @@ public extension L10n {
     static let glanceNoRecords = AnchorStrings.value("home.glance.no.records", default: "No records yet")
     static let glanceLatest = AnchorStrings.value("home.glance.latest", default: "Latest")
 
+    /// "2 failed · 1 running": the counts under a glance headline.
+    static func glanceOtherCounts(_ glance: WorkGlance) -> String {
+        glance.otherCounts.map { count in
+            let label = switch count.kind {
+            case .failed: glanceFailed
+            case .attention: glanceAttention
+            case .needsYou: PlanText.glanceNeedsYou
+            case .running: glanceRunning
+            }
+            return "\(count.value) \(label)"
+        }
+        .joined(separator: " · ")
+    }
+
     static func glanceMore(_ count: Int) -> String {
         String.localizedStringWithFormat(
             AnchorStrings.value("home.glance.more", default: "+%lld more anchors"), count

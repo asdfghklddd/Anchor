@@ -92,14 +92,9 @@ struct MacGlanceCard: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AnchorPalette.ink)
             Spacer(minLength: 12)
-            let rest = [
-                (glance.failed, L10n.glanceFailed),
-                (glance.attention, L10n.glanceAttention),
-                (glance.running, L10n.glanceRunning),
-                (glance.needsYou, PlanText.glanceNeedsYou)
-            ].filter { $0.0 > 0 }.dropFirst()
+            let rest = L10n.glanceOtherCounts(glance)
             if !rest.isEmpty {
-                Text(rest.map { "\($0.0) \($0.1)" }.joined(separator: " · "))
+                Text(rest)
                     .font(.callout)
                     .monospacedDigit()
                     .foregroundStyle(AnchorPalette.secondaryInk)

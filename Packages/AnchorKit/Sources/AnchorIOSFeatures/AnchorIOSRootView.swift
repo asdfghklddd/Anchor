@@ -54,7 +54,12 @@ public struct AnchorIOSRootView: View {
                             projection: model.projection,
                             playsArrival: arrivalPending,
                             onTask: openHostedTask,
-                            onManage: { sheet = .hostedTasks }
+                            onManage: { sheet = .hostedTasks },
+                            onSelect: { id in Task { _ = await model.selectHostedTask(id) } },
+                            onStep: { task, step, done in
+                                Task { _ = await model.send(.forSession(task, .setPlanStep(id: step, done: done))) }
+                            },
+                            onReviewed: { task in Task { _ = await model.send(.forSession(task, .markPlanReviewed)) } }
                         )
                     } else {
                         PortraitDashboard(

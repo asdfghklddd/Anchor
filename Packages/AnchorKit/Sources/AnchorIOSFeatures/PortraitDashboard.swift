@@ -98,7 +98,8 @@ struct PortraitDashboard: View {
                 VStack(spacing: 10) {
                     ForEach(Array(tasks.enumerated()).filter { $0.offset % columns == column }, id: \.element.id) { index, task in
                         Button { onTask(task.id) } label: {
-                            HostedTaskCard(task: task, height: dynamicTypeSize.isAccessibilitySize ? 190 : (index % 4 == 0 || index % 4 == 3 ? 100 : 212))
+                            HostedTaskCard(task: task, height: dynamicTypeSize.isAccessibilitySize ? 190 : (index % 4 == 0 || index % 4 == 3 ? 100 : 212),
+                                           isCurrent: tasks.count > 1 && task.id == projection.session?.id)
                         }
                         .buttonStyle(AnchorPressButtonStyle())
                         .accessibilityIdentifier("hosted.task.\(task.id)")

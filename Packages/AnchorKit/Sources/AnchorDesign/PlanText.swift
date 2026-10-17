@@ -22,6 +22,10 @@ public enum PlanText {
     public static let stepPlaceholder = AnchorStrings.value("plan.edit.step", default: "Step")
     public static let addStepPlaceholder = AnchorStrings.value("plan.edit.add", default: "Add a step")
     public static let doFirst = AnchorStrings.value("plan.return.first", default: "Do first")
+    /// The task the person is on, which the Mac also uses to place new work.
+    public static let current = AnchorStrings.value("plan.current", default: "Current")
+    public static let makeCurrentHint = AnchorStrings.value(
+        "plan.current.hint", default: "Makes this the task you're on.")
     public static let glanceNeedsYou = AnchorStrings.value("plan.glance.needs-you", default: "need you")
     public static let inProgress = AnchorStrings.value("plan.state.in-progress", default: "In progress")
     public static let allStepsDone = AnchorStrings.value(
@@ -30,10 +34,6 @@ public enum PlanText {
     public static func othersUnchanged(_ count: Int) -> String {
         String.localizedStringWithFormat(
             AnchorStrings.value("plan.return.unchanged", default: "Tasks with no changes: %lld"), count)
-    }
-
-    public static func moreChanges(_ count: Int) -> String {
-        String.localizedStringWithFormat(AnchorStrings.value("plan.return.more", default: "+%lld more"), count)
     }
 
     public static func step(_ number: Int) -> String {

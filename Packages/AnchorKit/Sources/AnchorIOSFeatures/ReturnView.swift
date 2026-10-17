@@ -22,6 +22,8 @@ struct ReturnView: View {
     @State private var showAllChanges = false
     @State private var stepFeedback = 0
     @State private var copiedStep: UUID?
+    /// The task whose every change is listed in a sheet.
+    @State private var changesFor: ReturnOverview.Item?
 
     private let ink = Color(red: 0.11, green: 0.15, blue: 0.17)
     private let secondaryInk = Color(red: 0.43, green: 0.48, blue: 0.50)
@@ -65,6 +67,7 @@ struct ReturnView: View {
         .sheet(item: $selectedProcess) { process in processSheet(process) }
         .sheet(isPresented: $showsContext) { contextSheet }
         .sheet(isPresented: $showAllChanges) { changesSheet }
+        .sheet(item: $changesFor) { item in taskChangesSheet(item) }
         .preferredColorScheme(.light)
         .sensoryFeedback(.success, trigger: feedbackCount)
         .sensoryFeedback(.success, trigger: stepFeedback)
@@ -154,7 +157,10 @@ struct ReturnView: View {
                         Text(PlanText.doFirst)
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(secondaryInk)
-                        Text("\(first.task.goal.title) · \(PlanText.line(for: action))")
+                        // The task named above needs no second mention.
+                        Text(first.task.id == review.session?.id
+                             ? PlanText.line(for: action)
+                             : "\(first.task.goal.title) · \(PlanText.line(for: action))")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(ink)
                             .fixedSize(horizontal: false, vertical: true)
@@ -380,11 +386,21 @@ struct ReturnView: View {
                         .accessibilityLabel(PlanText.stepsDone(plan.doneCount, of: plan.steps.count))
                 }
             }
+            if !item.changes.isEmpty {
+                // Every state the task's work reports, so mixed outcomes are never collapsed (D02).
+                Text(HostedTaskStatus(task: item.task).summary)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(secondaryInk)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("return.task.summary")
+            }
             ForEach(item.changes.prefix(3)) { process in resultRow(process) }
             if item.changes.count > 3 {
-                Text(PlanText.moreChanges(item.changes.count - 3))
-                    .font(.caption)
-                    .foregroundStyle(secondaryInk)
+                Button(L10n.returnChangesSummary(item.changes.count)) { changesFor = item }
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(AnchorIOSStyle.action)
+                    .frame(minHeight: 44, alignment: .leading)
+                    .accessibilityIdentifier("return.changes.all.button")
             }
             if let plan = item.task.goal.userPlan, !plan.steps.isEmpty, let action = item.action {
                 Divider()
@@ -422,6 +438,48 @@ struct ReturnView: View {
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .accessibilityHint(L10n.returnViewRecord)
+        .accessibilityIdentifier("return.result")
+    }
+
+    /// Every change one task reported while the person was away, in full.
+    private func taskChangesSheet(_ item: ReturnOverview.Item) -> some View {
+        NavigationStack {
+            List(item.changes) { process in
+                VStack(alignment: .leading, spacing: 4) {
+                    Label {
+                        Text("\(process.title) · \(Self.word(for: process))")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(ink)
+                    } icon: {
+                        Image(systemName: Self.symbol(for: process).name)
+                            .foregroundStyle(Self.symbol(for: process).color)
+                    }
+                    if !process.detail.isEmpty {
+                        Text(process.detail)
+                            .font(.caption)
+                            .foregroundStyle(secondaryInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    HStack(spacing: 6) {
+                        Text(process.sourceName)
+                        Text(process.updatedAt, style: .time).monospacedDigit()
+                    }
+                    .font(.caption2)
+                    .foregroundStyle(secondaryInk)
+                }
+                .padding(.vertical, 6)
+                .accessibilityElement(children: .combine)
+            }
+            .accessibilityIdentifier("return.changes.list")
+            .navigationTitle(item.task.goal.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(L10n.done) { changesFor = nil }
+                        .accessibilityIdentifier("return.changes.done")
+                }
+            }
+        }
     }
 
     private static func symbol(for process: AnchorProcess) -> (name: String, color: Color) {

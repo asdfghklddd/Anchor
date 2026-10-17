@@ -4187,6 +4187,40 @@
     "Presence is unknown" : {
 
     },
+    "plan.current" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前"
+          }
+        }
+      }
+    },
+    "plan.current.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Makes this the task you're on."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设为当前任务。"
+          }
+        }
+      }
+    },
     "plan.edit" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4523,23 +4557,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "先做"
-          }
-        }
-      }
-    },
-    "plan.return.more" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "+%lld more"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "另有 %lld 项变化"
           }
         }
       }
