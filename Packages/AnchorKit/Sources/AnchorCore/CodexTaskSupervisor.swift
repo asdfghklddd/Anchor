@@ -47,7 +47,7 @@ public actor CodexTaskSupervisor {
     private struct CacheEntry {
         let metadata: CodexSessionFileMetadata
         /// `nil` for subagent or unreadable logs, so each is inspected once per change.
-        let candidate: CodexTaskCandidate?
+        let summary: CodexConversationSummary?
     }
 
     private let locator: CodexSessionFileLocator
@@ -56,6 +56,9 @@ public actor CodexTaskSupervisor {
     private let discoveryWindow: Int
     private let maximumTailBytes: UInt64
     private var cache: [URL: CacheEntry] = [:]
+    /// A first request never changes, so it is read once per conversation.
+    private var requestTitles: [String: String] = [:]
+    private var threadNames: CodexThreadNames
 
     public init(
         rootURL: URL,
@@ -65,6 +68,7 @@ public actor CodexTaskSupervisor {
         maximumTailBytes: UInt64 = 4 * 1_024 * 1_024
     ) {
         locator = CodexSessionFileLocator(rootURL: rootURL)
+        threadNames = CodexThreadNames(sessionsRootURL: rootURL)
         self.pollInterval = max(0.25, pollInterval)
         self.candidateLimit = max(1, candidateLimit)
         // Guardian and subagent logs can outnumber user threads several times over.
@@ -73,22 +77,32 @@ public actor CodexTaskSupervisor {
     }
 
     public func snapshot() -> [CodexTaskCandidate] {
+        summaries().map(\.candidate)
+    }
+
+    /// The same recent user conversations as `snapshot()`, with what a glance
+    /// needs: a title, the latest turn's state and the opening of its reply.
+    public func summaries() -> [CodexConversationSummary] {
         let files = locator.recentSessionFiles(limit: discoveryWindow)
         let activeURLs = Set(files.map(\.fileURL))
         cache = cache.filter { activeURLs.contains($0.key) }
+        threadNames.refresh()
 
-        var candidates: [CodexTaskCandidate] = []
-        for metadata in files where candidates.count < candidateLimit {
-            let candidate: CodexTaskCandidate?
+        var summaries: [CodexConversationSummary] = []
+        for metadata in files where summaries.count < candidateLimit {
+            let summary: CodexConversationSummary?
             if let cached = cache[metadata.fileURL], cached.metadata == metadata {
-                candidate = cached.candidate
+                summary = cached.summary
             } else {
-                candidate = self.candidate(for: metadata)
-                cache[metadata.fileURL] = CacheEntry(metadata: metadata, candidate: candidate)
+                summary = self.summary(for: metadata)
+                cache[metadata.fileURL] = CacheEntry(metadata: metadata, summary: summary)
             }
-            if let candidate { candidates.append(candidate) }
+            // Codex can rename a thread without writing to its log.
+            if let summary { summaries.append(summary.titled(threadNames.names[summary.id])) }
         }
-        return candidates
+        let activeIDs = Set(summaries.map(\.id))
+        requestTitles = requestTitles.filter { activeIDs.contains($0.key) }
+        return summaries
     }
 
     public func snapshots() -> AsyncStream<[CodexTaskCandidate]> {
@@ -115,31 +129,69 @@ public actor CodexTaskSupervisor {
         }
     }
 
-    private func candidate(for metadata: CodexSessionFileMetadata) -> CodexTaskCandidate? {
+    private func summary(for metadata: CodexSessionFileMetadata) -> CodexConversationSummary? {
         guard let session = CodexSessionMetadata.read(from: metadata.fileURL),
               session.isUserConversation else {
             return nil
         }
-        let lifecycle = readLatestLifecycle(
+        let latest = readLatestLifecycle(
             from: metadata.fileURL,
             fileSize: metadata.fileSize
         )
-        return CodexTaskCandidate(
+        let candidate = CodexTaskCandidate(
             id: session.id,
             fileURL: metadata.fileURL,
             workspaceName: session.workspaceName,
             originator: session.originator,
             modifiedAt: metadata.contentModificationDate,
-            activity: lifecycle.map(Self.activity) ?? .unknown,
-            activityObservedAt: lifecycle?.timestamp,
+            activity: latest.map { Self.activity($0.record) } ?? .unknown,
+            activityObservedAt: latest?.record.timestamp,
             createdAt: session.createdAt
+        )
+        var reply: String?
+        let state: CodexConversationSummary.State
+        if let latest {
+            let at = latest.record.timestamp
+            switch latest.record.lifecycle {
+            case .started:
+                state = .running(since: at)
+            case .aborted:
+                state = .interrupted(at: at)
+            case .completed:
+                let end = CodexTurnEnd(json: latest.line)
+                if end?.hasError == true {
+                    state = .failed(at: at, message: end?.errorMessage.flatMap { CodexGlanceText.reply(from: $0) })
+                } else {
+                    state = .completed(at: at, duration: end?.duration)
+                    reply = end?.reply.flatMap { CodexGlanceText.reply(from: $0) }
+                }
+            }
+        } else {
+            state = .unknown
+        }
+        return CodexConversationSummary(
+            candidate: candidate,
+            title: threadNames.names[session.id] == nil ? requestTitle(for: session.id, at: metadata.fileURL) : nil,
+            state: state,
+            reply: reply
         )
     }
 
+    private func requestTitle(for id: String, at url: URL) -> String? {
+        if let title = requestTitles[id] { return title }
+        // A brand-new log may not hold its request yet; look again on the next change.
+        guard let request = CodexAutoAssociation.firstUserRequest(at: url),
+              let title = CodexGlanceText.title(from: request) else { return nil }
+        requestTitles[id] = title
+        return title
+    }
+
+    /// The latest lifecycle record and its raw line, which also carries the
+    /// turn's reply, duration and error when the record ends a turn.
     private func readLatestLifecycle(
         from url: URL,
         fileSize: UInt64
-    ) -> CodexLifecycleRecord? {
+    ) -> (record: CodexLifecycleRecord, line: Data)? {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
         let start = fileSize > maximumTailBytes ? fileSize - maximumTailBytes : 0
@@ -149,14 +201,22 @@ public actor CodexTaskSupervisor {
             if start > 0, let newline = data.firstIndex(of: 10) {
                 data.removeSubrange(...newline)
             }
-            return data
-                .split(separator: 10, omittingEmptySubsequences: true)
-                .compactMap { CodexLifecycleRecord(json: Data($0)) }
-                .max { $0.timestamp < $1.timestamp }
+            var latest: (record: CodexLifecycleRecord, line: Data)?
+            // Most lines are tool output; only a line naming a lifecycle is decoded.
+            for line in data.split(separator: 10, omittingEmptySubsequences: true)
+            where Self.lifecycleMarkers.contains(where: { line.range(of: $0) != nil }) {
+                guard let record = CodexLifecycleRecord(json: Data(line)) else { continue }
+                if latest.map({ record.timestamp > $0.record.timestamp }) ?? true {
+                    latest = (record, Data(line))
+                }
+            }
+            return latest
         } catch {
             return nil
         }
     }
+
+    private static let lifecycleMarkers = CodexLifecycleRecord.CodexLifecycle.allCases.map { Data($0.rawValue.utf8) }
 
     private static func activity(_ record: CodexLifecycleRecord) -> CodexTaskActivity {
         switch record.lifecycle {

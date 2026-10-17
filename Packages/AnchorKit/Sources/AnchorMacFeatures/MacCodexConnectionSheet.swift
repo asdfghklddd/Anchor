@@ -9,7 +9,7 @@ struct MacCodexConnectionNotice: View {
     var body: some View {
         if model.codexSessionsFolderName == nil {
             HStack {
-                Label("连接 Codex 后，Anchor 会按任务关键词查找会话。", systemImage: "folder.badge.plus")
+                Label("连接 Codex 后，你的对话会自动出现在这里。", systemImage: "folder.badge.plus")
                 Spacer()
                 Button("连接 Codex") { model.showsCodexOnboarding = true }
             }
@@ -52,19 +52,19 @@ struct MacCodexConnectionSheet: View {
         VStack(alignment: .leading, spacing: 20) {
             Label("让 Anchor 找到你的 Codex 工作", systemImage: "folder.badge.plus")
                 .font(.title2.bold())
-            Text("连接一次，之后打开 Anchor 就会自动查找与你的任务相关的会话。")
+            Text("连接一次，之后你的 Codex 对话会自动出现在 Anchor 里，不需要先投锚。")
                 .foregroundStyle(AnchorPalette.secondaryInk)
             VStack(alignment: .leading, spacing: 12) {
                 Label("授权读取 Codex 会话文件夹", systemImage: "1.circle")
-                Label("按任务名称、完成标准和步骤匹配", systemImage: "2.circle")
-                Label("确认或修改找到的会话，再开始追踪", systemImage: "3.circle")
+                Label("自动显示每个对话的进度和结束时的回复", systemImage: "2.circle")
+                Label("需要跟踪目标时，再把对话关联到锚点", systemImage: "3.circle")
             }
-            Text("点击后会打开 macOS 文件夹窗口。选择 sessions 文件夹并授权即可。匹配在本机进行，会话正文不会保存或同步到 Anchor。")
+            Text("点击后会打开 macOS 文件夹窗口。选择 sessions 文件夹并授权即可。对话内容只在这台 Mac 上显示，不会保存或同步到 iPhone。")
                 .font(.callout)
                 .foregroundStyle(AnchorPalette.secondaryInk)
                 .fixedSize(horizontal: false, vertical: true)
             if model.codexSessionsFolderName != nil {
-                Label("已连接，正在自动查找。没有匹配时，也会继续留意新会话。", systemImage: "checkmark.circle.fill")
+                Label("已连接。你的对话会显示在“当前工作”页面。", systemImage: "checkmark.circle.fill")
                     .foregroundStyle(AnchorPalette.mintInk)
             }
             HStack {

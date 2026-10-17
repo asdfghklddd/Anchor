@@ -72,6 +72,39 @@ struct MacDesignPreviewTests {
         Self.previewDefaults.removePersistentDomain(forName: Self.previewDefaultsName)
     }
 
+    @Test("The Codex conversations card renders in both appearances")
+    func renderCodexConversations() throws {
+        let now = Date.now
+        func at(_ minutes: Double) -> Date { now.addingTimeInterval(-minutes * 60) }
+        let conversations = [
+            codexConversation("sync", .running(since: at(6)), modified: at(0.3), title: "重构同步协议"),
+            codexConversation("tests", .running(since: at(41)), modified: at(14), title: "跑完整测试并修复失败项"),
+            codexConversation("login", .completed(at: at(3), duration: 420), modified: at(3), title: "修复登录崩溃",
+                              reply: "已修复 LoginView 在启动时的崩溃，所有测试通过。另外补了一个回归测试，覆盖未登录状态。"),
+            codexConversation("notes", .failed(at: at(25), message: "Context window exceeded"), modified: at(25),
+                              title: "整理发布说明", workspace: "Docs"),
+            codexConversation("migrate", .interrupted(at: at(70)), modified: at(70), title: "数据迁移脚本", workspace: "Tools"),
+            codexConversation("buoy", .completed(at: at(130), duration: 3_120), modified: at(130), title: "Mac 边缘浮标的清除时机",
+                              reply: String(repeating: "浮标在打开 Anchor 或激活应用时清除，同一信号不会重复提示；更强的新信号会让收起的小船回来一次。", count: 3)),
+            codexConversation("older", .completed(at: at(300), duration: 50), modified: at(300), title: "更早的对话"),
+        ]
+        for scheme in [ColorScheme.light, .dark] {
+            let page = MacCodexConversationsCard(conversations: conversations)
+                .padding(24)
+                .frame(width: 900)
+                .background(AnchorPalette.canvas)
+                .environment(\.colorScheme, scheme)
+                .environment(\.locale, AnchorStrings.interfaceLocale)
+            try export(page, name: "mac-codex-conversations-\(scheme == .dark ? "dark" : "light")")
+        }
+        try export(
+            MacCodexConversationsCard(conversations: [])
+                .padding(24).frame(width: 900).background(AnchorPalette.canvas)
+                .environment(\.locale, AnchorStrings.interfaceLocale),
+            name: "mac-codex-conversations-empty"
+        )
+    }
+
     private func export<Content: View>(_ view: Content, name: String) throws {
         guard let destination = ProcessInfo.processInfo.environment["ANCHOR_DESIGN_PREVIEW_EXPORT"] else { return }
         let renderer = ImageRenderer(content: view)

@@ -160,6 +160,7 @@ public struct AnchorMacRootView: View {
         case .current:
             MacFocusDashboard(
                 model: model,
+                sourceSetupModel: sourceSetupModel,
                 showsCompletedSessionInCurrentWork: showsCompletedSessionInCurrentWork,
                 onOpenProcess: openProcess,
                 onOpenTimeline: openTimeline,

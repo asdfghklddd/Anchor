@@ -6,6 +6,8 @@ import SwiftUI
 struct MacWorkOverviewView: View {
     let model: AnchorSessionModel
     let session: AnchorSession
+    /// Every recent Codex conversation; `nil` until Codex is connected.
+    var conversations: [CodexConversationSummary]?
     let onOpenProcess: (UUID) -> Void
     let onOpenTimeline: () -> Void
     var onOpenSettings: (() -> Void)?
@@ -28,6 +30,10 @@ struct MacWorkOverviewView: View {
                     selectedTaskID: session.id,
                     onSelectTask: { id in Task { await model.selectHostedTask(id) } }
                 )
+
+                if let conversations {
+                    MacCodexConversationsCard(conversations: conversations)
+                }
 
                 if session.status == .completed {
                     MacCompletionBanner(

@@ -5,6 +5,7 @@ import SwiftUI
 
 struct MacFocusDashboard: View {
     let model: AnchorSessionModel
+    var sourceSetupModel: MacSourceSetupModel?
     let showsCompletedSessionInCurrentWork: Bool
     let onOpenProcess: (UUID) -> Void
     let onOpenTimeline: () -> Void
@@ -19,26 +20,32 @@ struct MacFocusDashboard: View {
             MacWorkOverviewView(
                 model: model,
                 session: session,
+                conversations: conversations,
                 onOpenProcess: onOpenProcess,
                 onOpenTimeline: onOpenTimeline,
                 onOpenSettings: onOpenSettings
             )
         } else if !model.projection.hostedSessions.isEmpty {
-            ScrollView {
-                VStack(alignment: .leading, spacing: MacMetrics.pageSpacing) {
-                    MacWorkHeaderView(projection: model.projection, onOpenSettings: onOpenSettings)
-                    MacGlanceCard(
-                        tasks: model.projection.hostedSessions,
-                        connection: model.projection.connection,
-                        selectedTaskID: nil,
-                        onSelectTask: { id in Task { await model.selectHostedTask(id) } }
-                    )
+            page {
+                MacGlanceCard(
+                    tasks: model.projection.hostedSessions,
+                    connection: model.projection.connection,
+                    selectedTaskID: nil,
+                    onSelectTask: { id in Task { await model.selectHostedTask(id) } }
+                )
+                if let conversations {
+                    MacCodexConversationsCard(conversations: conversations)
                 }
-                .frame(maxWidth: MacMetrics.contentWidth, alignment: .leading)
-                .padding(.horizontal, MacMetrics.pageInset)
-                .padding(.bottom, MacMetrics.pageInset)
             }
-            .accessibilityIdentifier("mac.current.screen")
+        } else if let conversations {
+            // Conversations need no anchor; an anchor adds a goal when one is wanted.
+            page {
+                MacCodexConversationsCard(conversations: conversations)
+                Label(MacCodexCopy.anchorHint, systemImage: "iphone")
+                    .font(.callout)
+                    .foregroundStyle(AnchorPalette.secondaryInk)
+                    .padding(.horizontal, MacMetrics.cardPadding)
+            }
         } else {
             MacEmptyWorkView(
                 projection: model.projection,
@@ -46,6 +53,25 @@ struct MacFocusDashboard: View {
                 onOpenSettings: onOpenSettings
             )
         }
+    }
+
+    /// `nil` until Codex is connected, so an empty page still explains how to start.
+    private var conversations: [CodexConversationSummary]? {
+        guard let sourceSetupModel, sourceSetupModel.codexSessionsFolderName != nil else { return nil }
+        return sourceSetupModel.codexConversations
+    }
+
+    private func page<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: MacMetrics.pageSpacing) {
+                MacWorkHeaderView(projection: model.projection, onOpenSettings: onOpenSettings)
+                content()
+            }
+            .frame(maxWidth: MacMetrics.contentWidth, alignment: .leading)
+            .padding(.horizontal, MacMetrics.pageInset)
+            .padding(.bottom, MacMetrics.pageInset)
+        }
+        .accessibilityIdentifier("mac.current.screen")
     }
 }
 

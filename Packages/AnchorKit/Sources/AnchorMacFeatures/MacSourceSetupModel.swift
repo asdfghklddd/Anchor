@@ -14,6 +14,9 @@ public final class MacSourceSetupModel {
     public private(set) var didCopyShellSetup = false
     public private(set) var codexSessionFileName: String?
     public private(set) var codexCandidates: [CodexTaskCandidate] = []
+    /// Every recent user conversation for the dashboard, anchored or not.
+    /// Kept in memory only; it is never saved or sent to the phone.
+    public private(set) var codexConversations: [CodexConversationSummary] = []
     public private(set) var trackedCodexSessionIDs = Set<String>()
     public private(set) var codexSessionsFolderName: String?
     public private(set) var taskState: AnchorTaskState?
@@ -346,9 +349,17 @@ public final class MacSourceSetupModel {
     public func refreshCodexCandidates() async {
         guard let codexSupervisor else {
             codexCandidates = []
+            codexConversations = []
             return
         }
-        codexCandidates = await codexSupervisor.snapshot()
+        publish(await codexSupervisor.summaries())
+    }
+
+    /// Assigns only real changes, so a quiet two-second scan redraws nothing.
+    private func publish(_ summaries: [CodexConversationSummary]) {
+        if codexConversations != summaries { codexConversations = summaries }
+        let candidates = summaries.map(\.candidate)
+        if codexCandidates != candidates { codexCandidates = candidates }
     }
 
     private func restoreCodexSessionsRoot() async {
@@ -431,9 +442,8 @@ public final class MacSourceSetupModel {
         codexDiscoveryTask = Task { [weak self, supervisor] in
             while !Task.isCancelled {
                 guard let self else { return }
-                let candidates = await supervisor.snapshot()
-                self.codexCandidates = candidates
-                await self.automaticallyAssociate(candidates)
+                self.publish(await supervisor.summaries())
+                await self.automaticallyAssociate(self.codexCandidates)
                 do { try await Task.sleep(for: .seconds(2)) } catch { return }
             }
         }
