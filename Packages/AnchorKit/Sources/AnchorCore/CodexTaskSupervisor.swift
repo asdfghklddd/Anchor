@@ -159,6 +159,7 @@ public actor CodexTaskSupervisor {
             createdAt: session.createdAt
         )
         var reply: String?
+        var suggestions: [String] = []
         var tests: TestOutcome?
         var waiting = false
         let state: CodexConversationSummary.State
@@ -180,6 +181,7 @@ public actor CodexTaskSupervisor {
                 } else {
                     state = .completed(at: at, duration: end?.duration)
                     reply = end?.reply.flatMap { CodexGlanceText.reply(from: $0) }
+                    suggestions = end?.reply.map { CodexGlanceText.suggestedSteps(from: $0) } ?? []
                     waiting = latest.read.waitingForReply
                 }
             }
@@ -193,7 +195,8 @@ public actor CodexTaskSupervisor {
             state: state,
             reply: reply,
             tests: tests,
-            isWaitingForReply: waiting
+            isWaitingForReply: waiting,
+            suggestedSteps: suggestions
         )
     }
 

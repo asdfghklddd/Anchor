@@ -309,5 +309,12 @@ struct AnchorMacApp: App {
                 sourceSetupModel: sourceSetupModel
             )
         }
+        // Without a Dock icon, the menu bar is where Anchor opens and quits (M6).
+        MenuBarExtra {
+            AnchorMenuBarContent(model: model) { [applicationDelegate] in applicationDelegate.openWindow() }
+        } label: {
+            AnchorMenuBarLabel(model: model)
+        }
+        .menuBarExtraStyle(.menu)
     }
 }

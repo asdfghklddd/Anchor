@@ -27,8 +27,10 @@ final class AnchorSetupDraft {
     }
 
     var criteria: [String] { lines(completionCriteria) }
-    var steps: [String] { lines(actionPlan) }
-    var isValid: Bool { !goalTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !criteria.isEmpty && !steps.isEmpty }
+    /// Lines, or a spoken sequence ("先…然后…"), become steps the review shows before starting.
+    var steps: [String] { PlanStepSplitter.steps(from: actionPlan) }
+    /// A goal and one step are enough to start; completion criteria are optional (I3).
+    var isValid: Bool { !goalTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !steps.isEmpty }
     var originalText: String { [goalTitle, completionCriteria, actionPlan].filter { !$0.isEmpty }.joined(separator: "\n\n") }
 
     func text(for segment: AnchorSetupSegment) -> String {
@@ -48,7 +50,7 @@ final class AnchorSetupDraft {
     }
 
     private func lines(_ text: String) -> [String] {
-        // Only explicit line breaks split items; speech is never interpreted as a plan.
+        // Criteria are split only at line breaks.
         text.components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }

@@ -49,7 +49,12 @@ struct MacFocusDashboard: View {
             markReviewed: { task in Task { _ = await model.send(.forSession(task, .markPlanReviewed)) } },
             open: onOpenTask,
             assign: { conversation, task in Task { await sourceSetupModel?.assign(conversation, to: task) } },
-            ignore: { conversation in Task { await sourceSetupModel?.ignore(conversation) } }
+            ignore: { conversation in Task { await sourceSetupModel?.ignore(conversation) } },
+            addStep: { taskID, text in
+                guard let task = model.projection.hostedSessions.first(where: { $0.id == taskID }) else { return }
+                let steps = (task.goal.userPlan?.items ?? []) + [AnchorUserPlan.Step(text: text)]
+                Task { _ = await model.send(.forSession(taskID, .updatePlanSteps(steps))) }
+            }
         )
     }
 

@@ -38,22 +38,26 @@ public struct CodexConversationSummary: Identifiable, Hashable, Sendable {
     public let tests: TestOutcome?
     /// The agent asked the person something and is waiting for the answer.
     public let isWaitingForReply: Bool
+    /// Next steps the latest reply suggested under a clear heading, for the
+    /// person to add to their plan or not. Mac display only, like `reply`.
+    public let suggestedSteps: [String]
 
     public var id: String { candidate.id }
 
     public init(candidate: CodexTaskCandidate, title: String?, state: State, reply: String?,
-                tests: TestOutcome? = nil, isWaitingForReply: Bool = false) {
+                tests: TestOutcome? = nil, isWaitingForReply: Bool = false, suggestedSteps: [String] = []) {
         self.candidate = candidate
         self.title = title
         self.state = state
         self.reply = reply
         self.tests = tests
         self.isWaitingForReply = isWaitingForReply
+        self.suggestedSteps = suggestedSteps
     }
 
     func titled(_ newTitle: String?) -> Self {
         Self(candidate: candidate, title: newTitle ?? title, state: state, reply: reply,
-             tests: tests, isWaitingForReply: isWaitingForReply)
+             tests: tests, isWaitingForReply: isWaitingForReply, suggestedSteps: suggestedSteps)
     }
 }
 
@@ -153,6 +157,35 @@ enum CodexGlanceText {
             if length >= replyLength { break }
         }
         return capped((prose.isEmpty ? labels : prose).joined(separator: " "), at: replyLength)
+    }
+
+    /// Up to three next steps a reply lists under a heading such as "Next
+    /// steps" or "下一步". Without such a heading a reply suggests nothing:
+    /// following an agent's plan is the person's choice, so precision first.
+    static func suggestedSteps(from markdown: String) -> [String] {
+        var steps: [String] = []
+        var underHeading = false
+        for rawLine in markdown.split(separator: "\n", omittingEmptySubsequences: false) {
+            let line = rawLine.trimmingCharacters(in: .whitespaces)
+            if underHeading {
+                if line.isEmpty { if steps.isEmpty { continue } else { break } }
+                guard line.wholeMatch(of: /(?:[-*+]|\d+[.)、])\s+.+/) != nil else { break }
+                if let step = capped(plain(line), at: titleLength) { steps.append(step) }
+                if steps.count == 3 { break }
+            } else if isNextStepsHeading(line) {
+                underHeading = true
+                steps = []
+            }
+        }
+        return steps
+    }
+
+    private static func isNextStepsHeading(_ line: String) -> Bool {
+        let text = plain(line).trimmingCharacters(in: CharacterSet(charactersIn: ":：").union(.whitespaces))
+        guard !text.isEmpty, text.count <= 40 else { return false }
+        let lower = text.lowercased()
+        return lower.contains("next step") || lower.contains("follow-up") || lower.contains("follow up")
+            || text.contains("下一步") || text.contains("后续") || text.contains("接下来")
     }
 
     static func title(from request: String) -> String? {

@@ -313,7 +313,7 @@ final class AnchorIOSUITests: XCTestCase {
     }
 
     @MainActor
-    func testSetupRequiresThreeUserSegmentsWithoutMacProcesses() throws {
+    func testSetupRequiresGoalAndStepsWithoutMacProcesses() throws {
         XCUIDevice.shared.orientation = .portrait
         let app = isolatedApplication()
         defer { app.terminate() }
@@ -352,7 +352,9 @@ final class AnchorIOSUITests: XCTestCase {
         capture("Visual 02 goal filled", app: app)
         advanceSetup(in: app)
         capture("Visual 03 criteria empty", app: app)
-        XCTAssertFalse(nextButton.isEnabled)
+        // Completion criteria are optional: an empty page offers to skip.
+        XCTAssertTrue(nextButton.isEnabled)
+        XCTAssertTrue(["跳过", "Skip"].contains { nextButton.label.contains($0) }, nextButton.label)
         type("信息层级明确\n完成可演示的首页原型\n这周内完成", into: element("setup.criteria.field", in: app))
         advanceSetup(in: app)
         capture("Visual 04 steps empty", app: app)
@@ -371,7 +373,10 @@ final class AnchorIOSUITests: XCTestCase {
         XCTAssertTrue(element("setup.screen", in: app).waitForNonExistence(timeout: 5))
         app.terminate()
         app.launch()
-        let task = app.buttons["完成 Anchor 首页重新设计"]
+        // The task is both a library card and a lane in the glance; open the card.
+        let task = app.buttons.matching(NSPredicate(
+            format: "identifier BEGINSWITH 'hosted.task.' AND label == %@", "完成 Anchor 首页重新设计"
+        )).firstMatch
         XCTAssertTrue(task.waitForExistence(timeout: 8))
         task.tap()
         XCTAssertTrue(element("task.saved.plan", in: app).waitForExistence(timeout: 5))

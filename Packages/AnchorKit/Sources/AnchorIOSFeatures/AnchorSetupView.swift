@@ -146,7 +146,7 @@
           Spacer(minLength: 0)
           Button(SetupCopy.doneEditing) { editing = false }
             .accessibilityIdentifier("setup.keyboard.done")
-          Button(draft.segment == .steps ? SetupCopy.review : SetupCopy.next) {
+          Button(draft.segment == .steps ? SetupCopy.review : (skipsCriteria ? SetupCopy.skip : SetupCopy.next)) {
             editing = false
             advance()
           }
@@ -165,14 +165,21 @@
       !draft.isImportingImages
         && (draft.isReviewing
           ? draft.isValid
-          : !draft.text(for: draft.segment).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+          // Completion criteria are optional: an empty page can be skipped.
+          : draft.segment == .criteria
+            || !draft.text(for: draft.segment).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+    }
+
+    private var skipsCriteria: Bool {
+      draft.segment == .criteria && draft.completionCriteria.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var buttonTitle: String {
       if saving { return SetupCopy.saving }
       if draft.isReviewing { return SetupCopy.start }
-      return draft.editingReview
-        ? SetupCopy.doneEditing : (draft.segment == .steps ? SetupCopy.review : SetupCopy.next)
+      if draft.editingReview { return SetupCopy.doneEditing }
+      if draft.segment == .steps { return SetupCopy.review }
+      return skipsCriteria ? SetupCopy.skip : SetupCopy.next
     }
 
     private func changeSegment(_ segment: AnchorSetupSegment) {

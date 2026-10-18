@@ -12,6 +12,8 @@ struct MacTaskActions {
     let open: (_ task: UUID) -> Void
     let assign: (CodexConversationSummary, _ task: UUID) -> Void
     let ignore: (CodexConversationSummary) -> Void
+    /// Adds a step an agent suggested to the end of the task's plan (I8).
+    var addStep: (_ task: UUID, _ text: String) -> Void = { _, _ in }
 }
 
 /// The Mac's main page: every task from the iPhone with your next action, its
@@ -33,6 +35,16 @@ struct MacTasksPage: View {
                     selectedTaskID: nil,
                     onSelectTask: actions.open
                 )
+                // The day so far in one line (I10).
+                let recap = TodayRecap(open: model.projection.hostedSessions,
+                                       archived: model.projection.archivedSessions, now: .now)
+                if !recap.isEmpty {
+                    Label("\(TodayText.title) · \(TodayText.summary(recap))", systemImage: "sun.max")
+                        .font(.callout)
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                        .padding(.horizontal, MacMetrics.cardPadding)
+                        .accessibilityIdentifier("mac.today")
+                }
                 TimelineView(.periodic(from: .now, by: 30)) { context in
                     VStack(alignment: .leading, spacing: MacMetrics.pageSpacing) {
                         ForEach(MacTaskOrder.ordered(tasks)) { task in
@@ -279,6 +291,7 @@ struct MacTaskCard: View {
                     .fixedSize()
                     .accessibilityLabel(MacTaskCopy.moveTo)
                 }
+                suggestions(from: conversation)
             }
             ForEach(commands) { command in
                 HStack(spacing: 10) {
@@ -301,6 +314,38 @@ struct MacTaskCard: View {
                 .padding(.vertical, 8)
                 .accessibilityElement(children: .combine)
             }
+        }
+    }
+
+    /// Next steps the agent suggested that are not in the plan yet: one click
+    /// adds one, and the plan stays the person's own.
+    @ViewBuilder
+    private func suggestions(from conversation: CodexConversationSummary) -> some View {
+        let planned = Set((plan?.steps ?? []).map { $0.lowercased() })
+        let fresh = conversation.suggestedSteps.filter { !planned.contains($0.lowercased()) }
+        if !fresh.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(MacTaskCopy.suggested)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(AnchorPalette.secondaryInk)
+                ForEach(fresh, id: \.self) { suggestion in
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Image(systemName: "lightbulb")
+                            .foregroundStyle(AnchorPalette.secondaryInk)
+                            .accessibilityHidden(true)
+                        Text(suggestion)
+                            .font(.callout)
+                            .foregroundStyle(AnchorPalette.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 8)
+                        Button(MacTaskCopy.addStep, systemImage: "plus") { actions.addStep(task.id, suggestion) }
+                            .buttonStyle(.borderless)
+                            .accessibilityIdentifier("mac.task.add-step")
+                    }
+                }
+            }
+            .padding(.leading, 28)
+            .padding(.bottom, 8)
         }
     }
 
@@ -363,6 +408,8 @@ struct MacUnsortedCard: View {
 }
 
 enum MacTaskCopy {
+    static let suggested = AnchorStrings.value("mac.task.suggested", default: "Suggested next")
+    static let addStep = AnchorStrings.value("mac.task.add-step", default: "Add as step")
     static let details = AnchorStrings.value("mac.tasks.details", default: "Details")
     static let moveTo = AnchorStrings.value("mac.tasks.move", default: "Move to")
     static let fileUnder = AnchorStrings.value("mac.unsorted.file", default: "File under")

@@ -103,6 +103,26 @@ func summarizesTestsAndQuestions() async throws {
     #expect(summary.reply == "Which database should I use?")
 }
 
+@Test("Next steps under a clear heading are offered; a reply without one suggests nothing")
+func suggestedNextSteps() {
+    let reply = """
+    已实现删除操作，所有测试通过。
+
+    **下一步建议：**
+    1. 补充删除根节点的边界测试
+    2. 更新实验报告里的复杂度分析
+    3. 整理提交说明
+    4. 第四条不会出现
+    """
+    #expect(CodexGlanceText.suggestedSteps(from: reply)
+            == ["补充删除根节点的边界测试", "更新实验报告里的复杂度分析", "整理提交说明"])
+
+    let english = "Done.\n\n## Next steps\n\n- Run the full suite on CI\n- Tag the release\n\nLet me know."
+    #expect(CodexGlanceText.suggestedSteps(from: english) == ["Run the full suite on CI", "Tag the release"])
+    // A list without a next-steps heading is the agent's report, not a suggestion.
+    #expect(CodexGlanceText.suggestedSteps(from: "Changes:\n- Fixed login\n- Added a test").isEmpty)
+}
+
 @Test("Codex's own thread name wins when the index beside sessions is readable")
 func prefersCodexThreadNames() async throws {
     let codex = temporaryRoot("index")

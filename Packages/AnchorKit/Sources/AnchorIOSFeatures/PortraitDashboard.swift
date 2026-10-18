@@ -54,6 +54,11 @@ struct PortraitDashboard: View {
                     } else {
                         taskGrid
                     }
+                    let recap = TodayRecap(open: projection.hostedSessions, archived: projection.archivedSessions, now: .now)
+                    if !recap.isEmpty {
+                        TodayRecapCard(recap: recap, onTask: onTask)
+                            .padding(.top, 16)
+                    }
                 }
                 .padding(.horizontal, 20).padding(.top, 8).padding(.bottom, 12)
                 .frame(maxWidth: 760).frame(maxWidth: .infinity)

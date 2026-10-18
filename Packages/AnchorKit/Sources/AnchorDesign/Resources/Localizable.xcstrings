@@ -3250,6 +3250,40 @@
         }
       }
     },
+    "mac.task.add-step" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add as step"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加为步骤"
+          }
+        }
+      }
+    },
+    "mac.task.suggested" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggested next"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "建议的下一步"
+          }
+        }
+      }
+    },
     "mac.tasks.all-steps" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3756,6 +3790,57 @@
     },
     "Microphone access is off. Enable it in Settings to use voice input." : {
 
+    },
+    "menu.open" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开 Anchor"
+          }
+        }
+      }
+    },
+    "menu.quit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit Anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出 Anchor"
+          }
+        }
+      }
+    },
+    "menu.settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置…"
+          }
+        }
+      }
     },
     "minute.count" : {
       "localizations" : {
@@ -7496,13 +7581,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "For example: clear hierarchy, a working prototype. Put each criterion on a new line."
+            "value" : "Optional. For example: clear hierarchy, a working prototype. Put each criterion on a new line."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "例如：信息层级清晰、完成可演示的原型。每条标准可以另起一行。"
+            "value" : "可选。例如：信息层级清晰、完成可演示的原型。每条标准可以另起一行。"
           }
         }
       }
@@ -7932,6 +8017,23 @@
         }
       }
     },
+    "setup.plan.skip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跳过"
+          }
+        }
+      }
+    },
     "setup.plan.start" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7989,13 +8091,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "For example: review the content, sketch the layout, build the prototype. Put each step on a new line."
+            "value" : "For example: review the content, then sketch the layout, then build the prototype. Write a step per line or say them in order; Anchor splits them."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "例如：梳理内容、画出布局、制作原型。每个步骤可以另起一行。"
+            "value" : "例如：梳理内容，然后画出布局，最后制作原型。可以分行写，也可以说“先…然后…”，会自动拆成步骤。"
           }
         }
       }
@@ -8006,13 +8108,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Write each action step on a new line…"
+            "value" : "Write the steps, one per line or joined with \"then\"…"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "写下行动步骤，每步可以另起一行…"
+            "value" : "写下行动步骤，分行写或用“然后”连起来…"
           }
         }
       }
@@ -10619,6 +10721,125 @@
     },
     "Unavailable in this build" : {
 
+    },
+    "today.more" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More steps: %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另有 %lld 步"
+          }
+        }
+      }
+    },
+    "today.running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still running"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仍在运行"
+          }
+        }
+      }
+    },
+    "today.summary.finished" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks finished: %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成 %lld 个任务"
+          }
+        }
+      }
+    },
+    "today.summary.moved" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks moved: %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "推进 %lld 个任务"
+          }
+        }
+      }
+    },
+    "today.summary.steps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steps done: %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成 %lld 步"
+          }
+        }
+      }
+    },
+    "today.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天"
+          }
+        }
+      }
+    },
+    "today.waiting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for you"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在等你"
+          }
+        }
+      }
     },
     "unknown" : {
       "localizations" : {

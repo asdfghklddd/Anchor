@@ -56,6 +56,11 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
+    /// The menu bar's "Open Anchor".
+    func openWindow() {
+        detailWindowController?.present()
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         sourceSetupModel?.stopObserving()
         edgePanelController?.stop()
