@@ -49,7 +49,7 @@ public struct AnchorEdgeControlView: View {
             // The buoy floats toward the screen, outside the boat's sailing
             // motion, so it stays readable while the boat rests at the edge.
             if let buoy = presentation.buoy {
-                AnchorEdgeBuoyView(signal: buoy, reduceMotion: reduceMotion)
+                AnchorEdgeBuoyView(buoy: buoy, reduceMotion: reduceMotion)
                     .padding(.leading, 6)
                     .padding(.top, 10)
                     .transition(reduceMotion ? .opacity : .scale(scale: 0.4).combined(with: .opacity))

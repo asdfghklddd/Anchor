@@ -32,3 +32,36 @@ public enum EdgeBuoySignal: Int, Comparable, Hashable, Sendable {
         }
     }
 }
+
+/// What the edge buoy says: how many tasks need the person, in the color of
+/// the most pressing reason (one needs-you signal, M5).
+public struct EdgeBuoy: Hashable, Sendable {
+    public let signal: EdgeBuoySignal
+    public let count: Int
+
+    public init(signal: EdgeBuoySignal, count: Int) {
+        self.signal = signal
+        self.count = count
+    }
+
+    /// Tasks with something new since the person last looked at Anchor that
+    /// asks for them: a failure, a question, or a finished result. Answering
+    /// for the step on either device counts as having looked at that task.
+    public static func needsYou(in tasks: [AnchorSession], since seenAt: Date) -> EdgeBuoy? {
+        var strongest: EdgeBuoySignal?
+        var count = 0
+        for task in tasks {
+            let looked = max(seenAt, task.goal.userPlan?.reviewedAt ?? .distantPast)
+            guard let signal = EdgeBuoySignal.unseen(in: [task], since: looked) else { continue }
+            count += 1
+            strongest = max(strongest ?? signal, signal)
+        }
+        return strongest.map { EdgeBuoy(signal: $0, count: count) }
+    }
+
+    /// More tasks, or a more pressing reason, than before.
+    public func isNews(after previous: EdgeBuoy?) -> Bool {
+        guard let previous else { return true }
+        return signal > previous.signal || count > previous.count
+    }
+}

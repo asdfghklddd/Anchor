@@ -87,8 +87,11 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         }
         let codexTurnEndNotifier = MacCodexTurnEndNotifier(defaults: interfaceDefaults ?? .standard)
         self.codexTurnEndNotifier = codexTurnEndNotifier
-        sourceSetupModel.onCodexTurnsEnded = { [weak codexTurnEndNotifier] endings in
-            codexTurnEndNotifier?.notify(endings)
+        // A ping names the task and step its conversation was placed under.
+        sourceSetupModel.onCodexTurnsEnded = { [weak codexTurnEndNotifier, weak sourceSetupModel, weak model] endings in
+            guard let sourceSetupModel else { return }
+            let tasks = model?.projection.hostedSessions ?? []
+            codexTurnEndNotifier?.notify(endings) { CodexTurnEndContext.of($0.id, setup: sourceSetupModel, tasks: tasks) }
         }
 
         let edgePanelController = AnchorEdgePanelController(
@@ -104,13 +107,23 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
 }
 
 extension AnchorMacApplicationDelegate: UNUserNotificationCenterDelegate {
-    /// A Codex ping opens the dashboard, where its conversation row has the rest.
+    /// A Codex ping opens its task when the conversation was placed under one,
+    /// else the dashboard, where its conversation row has the rest.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
     ) async {
+        let thread = response.notification.request.content.threadIdentifier
         guard response.notification.request.identifier
             .hasPrefix(MacCodexTurnEndNotifier.identifierPrefix) else { return }
-        await MainActor.run { self.detailWindowController?.present() }
+        await MainActor.run {
+            let conversationID = String(thread.dropFirst(MacCodexTurnEndNotifier.identifierPrefix.count))
+            if let taskID = self.sourceSetupModel?.conversationTasks[conversationID],
+               let edgePanelController = self.edgePanelController {
+                edgePanelController.openTask(taskID)
+            } else {
+                self.detailWindowController?.present()
+            }
+        }
     }
 }

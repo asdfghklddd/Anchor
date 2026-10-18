@@ -32,8 +32,31 @@ struct CodexTurnEndDetector {
     }
 }
 
-/// The words of one turn-end notification: the conversation's name, the same
-/// status line as its dashboard row, and the opening of the reply or the error.
+/// The task a conversation was placed under, and the step it works on, if known.
+public struct CodexTurnEndContext: Equatable, Sendable {
+    public let task: String
+    public let step: Int?
+
+    public init(task: String, step: Int?) {
+        self.task = task
+        self.step = step
+    }
+
+    /// The task and step a conversation belongs to, from where it was placed.
+    @MainActor
+    public static func of(_ conversationID: String, setup: MacSourceSetupModel,
+                          tasks: [AnchorSession]) -> CodexTurnEndContext? {
+        guard let taskID = setup.conversationTasks[conversationID],
+              let task = tasks.first(where: { $0.id == taskID }) else { return nil }
+        let step = setup.conversationSteps[conversationID].flatMap { task.goal.userPlan?.index(of: $0) }
+        return CodexTurnEndContext(task: task.goal.title, step: step)
+    }
+}
+
+/// The words of one turn-end notification. For a conversation placed under a
+/// task, the task and step lead and the conversation follows with its status;
+/// otherwise the conversation's name, the same status line as its dashboard
+/// row. The opening of the reply or the error is the body.
 struct CodexTurnEndNotice: Equatable {
     let identifier: String
     let threadIdentifier: String
@@ -41,21 +64,28 @@ struct CodexTurnEndNotice: Equatable {
     let subtitle: String
     let body: String
 
-    init?(_ summary: CodexConversationSummary) {
+    init?(_ summary: CodexConversationSummary, context: CodexTurnEndContext? = nil) {
         guard let end = summary.state.endedAt else { return nil }
         let status = MacCodexConversationStatus(summary, now: end)
-        // A title that fell back to the folder name need not repeat it below.
-        let workspace = summary.title == nil ? nil : summary.candidate.workspaceName
-        title = summary.title ?? summary.candidate.workspaceName ?? MacCodexCopy.title
-        subtitle = [status.label, status.fact, workspace].compactMap { $0 }.joined(separator: " · ")
+        let name = summary.title ?? summary.candidate.workspaceName ?? MacCodexCopy.title
+        if let context {
+            title = [context.task, context.step.map { PlanText.step($0 + 1) }].compactMap { $0 }.joined(separator: " · ")
+            subtitle = [name, status.label, status.fact].compactMap { $0 }.joined(separator: " · ")
+        } else {
+            // A title that fell back to the folder name need not repeat it below.
+            let workspace = summary.title == nil ? nil : summary.candidate.workspaceName
+            title = name
+            subtitle = [status.label, status.fact, workspace].compactMap { $0 }.joined(separator: " · ")
+        }
         body = status.detail ?? ""
         threadIdentifier = MacCodexTurnEndNotifier.identifierPrefix + summary.id
         identifier = threadIdentifier + "." + String(Int64(end.timeIntervalSince1970 * 1_000))
     }
 }
 
-/// Posts one macOS notification per newly ended Codex turn, unless pings are
-/// off or the person is already looking at the Codex app.
+/// Posts one macOS notification per newly finished or failed Codex turn,
+/// unless pings are off or the person is already looking at the Codex app. A
+/// turn the person stopped themselves is never news (M5).
 @MainActor
 public final class MacCodexTurnEndNotifier {
     public nonisolated static let enabledDefaultsKey = "anchor.mac.codex.turn-end-notifications.enabled"
@@ -69,15 +99,24 @@ public final class MacCodexTurnEndNotifier {
         self.defaults = defaults
     }
 
-    public func notify(_ endings: [CodexConversationSummary]) {
+    public func notify(_ endings: [CodexConversationSummary],
+                       context: (CodexConversationSummary) -> CodexTurnEndContext? = { _ in nil }) {
         guard defaults.object(forKey: Self.enabledDefaultsKey) as? Bool ?? true else { return }
         let codexIsFrontmost = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
             == Self.codexAppBundleIdentifier
-        let notices = endings
+        let notices = Self.worthPinging(endings)
             .filter { !(codexIsFrontmost && $0.candidate.isFromDesktopApp) }
-            .compactMap(CodexTurnEndNotice.init)
+            .compactMap { CodexTurnEndNotice($0, context: context($0)) }
         guard !notices.isEmpty else { return }
         Task { await Self.post(notices) }
+    }
+
+    /// Finished and failed turns; a stop is the person's own doing.
+    nonisolated static func worthPinging(_ endings: [CodexConversationSummary]) -> [CodexConversationSummary] {
+        endings.filter { ending in
+            if case .interrupted = ending.state { return false }
+            return true
+        }
     }
 
     private static func post(_ notices: [CodexTurnEndNotice]) async {

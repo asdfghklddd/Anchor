@@ -60,15 +60,30 @@ struct MacDesignPreviewTests {
         }
 
         let row = HStack(spacing: 24) {
-            ForEach([EdgeBuoySignal.failed, .attention, .finished], id: \.self) { signal in
+            ForEach([EdgeBuoy(signal: .failed, count: 2), EdgeBuoy(signal: .attention, count: 1),
+                     EdgeBuoy(signal: .finished, count: 1)], id: \.self) { buoy in
                 let model = AnchorEdgePresentationModel(defaults: Self.previewDefaults)
-                let _ = model.showBuoy(signal)
+                let _ = model.showBuoy(buoy)
                 AnchorEdgeControlView(presentation: model, onOpenDetails: {})
             }
         }
         .padding(20)
         .background(Color(red: 0.30, green: 0.42, blue: 0.40))
         try export(row, name: "mac-edge-buoys")
+
+        let current = tasks[0]
+        for scheme in [ColorScheme.light, .dark] {
+            let card = MacWelcomeBackCard(
+                welcome: MacWelcomeBack(tasks: tasks, currentID: current.id,
+                                        awaySince: .now.addingTimeInterval(-45 * 60), returnedAt: .now),
+                onOpen: { _ in }, onDismiss: {}
+            )
+            .padding(20)
+            .background(Color(red: 0.30, green: 0.42, blue: 0.40))
+            .environment(\.colorScheme, scheme)
+            .environment(\.locale, AnchorStrings.interfaceLocale)
+            try export(card, name: "mac-welcome-back-\(scheme == .dark ? "dark" : "light")")
+        }
         Self.previewDefaults.removePersistentDomain(forName: Self.previewDefaultsName)
     }
 

@@ -493,17 +493,7 @@ struct ReturnView: View {
         }
     }
 
-    /// The glance's state words, so one screen never names a state two ways.
-    private static func word(for process: AnchorProcess) -> String {
-        if process.isInterrupted { return L10n.tideState(.interrupted) }
-        switch process.status {
-        case .running: return L10n.tideState(.running)
-        case .completed: return L10n.tideState(.completed)
-        case .failed: return L10n.tideState(.failed)
-        case .needsDecision, .blocked, .disconnected: return L10n.tideState(.attention)
-        case .queued: return L10n.status(.queued)
-        }
-    }
+    private static func word(for process: AnchorProcess) -> String { L10n.runState(process) }
 
     /// The current step of a task's plan with its answers, the copy button and what follows.
     @ViewBuilder

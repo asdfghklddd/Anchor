@@ -17,6 +17,11 @@ final class AnchorEdgePanelController {
     private let effectsPanel: AnchorDecorativePanel
     private var isStarted = false
     private var activationObserver: NSObjectProtocol?
+    private var awayMonitor: MacAwayMonitor?
+    private var welcomePanel: AnchorWelcomePanel?
+    private var welcomeTimeout: Task<Void, Never>?
+    /// A card nobody answered leaves on its own: the buoy still says what needs the person.
+    private static let welcomeLifetime: Duration = .seconds(5 * 60)
 
     /// The last time the person looked at Anchor. Persisted so a relaunch does
     /// not re-announce work they already saw.
@@ -74,14 +79,27 @@ final class AnchorEdgePanelController {
         activationObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.markBuoySeen() }
+            MainActor.assumeIsolated {
+                self?.markBuoySeen()
+                self?.dismissWelcome()
+            }
         }
+        // After time away, a small card above the boat catches the person up (M4).
+        let awayMonitor = MacAwayMonitor(
+            onLeave: { [weak self] in self?.dismissWelcome() },
+            onReturn: { [weak self] awaySince in self?.welcomeBack(awaySince: awaySince) }
+        )
+        self.awayMonitor = awayMonitor
+        awayMonitor.start()
         Task { await MacNotificationSettings.removeRetiredDecisionNotifications() }
     }
 
     func stop() {
         if let activationObserver { NotificationCenter.default.removeObserver(activationObserver) }
         activationObserver = nil
+        awayMonitor?.stop()
+        awayMonitor = nil
+        dismissWelcome()
         soundPlayer.stop()
         controlPanel.orderOut(nil)
         effectsPanel.orderOut(nil)
@@ -111,6 +129,98 @@ final class AnchorEdgePanelController {
         )
         effectsPanel.orderFrontRegardless()
         controlPanel.orderFrontRegardless()
+        positionWelcome()
+    }
+
+    /// Opens a task in the main window and makes it the one the person is on.
+    func openTask(_ id: UUID) {
+        dismissWelcome()
+        Task { [weak self] in
+            guard let self else { return }
+            _ = await self.model.selectHostedTask(id)
+            self.markBuoySeen()
+            self.onOpenDetails()
+        }
+    }
+
+    // MARK: Welcome back
+
+    private func welcomeBack(awaySince: Date) {
+        let welcome = MacWelcomeBack(
+            tasks: model.projection.hostedSessions,
+            currentID: model.projection.session?.id,
+            awaySince: awaySince,
+            returnedAt: .now
+        )
+        // With no open task there is nothing to catch up on.
+        guard !welcome.isEmpty else { return }
+        dismissWelcome()
+
+        let panel = AnchorWelcomePanel(
+            contentRect: .zero,
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        panel.backgroundColor = .clear
+        panel.isOpaque = false
+        panel.hasShadow = true
+        panel.level = .floating
+        panel.hidesOnDeactivate = false
+        panel.isMovable = false
+        panel.isReleasedWhenClosed = false
+        panel.isExcludedFromWindowsMenu = true
+        panel.becomesKeyOnlyIfNeeded = false
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
+        panel.onCancel = { [weak self] in self?.dismissWelcome() }
+
+        let card = MacWelcomeBackCard(
+            welcome: welcome,
+            onOpen: { [weak self] id in self?.openTask(id) },
+            onDismiss: { [weak self] in self?.dismissWelcome() }
+        )
+        let host = NSHostingController(
+            rootView: card.environment(\.locale, AnchorStrings.interfaceLocale)
+        )
+        host.view.wantsLayer = true
+        host.view.layer?.backgroundColor = NSColor.clear.cgColor
+        panel.contentViewController = host
+        panel.setContentSize(host.view.fittingSize)
+        welcomePanel = panel
+        positionWelcome()
+
+        let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+            || UserDefaults.standard.bool(forKey: AnchorMotion.reduceMotionDefaultsKey)
+        panel.alphaValue = reduceMotion ? 1 : 0
+        panel.orderFrontRegardless()
+        if !reduceMotion {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.2
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                panel.animator().alphaValue = 1
+            }
+        }
+        welcomeTimeout = Task { [weak self] in
+            try? await Task.sleep(for: Self.welcomeLifetime)
+            guard !Task.isCancelled else { return }
+            self?.dismissWelcome()
+        }
+    }
+
+    /// Above the boat, right-aligned with it, so the card never covers it.
+    private func positionWelcome() {
+        guard let welcomePanel, let screen = targetScreen() else { return }
+        let visibleFrame = screen.visibleFrame
+        let berthTop = visibleFrame.minY + AnchorEdgeBerth.effectsSize.height
+        let size = welcomePanel.frame.size
+        welcomePanel.setFrameOrigin(NSPoint(x: visibleFrame.maxX - size.width - 16, y: berthTop + 8))
+    }
+
+    private func dismissWelcome() {
+        welcomeTimeout?.cancel()
+        welcomeTimeout = nil
+        welcomePanel?.orderOut(nil)
+        welcomePanel = nil
     }
 
     private func configurePanels() {
@@ -183,14 +293,14 @@ final class AnchorEdgePanelController {
                 || UserDefaults.standard.bool(forKey: AnchorMotion.reduceMotionDefaultsKey)
         )
         latestHostedSessions = snapshot.2
-        presentation.showBuoy(EdgeBuoySignal.unseen(in: snapshot.2, since: buoySeenAt))
+        presentation.showBuoy(EdgeBuoy.needsYou(in: snapshot.2, since: buoySeenAt))
     }
 
     private var latestHostedSessions: [AnchorSession] = []
 
     private func markBuoySeen() {
         buoySeenAt = .now
-        presentation.showBuoy(EdgeBuoySignal.unseen(in: latestHostedSessions, since: buoySeenAt))
+        presentation.showBuoy(EdgeBuoy.needsYou(in: latestHostedSessions, since: buoySeenAt))
     }
 
     private func targetScreen() -> NSScreen? {

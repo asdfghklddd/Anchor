@@ -25,6 +25,18 @@ public extension L10n {
     static let glanceNoRecords = AnchorStrings.value("home.glance.no.records", default: "No records yet")
     static let glanceLatest = AnchorStrings.value("home.glance.latest", default: "Latest")
 
+    /// One run's state in the glance's words, so a screen never names a state two ways.
+    static func runState(_ process: AnchorProcess) -> String {
+        if process.isInterrupted { return tideState(.interrupted) }
+        switch process.status {
+        case .running: return tideState(.running)
+        case .completed: return tideState(.completed)
+        case .failed: return tideState(.failed)
+        case .needsDecision, .blocked, .disconnected: return tideState(.attention)
+        case .queued: return status(.queued)
+        }
+    }
+
     /// "2 failed · 1 running": the counts under a glance headline.
     static func glanceOtherCounts(_ glance: WorkGlance) -> String {
         glance.otherCounts.map { count in

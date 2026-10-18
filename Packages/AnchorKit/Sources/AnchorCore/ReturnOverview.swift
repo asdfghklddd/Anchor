@@ -31,7 +31,7 @@ public struct ReturnOverview: Sendable {
             items.append(Item(task: task, action: action, changes: changes))
         }
         self.items = items.sorted { lhs, rhs in
-            let left = lhs.action?.urgency ?? 5, right = rhs.action?.urgency ?? 5
+            let left = Self.urgency(lhs), right = Self.urgency(rhs)
             if left != right { return left < right }
             return Self.latest(lhs) > Self.latest(rhs)
         }
@@ -40,6 +40,15 @@ public struct ReturnOverview: Sendable {
 
     /// The one thing to do first.
     public var first: Item? { items.first }
+
+    /// The plan's reading order; a task without written steps still puts a
+    /// failure first and a finished result next.
+    private static func urgency(_ item: Item) -> Int {
+        if let action = item.action { return action.urgency }
+        if item.changes.contains(where: { $0.status == .failed && !$0.isInterrupted }) { return 0 }
+        if item.changes.contains(where: { $0.status == .completed }) { return 1 }
+        return 5
+    }
 
     private static func latest(_ item: Item) -> Date {
         item.changes.first?.updatedAt ?? item.task.startedAt

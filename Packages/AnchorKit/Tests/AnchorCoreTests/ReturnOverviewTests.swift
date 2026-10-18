@@ -57,6 +57,17 @@ struct ReturnOverviewTests {
         #expect(ReturnOverview(tasks: [looked], awaySince: ago(60)).items.isEmpty)
     }
 
+    @Test("Without written steps a failure still comes first, then a finished result")
+    func tasksWithoutStepsByState() {
+        let stopped = task("Migration", plan: nil, [codex("migrate", .running, at: ago(3))])
+        let notes = task("Notes", plan: nil, [codex("notes", .completed, at: ago(6))])
+        let login = task("Login", plan: nil, [codex("login", .failed, at: ago(11))])
+
+        let overview = ReturnOverview(tasks: [stopped, notes, login], awaySince: ago(45))
+
+        #expect(overview.items.map(\.task.goal.title) == ["Login", "Notes", "Migration"])
+    }
+
     @Test("Finished tasks are left out; without a time away nothing counts as a change")
     func finishedTasksAndNoAwayTime() {
         let finished = task("Old", plan: AnchorUserPlan(steps: ["Ship"]), [codex("ship", .completed, at: ago(5))],

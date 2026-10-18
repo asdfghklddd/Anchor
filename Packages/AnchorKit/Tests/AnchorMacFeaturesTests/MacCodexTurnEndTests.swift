@@ -89,6 +89,24 @@ func turnEndNoticeWording() throws {
     #expect(later.threadIdentifier == done.threadIdentifier)
 }
 
+@Test("A ping for placed work leads with its task and step; a stop the person made never pings")
+func turnEndNoticeForATask() throws {
+    let done = try #require(CodexTurnEndNotice(codexConversation(
+        "login", .completed(at: ago(1), duration: 420), modified: ago(1),
+        title: "修复登录崩溃", reply: "已修复启动崩溃，所有测试通过。"),
+        context: CodexTurnEndContext(task: "数据结构作业", step: 1)))
+    #expect(done.title == "数据结构作业 · 第 2 步")
+    #expect(done.subtitle == "修复登录崩溃 · 已完成 · 用时 7分钟")
+    #expect(done.body == "已修复启动崩溃，所有测试通过。")
+
+    let endings = [
+        codexConversation("a", .completed(at: ago(1), duration: 30), modified: ago(1)),
+        codexConversation("b", .interrupted(at: ago(1)), modified: ago(1)),
+        codexConversation("c", .failed(at: ago(1), message: "x"), modified: ago(1)),
+    ]
+    #expect(MacCodexTurnEndNotifier.worthPinging(endings).map(\.id) == ["a", "c"])
+}
+
 @MainActor
 @Test("A turn that ends while Anchor watches reaches the ping once, with its reply")
 func scannerHandsTurnEndsToThePing() async throws {
@@ -129,5 +147,46 @@ func scannerHandsTurnEndsToThePing() async throws {
     await model.refreshCodexCandidates()
     #expect(pinged.map(\.reply) == ["Fixed the crash."])
     #expect(pinged.first?.title == "Fix the crash")
+}
+
+@MainActor
+@Test("A conversation the person said is not part of a task never pings")
+func ignoredConversationsStayQuiet() async throws {
+    let root = URL.temporaryDirectory.appending(path: "anchor-turn-end-ignored-\(UUID())")
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+    let suite = "anchor-turn-end-ignored-\(UUID())"
+    let defaults = try #require(UserDefaults(suiteName: suite))
+    defer { defaults.removePersistentDomain(forName: suite) }
+
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    func at(_ secondsAgo: TimeInterval) -> String { formatter.string(from: .now.addingTimeInterval(-secondsAgo)) }
+    let file = root.appending(path: "rollout-thread-quiet.jsonl")
+    let opening = [
+        #"{"timestamp":"\#(at(60))","type":"session_meta","payload":{"id":"thread-quiet","cwd":"/tmp/Notes","originator":"codex_cli_rs","thread_source":"user"}}"#,
+        #"{"timestamp":"\#(at(59))","type":"event_msg","payload":{"type":"user_message","message":"Tidy my notes"}}"#,
+        #"{"timestamp":"\#(at(58))","type":"event_msg","payload":{"type":"task_started","turn_id":"turn-1"}}"#,
+    ]
+    try Data((opening.joined(separator: "\n") + "\n").utf8).write(to: file)
+
+    var pinged: [CodexConversationSummary] = []
+    let model = MacSourceSetupModel(defaults: defaults)
+    model.onCodexTurnsEnded = { pinged.append(contentsOf: $0) }
+    await model.observeAuthorizedCodexFolder(root)
+    defer { model.stopObserving() }
+    await model.refreshCodexCandidates()
+    let conversation = try #require(model.codexConversations.first)
+    await model.ignore(conversation)
+
+    let completed = #"{"timestamp":"\#(at(1))","type":"event_msg","payload":{"type":"task_complete","turn_id":"turn-1","last_agent_message":"Done.","duration_ms":57000,"error":null}}"#
+    let handle = try FileHandle(forWritingTo: file)
+    try handle.seekToEnd()
+    try handle.write(contentsOf: Data("\(completed)\n".utf8))
+    try handle.close()
+
+    await model.refreshCodexCandidates()
+    await model.refreshCodexCandidates()
+    #expect(pinged.isEmpty)
 }
 #endif

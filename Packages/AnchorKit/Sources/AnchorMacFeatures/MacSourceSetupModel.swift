@@ -422,7 +422,8 @@ public final class MacSourceSetupModel {
         if codexConversations != summaries { codexConversations = summaries }
         let candidates = summaries.map(\.candidate)
         if codexCandidates != candidates { codexCandidates = candidates }
-        let endings = turnEnds.endings(in: summaries, now: .now)
+        // A conversation the person said is not part of a task never pings.
+        let endings = turnEnds.endings(in: summaries, now: .now).filter { !isIgnored($0.id) }
         if !endings.isEmpty { onCodexTurnsEnded?(endings) }
     }
 
