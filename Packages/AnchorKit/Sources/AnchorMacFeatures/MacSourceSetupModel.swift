@@ -19,7 +19,14 @@ public final class MacSourceSetupModel {
     public private(set) var codexConversations: [CodexConversationSummary] = []
     public private(set) var trackedCodexSessionIDs = Set<String>()
     public private(set) var codexSessionsFolderName: String?
+    /// Set once the person granted Claude Code's `projects` folder.
+    public private(set) var claudeProjectsFolderName: String?
     public private(set) var taskState: AnchorTaskState?
+
+    /// Any agent's conversations can be read: Codex, Claude Code, or both.
+    public var hasConversationSource: Bool {
+        codexSessionsFolderName != nil || claudeProjectsFolderName != nil
+    }
     public var errorMessage: String?
 
     public var showsCodexOnboarding = false
@@ -43,7 +50,7 @@ public final class MacSourceSetupModel {
     private var lastPlacementOperation: Task<Void, Never>?
 
     public func presentCodexSetupIfNeeded() {
-        guard codexSessionsFolderName == nil else { return }
+        guard !hasConversationSource else { return }
         showsCodexOnboarding = true
         onNeedsAttention?()
     }
@@ -75,8 +82,8 @@ public final class MacSourceSetupModel {
     }
 
     private func performAssign(_ conversation: CodexConversationSummary, to taskID: UUID) async {
-        guard !isWorking, let root = codexSessionsRootURL, let onCodexSessionAssociated,
-              let path = Self.relativePath(for: conversation.candidate.fileURL, under: root) else { return }
+        guard !isWorking, let onCodexSessionAssociated,
+              let location = location(of: conversation.candidate.fileURL) else { return }
         isWorking = true
         errorMessage = nil
         defer { isWorking = false }
@@ -98,7 +105,8 @@ public final class MacSourceSetupModel {
             }
             try await onCodexSessionAssociated(conversation.candidate.fileURL, taskID, false, step)
             let binding = TrackedCodexSession(anchorSessionID: taskID, codexSessionID: conversation.id,
-                                              relativePath: path, automaticallyMatched: false, stepID: step)
+                                              relativePath: location.path, automaticallyMatched: false, stepID: step,
+                                              source: location.source)
             bindings.append(binding)
             saveTrackedCodexSessions(bindings)
             registeredBindings.insert(binding)
@@ -149,6 +157,9 @@ public final class MacSourceSetupModel {
     private var codexSessionsRootURL: URL?
     private var codexSessionsRootSecurityScopedURL: URL?
     private var codexSupervisor: CodexTaskSupervisor?
+    private var claudeRootURL: URL?
+    private var claudeRootSecurityScopedURL: URL?
+    private var claudeSupervisor: CodexTaskSupervisor?
     private var codexDiscoveryTask: Task<Void, Never>?
     private var registeredBindings = Set<TrackedCodexSession>()
     private var observedAnchorSessionID: UUID?
@@ -160,6 +171,19 @@ public final class MacSourceSetupModel {
         let relativePath: String
         var automaticallyMatched: Bool? = nil
         var stepID: UUID? = nil
+        /// Which folder `relativePath` is under; `nil` for Codex, as saved before Claude Code.
+        var source: ConversationDialect? = nil
+    }
+
+    /// The folder a conversation's log lives in, and its path there.
+    private func location(of url: URL) -> (source: ConversationDialect?, path: String)? {
+        if let root = codexSessionsRootURL, let path = Self.relativePath(for: url, under: root) { return (nil, path) }
+        if let root = claudeRootURL, let path = Self.relativePath(for: url, under: root) { return (.claudeCode, path) }
+        return nil
+    }
+
+    private func root(for source: ConversationDialect?) -> URL? {
+        source == .claudeCode ? claudeRootURL : codexSessionsRootURL
     }
 
     public init(
@@ -228,6 +252,7 @@ public final class MacSourceSetupModel {
         defer { isRestoringCodexSession = false }
 
         await restoreCodexSessionsRoot()
+        await restoreClaudeRoot()
         await restoreTrackedCodexSessions()
 
         if codexSecurityScopedURL == nil,
@@ -335,6 +360,48 @@ public final class MacSourceSetupModel {
         }
     }
 
+    /// Asks for Claude Code's `projects` folder only: the rest of `~/.claude`
+    /// holds settings and credentials Anchor has no reason to read.
+    public func authorizeClaudeCodeFolder() async {
+        guard !isWorking else { return }
+        isWorking = true
+        errorMessage = nil
+        defer { isWorking = false }
+        let panel = NSOpenPanel()
+        panel.title = MacClaudeCodeCopy.panelTitle
+        panel.message = MacClaudeCodeCopy.panelMessage
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        let home = NSHomeDirectoryForUser(NSUserName()).map { URL(filePath: $0) }
+            ?? FileManager.default.homeDirectoryForCurrentUser
+        panel.directoryURL = home.appending(path: ".claude/projects")
+        panel.showsHiddenFiles = true
+        panel.prompt = MacClaudeCodeCopy.panelPrompt
+        guard await panel.begin() == .OK, let url = panel.url else { return }
+        do {
+            guard url.lastPathComponent == "projects" else {
+                throw NSError(domain: "Anchor.ClaudeCodeSetup", code: 1,
+                              userInfo: [NSLocalizedDescriptionKey: MacClaudeCodeCopy.wrongFolder])
+            }
+            let bookmark = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil,
+                                                relativeTo: nil)
+            guard url.startAccessingSecurityScopedResource() else { throw CocoaError(.fileReadNoPermission) }
+            do {
+                _ = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
+            } catch {
+                url.stopAccessingSecurityScopedResource()
+                throw error
+            }
+            claudeRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
+            claudeRootSecurityScopedURL = url
+            defaults.set(bookmark, forKey: Self.claudeRootBookmarkKey)
+            await observeAuthorizedClaudeFolder(url)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     public func trackCodexSession(_ candidate: CodexTaskCandidate) async {
         guard let rootURL = codexSessionsRootURL else {
             await selectCodexSession(suggestedURL: candidate.fileURL)
@@ -409,12 +476,24 @@ public final class MacSourceSetupModel {
     }
 
     public func refreshCodexCandidates() async {
-        guard let codexSupervisor else {
+        guard codexSupervisor != nil || claudeSupervisor != nil else {
             codexCandidates = []
             codexConversations = []
             return
         }
-        publish(await codexSupervisor.summaries())
+        publish(await currentSummaries())
+    }
+
+    /// Recent conversations from every granted agent, newest first.
+    private func currentSummaries() async -> [CodexConversationSummary] {
+        var summaries = await codexSupervisor?.summaries() ?? []
+        summaries += await claudeSupervisor?.summaries() ?? []
+        return summaries.sorted { lhs, rhs in
+            if lhs.candidate.modifiedAt != rhs.candidate.modifiedAt {
+                return lhs.candidate.modifiedAt > rhs.candidate.modifiedAt
+            }
+            return lhs.id < rhs.id
+        }
     }
 
     /// Assigns only real changes, so a quiet two-second scan redraws nothing.
@@ -451,8 +530,33 @@ public final class MacSourceSetupModel {
         let root = url.lastPathComponent == ".codex" ? url.appending(path: "sessions") : url
         codexSessionsRootURL = root
         codexSessionsFolderName = root.lastPathComponent
+        codexSupervisor = CodexTaskSupervisor(rootURL: root)
         await restoreTrackedCodexSessions()
-        restartCodexDiscovery(at: root)
+        restartCodexDiscovery()
+    }
+
+    /// The same for Claude Code's `projects` folder.
+    func observeAuthorizedClaudeFolder(_ url: URL) async {
+        claudeRootURL = url
+        claudeProjectsFolderName = url.lastPathComponent
+        claudeSupervisor = CodexTaskSupervisor(rootURL: url, dialect: .claudeCode)
+        await restoreTrackedCodexSessions()
+        restartCodexDiscovery()
+    }
+
+    private func restoreClaudeRoot() async {
+        guard claudeRootSecurityScopedURL == nil,
+              let url = resolveBookmarkedURL(for: Self.claudeRootBookmarkKey),
+              url.startAccessingSecurityScopedResource() else { return }
+        do {
+            _ = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
+        } catch {
+            url.stopAccessingSecurityScopedResource()
+            errorMessage = MacClaudeCodeCopy.lostAccess
+            return
+        }
+        claudeRootSecurityScopedURL = url
+        await observeAuthorizedClaudeFolder(url)
     }
 
     public func stopObserving() {
@@ -460,12 +564,14 @@ public final class MacSourceSetupModel {
         codexDiscoveryTask = nil
         codexSecurityScopedURL?.stopAccessingSecurityScopedResource()
         codexSessionsRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
+        claudeRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
         codexSecurityScopedURL = nil
         codexSessionsRootSecurityScopedURL = nil
+        claudeRootSecurityScopedURL = nil
     }
 
     private func restoreTrackedCodexSessions() async {
-        guard let rootURL = codexSessionsRootURL,
+        guard codexSessionsRootURL != nil || claudeRootURL != nil,
               let sessions = await autoAssociationSessions?(),
               let onCodexSessionAssociated else { return }
         let selectedID = await currentAnchorSessionID?()
@@ -474,12 +580,13 @@ public final class MacSourceSetupModel {
         // Earlier builds could auto-match guardian or subagent logs; stop observing them.
         let bindings = loadTrackedCodexSessions()
         let retained = bindings.filter { binding in
-            binding.automaticallyMatched != true
-                || CodexSessionMetadata.read(from: rootURL.appending(path: binding.relativePath))?
-                    .isUserConversation != false
+            guard binding.automaticallyMatched == true, let rootURL = root(for: binding.source) else { return true }
+            return CodexSessionMetadata.read(from: rootURL.appending(path: binding.relativePath))?
+                .isUserConversation != false
         }
         if retained.count != bindings.count { saveTrackedCodexSessions(retained) }
         for binding in retained where activeIDs.contains(binding.anchorSessionID) {
+            guard let rootURL = root(for: binding.source) else { continue }
             let url = rootURL.appending(path: binding.relativePath)
             guard Self.relativePath(for: url, under: rootURL) != nil,
                   FileManager.default.fileExists(atPath: url.path) else { continue }
@@ -494,20 +601,17 @@ public final class MacSourceSetupModel {
     }
 
     private func startCodexDiscoveryIfNeeded() {
-        guard codexDiscoveryTask == nil, let rootURL = codexSessionsRootURL else {
-            return
-        }
-        restartCodexDiscovery(at: rootURL)
+        guard codexDiscoveryTask == nil, hasConversationSource else { return }
+        restartCodexDiscovery()
     }
 
-    private func restartCodexDiscovery(at rootURL: URL) {
+    /// One loop reads every granted agent's recent conversations and places them.
+    private func restartCodexDiscovery() {
         codexDiscoveryTask?.cancel()
-        let supervisor = CodexTaskSupervisor(rootURL: rootURL)
-        codexSupervisor = supervisor
-        codexDiscoveryTask = Task { [weak self, supervisor] in
+        codexDiscoveryTask = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self else { return }
-                self.publish(await supervisor.summaries())
+                self.publish(await self.currentSummaries())
                 await self.placeConversations(self.codexConversations)
                 do { try await Task.sleep(for: .seconds(2)) } catch { return }
             }
@@ -521,7 +625,7 @@ public final class MacSourceSetupModel {
     }
 
     private func performPlacement(_ conversations: [CodexConversationSummary]) async {
-        guard let root = codexSessionsRootURL, let autoAssociationSessions else { return }
+        guard hasConversationSource, let autoAssociationSessions else { return }
         await refreshTaskState()
         let tasks = await autoAssociationSessions().filter { $0.status == .active }
         activeTasks = tasks
@@ -540,7 +644,7 @@ public final class MacSourceSetupModel {
             guard !Task.isCancelled else { return }
             guard attached[conversation.id] == nil, !matchMemory.ignored.contains(conversation.id),
                   let earliestStart, conversation.candidate.modifiedAt >= earliestStart,
-                  let path = Self.relativePath(for: conversation.candidate.fileURL, under: root) else { continue }
+                  let location = location(of: conversation.candidate.fileURL) else { continue }
             let work = await work(for: conversation)
             switch TaskMatcher.place(work, tasks: tasks, current: currentTask, memory: matchMemory) {
             case let .task(taskID, step, reason):
@@ -551,7 +655,8 @@ public final class MacSourceSetupModel {
                     let automatic = reason != .corrected
                     try await onCodexSessionAssociated(conversation.candidate.fileURL, taskID, automatic, step)
                     let binding = TrackedCodexSession(anchorSessionID: taskID, codexSessionID: conversation.id,
-                                                      relativePath: path, automaticallyMatched: automatic, stepID: step)
+                                                      relativePath: location.path, automaticallyMatched: automatic,
+                                                      stepID: step, source: location.source)
                     bindings.removeAll { $0.codexSessionID == conversation.id }
                     bindings.append(binding)
                     saveTrackedCodexSessions(bindings)
@@ -702,5 +807,24 @@ public final class MacSourceSetupModel {
     private static let codexBookmarkKey = "anchor.mac.source-setup.codex-session"
     private static let codexRootBookmarkKey = "anchor.mac.source-setup.codex-root.v1"
     private static let codexTrackedSessionsKey = "anchor.mac.source-setup.codex-tracked.v1"
+    private static let claudeRootBookmarkKey = "anchor.mac.source-setup.claude-root.v1"
+}
+
+enum MacClaudeCodeCopy {
+    static let title = AnchorStrings.value("mac.sources.claude", default: "Claude Code")
+    static let detail = AnchorStrings.value(
+        "mac.sources.claude.detail",
+        default: "Reads your Claude Code sessions' requests, turn ends and the start of each reply, and files them under your tasks like Codex conversations.")
+    static let authorize = AnchorStrings.value("mac.sources.claude.authorize", default: "Allow the projects folder")
+    static let ready = AnchorStrings.value("mac.sources.claude.ready", default: "Reading recent sessions")
+    static let panelTitle = AnchorStrings.value("mac.sources.claude.panel.title", default: "Allow Claude Code sessions")
+    static let panelMessage = AnchorStrings.value(
+        "mac.sources.claude.panel.message",
+        default: "Choose the projects folder inside .claude. Anchor reads only the session logs there.")
+    static let panelPrompt = AnchorStrings.value("mac.sources.claude.panel.prompt", default: "Allow and start")
+    static let wrongFolder = AnchorStrings.value(
+        "mac.sources.claude.wrong-folder", default: "Choose the projects folder inside .claude, not .claude itself.")
+    static let lostAccess = AnchorStrings.value(
+        "mac.sources.claude.lost-access", default: "The Claude Code folder can no longer be read. Allow it again.")
 }
 #endif

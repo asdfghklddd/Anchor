@@ -44,6 +44,22 @@ struct MacSourceSetupView: View {
                     .accessibilityIdentifier("mac.sources.setup.codex.choose-session")
                 }
 
+                Divider()
+
+                MacSourceSetupRow(
+                    symbol: "sparkles",
+                    title: MacClaudeCodeCopy.title,
+                    detail: MacClaudeCodeCopy.detail,
+                    status: model.claudeProjectsFolderName == nil ? L10n.sourceSetupNotConnected : MacClaudeCodeCopy.ready,
+                    isReady: model.claudeProjectsFolderName != nil
+                ) {
+                    Button(MacClaudeCodeCopy.authorize, systemImage: "folder.badge.plus") {
+                        Task { await model.authorizeClaudeCodeFolder() }
+                    }
+                    .disabled(model.isWorking)
+                    .accessibilityIdentifier("mac.sources.setup.claude.authorize-folder")
+                }
+
                 if !model.codexCandidates.isEmpty {
                     MacCodexCandidateList(
                         candidates: model.codexCandidates,

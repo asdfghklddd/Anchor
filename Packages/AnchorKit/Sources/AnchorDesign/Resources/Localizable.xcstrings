@@ -3097,6 +3097,159 @@
         }
       }
     },
+    "mac.sources.claude" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code"
+          }
+        }
+      }
+    },
+    "mac.sources.claude.authorize" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow the projects folder"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权 projects 文件夹"
+          }
+        }
+      }
+    },
+    "mac.sources.claude.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reads your Claude Code sessions' requests, turn ends and the start of each reply, and files them under your tasks like Codex conversations."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "读取 Claude Code 会话的请求、每轮结束和回复开头，像 Codex 对话一样归到你的任务下。"
+          }
+        }
+      }
+    },
+    "mac.sources.claude.lost-access" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Claude Code folder can no longer be read. Allow it again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "之前授权的 Claude Code 文件夹已无法读取，请重新授权。"
+          }
+        }
+      }
+    },
+    "mac.sources.claude.panel.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the projects folder inside .claude. Anchor reads only the session logs there."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择 .claude 里的 projects 文件夹。Anchor 只读取其中的会话记录。"
+          }
+        }
+      }
+    },
+    "mac.sources.claude.panel.prompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow and start"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权并开始"
+          }
+        }
+      }
+    },
+    "mac.sources.claude.panel.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Claude Code sessions"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权读取 Claude Code 会话"
+          }
+        }
+      }
+    },
+    "mac.sources.claude.ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading recent sessions"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在读取最近的会话"
+          }
+        }
+      }
+    },
+    "mac.sources.claude.wrong-folder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the projects folder inside .claude, not .claude itself."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择 .claude 里的 projects 文件夹，而不是整个 .claude 文件夹。"
+          }
+        }
+      }
+    },
     "mac.tasks.all-steps" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -64,6 +64,13 @@ struct CodexTurnEnd {
     let errorMessage: String?
     let duration: TimeInterval?
 
+    init(reply: String?, hasError: Bool, errorMessage: String?, duration: TimeInterval?) {
+        self.reply = reply
+        self.hasError = hasError
+        self.errorMessage = errorMessage
+        self.duration = duration
+    }
+
     init?(json data: Data) {
         guard let payload = try? JSONDecoder().decode(Envelope.self, from: data).payload else { return nil }
         reply = payload.reply

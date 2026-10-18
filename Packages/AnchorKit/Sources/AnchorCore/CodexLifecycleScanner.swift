@@ -30,11 +30,14 @@ public struct CodexIncrementalScanner: Codable, Sendable {
     private var remainder = Data()
     private var discardingOversizedLine = false
     private var maximumLineBytes = 2 * 1_024 * 1_024
-    /// The current turn's tests and open question. Not checkpointed: a resumed
-    /// scan has not seen the turn start, so it never claims "not tested".
-    private var facts = CodexTurnFacts()
-    public init() {}
-    private enum CodingKeys: String, CodingKey { case version, offset }
+    /// Turns read so far. A checkpoint keeps only a Claude Code turn that is
+    /// still open; tests and questions are not kept, so a resumed scan has not
+    /// seen the turn start and never claims "not tested".
+    private var reader: ConversationLogReader
+    public init(dialect: ConversationDialect = .codex) {
+        reader = ConversationLogReader(dialect: dialect)
+    }
+    private enum CodingKeys: String, CodingKey { case version, offset, dialect, openTurn }
 
     public init(from decoder: any Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
@@ -43,13 +46,23 @@ public struct CodexIncrementalScanner: Codable, Sendable {
         }
         offset = try values.decode(UInt64.self, forKey: .offset)
         committedOffset = offset
+        reader = ConversationLogReader(
+            dialect: (try? values.decodeIfPresent(ConversationDialect.self, forKey: .dialect)) ?? .codex,
+            resuming: try? values.decodeIfPresent(ClaudeCodeTurnReader.Checkpoint.self, forKey: .openTurn)
+        )
     }
 
     public func encode(to encoder: any Encoder) throws {
         var values = encoder.container(keyedBy: CodingKeys.self)
         try values.encode(1, forKey: .version)
         try values.encode(committedOffset, forKey: .offset)
+        if reader.dialect != .codex {
+            try values.encode(reader.dialect, forKey: .dialect)
+            try values.encodeIfPresent(reader.claude.openTurn, forKey: .openTurn)
+        }
     }
+
+    public var dialect: ConversationDialect { reader.dialect }
 
     public init(checkpoint data: Data) throws {
         self = try JSONDecoder().decode(Self.self, from: data)
@@ -69,7 +82,7 @@ public struct CodexIncrementalScanner: Codable, Sendable {
     }
 
     /// The file reader must detect identity changes and truncation, then reset explicitly.
-    public mutating func reset() { self = Self() }
+    public mutating func reset() { self = Self(dialect: reader.dialect) }
 
     public mutating func append(_ data: Data) -> [CodexLifecycleRecord] {
         appendWithOffsets(data).map(\.record)
@@ -80,24 +93,11 @@ public struct CodexIncrementalScanner: Codable, Sendable {
         for byte in data {
             offset += 1
             if byte == 10 {
-                let record = discardingOversizedLine ? nil : CodexLifecycleRecord(json: remainder)
-                if record == nil, !discardingOversizedLine { facts.consume(remainder) }
-                var scanned = record.map { CodexLifecycleScannedRecord(record: $0, committedOffset: offset) }
-                switch record?.lifecycle {
-                case .started?:
-                    facts.turnStarted()
-                case .completed?:
-                    let end = CodexTurnEnd(json: remainder)
-                    scanned?.end = end
-                    scanned?.tests = facts.tests(duration: end?.duration)
-                    scanned?.waitingForReply = facts.isWaitingForReply(turnEnded: true)
-                case .aborted?, nil:
-                    break
-                }
+                let read = discardingOversizedLine ? [] : reader.read(remainder)
                 remainder.removeAll(keepingCapacity: true)
                 discardingOversizedLine = false
                 committedOffset = offset
-                if let scanned { records.append(scanned) }
+                records += read.map { Self.scanned($0, at: offset) }
             } else if !discardingOversizedLine {
                 if remainder.count < maximumLineBytes {
                     remainder.append(byte)
@@ -107,6 +107,13 @@ public struct CodexIncrementalScanner: Codable, Sendable {
                 }
             }
         }
+        // A reply written as several entries is complete once this read ends.
+        records += reader.flush().map { Self.scanned($0, at: committedOffset) }
         return records
+    }
+
+    private static func scanned(_ read: TurnLogRecord, at offset: UInt64) -> CodexLifecycleScannedRecord {
+        CodexLifecycleScannedRecord(record: read.record, committedOffset: offset, end: read.end,
+                                    tests: read.tests, waitingForReply: read.waitingForReply)
     }
 }

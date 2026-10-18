@@ -58,6 +58,7 @@ public actor CodexTaskSupervisor {
     }
 
     private let locator: CodexSessionFileLocator
+    private let dialect: ConversationDialect
     private let pollInterval: TimeInterval
     private let candidateLimit: Int
     private let discoveryWindow: Int
@@ -69,12 +70,14 @@ public actor CodexTaskSupervisor {
 
     public init(
         rootURL: URL,
+        dialect: ConversationDialect = .codex,
         pollInterval: TimeInterval = 2,
         candidateLimit: Int = 12,
         discoveryWindow: Int? = nil,
         maximumTailBytes: UInt64 = 4 * 1_024 * 1_024
     ) {
         locator = CodexSessionFileLocator(rootURL: rootURL)
+        self.dialect = dialect
         threadNames = CodexThreadNames(sessionsRootURL: rootURL)
         self.pollInterval = max(0.25, pollInterval)
         self.candidateLimit = max(1, candidateLimit)
@@ -151,8 +154,8 @@ public actor CodexTaskSupervisor {
             workspaceName: session.workspaceName,
             originator: session.originator,
             modifiedAt: metadata.contentModificationDate,
-            activity: latest.map { Self.activity($0.record) } ?? .unknown,
-            activityObservedAt: latest?.record.timestamp,
+            activity: latest.map { Self.activity($0.read.record) } ?? .unknown,
+            activityObservedAt: latest?.read.record.timestamp,
             createdAt: session.createdAt
         )
         var reply: String?
@@ -160,32 +163,33 @@ public actor CodexTaskSupervisor {
         var waiting = false
         let state: CodexConversationSummary.State
         if let latest {
-            let at = latest.record.timestamp
-            switch latest.record.lifecycle {
+            let at = latest.read.record.timestamp
+            switch latest.read.record.lifecycle {
             case .started:
                 state = .running(since: at)
                 // Results so far; a held question means the turn waits on the person.
-                tests = latest.facts.tests(duration: nil)
-                waiting = latest.facts.isWaitingForReply(turnEnded: false)
+                tests = latest.testsSoFar
+                waiting = latest.isHeldByQuestion
             case .aborted:
                 state = .interrupted(at: at)
             case .completed:
-                let end = CodexTurnEnd(json: latest.line)
-                tests = latest.facts.tests(duration: end?.duration)
+                let end = latest.read.end
+                tests = latest.read.tests
                 if end?.hasError == true {
                     state = .failed(at: at, message: end?.errorMessage.flatMap { CodexGlanceText.reply(from: $0) })
                 } else {
                     state = .completed(at: at, duration: end?.duration)
                     reply = end?.reply.flatMap { CodexGlanceText.reply(from: $0) }
-                    waiting = latest.facts.isWaitingForReply(turnEnded: true)
+                    waiting = latest.read.waitingForReply
                 }
             }
         } else {
             state = .unknown
         }
+        let ownName = threadNames.names[session.id] ?? latest?.title.flatMap { CodexGlanceText.title(from: $0) }
         return CodexConversationSummary(
             candidate: candidate,
-            title: threadNames.names[session.id] == nil ? requestTitle(for: session.id, at: metadata.fileURL) : nil,
+            title: ownName ?? requestTitle(for: session.id, at: metadata.fileURL),
             state: state,
             reply: reply,
             tests: tests,
@@ -202,13 +206,13 @@ public actor CodexTaskSupervisor {
         return title
     }
 
-    /// The latest lifecycle record and its raw line, which also carries the
-    /// turn's reply, duration and error when the record ends a turn, with
-    /// what that turn's tool calls showed: its tests and any open question.
+    /// The latest turn record with what its end reported, and for a running
+    /// turn its tests so far and whether a question holds it; plus the
+    /// conversation's own name when the log records one.
     private func readLatestTurn(
         from url: URL,
         fileSize: UInt64
-    ) -> (record: CodexLifecycleRecord, line: Data, facts: CodexTurnFacts)? {
+    ) -> (read: TurnLogRecord, testsSoFar: TestOutcome?, isHeldByQuestion: Bool, title: String?)? {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
         let start = fileSize > maximumTailBytes ? fileSize - maximumTailBytes : 0
@@ -218,27 +222,22 @@ public actor CodexTaskSupervisor {
             if start > 0, let newline = data.firstIndex(of: 10) {
                 data.removeSubrange(...newline)
             }
-            var latest: (record: CodexLifecycleRecord, line: Data)?
-            var facts = CodexTurnFacts()
-            for line in data.split(separator: 10, omittingEmptySubsequences: true) {
-                // Most lines are tool output; only a line naming a lifecycle is decoded as one.
-                guard Self.lifecycleMarkers.contains(where: { line.range(of: $0) != nil }),
-                      let record = CodexLifecycleRecord(json: Data(line)) else {
-                    facts.consume(Data(line))
-                    continue
-                }
-                if record.lifecycle == .started { facts.turnStarted() }
-                if latest.map({ record.timestamp > $0.record.timestamp }) ?? true {
-                    latest = (record, Data(line))
+            var reader = ConversationLogReader(dialect: dialect)
+            var latest: TurnLogRecord?
+            func keep(_ reads: [TurnLogRecord]) {
+                for read in reads where latest.map({ read.record.timestamp >= $0.record.timestamp }) ?? true {
+                    latest = read
                 }
             }
-            return latest.map { ($0.record, $0.line, facts) }
+            for line in data.split(separator: 10, omittingEmptySubsequences: true) {
+                keep(reader.read(Data(line)))
+            }
+            keep(reader.flush())
+            return latest.map { ($0, reader.testsSoFar, reader.isHeldByQuestion, reader.title) }
         } catch {
             return nil
         }
     }
-
-    private static let lifecycleMarkers = CodexLifecycleRecord.CodexLifecycle.allCases.map { Data($0.rawValue.utf8) }
 
     private static func activity(_ record: CodexLifecycleRecord) -> CodexTaskActivity {
         switch record.lifecycle {

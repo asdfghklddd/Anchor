@@ -88,7 +88,11 @@ struct MacCodexConversationRow: View {
                     Text(status.label)
                         .fontWeight(.semibold)
                         .foregroundStyle(status.tint)
-                    Text([status.fact, note, conversation.candidate.workspaceName]
+                    // Codex is the default; Claude Code says its name so the two read apart.
+                    Text([status.fact, note,
+                          conversation.candidate.originator == CodexSessionMetadata.claudeCodeOriginator
+                              ? CodexSessionMetadata.claudeCodeOriginator : nil,
+                          conversation.candidate.workspaceName]
                         .compactMap { $0 }
                         .map { " · " + $0 }
                         .joined())

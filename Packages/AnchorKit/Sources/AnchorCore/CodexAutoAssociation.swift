@@ -60,8 +60,19 @@ public enum CodexAutoAssociation {
         for data in (latest ? Array(chunks.reversed()) : chunks) {
             let lines = data.split(separator: 10)
             for line in (latest ? Array(lines.reversed()) : Array(lines)) {
-                guard let object = try? JSONSerialization.jsonObject(with: Data(line)) as? [String: Any],
-                      let payload = object["payload"] as? [String: Any] else { continue }
+                guard let object = try? JSONSerialization.jsonObject(with: Data(line)) as? [String: Any] else { continue }
+                // Claude Code: a prompt the person typed, never meta, sub-agent or tool text.
+                if object["type"] as? String == "user", object["isMeta"] as? Bool != true,
+                   object["isSidechain"] as? Bool != true, let message = object["message"] as? [String: Any] {
+                    let text = (message["content"] as? String)
+                        ?? (message["content"] as? [[String: Any]])?
+                            .filter { $0["type"] as? String == "text" }.compactMap { $0["text"] as? String }
+                            .joined(separator: "\n") ?? ""
+                    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard ClaudeCodeTurnReader.isPrompt(trimmed), !trimmed.hasPrefix("[Request interrupted") else { continue }
+                    return String(trimmed.prefix(8_000))
+                }
+                guard let payload = object["payload"] as? [String: Any] else { continue }
                 let items: [String]
                 if object["type"] as? String == "event_msg", payload["type"] as? String == "user_message",
                    let message = payload["message"] as? String {

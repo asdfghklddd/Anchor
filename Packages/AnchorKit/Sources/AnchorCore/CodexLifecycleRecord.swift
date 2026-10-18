@@ -14,6 +14,14 @@ public struct CodexLifecycleRecord: Codable, Hashable, Sendable {
     /// Process title written before conversations carried their workspace name.
     public static let legacyTurnTitle = "Codex turn"
 
+    /// A record another log dialect derived, in the same shape as Codex's own.
+    init(timestamp: Date, lifecycle: CodexLifecycle, turnID: String) {
+        self.timestamp = timestamp
+        type = lifecycle.rawValue
+        self.turnID = turnID
+        self.lifecycle = lifecycle
+    }
+
     public init?(json data: Data) {
         struct Envelope: Decodable { let timestamp: String; let type: String; let payload: Payload }
         struct Payload: Decodable { let type: CodexLifecycle; let turnID: String?; let turn_id: String? }
@@ -46,6 +54,8 @@ public struct CodexLifecycleRecord: Codable, Hashable, Sendable {
         sessionID: UUID,
         sourceID: UUID,
         sourceName: String = "Codex",
+        sourceSymbol: String = "C",
+        sourceTone: String = "cyan",
         title: String = CodexLifecycleRecord.legacyTurnTitle,
         end: CodexTurnEnd?,
         stepID: UUID? = nil,
@@ -72,8 +82,8 @@ public struct CodexLifecycleRecord: Codable, Hashable, Sendable {
                                     sourceID: sourceID, sequence: UInt64(max(0, timestamp.timeIntervalSince1970 * 1000)),
                                     occurredAt: timestamp,
                                     process: AnchorProcess(id: processID, sessionID: sessionID, sourceID: sourceID,
-                                                           externalID: turnID, sourceName: sourceName, sourceSymbol: "C",
-                                                           sourceTone: "cyan", title: title, status: status,
+                                                           externalID: turnID, sourceName: sourceName, sourceSymbol: sourceSymbol,
+                                                           sourceTone: sourceTone, title: title, status: status,
                                                            progress: nil, detail: detail, updatedAt: timestamp,
                                                            stepID: stepID,
                                                            testOutcome: lifecycle == .started ? nil : tests),

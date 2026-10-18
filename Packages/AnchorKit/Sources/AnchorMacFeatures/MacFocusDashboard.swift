@@ -55,7 +55,7 @@ struct MacFocusDashboard: View {
 
     /// `nil` until Codex is connected, so an empty page still explains how to start.
     private var conversations: [CodexConversationSummary]? {
-        guard let sourceSetupModel, sourceSetupModel.codexSessionsFolderName != nil else { return nil }
+        guard let sourceSetupModel, sourceSetupModel.hasConversationSource else { return nil }
         return sourceSetupModel.codexConversations
     }
 

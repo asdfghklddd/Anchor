@@ -85,7 +85,9 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
     public func events() -> AsyncThrowingStream<ExternalProcessEvent, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
-                var scanner = CodexIncrementalScanner()
+                // Codex and Claude Code logs share everything but how lines read.
+                let dialect = ConversationDialect.of(fileURL)
+                var scanner = CodexIncrementalScanner(dialect: dialect)
                 var offset: UInt64 = 0
                 var identity: CodexLifecycleFileIdentity?
                 // The checkpoint key must not persist the user's session path.
@@ -94,8 +96,10 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                     if let store = checkpointStore,
                        let checkpoint = try await store.load(for: sourceKey),
                        let currentIdentity = try fileIdentity(for: fileURL),
-                       checkpoint.identity == currentIdentity {
-                        scanner = try CodexIncrementalScanner(checkpoint: checkpoint.scannerCheckpoint)
+                       checkpoint.identity == currentIdentity,
+                       let restored = try? CodexIncrementalScanner(checkpoint: checkpoint.scannerCheckpoint),
+                       restored.dialect == dialect {
+                        scanner = restored
                         offset = scanner.offset
                         identity = currentIdentity
                     }
@@ -149,6 +153,8 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                                     sessionID: context.sessionID,
                                     sourceID: descriptor.id,
                                     sourceName: descriptor.name,
+                                    sourceSymbol: descriptor.symbol,
+                                    sourceTone: descriptor.tone,
                                     title: conversationTitle ?? CodexLifecycleRecord.legacyTurnTitle,
                                     end: scanned.end,
                                     stepID: stepID,

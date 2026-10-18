@@ -23,19 +23,66 @@ public struct CodexSessionMetadata: Hashable, Sendable {
 
     /// The desktop app is branded ChatGPT; CLI and editor clients remain Codex.
     public var sourceName: String {
-        originator?.localizedCaseInsensitiveContains("desktop") == true ? "ChatGPT" : "Codex"
+        if originator == Self.claudeCodeOriginator { return Self.claudeCodeOriginator }
+        return originator?.localizedCaseInsensitiveContains("desktop") == true ? "ChatGPT" : "Codex"
     }
+
+    public static let claudeCodeOriginator = "Claude Code"
 
     static let userThreadSources: Set<String> = ["user", "chatgpt_handoff"]
 
     public static func read(from url: URL) -> CodexSessionMetadata? {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
-        guard let data = try? handle.read(upToCount: 64 * 1_024),
+        guard let data = try? handle.read(upToCount: 256 * 1_024),
               let newline = data.firstIndex(of: 10) else {
             return nil
         }
-        return CodexSessionMetadata(firstLine: data[..<newline])
+        return CodexSessionMetadata(firstLine: data[..<newline]) ?? claudeCode(url: url, head: data)
+    }
+
+    /// A Claude Code session: its ID, folder and start from its first entries.
+    /// Sub-agent logs live in a `subagents` folder or mark their entries as a sidechain.
+    static func claudeCode(url: URL, head: Data) -> CodexSessionMetadata? {
+        struct Entry: Decodable {
+            let sessionId: String?
+            let cwd: String?
+            let timestamp: String?
+            let isSidechain: Bool?
+        }
+        var id: String?
+        var cwd: String?
+        var createdAt: Date?
+        var sidechain = false
+        for line in head.split(separator: 10, omittingEmptySubsequences: true).prefix(200) {
+            guard let entry = try? JSONDecoder().decode(Entry.self, from: Data(line)) else { continue }
+            id = id ?? entry.sessionId
+            if createdAt == nil, let stamp = entry.timestamp {
+                createdAt = try? Date.ISO8601FormatStyle(includingFractionalSeconds: true).parse(stamp)
+            }
+            if cwd == nil, let folder = entry.cwd {
+                cwd = folder
+                sidechain = entry.isSidechain == true
+            }
+            if id != nil, cwd != nil, createdAt != nil { break }
+        }
+        guard let id, !id.isEmpty else { return nil }
+        return CodexSessionMetadata(
+            id: id, createdAt: createdAt,
+            workspaceName: cwd.map { URL(filePath: $0, directoryHint: .isDirectory).lastPathComponent },
+            originator: claudeCodeOriginator, threadSource: nil,
+            isSubagent: sidechain || url.pathComponents.contains("subagents")
+        )
+    }
+
+    private init(id: String, createdAt: Date?, workspaceName: String?, originator: String?,
+                 threadSource: String?, isSubagent: Bool) {
+        self.id = id
+        self.createdAt = createdAt
+        self.workspaceName = workspaceName
+        self.originator = originator
+        self.threadSource = threadSource
+        self.isSubagent = isSubagent
     }
 
     init?(firstLine: Data) {

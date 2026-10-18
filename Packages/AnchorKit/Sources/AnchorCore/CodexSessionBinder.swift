@@ -40,6 +40,7 @@ public actor CodexSessionBinder {
             createdAt: session.startedAt
         )
         let conversation = CodexSessionMetadata.read(from: fileURL)
+        let isClaudeCode = conversation?.originator == CodexSessionMetadata.claudeCodeOriginator
         try await taskRunStore.host(task: task)
         try await taskRunStore.upsert(workItem: workItem)
         let repository = self.repository
@@ -55,8 +56,8 @@ public actor CodexSessionBinder {
                 id: sourceID,
                 name: conversation?.sourceName ?? "Codex",
                 kind: .integration,
-                symbol: "C",
-                tone: "cyan",
+                symbol: isClaudeCode ? "CC" : "C",
+                tone: isClaudeCode ? "coral" : "cyan",
                 capabilities: [.observe],
                 permission: .granted
             ),
