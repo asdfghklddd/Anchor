@@ -17,7 +17,9 @@ func codexConversation(
     created: Date? = nil,
     title: String? = nil,
     workspace: String = "Anchor",
-    reply: String? = nil
+    reply: String? = nil,
+    tests: TestOutcome? = nil,
+    waiting: Bool = false
 ) -> CodexConversationSummary {
     CodexConversationSummary(
         candidate: CodexTaskCandidate(
@@ -32,8 +34,30 @@ func codexConversation(
         ),
         title: title ?? id,
         state: state,
-        reply: reply
+        reply: reply,
+        tests: tests,
+        isWaitingForReply: waiting
     )
+}
+
+@Test("A turn that ended on a question waits for you; the test verdict follows the time it took")
+func waitingAndTestedConversations() {
+    let asking = MacCodexConversationStatus(
+        codexConversation("q", .completed(at: ago(2), duration: 300), modified: ago(2),
+                          reply: "要用哪个数据库？", tests: .notRun, waiting: true), now: now)
+    #expect(asking.tone == .waiting)
+    #expect(asking.label == "等你回复")
+    #expect(asking.fact == "用时 5分钟 · 未测试")
+    #expect(asking.detail == "要用哪个数据库？")
+
+    let tested = MacCodexConversationStatus(
+        codexConversation("t", .completed(at: ago(1), duration: 420), modified: ago(1), tests: .passed), now: now)
+    #expect(tested.label == "已完成")
+    #expect(tested.fact == "用时 7分钟 · 测试通过")
+
+    let failing = MacCodexConversationStatus(
+        codexConversation("f", .failed(at: ago(1), message: "x"), modified: ago(1), tests: .failed), now: now)
+    #expect(failing.fact == "测试失败")
 }
 
 @Test("Running conversations lead; the rest follow by when their turn ended, not by log writes")

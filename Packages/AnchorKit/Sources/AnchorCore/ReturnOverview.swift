@@ -42,12 +42,13 @@ public struct ReturnOverview: Sendable {
     public var first: Item? { items.first }
 
     /// The plan's reading order; a task without written steps still puts a
-    /// failure first and a finished result next.
+    /// question first, then a failure, then a finished result.
     private static func urgency(_ item: Item) -> Int {
         if let action = item.action { return action.urgency }
-        if item.changes.contains(where: { $0.status == .failed && !$0.isInterrupted }) { return 0 }
-        if item.changes.contains(where: { $0.status == .completed }) { return 1 }
-        return 5
+        if item.changes.contains(where: { $0.status == .needsDecision }) { return TaskNextAction.answer(process: "").urgency }
+        if item.changes.contains(where: { $0.status == .failed && !$0.isInterrupted }) { return TaskNextAction.fix(process: "").urgency }
+        if item.changes.contains(where: { $0.status == .completed }) { return TaskNextAction.review(process: "").urgency }
+        return TaskNextAction.unplannedUrgency
     }
 
     private static func latest(_ item: Item) -> Date {

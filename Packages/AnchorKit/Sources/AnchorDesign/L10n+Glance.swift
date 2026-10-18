@@ -32,7 +32,8 @@ public extension L10n {
         case .running: return tideState(.running)
         case .completed: return tideState(.completed)
         case .failed: return tideState(.failed)
-        case .needsDecision, .blocked, .disconnected: return tideState(.attention)
+        case .needsDecision: return PlanText.waitingForReply
+        case .blocked, .disconnected: return tideState(.attention)
         case .queued: return status(.queued)
         }
     }

@@ -334,7 +334,7 @@ struct ReturnView: View {
         returnCard {
             cardHeading(L10n.yourNextStep)
             switch action {
-            case .fix, .review, .wait:
+            case .answer, .fix, .review, .wait:
                 Button {
                     if let process = review.nextProcess ?? review.processes.max(by: { $0.updatedAt < $1.updatedAt }) {
                         selectedProcess = process
@@ -419,7 +419,8 @@ struct ReturnView: View {
                     .foregroundStyle(Self.symbol(for: process).color)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("\(process.title) · \(Self.word(for: process))")
+                    Text(([process.title, Self.word(for: process)] + [process.testOutcome.map(PlanText.tests)].compactMap { $0 })
+                        .joined(separator: " · "))
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(ink)
                     if !process.detail.isEmpty {
@@ -548,7 +549,7 @@ struct ReturnView: View {
         .buttonStyle(.bordered)
         .accessibilityIdentifier("return.plan.done")
         // "Not yet" answers a finished or failed result; with none to judge, it would mean nothing.
-        if action.asksForALook {
+        if action.judgesAResult {
             Button(PlanText.notYet) {
                 Task { _ = await model.send(.forSession(task.id, .markPlanReviewed)) }
             }

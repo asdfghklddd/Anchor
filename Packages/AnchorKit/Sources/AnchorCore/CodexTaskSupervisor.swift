@@ -141,7 +141,7 @@ public actor CodexTaskSupervisor {
               session.isUserConversation else {
             return nil
         }
-        let latest = readLatestLifecycle(
+        let latest = readLatestTurn(
             from: metadata.fileURL,
             fileSize: metadata.fileSize
         )
@@ -156,21 +156,28 @@ public actor CodexTaskSupervisor {
             createdAt: session.createdAt
         )
         var reply: String?
+        var tests: TestOutcome?
+        var waiting = false
         let state: CodexConversationSummary.State
         if let latest {
             let at = latest.record.timestamp
             switch latest.record.lifecycle {
             case .started:
                 state = .running(since: at)
+                // Results so far; a held question means the turn waits on the person.
+                tests = latest.facts.tests(duration: nil)
+                waiting = latest.facts.isWaitingForReply(turnEnded: false)
             case .aborted:
                 state = .interrupted(at: at)
             case .completed:
                 let end = CodexTurnEnd(json: latest.line)
+                tests = latest.facts.tests(duration: end?.duration)
                 if end?.hasError == true {
                     state = .failed(at: at, message: end?.errorMessage.flatMap { CodexGlanceText.reply(from: $0) })
                 } else {
                     state = .completed(at: at, duration: end?.duration)
                     reply = end?.reply.flatMap { CodexGlanceText.reply(from: $0) }
+                    waiting = latest.facts.isWaitingForReply(turnEnded: true)
                 }
             }
         } else {
@@ -180,7 +187,9 @@ public actor CodexTaskSupervisor {
             candidate: candidate,
             title: threadNames.names[session.id] == nil ? requestTitle(for: session.id, at: metadata.fileURL) : nil,
             state: state,
-            reply: reply
+            reply: reply,
+            tests: tests,
+            isWaitingForReply: waiting
         )
     }
 
@@ -194,11 +203,12 @@ public actor CodexTaskSupervisor {
     }
 
     /// The latest lifecycle record and its raw line, which also carries the
-    /// turn's reply, duration and error when the record ends a turn.
-    private func readLatestLifecycle(
+    /// turn's reply, duration and error when the record ends a turn, with
+    /// what that turn's tool calls showed: its tests and any open question.
+    private func readLatestTurn(
         from url: URL,
         fileSize: UInt64
-    ) -> (record: CodexLifecycleRecord, line: Data)? {
+    ) -> (record: CodexLifecycleRecord, line: Data, facts: CodexTurnFacts)? {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
         let start = fileSize > maximumTailBytes ? fileSize - maximumTailBytes : 0
@@ -209,15 +219,20 @@ public actor CodexTaskSupervisor {
                 data.removeSubrange(...newline)
             }
             var latest: (record: CodexLifecycleRecord, line: Data)?
-            // Most lines are tool output; only a line naming a lifecycle is decoded.
-            for line in data.split(separator: 10, omittingEmptySubsequences: true)
-            where Self.lifecycleMarkers.contains(where: { line.range(of: $0) != nil }) {
-                guard let record = CodexLifecycleRecord(json: Data(line)) else { continue }
+            var facts = CodexTurnFacts()
+            for line in data.split(separator: 10, omittingEmptySubsequences: true) {
+                // Most lines are tool output; only a line naming a lifecycle is decoded as one.
+                guard Self.lifecycleMarkers.contains(where: { line.range(of: $0) != nil }),
+                      let record = CodexLifecycleRecord(json: Data(line)) else {
+                    facts.consume(Data(line))
+                    continue
+                }
+                if record.lifecycle == .started { facts.turnStarted() }
                 if latest.map({ record.timestamp > $0.record.timestamp }) ?? true {
                     latest = (record, Data(line))
                 }
             }
-            return latest
+            return latest.map { ($0.record, $0.line, facts) }
         } catch {
             return nil
         }

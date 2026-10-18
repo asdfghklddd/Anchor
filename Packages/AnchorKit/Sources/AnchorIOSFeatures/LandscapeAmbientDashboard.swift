@@ -243,7 +243,7 @@ struct LandscapeAmbientDashboard: View {
     private func agentLine(_ task: AnchorSession, action: TaskNextAction, now: Date) -> some View {
         let symbol = PlanCopy.symbol(for: action)
         switch action {
-        case let .fix(title), let .review(title):
+        case let .answer(title), let .fix(title), let .review(title):
             VStack(alignment: .leading, spacing: 4) {
                 Label(PlanText.line(for: action), systemImage: symbol.name)
                     .font(.system(size: stateSize, weight: .semibold))
@@ -278,7 +278,7 @@ struct LandscapeAmbientDashboard: View {
             }
             .accessibilityIdentifier("ambient.step.done")
             // "Not yet" answers a result; with none to judge it would mean nothing.
-            if action?.asksForALook == true {
+            if action?.judgesAResult == true {
                 Button(PlanText.notYet) { onReviewed(task.id) }
                     .accessibilityIdentifier("ambient.step.not-yet")
             }

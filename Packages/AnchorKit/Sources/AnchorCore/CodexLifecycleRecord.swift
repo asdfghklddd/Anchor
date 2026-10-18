@@ -40,19 +40,25 @@ public struct CodexLifecycleRecord: Codable, Hashable, Sendable {
 
     /// `end` carries what the turn reported when it ended: the opening of its
     /// final reply, or the error that made it fail. Only that short preview
-    /// leaves the Mac, over the local link.
+    /// leaves the Mac, over the local link, with the turn's test verdict and
+    /// whether it ended waiting for the person's reply.
     func externalEvent(
         sessionID: UUID,
         sourceID: UUID,
         sourceName: String = "Codex",
         title: String = CodexLifecycleRecord.legacyTurnTitle,
         end: CodexTurnEnd?,
-        stepID: UUID? = nil
+        stepID: UUID? = nil,
+        tests: TestOutcome? = nil,
+        waitingForReply: Bool = false
     ) -> ExternalProcessEvent {
         let failedByError = lifecycle == .completed && end?.hasError == true
         let finished = lifecycle == .completed && !failedByError
-        let status: ProcessStatus = lifecycle == .started ? .running : (finished ? .completed : .failed)
-        let kind: ProcessEventKind = lifecycle == .started ? .created : (finished ? .completed : .failed)
+        let waiting = finished && waitingForReply
+        let status: ProcessStatus = lifecycle == .started ? .running
+            : (waiting ? .needsDecision : (finished ? .completed : .failed))
+        let kind: ProcessEventKind = lifecycle == .started ? .created
+            : (waiting ? .decisionRequired : (finished ? .completed : .failed))
         let detail = (failedByError ? end?.errorMessage : end?.reply)
             .flatMap { CodexGlanceText.reply(from: $0) } ?? ""
         let processID = StableProcessIdentity.id(namespace: "codex.turn", sessionID: sessionID, externalID: turnID)
@@ -69,7 +75,8 @@ public struct CodexLifecycleRecord: Codable, Hashable, Sendable {
                                                            externalID: turnID, sourceName: sourceName, sourceSymbol: "C",
                                                            sourceTone: "cyan", title: title, status: status,
                                                            progress: nil, detail: detail, updatedAt: timestamp,
-                                                           stepID: stepID),
+                                                           stepID: stepID,
+                                                           testOutcome: lifecycle == .started ? nil : tests),
                                     event: event, deduplicationKey: key,
                                     observedOutcome: lifecycle == .aborted ? .interrupted : nil)
     }

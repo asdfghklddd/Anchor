@@ -440,6 +440,7 @@ struct ProfileDetailSheet: View {
         // Finished runs are not a finished task; a plan's state follows the person's next move.
         if let session = projection.session, let action = TaskNextAction(task: session) {
             switch action {
+            case .answer: return PlanText.waitingForReply
             case .fix: return L10n.status(.failed)
             case .review: return PlanText.toReview
             case .wait: return L10n.status(.running)

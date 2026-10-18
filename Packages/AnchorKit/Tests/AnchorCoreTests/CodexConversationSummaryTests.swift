@@ -86,6 +86,23 @@ func summarizesRunningAndEmptyConversations() async throws {
     #expect(await supervisor.summaries().first?.title == "Fix the login crash")
 }
 
+@Test("A summary says how the latest turn's tests ended and whether it waits for a reply")
+func summarizesTestsAndQuestions() async throws {
+    let root = temporaryRoot("facts")
+    defer { try? FileManager.default.removeItem(at: root) }
+    let exec = #"{"timestamp":"2026-10-16T08:01:00.000Z","type":"response_item","payload":{"type":"custom_tool_call","id":"ctc","status":"completed","call_id":"call-1","name":"exec","input":"text(await exec('swift test'))"}}"#
+    let output = #"{"timestamp":"2026-10-16T08:02:00.000Z","type":"response_item","payload":{"type":"custom_tool_call_output","id":"ctco","call_id":"call-1","output":[{"type":"input_text","text":"{\"exit_code\": 1}"}]}}"#
+    let question = #"{"timestamp":"2026-10-16T08:03:00.000Z","type":"response_item","payload":{"type":"function_call","name":"request_user_input_async","arguments":"{\"questions\":[]}","call_id":"call-q"}}"#
+    let completed = #"{"timestamp":"2026-10-16T08:07:01.000Z","type":"event_msg","payload":{"type":"task_complete","turn_id":"turn-1","last_agent_message":"Which database should I use?","duration_ms":420000,"error":null}}"#
+    _ = try writeSession([meta, request, started, exec, output, question, completed], in: root)
+
+    let summary = try #require(await CodexTaskSupervisor(rootURL: root).summaries().first)
+
+    #expect(summary.tests == .failed)
+    #expect(summary.isWaitingForReply)
+    #expect(summary.reply == "Which database should I use?")
+}
+
 @Test("Codex's own thread name wins when the index beside sessions is readable")
 func prefersCodexThreadNames() async throws {
     let codex = temporaryRoot("index")

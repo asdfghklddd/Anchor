@@ -34,18 +34,26 @@ public struct CodexConversationSummary: Identifiable, Hashable, Sendable {
     public let state: State
     /// The opening of the latest completed turn's reply, as plain text.
     public let reply: String?
+    /// How the latest turn's tests ended, if it ran any (or "not tested" for a long turn).
+    public let tests: TestOutcome?
+    /// The agent asked the person something and is waiting for the answer.
+    public let isWaitingForReply: Bool
 
     public var id: String { candidate.id }
 
-    public init(candidate: CodexTaskCandidate, title: String?, state: State, reply: String?) {
+    public init(candidate: CodexTaskCandidate, title: String?, state: State, reply: String?,
+                tests: TestOutcome? = nil, isWaitingForReply: Bool = false) {
         self.candidate = candidate
         self.title = title
         self.state = state
         self.reply = reply
+        self.tests = tests
+        self.isWaitingForReply = isWaitingForReply
     }
 
     func titled(_ newTitle: String?) -> Self {
-        Self(candidate: candidate, title: newTitle ?? title, state: state, reply: reply)
+        Self(candidate: candidate, title: newTitle ?? title, state: state, reply: reply,
+             tests: tests, isWaitingForReply: isWaitingForReply)
     }
 }
 

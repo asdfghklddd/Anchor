@@ -84,7 +84,7 @@ enum MacTaskOrder {
     }
 
     static func rank(_ action: TaskNextAction?) -> Int {
-        action?.urgency ?? 5
+        action?.urgency ?? TaskNextAction.unplannedUrgency
     }
 
     private static func lastActivity(_ task: AnchorSession) -> Date {
@@ -95,6 +95,7 @@ enum MacTaskOrder {
 enum MacNextActionStyle {
     static func symbol(for action: TaskNextAction) -> (name: String, color: Color) {
         switch action {
+        case .answer: ("questionmark.bubble.fill", AnchorStateTone.attention.ink)
         case .fix: ("xmark.octagon.fill", AnchorStateTone.failed.ink)
         case .review: ("eye.fill", AnchorStateTone.attention.ink)
         case .wait: ("hourglass", AnchorPalette.secondaryInk)
@@ -207,9 +208,7 @@ struct MacTaskCard: View {
                     actions.setStep(task.id, step.id, true)
                 }
                 .accessibilityIdentifier("mac.task.step.done")
-                if case .review? = action {
-                    Button(PlanText.notYet) { actions.markReviewed(task.id) }
-                } else if case .fix? = action {
+                if action?.judgesAResult == true {
                     Button(PlanText.notYet) { actions.markReviewed(task.id) }
                 }
                 if let prompt = PlanText.prompt(goal: task.goal, step: index) {

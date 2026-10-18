@@ -4442,6 +4442,23 @@
         }
       }
     },
+    "plan.next.answer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reply: %@ is waiting for you"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回复：%@ 在等你回复"
+          }
+        }
+      }
+    },
     "plan.next.finish" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9776,6 +9793,23 @@
         }
       }
     },
+    "status.waiting-reply" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for you"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等你回复"
+          }
+        }
+      }
+    },
     "status.waiting.confirmation" : {
       "localizations" : {
         "en" : {
@@ -10228,6 +10262,74 @@
     },
     "THIS SESSION" : {
 
+    },
+    "tests.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tests failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试失败"
+          }
+        }
+      }
+    },
+    "tests.not-run" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not tested"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未测试"
+          }
+        }
+      }
+    },
+    "tests.passed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tests passed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试通过"
+          }
+        }
+      }
+    },
+    "tests.ran" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ran tests"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跑过测试"
+          }
+        }
+      }
     },
     "tide.running" : {
       "localizations" : {

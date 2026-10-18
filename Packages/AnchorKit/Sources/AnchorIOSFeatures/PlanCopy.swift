@@ -7,6 +7,7 @@ import SwiftUI
 enum PlanCopy {
     static func symbol(for action: TaskNextAction) -> (name: String, color: Color) {
         switch action {
+        case .answer: ("questionmark.bubble.fill", AnchorStateTone.attention.ink)
         case .fix: ("xmark.octagon.fill", AnchorStateTone.failed.ink)
         case .review: ("eye.fill", AnchorStateTone.attention.ink)
         case .wait: ("hourglass", AnchorIOSStyle.secondaryText)

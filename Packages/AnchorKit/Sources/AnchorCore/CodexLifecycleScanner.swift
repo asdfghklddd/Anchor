@@ -12,6 +12,10 @@ struct CodexLifecycleScannedRecord: Sendable {
     let committedOffset: UInt64
     /// For a `task_complete` line: its reply preview, duration and error.
     var end: CodexTurnEnd? = nil
+    /// For a `task_complete` line: how the turn's tests ended, if it ran any.
+    var tests: TestOutcome? = nil
+    /// For a `task_complete` line: the turn ended with a question still open.
+    var waitingForReply = false
 }
 
 enum CodexLifecycleScannerError: Error {
@@ -26,6 +30,9 @@ public struct CodexIncrementalScanner: Codable, Sendable {
     private var remainder = Data()
     private var discardingOversizedLine = false
     private var maximumLineBytes = 2 * 1_024 * 1_024
+    /// The current turn's tests and open question. Not checkpointed: a resumed
+    /// scan has not seen the turn start, so it never claims "not tested".
+    private var facts = CodexTurnFacts()
     public init() {}
     private enum CodingKeys: String, CodingKey { case version, offset }
 
@@ -74,19 +81,23 @@ public struct CodexIncrementalScanner: Codable, Sendable {
             offset += 1
             if byte == 10 {
                 let record = discardingOversizedLine ? nil : CodexLifecycleRecord(json: remainder)
-                let end = record?.lifecycle == .completed ? CodexTurnEnd(json: remainder) : nil
+                if record == nil, !discardingOversizedLine { facts.consume(remainder) }
+                var scanned = record.map { CodexLifecycleScannedRecord(record: $0, committedOffset: offset) }
+                switch record?.lifecycle {
+                case .started?:
+                    facts.turnStarted()
+                case .completed?:
+                    let end = CodexTurnEnd(json: remainder)
+                    scanned?.end = end
+                    scanned?.tests = facts.tests(duration: end?.duration)
+                    scanned?.waitingForReply = facts.isWaitingForReply(turnEnded: true)
+                case .aborted?, nil:
+                    break
+                }
                 remainder.removeAll(keepingCapacity: true)
                 discardingOversizedLine = false
                 committedOffset = offset
-                if let record {
-                    records.append(
-                        CodexLifecycleScannedRecord(
-                            record: record,
-                            committedOffset: committedOffset,
-                            end: end
-                        )
-                    )
-                }
+                if let scanned { records.append(scanned) }
             } else if !discardingOversizedLine {
                 if remainder.count < maximumLineBytes {
                     remainder.append(byte)

@@ -65,6 +65,20 @@ struct TaskNextActionTests {
         #expect(TaskNextAction(task: task(done, [finished])) == .start(step: 1, text: "Delete"))
     }
 
+    @Test("An agent waiting for the person's reply comes before everything, until they answer")
+    func answerFirst() {
+        let plan = AnchorUserPlan(steps: ["Insert"])
+        var asking = codex("Website", .needsDecision, at: ago(9))
+        asking.events = [ProcessEvent(sourceID: asking.sourceID, occurredAt: ago(9), kind: .decisionRequired,
+                                      title: "Codex task_complete")]
+        let failed = codex("Anchor", .failed, at: ago(1))
+        #expect(TaskNextAction(task: task(plan, [failed, asking])) == .answer(process: "Website"))
+        // Saying "not yet" on the phone does not answer the agent.
+        #expect(TaskNextAction(task: task(plan.markingReviewed(at: ago(0)), [asking])) == .answer(process: "Website"))
+        #expect(TaskNextAction.answer(process: "Website").asksForALook)
+        #expect(!TaskNextAction.answer(process: "Website").judgesAResult)
+    }
+
     @Test("An unseen failure comes first; a turn the person stopped is not a failure")
     func failuresFirst() {
         let plan = AnchorUserPlan(steps: ["Insert"])

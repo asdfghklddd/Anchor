@@ -4,6 +4,8 @@ import Foundation
 /// its sources reported since they last looked. It is a reading order, never an
 /// action taken for them, and it never marks a step done.
 public enum TaskNextAction: Hashable, Sendable {
+    /// An agent asked the person something and waits idle for the answer.
+    case answer(process: String)
     /// A source reported a failure the person has not looked at.
     case fix(process: String)
     /// A run finished since the person last looked: check it, then answer for the step.
@@ -21,7 +23,10 @@ public enum TaskNextAction: Hashable, Sendable {
         let looked = plan.reviewedAt ?? .distantPast
         let processes = task.taskProcesses
         let unseen = processes.filter { $0.updatedAt > looked }
-        if let failure = Self.latest(unseen.filter { $0.status == .failed && !$0.isInterrupted }) {
+        // Answering happens in the agent's own app, so only the answer clears it.
+        if let asking = Self.latest(processes.filter { $0.status == .needsDecision }) {
+            self = .answer(process: asking.title)
+        } else if let failure = Self.latest(unseen.filter { $0.status == .failed && !$0.isInterrupted }) {
             self = .fix(process: failure.title)
         } else if let finished = Self.latest(unseen.filter { $0.status == .completed }) {
             self = .review(process: finished.title)
@@ -38,7 +43,7 @@ public enum TaskNextAction: Hashable, Sendable {
     /// Whether the person, rather than a running source, is the one expected to act.
     public var needsPerson: Bool {
         switch self {
-        case .fix, .review, .start, .finish: true
+        case .answer, .fix, .review, .start, .finish: true
         case .wait: false
         }
     }
@@ -49,17 +54,34 @@ public enum TaskNextAction: Hashable, Sendable {
 }
 
 public extension TaskNextAction {
-    /// One reading order for every screen: fix, check, start, wait, finish.
+    /// One reading order for every screen: answer, fix, check, start, wait, finish.
+    /// A task without written steps ranks after all of these.
     var urgency: Int {
         switch self {
-        case .fix: 0
-        case .review: 1
-        case .start: 2
-        case .wait: 3
-        case .finish: 4
+        case .answer: 0
+        case .fix: 1
+        case .review: 2
+        case .start: 3
+        case .wait: 4
+        case .finish: 5
         }
     }
 
-    /// A failure or a finished result the person has not looked at.
-    var asksForALook: Bool { urgency <= 1 }
+    static let unplannedUrgency = 6
+
+    /// A question, a failure or a finished result waiting on the person.
+    var asksForALook: Bool {
+        switch self {
+        case .answer, .fix, .review: true
+        case .start, .wait, .finish: false
+        }
+    }
+
+    /// A result the person judges; "not yet" answers it. A question is answered in its own app.
+    var judgesAResult: Bool {
+        switch self {
+        case .fix, .review: true
+        case .answer, .start, .wait, .finish: false
+        }
+    }
 }

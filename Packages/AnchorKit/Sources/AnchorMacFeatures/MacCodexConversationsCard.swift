@@ -149,6 +149,8 @@ struct MacCodexConversationStatus: Equatable {
         case done
         case failed
         case stopped
+        /// The agent asked the person something and waits for the answer.
+        case waiting
         case unknown
     }
 
@@ -162,29 +164,36 @@ struct MacCodexConversationStatus: Equatable {
     let endedAt: Date?
 
     init(_ conversation: CodexConversationSummary, now: Date) {
+        // The test verdict follows whatever the turn's state says.
+        let tests = conversation.tests.map(PlanText.tests)
         switch conversation.state {
         case .running(let since):
             let silence = now.timeIntervalSince(conversation.candidate.modifiedAt)
-            label = L10n.sourceSetupTaskRunning
-            if silence > Self.quietAfter {
+            if conversation.isWaitingForReply {
+                tone = .waiting
+                label = PlanText.waitingForReply
+                fact = tests
+            } else if silence > Self.quietAfter {
                 tone = .quiet
+                label = L10n.sourceSetupTaskRunning
                 fact = MacCodexCopy.quiet(Self.duration(silence))
             } else {
                 tone = .running
-                fact = Self.duration(now.timeIntervalSince(since))
+                label = L10n.sourceSetupTaskRunning
+                fact = Self.joined(Self.duration(now.timeIntervalSince(since)), tests)
             }
             detail = nil
             endedAt = nil
         case .completed(let at, let duration):
-            tone = .done
-            label = L10n.sourceSetupTaskCompleted
-            fact = duration.map { MacCodexCopy.took(Self.duration($0)) }
+            tone = conversation.isWaitingForReply ? .waiting : .done
+            label = conversation.isWaitingForReply ? PlanText.waitingForReply : L10n.sourceSetupTaskCompleted
+            fact = Self.joined(duration.map { MacCodexCopy.took(Self.duration($0)) }, tests)
             detail = conversation.reply
             endedAt = at
         case .failed(let at, let message):
             tone = .failed
             label = MacCodexCopy.failed
-            fact = nil
+            fact = tests
             detail = message
             endedAt = at
         case .interrupted(let at):
@@ -209,8 +218,14 @@ struct MacCodexConversationStatus: Equatable {
         case .done: "checkmark.circle.fill"
         case .failed: "xmark.octagon.fill"
         case .stopped: "pause.circle.fill"
+        case .waiting: "questionmark.bubble.fill"
         case .unknown: "circle.dashed"
         }
+    }
+
+    private static func joined(_ parts: String?...) -> String? {
+        let present = parts.compactMap { $0 }
+        return present.isEmpty ? nil : present.joined(separator: " · ")
     }
 
     var tint: Color {
@@ -218,6 +233,7 @@ struct MacCodexConversationStatus: Equatable {
         case .running: AnchorStateTone.running.ink
         case .done: AnchorStateTone.done.ink
         case .failed: AnchorStateTone.failed.ink
+        case .waiting: AnchorStateTone.attention.ink
         // Stopping a turn is the person's own choice, so it stays quiet.
         case .quiet, .stopped, .unknown: AnchorPalette.secondaryInk
         }

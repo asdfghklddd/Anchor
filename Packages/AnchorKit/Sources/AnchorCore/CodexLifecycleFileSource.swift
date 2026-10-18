@@ -151,7 +151,9 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                                     sourceName: descriptor.name,
                                     title: conversationTitle ?? CodexLifecycleRecord.legacyTurnTitle,
                                     end: scanned.end,
-                                    stepID: stepID
+                                    stepID: stepID,
+                                    tests: scanned.tests,
+                                    waitingForReply: scanned.waitingForReply
                                 )
                                 if let identity, checkpointStore != nil {
                                     await deliveryState.prepare(

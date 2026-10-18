@@ -22,6 +22,17 @@ public enum PlanText {
     public static let stepPlaceholder = AnchorStrings.value("plan.edit.step", default: "Step")
     public static let addStepPlaceholder = AnchorStrings.value("plan.edit.add", default: "Add a step")
     public static let doFirst = AnchorStrings.value("plan.return.first", default: "Do first")
+    /// An agent asked something and waits for the person's reply.
+    public static let waitingForReply = AnchorStrings.value("status.waiting-reply", default: "Waiting for you")
+
+    public static func tests(_ outcome: TestOutcome) -> String {
+        switch outcome {
+        case .passed: AnchorStrings.value("tests.passed", default: "Tests passed")
+        case .failed: AnchorStrings.value("tests.failed", default: "Tests failed")
+        case .ran: AnchorStrings.value("tests.ran", default: "Ran tests")
+        case .notRun: AnchorStrings.value("tests.not-run", default: "Not tested")
+        }
+    }
     /// The task the person is on, which the Mac also uses to place new work.
     public static let current = AnchorStrings.value("plan.current", default: "Current")
     public static let makeCurrentHint = AnchorStrings.value(
@@ -51,6 +62,9 @@ public enum PlanText {
                 AnchorStrings.value("plan.next.start.short", default: "Step %lld: %@"), step + 1, text)
         }
         return switch action {
+        case let .answer(process):
+            String.localizedStringWithFormat(
+                AnchorStrings.value("plan.next.answer", default: "Reply: %@ is waiting for you"), process)
         case let .fix(process):
             String.localizedStringWithFormat(AnchorStrings.value("plan.next.fix", default: "Fix: %@ failed"), process)
         case let .review(process):
