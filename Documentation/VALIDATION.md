@@ -1,6 +1,51 @@
 # Anchor native validation record
 
-Last updated: 2026-10-15
+Last updated: 2026-10-18
+
+## Current results — the personal-tool direction, phases 1–7 (2026-10-16 to 10-18)
+
+Built on `feat/auto-show` in one commit per phase, following
+[the approved product direction](PRODUCT_DIRECTION_2026-10-17.md): a live plan per task,
+the Mac filing agent work under tasks and steps, results and return across every task on
+the phone, the desk board and the Mac welcome back, waiting-for-reply and test facts,
+Claude Code as a second source, a lighter setup, suggested steps, a today recap and the
+menu bar item.
+
+- **Swift package: 351 tests passed** (Core 231, MacFeatures 59, Transport 43,
+  IOSFeatures 18). New suites cover live plans and stable step IDs, next actions
+  (answer, fix, review, start, wait, finish), TaskMatcher placement, return overview,
+  sync freshness and peer contact, the edge buoy count, the Mac away tracker and welcome
+  content, Codex turn facts (tests, questions) in the current `exec`/`js` tool format,
+  Claude Code turns (prompt to `end_turn`, split replies, interruption, sidechain,
+  AskUserQuestion, checkpoint resume), the plan step splitter, suggested next steps and
+  the today recap. The existing `idleBoatRestingBehavior` 20 ms timing test failed in two
+  concurrent runs and passed 5 of 5 alone; its timing was not changed.
+- **macOS and iOS Debug builds passed** with signing disabled.
+- **iOS UI tests on a spare iPhone 17 Pro simulator** (isolated stores, uninstalled
+  afterwards): workspace rotation, landscape draft suspension, formal task creation and
+  restore, two hosted tasks, leave and return, closing setup keeps the draft, the
+  goal-and-steps setup rule with Skip on empty criteria, the populated return review at
+  normal and largest accessibility size (`scripts/validation/ios-populated-return.py`),
+  dashboard readability light and dark (`scripts/validation/ios-dashboard-readability.py`)
+  and a design preview of the live-plan desk board. Screenshots of the multi-task return
+  page, the desk board (current task, switched task, accessibility size) and the home
+  freshness line were inspected.
+- **Mac previews** of the task cards, welcome-back card (light/dark) and buoy count were
+  rendered with `ImageRenderer` (`ANCHOR_DESIGN_PREVIEW_EXPORT`) and inspected. No Anchor
+  Mac app instance was launched.
+- **Real-log checks, aggregate only** (counts and record structure, never message text):
+  over the last 30 days of Codex logs, 90 test commands were recognized (55 passed,
+  5 failed, 30 without a visible exit code) and 7 turns ended with an unanswered question.
+  Over 23 Claude Code sessions, the reader ends 143 of 145 turns as finished or stopped;
+  the 2 open ones were still running. This check found and fixed assistant entries whose
+  `type` sits after a long message body.
+- **Not verified:** two real devices syncing reply previews, test verdicts and step
+  answers; peer-contact freshness after a real phone lock; the Mac idle, lock and sleep
+  detection and the welcome-back panel on a real desktop (focus, Esc, multiple displays);
+  notification clicks opening a task; the menu bar item; granting the Claude Code folder
+  through the system picker in a signed build; the desk board staying awake while charging
+  (the simulator reports no charging state); haptics and VoiceOver on hardware.
+
 
 ## Current results — Codex first connection and suggested tracking (2026-10-15)
 

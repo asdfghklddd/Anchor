@@ -166,9 +166,11 @@ Part I (P1–P6) is unchanged. These Part II/III rules change:
 
 After each phase, use Anchor for a day before starting the next.
 
+**Status, 2026-10-18:** phases 1–7 are built and committed on `feat/auto-show` (not pushed), one commit per phase; evidence and open device checks are in [VALIDATION.md](VALIDATION.md). Each phase's "done when" below is met only by your own day of use. Track R covers only sync freshness so far; stable signing and reconnect-after-sleep still need your Apple ID's Personal Team.
+
 | Phase | Contents | Done when |
 |---|---|---|
-| **1. Live plan** | I1 | Built; uncommitted. You check steps and follow next actions for a day |
+| **1. Live plan** | I1 | You check steps and follow next actions for a day |
 | **2. Plans you can change** | B2, I2 | You add, rename, and reorder steps without losing what's checked |
 | **3. Mac knows your tasks** | M1, M2, M3, B1 | About 4 in 5 new conversations land on the right task without you touching anything, with zero pop-ups |
 | **4. Results reach the phone** | B5, B6, I6, I7, I9, I11 | After 30 min away from the desk, the phone tells you each task's state and next step |

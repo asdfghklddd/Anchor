@@ -1,8 +1,12 @@
 # Anchor
 
 Anchor observes AI task and terminal command state on the Mac and synchronizes it
-to an iPhone work dashboard. The Mac is an observation companion; it does not
-answer questions, make decisions, or resume external tools on the user’s behalf.
+to an iPhone work dashboard. Each task you anchor on the iPhone carries your own
+plan of steps; Anchor files agent work under the right task and step and always
+shows your next action, so you can switch projects or step away and pick up where
+you were. The Mac is an observation companion; it does not answer questions, make
+decisions, or resume external tools on the user’s behalf. The direction behind
+this is in [the product direction](Documentation/PRODUCT_DIRECTION_2026-10-17.md).
 
 ## 页面与交互地图 · Product atlas
 
@@ -31,29 +35,39 @@ GitHub Pages publishes the `docs/` directory on `main`.
   platform-aware components, and an English/Simplified Chinese String Catalog.
   See [DESIGN.md](DESIGN.md) for the frozen design philosophy, current iOS/macOS
   experience, and detailed design requirements.
-- `AnchorIOSFeatures`: setup, portrait dashboard, landscape Ambient workspace,
-  anchor notes, handoff/away/return, history, management, and settings.
+- `AnchorIOSFeatures`: setup (goal and steps; criteria optional), a live plan
+  you check off and edit, portrait dashboard with each task's next action, a
+  landscape desk board centered on the step you're on (kept awake while
+  charging), anchor notes, handoff/away/return across every changed task, a
+  today recap, history, management, and settings.
 - The production iPhone loop has an explicit final confirmation boundary:
   completing a task retains its detailed history across relaunches. Concurrent
   hosted tasks keep independent conversations and histories; completing one task
   preserves the others. The homepage uses the main conversation for its progress
   capsule and shows individual conversation progress in the anchor chart.
-- `AnchorMacFeatures`: menu bar status plus a native detail window using
-  `NavigationStack` and an expandable sidebar.
+- `AnchorMacFeatures`: a menu bar item (open, tasks needing you, settings,
+  quit), a task-centric native detail window using `NavigationStack` and an
+  expandable sidebar, and the edge boat with a needs-you buoy and a
+  welcome-back card after time away.
 - `AnchorTransport`: Bonjour discovery, one-time-code key agreement, Keychain
   trust, authenticated event envelopes and acknowledgements, BLE RSSI proximity
   advertising/scanning, and an optional CloudKit private event store.
 - `AnchorCore`: a versioned external source contract, actor-based source
   ingestion, a durable CLI inbox, deterministic event replay, and a retryable
   durable-sync coordinator.
-- Production observation uses Codex conversation lifecycle and generic CLI command
-  lifecycle. General Mac application observation, the Safari extension and its
+- Production observation uses Codex conversation lifecycle, Claude Code session
+  lifecycle and generic CLI command lifecycle, including whether a turn tested
+  and whether the agent waits for your reply. General Mac application observation, the Safari extension and its
   inbox adapter have been removed. Legacy stored events remain readable; the
   current dashboard filters retired sources and decision records.
 - Codex tasks written to local session logs are supported, including the installed
   app branded ChatGPT with bundle ID `com.openai.codex`. Ordinary ChatGPT chats
   and other AI tools without this log contract need dedicated adapters. An open
   application is never treated as evidence of a running AI task.
+- Claude Code sessions are read from `~/.claude/projects` after a one-time grant
+  of that folder only. The opening of each reply, a test verdict and whether a
+  question is open travel to the iPhone over the local link; full conversations,
+  commands and output are read on the Mac and never stored or synced.
 
 SwiftData-backed persistence, production CloudKit container activation, and
 additional AI task adapters remain later phases. Generic application/browser
