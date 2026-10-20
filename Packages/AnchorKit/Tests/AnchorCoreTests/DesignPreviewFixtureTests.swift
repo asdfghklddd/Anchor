@@ -155,4 +155,63 @@ struct DesignPreviewFixtureTests {
             try Data(contentsOf: storage).write(to: output.appending(path: "session-repository.json"))
         }
     }
+
+    @Test("While the current task's agent works, the desk points at the task that needs you")
+    func deskWaitMeanwhile() async throws {
+        let directory = URL.temporaryDirectory.appending(path: "anchor-desk-wait-preview-\(UUID())")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let storage = directory.appending(path: "session-repository.json")
+        let repository = LocalSessionRepository(storageURL: storage, sourceID: UUID())
+        let now = Date.now
+
+        func at(_ minutesAgo: Double) -> Date { now.addingTimeInterval(-minutesAgo * 60) }
+        func id(_ index: Int) -> UUID { UUID(uuidString: String(format: "DE5C0000-7215-40E0-8B0B-%012d", index))! }
+        func codex(_ title: String, task: UUID, status: ProcessStatus, started: Double, ended: Double? = nil,
+                   step: UUID? = nil, reply: String = "") -> AnchorProcess {
+            let processID = UUID(), sourceID = UUID()
+            var events = [ProcessEvent(sessionID: task, processID: processID, sourceID: sourceID,
+                                       occurredAt: at(started), kind: .created, title: "Codex task_started", metric: nil)]
+            if let ended {
+                events.append(ProcessEvent(sessionID: task, processID: processID, sourceID: sourceID, occurredAt: at(ended),
+                                           kind: .completed, title: "Codex task_complete", metric: nil))
+            }
+            return AnchorProcess(id: processID, sessionID: task, sourceID: sourceID, sourceName: "Codex", sourceSymbol: "C",
+                                 sourceTone: "cyan", title: title, status: status, detail: reply,
+                                 updatedAt: events.map(\.occurredAt).max() ?? now, events: events, stepID: step)
+        }
+
+        let homeworkPlan = AnchorUserPlan(steps: ["实现插入", "实现删除操作", "补边界情况测试", "写实验报告"],
+                                          completedSteps: [0], reviewedAt: at(45))
+        let homework = AnchorSession(id: id(1), goal: AnchorGoal(
+            title: "数据结构作业", completionCriteria: "红黑树的插入和删除都通过测试", userPlan: homeworkPlan),
+            startedAt: at(120), processes: [codex("红黑树删除", task: id(1), status: .running, started: 6,
+                                         step: homeworkPlan.items[1].id)],
+            taskColorIndex: 0)
+        let website = AnchorSession(id: id(2), goal: AnchorGoal(
+            title: "个人网站", completionCriteria: "作品集页面上线",
+            userPlan: AnchorUserPlan(steps: ["整理项目清单", "做项目页", "部署上线"], completedSteps: [0], reviewedAt: at(90))),
+            startedAt: at(300), processes: [codex("项目页", task: id(2), status: .completed, started: 30, ended: 9,
+                                         reply: "项目页已完成，三个项目卡片和详情页都能打开。")],
+            taskColorIndex: 1)
+        let notes = AnchorSession(id: id(3), goal: AnchorGoal(
+            title: "研究笔记", completionCriteria: "整理好推荐系统论文",
+            userPlan: AnchorUserPlan(steps: ["读第 3 篇论文", "整理笔记"])),
+            startedAt: at(60), taskColorIndex: 3)
+        for task in [website, notes, homework] { try await repository.send(.hostSession(task)) }
+        try await repository.send(.selectSession(homework.id))
+
+        let projection = await LocalSessionRepository(storageURL: storage, sourceID: UUID()).currentProjection()
+        let current = try #require(projection.hostedSessions.first { $0.id == homework.id })
+        #expect(TaskMeanwhile(current: current, among: projection.hostedSessions)
+            == .other(task: website.id, title: "个人网站", action: .review(process: "项目页")))
+        if case .waiting = DeskHold(current: current, among: projection.hostedSessions) {} else {
+            Issue.record("expected the desk to hold while the agent works")
+        }
+        if let export = ProcessInfo.processInfo.environment["ANCHOR_DESIGN_PREVIEW_EXPORT"].map({ URL(fileURLWithPath: $0) }) {
+            let output = export.appending(path: "desk-wait")
+            try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+            try Data(contentsOf: storage).write(to: output.appending(path: "session-repository.json"))
+        }
+    }
 }

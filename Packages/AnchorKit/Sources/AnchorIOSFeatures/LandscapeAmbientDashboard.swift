@@ -8,8 +8,10 @@ import SwiftUI
 /// read at a glance (40 pt), the agent's state on it (22 pt), and the answer
 /// for the step within reach. The other tasks are chips that say which ones
 /// need a look, with how current this copy is. No text is smaller than 17 pt.
-/// Nothing moves on its own except real state changes and the one-time
-/// arrival, when the anchor drops and sets in the harbor water.
+/// While the agent works, a "Meanwhile" line names what to do instead of
+/// the phone. Motion follows real work only: the water flows while a source
+/// reports a run and the copy is fresh, swells once when a result arrives,
+/// and the one-time arrival drops the anchor into it.
 struct LandscapeAmbientDashboard: View {
     let projection: SessionProjection
     /// Play the anchor drop and its haptic: true only when work just turned
@@ -40,6 +42,11 @@ struct LandscapeAmbientDashboard: View {
     @State private var rowsShown = true
     @State private var stepAnswers = 0
     @State private var keepAwake = DeskKeepAwake()
+    /// Results already on the board; only ones that arrive later swell.
+    @State private var seenResults: Set<ResultKey>?
+    @State private var swells = 0
+    @State private var swellsByTask: [UUID: Int] = [:]
+    @State private var swellTone = AnchorStateTone.attention.ink
 
     // Desk sizes may grow with Dynamic Type but never shrink below the desk floor.
     private var stepSize: CGFloat { max(40, stepScaled) }
@@ -58,6 +65,24 @@ struct LandscapeAmbientDashboard: View {
 
     /// The other tasks keep their anchoring order, so place stays a cue from afar.
     private var others: [AnchorSession] { tasks.filter { $0.id != current?.id } }
+
+    private var meanwhile: TaskMeanwhile? { current.flatMap { TaskMeanwhile(current: $0, among: tasks) } }
+
+    /// The water flows only while a source reports a run and this copy is fresh.
+    private var isFlowing: Bool {
+        if case .behind = projection.freshness { return false }
+        return tasks.contains { $0.taskProcesses.contains { $0.status == .running } }
+    }
+
+    private struct ResultKey: Hashable {
+        let task: UUID
+        let process: UUID
+        let at: Date
+    }
+
+    private var resultKeys: Set<ResultKey> {
+        Set(tasks.flatMap { task in task.resultsToLookAt.map { ResultKey(task: task.id, process: $0.id, at: $0.updatedAt) } })
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -107,8 +132,25 @@ struct LandscapeAmbientDashboard: View {
             if playsArrival, !tasks.isEmpty { playArrival() }
         }
         .onDisappear { keepAwake.stop() }
+        .onChange(of: resultKeys, initial: true) { _, keys in noteResults(keys) }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("ambient.screen")
+    }
+
+    /// A result that arrives while the board is up swells once under its task;
+    /// what was already there when the board appeared is not news.
+    private func noteResults(_ keys: Set<ResultKey>) {
+        guard let seen = seenResults else {
+            seenResults = keys
+            return
+        }
+        let arrived = keys.subtracting(seen)
+        seenResults = seen.union(keys)
+        guard let newest = arrived.max(by: { $0.at < $1.at }),
+              let task = tasks.first(where: { $0.id == newest.task }) else { return }
+        swellTone = TaskNextAction(task: task).map { PlanCopy.symbol(for: $0).color } ?? AnchorStateTone.attention.ink
+        swellsByTask[task.id, default: 0] += 1
+        swells += 1
     }
 
     // MARK: The task the person is on (left)
@@ -150,7 +192,12 @@ struct LandscapeAmbientDashboard: View {
     @ViewBuilder
     private func focus(now: Date) -> some View {
         if let task = current {
+            // A task made current comes in from the chips on the right.
             focusContent(task, now: now)
+                .id(task.id)
+                .transition(reduceMotion ? .opacity : .asymmetric(
+                    insertion: .offset(x: 48).combined(with: .opacity), removal: .opacity))
+                .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: current?.id)
         } else {
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.glanceEmpty).font(.system(size: labelSize, weight: .semibold)).foregroundStyle(AnchorIOSStyle.text)
@@ -180,6 +227,7 @@ struct LandscapeAmbientDashboard: View {
                             .font(.system(size: stateSize, weight: .semibold, design: .rounded))
                             .monospacedDigit()
                             .foregroundStyle(AnchorIOSStyle.secondaryText)
+                            .contentTransition(reduceMotion ? .opacity : .numericText(value: Double(plan.doneCount)))
                     }
                     if tasks.count > 1 {
                         Text(PlanText.current)
@@ -199,9 +247,14 @@ struct LandscapeAmbientDashboard: View {
 
             if let plan, let index = plan.nextStepIndex {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(PlanText.step(index + 1))
-                        .font(.system(size: detailSize, weight: .medium))
-                        .foregroundStyle(AnchorIOSStyle.secondaryText)
+                    HStack(spacing: 8) {
+                        Text(PlanText.step(index + 1))
+                            .font(.system(size: detailSize, weight: .medium))
+                            .foregroundStyle(AnchorIOSStyle.secondaryText)
+                            .contentTransition(reduceMotion ? .opacity : .numericText(value: Double(index)))
+                        // Marking the step done draws a check here while the step lifts away.
+                        DrawnCheck(trigger: stepAnswers, size: detailSize + 2, reduceMotion: reduceMotion)
+                    }
                     Text(plan.items[index].text)
                         .font(.system(size: stepSize, weight: .bold))
                         .foregroundStyle(AnchorIOSStyle.text)
@@ -209,7 +262,9 @@ struct LandscapeAmbientDashboard: View {
                         .minimumScaleFactor(0.7)
                         .fixedSize(horizontal: false, vertical: true)
                         .id(plan.items[index].id)
-                        .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 6)))
+                        .transition(reduceMotion ? .opacity : .asymmetric(
+                            insertion: .offset(y: 28).combined(with: .opacity),
+                            removal: .offset(y: -28).combined(with: .opacity)))
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("ambient.step")
@@ -226,13 +281,25 @@ struct LandscapeAmbientDashboard: View {
                     .lineLimit(1).minimumScaleFactor(0.7)
             }
 
-            if let action { agentLine(task, action: action, now: now) }
+            if let action {
+                agentLine(task, action: action, now: now)
+                    .background { ResultSwell(trigger: swellsByTask[task.id, default: 0], tone: swellTone,
+                                              cornerRadius: 10, reduceMotion: reduceMotion).padding(-6) }
+            }
+
+            // Instead of the phone: the next task that needs you, or this task's next step.
+            if let meanwhile {
+                meanwhileLine(meanwhile)
+                    .transition(reduceMotion ? .opacity : .offset(x: 40).combined(with: .opacity))
+            }
 
             if let plan, let index = plan.nextStepIndex {
                 answers(task, step: plan.items[index].id, action: action)
             }
         }
         .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: plan?.nextStepIndex)
+        .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: meanwhile)
+        .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.micro, value: action)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("ambient.glance")
     }
@@ -266,6 +333,38 @@ struct LandscapeAmbientDashboard: View {
                 .accessibilityIdentifier("ambient.agent")
         case .start, .finish:
             EmptyView()
+        }
+    }
+
+    /// What to do while the agent works. Another task's line is a button that
+    /// makes it current; its chip carries the same identity color as a frame.
+    @ViewBuilder
+    private func meanwhileLine(_ meanwhile: TaskMeanwhile) -> some View {
+        let label = HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(PlanText.meanwhile)
+                .font(.system(size: detailSize, weight: .bold))
+                .foregroundStyle(AnchorIOSStyle.action)
+            if let target = meanwhile.taskID.flatMap({ id in tasks.first { $0.id == id } }) {
+                Circle().fill(HostedTaskAppearance.tint(target)).frame(width: 10, height: 10)
+                    .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
+                    .accessibilityHidden(true)
+            }
+            Text(PlanText.meanwhileLine(meanwhile))
+                .font(.system(size: stateSize, weight: .semibold))
+                .foregroundStyle(AnchorIOSStyle.text)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
+                .minimumScaleFactor(0.7)
+        }
+        if let id = meanwhile.taskID {
+            Button { onSelect(id) } label: { label.contentShape(.rect) }
+                .buttonStyle(AnchorPressButtonStyle())
+                .accessibilityElement(children: .combine)
+                .accessibilityHint(PlanText.makeCurrentHint)
+                .accessibilityIdentifier("ambient.meanwhile")
+        } else {
+            label
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("ambient.meanwhile")
         }
     }
 
@@ -310,6 +409,9 @@ struct LandscapeAmbientDashboard: View {
                 let shown = overflow ? Array(others.prefix(maxRows - 1)) : others
                 ForEach(Array(shown.enumerated()), id: \.element.id) { index, task in
                     chip(task)
+                        // The task that stopped being current slides over from the left.
+                        .transition(reduceMotion ? .opacity : .asymmetric(
+                            insertion: .offset(x: -48).combined(with: .opacity), removal: .opacity))
                         .opacity(rowsShown ? 1 : 0.4)
                         .offset(y: rowsShown ? 0 : 8)
                         .animation(reduceMotion ? .easeOut(duration: 0.16)
@@ -373,6 +475,18 @@ struct LandscapeAmbientDashboard: View {
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
             .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: 16))
+            .overlay {
+                ResultSwell(trigger: swellsByTask[task.id, default: 0], tone: swellTone,
+                            cornerRadius: 16, reduceMotion: reduceMotion)
+            }
+            .overlay {
+                // The task the "Meanwhile" line names wears its color as a frame.
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(HostedTaskAppearance.tint(task), lineWidth: 2.5)
+                    .opacity(meanwhile?.taskID == task.id ? 1 : 0)
+                    .animation(AnchorMotion.micro, value: meanwhile?.taskID)
+                    .accessibilityHidden(true)
+            }
             .contentShape(.rect)
         }
         .buttonStyle(AnchorPressButtonStyle())
@@ -408,6 +522,18 @@ struct LandscapeAmbientDashboard: View {
                 Rectangle().fill(AnchorIOSStyle.oceanSurface.opacity(0.32))
             }
             .frame(height: 48)
+            .overlay { HarborCurrent(flowing: isFlowing, reduceMotion: reduceMotion) }
+            // A result arriving lifts and tints the whole band once: a change
+            // the corner of the eye catches while you look at the Mac.
+            .keyframeAnimator(initialValue: 0.0, trigger: swells) { band, rise in
+                band
+                    .overlay { Rectangle().fill(swellTone.opacity(0.4 * rise)) }
+                    .scaleEffect(x: 1, y: reduceMotion ? 1 : 1 + 0.7 * rise, anchor: .bottom)
+            } keyframes: { _ in
+                CubicKeyframe(1, duration: reduceMotion ? 0.12 : 0.26)
+                LinearKeyframe(1, duration: 0.2)
+                CubicKeyframe(0, duration: 0.7)
+            }
             if !tasks.isEmpty {
                 // The rope only shows while the anchor falls.
                 Rectangle()

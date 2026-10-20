@@ -212,7 +212,7 @@ Each comes with my recommendation.
 ## 11. Not now
 
 - **Cloud or CloudKit** (needs a paid account): the phone can't update while you're out, and it shows the last sync honestly instead.
-- **Push notifications to the phone and Live Activities.**
+- **Push notifications to the phone and Live Activities.** Update 2026-10-19 (approved by the owner): a reminder the phone makes itself, with no push, is in. When you leave Anchor with the phone in hand while an agent works or a result waits, it reminds you after 2 minutes. A phone alert when an agent finishes and a Live Activity move from "not now" to "later": they depend on a device test of whether the Mac's updates reach a backgrounded phone over Bluetooth.
 - **AI-written summaries:** Apple's on-device model is a later option. Facts first.
 - **Creating tasks on the Mac:** goals stay on the iPhone, as you chose.
 - **Generic app or browser tracking:** excluded by design.

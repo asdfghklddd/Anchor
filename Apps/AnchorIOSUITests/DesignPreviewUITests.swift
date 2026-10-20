@@ -75,6 +75,54 @@ final class DesignPreviewUITests: XCTestCase {
         capture("desk-board-accessibility")
     }
 
+    /// The desk board while the current task's agent works, and the card that
+    /// interrupts when the phone is picked up, with the desk-wait fixture from
+    /// DesignPreviewFixtureTests: "Meanwhile" names the task with a result to check.
+    @MainActor
+    func testDeskWaitAndPickUp() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["ANCHOR_UI_TESTING"] = "1"
+        app.launchEnvironment["ANCHOR_UI_TEST_STORAGE_ID"] = "DE5C0000-7215-40E0-8B0B-000000000099"
+        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
+        XCUIDevice.shared.orientation = .portrait
+        app.launch()
+        defer { app.terminate(); XCUIDevice.shared.orientation = .portrait }
+        guard app.descendants(matching: .any)["home.glance"].waitForExistence(timeout: 8) else {
+            throw XCTSkip("Import the isolated desk-wait repository first.")
+        }
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        let meanwhile = app.descendants(matching: .any)["ambient.meanwhile"]
+        XCTAssertTrue(meanwhile.waitForExistence(timeout: 5))
+        XCTAssertTrue(meanwhile.label.contains("个人网站"), meanwhile.label)
+        capture("desk-wait-board")
+
+        // Picking the phone up interrupts; using it anyway is a deliberate choice.
+        XCUIDevice.shared.orientation = .portrait
+        let card = app.descendants(matching: .any)["desk.pickup"]
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        capture("desk-pickup")
+        app.buttons["desk.pickup.use-anyway"].tap()
+        XCTAssertTrue(card.waitForNonExistence(timeout: 3))
+        XCTAssertTrue(app.descendants(matching: .any)["home.glance"].exists)
+
+        // Each pick-up interrupts again, and the Meanwhile card switches to that task.
+        XCUIDevice.shared.orientation = .landscapeLeft
+        XCTAssertTrue(meanwhile.waitForExistence(timeout: 5))
+        XCUIDevice.shared.orientation = .portrait
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        app.descendants(matching: .any)["desk.pickup.meanwhile"].firstMatch.tap()
+        let agent = app.descendants(matching: .any)["desk.pickup.agent"]
+        let switched = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            agent.exists && agent.label.contains("项目页")
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [switched], timeout: 5), .completed)
+        capture("desk-pickup-switched")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        XCTAssertTrue(card.waitForNonExistence(timeout: 5))
+    }
+
     @MainActor private func capture(_ name: String) {
         let settled = expectation(description: "settled")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { settled.fulfill() }

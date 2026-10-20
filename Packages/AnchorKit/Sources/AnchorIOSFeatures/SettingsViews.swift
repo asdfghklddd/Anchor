@@ -39,16 +39,45 @@ struct SourceSettingsView: View {
 }
 
 struct NotificationSettingsView: View {
+    @AppStorage(DeskReminder.enabledKey) private var reminderEnabled = true
+    @AppStorage(DeskReminder.minutesKey) private var reminderMinutes = DeskReminder.defaultMinutes
+    @State private var reminder = DeskReminder()
 
     var body: some View {
         Form {
+            Section {
+                Toggle(DeskText.settingsToggle, isOn: $reminderEnabled)
+                    .accessibilityIdentifier("settings.desk-reminder")
+                if reminderEnabled {
+                    Picker(DeskText.settingsDelay, selection: $reminderMinutes) {
+                        ForEach(DeskReminder.minuteChoices, id: \.self) { minutes in
+                            Text(L10n.minutesShort(minutes)).tag(minutes)
+                        }
+                    }
+                    switch reminder.authorization {
+                    case .notDetermined:
+                        Button(DeskText.settingsAllow) { Task { await reminder.requestAuthorization() } }
+                    case .denied:
+                        Text(DeskText.settingsDenied).foregroundStyle(AnchorIOSStyle.secondaryText)
+                        Button(DeskText.settingsOpen) { DeskReminder.openSystemSettings() }
+                    default:
+                        EmptyView()
+                    }
+                }
+            } header: {
+                Text(DeskText.settingsSection)
+            } footer: {
+                Text(DeskText.settingsFooter)
+            }
+            .listRowBackground(AnchorIOSStyle.surface)
             Section(L10n.notificationsSettings) {
-                Text(AnchorStrings.value("notifications.availability", default: "Review decisions and process changes in Anchor. Background notifications are not available in this version."))
+                Text(AnchorStrings.value("notifications.availability", default: "Results from your agents show in Anchor. An alert on this iPhone when an agent finishes is not available yet."))
             }
             .listRowBackground(AnchorIOSStyle.surface)
         }
         .anchorIOSListSurface()
         .navigationTitle(L10n.notificationsSettings)
+        .task { await reminder.refresh() }
     }
 }
 

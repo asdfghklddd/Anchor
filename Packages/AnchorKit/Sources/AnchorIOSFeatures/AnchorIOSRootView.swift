@@ -27,6 +27,12 @@ public struct AnchorIOSRootView: View {
     @State private var gravity = DeviceGravityMonitor()
     @State private var posture = DevicePosture.unknown
     @State private var promptedRecoverySessionID: UUID?
+    /// The phone came off the desk during work: show the pick-up card (D05).
+    @State private var pickedUp = false
+    @State private var reminder = DeskReminder()
+    @AppStorage(DeskReminder.enabledKey) private var reminderEnabled = true
+    @AppStorage(DeskReminder.minutesKey) private var reminderMinutes = DeskReminder.defaultMinutes
+    @Environment(\.scenePhase) private var scenePhase
     @Namespace private var processTransition
 
     public init(
@@ -76,6 +82,24 @@ public struct AnchorIOSRootView: View {
                             anchorWeighs: anchorWeighs,
                             gravity: gravity
                         )
+                        .overlay {
+                            if pickedUp, let hold = deskHold {
+                                DeskPickUpCard(
+                                    hold: hold,
+                                    current: deskCurrent,
+                                    tasks: model.projection.hostedSessions,
+                                    reminderEnabled: reminderEnabled,
+                                    reminderMinutes: reminderMinutes,
+                                    reminderAuthorization: reminder.authorization,
+                                    onSelect: { id in Task { _ = await model.selectHostedTask(id) } },
+                                    onAllowReminder: { Task { await reminder.requestAuthorization() } },
+                                    onUseAnyway: { pickedUp = false }
+                                )
+                                // It is there the moment the phone turns; it fades when dismissed.
+                                .transition(.asymmetric(insertion: .identity, removal: .opacity))
+                            }
+                        }
+                        .animation(AnchorMotion.micro, value: pickedUp)
                     }
                 }
                 .navigationDestination(for: AnchorRoute.self) { route in
@@ -111,7 +135,9 @@ public struct AnchorIOSRootView: View {
             return width > height ? .landscape : .portrait
         } action: { newPosture in
             guard newPosture != posture else { return }
+            let previous = posture
             posture = newPosture
+            notePickUp(from: previous, to: newPosture)
             synchronizeInvitation()
             // A rotation pauses setup without discarding its input or task identity.
             if newPosture == .landscape, sheet == .setup {
@@ -186,7 +212,58 @@ public struct AnchorIOSRootView: View {
         } message: {
             Text(model.lastError ?? "")
         }
-        .task { model.start() }
+        .onChange(of: scenePhase) { _, phase in noteScenePhase(phase) }
+        // Once nothing holds the person at the desk, or they are away, the pick-up
+        // is over: a later run must not bring the card back while they use the phone.
+        .onChange(of: deskHold == nil || !isAtDesk) { _, released in
+            if released { pickedUp = false }
+        }
+        .task {
+            model.start()
+            await reminder.refresh()
+        }
+    }
+
+    // MARK: Back to the desk
+
+    /// The task the person is on, as the desk board shows it.
+    private var deskCurrent: AnchorSession? {
+        let tasks = model.projection.hostedSessions
+        return model.projection.session.flatMap { selected in tasks.first { $0.id == selected.id } } ?? tasks.first
+    }
+
+    /// Why the person belongs at the desk right now, if they do.
+    private var deskHold: DeskHold? {
+        DeskHold(current: deskCurrent, among: model.projection.hostedSessions)
+    }
+
+    /// Turning the phone upright off the desk board during work is the moment
+    /// the person asked to be interrupted; turning it back puts the card away.
+    /// Presence is untouched: the work continues either way (D05, D08).
+    private func notePickUp(from previous: DevicePosture, to posture: DevicePosture) {
+        if posture == .landscape {
+            pickedUp = false
+        } else if previous == .landscape, posture == .portrait, isAtDesk,
+                  sheet == nil, fullScreen == nil, deskHold != nil {
+            pickedUp = true
+        }
+    }
+
+    /// Leaving Anchor during work schedules the reminder; coming back withdraws it.
+    /// Only a phone held upright counts: the board on its stand locking itself
+    /// on battery also sends Anchor to the background, and that is not leaving.
+    private func noteScenePhase(_ phase: ScenePhase) {
+        switch phase {
+        case .background:
+            guard posture == .portrait, isAtDesk, isMacConnected, let hold = deskHold else { return }
+            let subtitle: String? = if case let .waiting(_, title, _, _) = hold { title } else { nil }
+            reminder.schedule(hold, subtitle: subtitle)
+        case .active:
+            reminder.cancel()
+            Task { await reminder.refresh() }
+        default:
+            break
+        }
     }
 
     // MARK: Landscape invitation

@@ -1329,6 +1329,261 @@
     "Departure detection paused" : {
 
     },
+    "desk.back" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to the desk"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回到桌前"
+          }
+        }
+      }
+    },
+    "desk.pickup.needs-you" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs you"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要你"
+          }
+        }
+      }
+    },
+    "desk.pickup.remind" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remind me if I stay away"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开太久时提醒我"
+          }
+        }
+      }
+    },
+    "desk.pickup.reminds" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder after %lld min away"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开 %lld 分钟后提醒"
+          }
+        }
+      }
+    },
+    "desk.pickup.sideways" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn the phone sideways to go back to the desk"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把手机横放，回到桌前"
+          }
+        }
+      }
+    },
+    "desk.pickup.use-anyway" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the phone anyway"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仍要使用手机"
+          }
+        }
+      }
+    },
+    "desk.reminder.needs-you" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ needs you · %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ 在等你 · %2$@"
+          }
+        }
+      }
+    },
+    "desk.reminder.prepare" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your agent was working when you left. Meanwhile: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你离开时代理正在工作。同时：%@"
+          }
+        }
+      }
+    },
+    "desk.settings.allow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow reminders"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许提醒"
+          }
+        }
+      }
+    },
+    "desk.settings.delay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开多久后"
+          }
+        }
+      }
+    },
+    "desk.settings.denied" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications are off for Anchor. Turn them on in Settings."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor 的通知已关闭，请在“设置”中打开。"
+          }
+        }
+      }
+    },
+    "desk.settings.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you leave Anchor while an agent works on your task or a result waits for you, a reminder comes after this long. It is made on this iPhone and needs no connection."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代理在为你的任务工作、或有结果在等你时离开 Anchor，过这么久会提醒你。提醒由这台 iPhone 自己发出，不需要连接。"
+          }
+        }
+      }
+    },
+    "desk.settings.open" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开设置"
+          }
+        }
+      }
+    },
+    "desk.settings.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desk reminder"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回桌提醒"
+          }
+        }
+      }
+    },
+    "desk.settings.toggle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remind me when I leave the desk"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开桌前时提醒我"
+          }
+        }
+      }
+    },
     "Device pairing is unavailable in this build." : {
 
     },
@@ -4157,13 +4412,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Review decisions and process changes in Anchor. Background notifications are not available in this version."
+            "value" : "Results from your agents show in Anchor. An alert on this iPhone when an agent finishes is not available yet."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请在 Anchor 内查看决策和进程变化。当前版本尚不支持后台通知。"
+            "value" : "代理的结果显示在 Anchor 中。代理完成时在这台 iPhone 上提醒，暂不可用。"
           }
         }
       }
@@ -4537,6 +4792,57 @@
     },
     "Pick up from your anchor note" : {
 
+    },
+    "plan.meanwhile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meanwhile"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同时"
+          }
+        }
+      }
+    },
+    "plan.meanwhile.look-over" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Look over what this task has so far"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回顾这个任务目前的结果"
+          }
+        }
+      }
+    },
+    "plan.meanwhile.prepare" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get step %lld ready: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "准备第 %lld 步：%@"
+          }
+        }
+      }
     },
     "Preparing" : {
 

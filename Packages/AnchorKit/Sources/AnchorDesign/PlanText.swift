@@ -42,6 +42,22 @@ public enum PlanText {
     public static let allStepsDone = AnchorStrings.value(
         "plan.next.finish", default: "All steps done. Finish the task when you agree.")
 
+    /// What to do while the agent works on the task you're on.
+    public static let meanwhile = AnchorStrings.value("plan.meanwhile", default: "Meanwhile")
+
+    /// The words of a meanwhile that stays on this task: the step to get ready, or a look over it.
+    public static func meanwhileLine(_ meanwhile: TaskMeanwhile) -> String {
+        switch meanwhile {
+        case let .other(_, title, action):
+            "\(title) · \(line(for: action, compact: true))"
+        case let .prepare(step?, text?):
+            String.localizedStringWithFormat(
+                AnchorStrings.value("plan.meanwhile.prepare", default: "Get step %lld ready: %@"), step + 1, text)
+        case .prepare:
+            AnchorStrings.value("plan.meanwhile.look-over", default: "Look over what this task has so far")
+        }
+    }
+
     public static func othersUnchanged(_ count: Int) -> String {
         String.localizedStringWithFormat(
             AnchorStrings.value("plan.return.unchanged", default: "Tasks with no changes: %lld"), count)

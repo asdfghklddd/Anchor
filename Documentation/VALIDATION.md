@@ -1,8 +1,48 @@
 # Anchor native validation record
 
-Last updated: 2026-10-18
+Last updated: 2026-10-19
 
-## Current results — the personal-tool direction, phases 1–7 (2026-10-16 to 10-18)
+## Current results — Meanwhile, the pick-up card, the desk reminder and desk motion (2026-10-19)
+
+Approved by the owner on 2026-10-19: while the agent works on the task you're on, the desk
+board says what to do instead of the phone ("Meanwhile": the next task that needs you, or
+this task's next step); picking the phone up during work interrupts with a card; leaving
+Anchor with the phone in hand reminds you after 2 minutes; and the board's motion follows
+real work (water flowing while a run is reported, one swell per new result, the task swap
+and the step-done sequence). D05, D08, D10 and D11 in DESIGN.md were changed accordingly.
+
+- **Swift package: 239 tests in 32 suites passed** (Swift Testing's own count; the package
+  has no XCTest cases). New: `TaskMeanwhileTests` (7: only while waiting, reading order,
+  longest-waiting first, the step after the agent's matched step, the desk hold) and the
+  `deskWaitMeanwhile` design-preview fixture.
+- **iOS Simulator (iPhone 18 Pro, iOS 27) Debug build and macOS Debug build passed**
+  (signing disabled for macOS); `git diff --check` passed.
+- **New UI test `testDeskWaitAndPickUp`** with the isolated desk-wait fixture: the board
+  shows "Meanwhile → 个人网站" with that chip framed; turning upright shows the pick-up
+  card; "Use the phone anyway" dismisses it; a second pick-up shows it again; tapping the
+  Meanwhile card makes 个人网站 current, and the card then reads its result to check;
+  turning sideways puts the card away. Passed, as did `testLivePlanDeskBoard` with its
+  fixture imported. Screenshots were inspected and kept in
+  `../Build/Previews/DeskWait-20261019/`. Both fixtures were removed from the simulator
+  afterwards.
+- **A bug the UI test found and fixed:** the first tap on "Use the phone anyway" did
+  nothing because only the 18 pt words took touches; the whole 44 pt row now does (D03).
+- **Rest of the iOS UI suite** (run without the new test): 16 passed, 3 skipped (fixtures
+  not imported, as before), 2 failed.
+  `testLivePlanDeskBoard` failed only because its fixture was not imported (its skip check
+  passes on an empty home) and passed once imported. `testFinalConfirmationClearsCurrentWork
+  AndRestoresDetailedHistory` fails on "Multiple matching elements" for the task's name
+  (card and glance lane); it fails the same way on the previous commit `418f08a`, so it
+  predates this change and is left as is.
+- **Not verified:** on a real iPhone, whether turning upright always means picking up the
+  phone; how the flowing water and the swell read from the corner of the eye and whether
+  they distract; that the reminder arrives (and under a Focus mode) and whether 2 minutes is
+  right; the soft haptic. The UI tests have no connected Mac, so the water never flows and
+  the reminder is never scheduled there; the swell is checked by code path only.
+  Phone alerts when an agent finishes and a Live Activity are not built (they depend on a
+  device test of background Bluetooth delivery).
+
+## Results — the personal-tool direction, phases 1–7 (2026-10-16 to 10-18)
 
 Built on `feat/auto-show` in one commit per phase, following
 [the approved product direction](PRODUCT_DIRECTION_2026-10-17.md): a live plan per task,
