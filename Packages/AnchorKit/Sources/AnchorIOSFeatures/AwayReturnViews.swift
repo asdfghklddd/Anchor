@@ -136,7 +136,7 @@ struct AwayView: View {
     let projection: SessionProjection
     let model: AnchorSessionModel
     private let onProfile: () -> Void
-    private let onNotifications: () -> Void
+    private let onSettings: () -> Void
     private let onLayout: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -146,13 +146,13 @@ struct AwayView: View {
         projection: SessionProjection,
         model: AnchorSessionModel,
         onProfile: @escaping () -> Void = {},
-        onNotifications: @escaping () -> Void = {},
+        onSettings: @escaping () -> Void = {},
         onLayout: @escaping () -> Void = {}
     ) {
         self.projection = projection
         self.model = model
         self.onProfile = onProfile
-        self.onNotifications = onNotifications
+        self.onSettings = onSettings
         self.onLayout = onLayout
     }
 
@@ -186,10 +186,9 @@ struct AwayView: View {
             .safeAreaInset(edge: .top, spacing: 0) {
                 HarborTopBar(
                     connection: projection.connection,
-                    unreadCount: projection.unreadNotificationsCount,
                     auxiliaryLabel: nil,
                     onProfile: onProfile,
-                    onNotifications: onNotifications,
+                    onSettings: onSettings,
                     onAuxiliary: nil
                 )
             }

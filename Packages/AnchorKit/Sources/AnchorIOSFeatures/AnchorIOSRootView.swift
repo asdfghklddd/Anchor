@@ -418,10 +418,7 @@ public struct AnchorIOSRootView: View {
         case .hostedTasks:
             HostedTasksView(model: model, onCreate: { sheet = .setup }, onEdit: { sheet = .goal }, onNote: { sheet = .note }, onFinish: { sheet = .finish })
         case .account:
-            ProfileEditorView()
-                .presentationDetents([.large])
-        case .icloud:
-            ProfileInfoSheet(kind: .icloud, projection: model.projection)
+            ProfileEditorView(projection: model.projection) { destination(for: $0) }
                 .presentationDetents([.large])
         case let .profileDetail(kind):
             ProfileDetailSheet(
@@ -454,11 +451,6 @@ public struct AnchorIOSRootView: View {
             if let goal = model.projection.session?.goal {
                 GoalEditorView(model: model, goal: goal)
             }
-        case .notifications:
-            NotificationsView(projection: model.projection) { id in
-                sheet = nil
-                path.append(.process(id))
-            }
         case .layout:
             TaskManagementView(model: model)
         case .finish:
@@ -486,9 +478,9 @@ public struct AnchorIOSRootView: View {
                 fullScreen = nil
                 path.append(.profile)
             },
-            onNotifications: {
+            onSettings: {
                 fullScreen = nil
-                sheet = .notifications
+                sheet = .account
             },
             onLayout: {
                 fullScreen = nil
@@ -566,7 +558,7 @@ private struct AnchorFullScreenHost: View {
     let item: AnchorFullScreen
     let model: AnchorSessionModel
     let onProfile: () -> Void
-    let onNotifications: () -> Void
+    let onSettings: () -> Void
     let onLayout: () -> Void
 
     @AnchorReducedMotion private var reduceMotion
@@ -591,7 +583,7 @@ private struct AnchorFullScreenHost: View {
                 projection: model.projection,
                 model: model,
                 onProfile: onProfile,
-                onNotifications: onNotifications,
+                onSettings: onSettings,
                 onLayout: onLayout
             )
         case .returning:

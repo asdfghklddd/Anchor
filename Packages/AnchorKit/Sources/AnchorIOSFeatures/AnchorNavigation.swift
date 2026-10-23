@@ -31,12 +31,10 @@ enum AnchorSheet: Hashable, Identifiable {
     case setup
     case note
     case goal
-    case notifications
     case layout
     case finish
     case recovery(UUID)
     case account
-    case icloud
     case profileDetail(ProfileDetailKind)
 
     var id: Self { self }

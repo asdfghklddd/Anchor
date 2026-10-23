@@ -41,6 +41,7 @@ struct HostedTaskCard: View {
             }
             .animation(reduceMotion ? .easeOut(duration: 0.16) : .spring(duration: 0.36, bounce: 0.3),
                        value: summary.isComplete)
+            .animation(AnchorMotion.micro, value: isCurrent)
             // The person's own next move leads; the last event is the fallback for a task without steps.
             if showsLatest {
                 if let nextAction {
@@ -58,7 +59,10 @@ struct HostedTaskCard: View {
                     statusLine(tint: tint)
                 }
                 Spacer(minLength: 4)
-                if isCurrent { currentTag(tint: tint) }
+                if isCurrent {
+                    currentTag(tint: tint)
+                        .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.9)))
+                }
                 if let planProgress {
                     if showsLatest, !summary.isComplete { stepsCapsule(planProgress, tint: tint) }
                 } else if let progress = displayedProgress {

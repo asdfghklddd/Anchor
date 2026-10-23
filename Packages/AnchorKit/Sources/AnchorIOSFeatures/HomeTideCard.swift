@@ -87,8 +87,35 @@ struct HomeTideCard: View {
 
     // MARK: Headline
 
-    @ViewBuilder
+    /// A change in what the headline is about fades through, the new line rising
+    /// a little; a count changing within the same kind rolls in place instead.
     private func headline(_ glance: WorkGlance) -> some View {
+        let kind = Self.kind(of: glance.headline)
+        return ZStack(alignment: .topLeading) {
+            headlineContent(glance)
+                .id(kind)
+                .transition(reduceMotion ? .opacity : .asymmetric(
+                    insertion: .opacity.combined(with: .offset(y: 6)),
+                    removal: .opacity.combined(with: .offset(y: -6))))
+        }
+        .animation(AnchorMotion.micro, value: kind)
+    }
+
+    private static func kind(of headline: WorkGlance.Headline) -> Int {
+        switch headline {
+        case .empty: 0
+        case .awaitingSources: 1
+        case .failed: 2
+        case .attention: 3
+        case .needsYou: 4
+        case .running: 5
+        case .allCompleted: 6
+        case .quiet: 7
+        }
+    }
+
+    @ViewBuilder
+    private func headlineContent(_ glance: WorkGlance) -> some View {
         switch glance.headline {
         case .empty:
             message(L10n.glanceEmpty, detail: L10n.glanceEmptyDetail, symbol: "water.waves")

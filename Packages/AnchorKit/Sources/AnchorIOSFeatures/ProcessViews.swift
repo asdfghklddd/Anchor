@@ -332,39 +332,6 @@ struct GoalEditorView: View {
     }
 }
 
-struct NotificationsView: View {
-    let projection: SessionProjection
-    let onOpenProcess: (UUID) -> Void
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            List(projection.session?.timeline ?? []) { event in
-                Button {
-                    if let processID = event.processID { onOpenProcess(processID) }
-                } label: {
-                    EventRow(event: event)
-                }
-                .buttonStyle(.plain)
-                .disabled(event.processID == nil)
-                .listRowBackground(AnchorIOSStyle.surface)
-            }
-            .overlay {
-                if projection.session?.timeline.isEmpty != false {
-                    ContentUnavailableView(L10n.noEvents, systemImage: "bell.slash")
-                }
-            }
-            .anchorIOSListSurface()
-            .navigationTitle(L10n.notifications)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(L10n.done) { dismiss() }
-                }
-            }
-        }
-    }
-}
-
 struct EventRow: View {
     let event: ProcessEvent
 

@@ -11,7 +11,12 @@ struct AnchorSavedPlan: View {
     var onToggleStep: ((UUID, Bool) -> Void)? = nil
     var onEditSteps: (([AnchorUserPlan.Step]) -> Void)? = nil
     @State private var images: [Data] = []
-    @State private var checkedCount = 0
+    /// The step the person just checked; it ticks once the saved plan shows it done.
+    @State private var pendingCheck: UUID?
+    @State private var savedChecks = 0
+    /// Per step, how many saved checks it has had: each bounces its circle once.
+    @State private var bounces: [UUID: Int] = [:]
+    @AnchorReducedMotion private var reduceMotion
     @State private var editing = false
 
     var body: some View {
@@ -42,7 +47,15 @@ struct AnchorSavedPlan: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("task.saved.plan")
-            .sensoryFeedback(.success, trigger: checkedCount)
+            // Success follows the save, not the tap: a failed save never ticks (D06).
+            .sensoryFeedback(.success, trigger: savedChecks)
+            .onChange(of: plan.items.filter(\.isDone).map(\.id)) { _, done in
+                guard let pendingCheck, done.contains(pendingCheck) else { return }
+                self.pendingCheck = nil
+                // The bounce and the haptic land on the same frame.
+                bounces[pendingCheck, default: 0] += 1
+                savedChecks += 1
+            }
             .sheet(isPresented: $editing) {
                 if let onEditSteps { AnchorPlanEditor(plan: plan, onSave: onEditSteps) }
             }
@@ -68,6 +81,8 @@ struct AnchorSavedPlan: View {
                 .font(.body)
                 .foregroundStyle(done ? AnchorStateTone.done.ink : AnchorIOSStyle.secondaryText)
                 .contentTransition(.symbolEffect(.replace))
+                .symbolEffect(.bounce, options: .nonRepeating,
+                              value: reduceMotion ? 0 : bounces[step.id, default: 0])
                 .accessibilityHidden(true)
             Text(String(format: "%02d", index + 1)).font(.caption.monospacedDigit())
                 .foregroundStyle(AnchorIOSStyle.action)
@@ -87,10 +102,10 @@ struct AnchorSavedPlan: View {
 
         if let onToggleStep {
             Button {
-                if !done { checkedCount += 1 }
+                pendingCheck = done ? nil : step.id
                 onToggleStep(step.id, !done)
             } label: { row }
-            .buttonStyle(.plain)
+            .buttonStyle(AnchorPressButtonStyle())
             .accessibilityLabel("\(index + 1). \(text)")
             .accessibilityValue(done ? PlanText.doneState : PlanText.openState)
             .accessibilityHint(PlanText.toggleHint)

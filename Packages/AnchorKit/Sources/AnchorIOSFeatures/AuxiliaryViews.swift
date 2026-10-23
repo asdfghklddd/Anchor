@@ -30,7 +30,7 @@ struct InsightsView: View {
                     }
                 }
                 Text(L10n.activity).font(.title2.bold())
-                ForEach(projection.session?.timeline ?? []) { event in
+                ForEach(projection.session?.records ?? []) { event in
                     EventRow(event: event)
                 }
             }
@@ -86,7 +86,6 @@ struct ProfileView: View {
                     metricStrip
                     sessionCard
                     memorySection
-                    workStyleSection
                 }
                 .padding(.horizontal, AnchorSpacing.medium)
                 .padding(.bottom, AnchorSpacing.xLarge)
@@ -99,22 +98,11 @@ struct ProfileView: View {
         .navigationTitle(L10n.profile)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    onSheet(.account)
-                } label: {
-                    Image(systemName: "slider.horizontal.3")
-                }
-                .accessibilityLabel(L10n.settings)
-                .accessibilityIdentifier("profile.account.button")
-            }
-        }
     }
 
     private var identityCard: some View {
         HStack(spacing: 14) {
-            ProfileAvatar(size: 56)
+            ProfileAvatarButton(size: 56)
             VStack(alignment: .leading, spacing: 4) {
                 Text(L10n.personalAnchor)
                     .font(.caption.bold())
@@ -126,6 +114,7 @@ struct ProfileView: View {
                     .font(.caption.bold())
                     .foregroundStyle(AnchorPalette.secondaryText)
             }
+            .accessibilityElement(children: .combine)
             Spacer(minLength: 8)
             VStack(spacing: 2) {
                 Text(projection.connection == .connected ? "1" : "0")
@@ -144,6 +133,7 @@ struct ProfileView: View {
                 RoundedRectangle(cornerRadius: 14)
                     .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
             }
+            .accessibilityElement(children: .combine)
         }
         .padding(18)
         .fluoriteSurface(
@@ -153,7 +143,7 @@ struct ProfileView: View {
             elevated: true
         )
         .padding(.top, 8)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
     }
 
     private var metricStrip: some View {
@@ -299,7 +289,7 @@ struct ProfileView: View {
             }
 
             VStack(spacing: 0) {
-                ForEach(Array((projection.session?.timeline ?? []).prefix(3).enumerated()), id: \.element.id) { index, event in
+                ForEach(Array((projection.session?.records ?? []).prefix(3).enumerated()), id: \.element.id) { index, event in
                     Button {
                         onSheet(.profileDetail(.session))
                     } label: {
@@ -325,7 +315,7 @@ struct ProfileView: View {
                         .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
-                    if index < min(2, (projection.session?.timeline.count ?? 1) - 1) {
+                    if index < min(2, (projection.session?.records.count ?? 1) - 1) {
                         Divider().padding(.leading, 45)
                     }
                 }
@@ -333,70 +323,6 @@ struct ProfileView: View {
             .padding(.horizontal, 13)
             .fluoriteSurface(cornerRadius: 18)
         }
-    }
-
-    private var workStyleSection: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            Text(L10n.workStyle)
-                .font(.caption2.bold())
-                .foregroundStyle(AnchorPalette.link)
-
-            VStack(spacing: 0) {
-                routeRow(L10n.taskManagement, symbol: "square.grid.2x2", route: .taskManagement)
-                Divider().padding(.leading, 48)
-                sheetRow(
-                    AnchorStrings.value("settings.icloud", default: "iCloud Sync"),
-                    symbol: "icloud",
-                    sheet: .icloud
-                )
-                Divider().padding(.leading, 48)
-                sheetRow(L10n.connections, symbol: "macbook.and.iphone", sheet: .connections)
-                Divider().padding(.leading, 48)
-                routeRow(L10n.sources, symbol: "point.3.connected.trianglepath.dotted", route: .sources)
-                Divider().padding(.leading, 48)
-                routeRow(L10n.notificationsSettings, symbol: "bell", route: .notificationSettings)
-                Divider().padding(.leading, 48)
-                routeRow(L10n.privacy, symbol: "hand.raised", route: .privacy)
-                Divider().padding(.leading, 48)
-                routeRow(L10n.accessibility, symbol: "accessibility", route: .accessibility)
-            }
-            .padding(.horizontal, 12)
-            .fluoriteSurface(cornerRadius: 18)
-        }
-    }
-
-    private func routeRow(_ title: String, symbol: String, route: AnchorRoute) -> some View {
-        Button { onRoute(route) } label: {
-            HStack(spacing: 12) {
-                Image(systemName: symbol)
-                    .foregroundStyle(AnchorPalette.interaction)
-                    .frame(width: 32, height: 32)
-                    .background(AnchorPalette.softBlue.opacity(0.62), in: .rect(cornerRadius: 9))
-                Text(title).font(.subheadline.bold()).foregroundStyle(AnchorPalette.ink)
-                Spacer()
-                Image(systemName: "chevron.right").font(.caption2.bold()).foregroundStyle(AnchorPalette.secondaryText)
-            }
-            .frame(minHeight: 50)
-            .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func sheetRow(_ title: String, symbol: String, sheet: AnchorSheet) -> some View {
-        Button { onSheet(sheet) } label: {
-            HStack(spacing: 12) {
-                Image(systemName: symbol)
-                    .foregroundStyle(AnchorPalette.interaction)
-                    .frame(width: 32, height: 32)
-                    .background(AnchorPalette.softBlue.opacity(0.62), in: .rect(cornerRadius: 9))
-                Text(title).font(.subheadline.bold()).foregroundStyle(AnchorPalette.ink)
-                Spacer()
-                Image(systemName: "chevron.right").font(.caption2.bold()).foregroundStyle(AnchorPalette.secondaryText)
-            }
-            .frame(minHeight: 50)
-            .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
     }
 
     private func memoryTint(_ index: Int) -> Color {
@@ -510,9 +436,9 @@ struct HistoryDetailView: View {
                             .background(AnchorPalette.surface, in: .rect(cornerRadius: 18))
                     }
                 }
-                if let session, !session.timeline.isEmpty {
+                if let session, !session.records.isEmpty {
                     Text(L10n.activity).font(.title2.bold())
-                    ForEach(session.timeline) { event in
+                    ForEach(session.records) { event in
                         EventRow(event: event)
                     }
                 }

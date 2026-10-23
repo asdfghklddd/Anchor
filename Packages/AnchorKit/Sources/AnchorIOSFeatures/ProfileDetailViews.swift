@@ -325,6 +325,7 @@ struct ProfileDetailSheet: View {
                                 .font(.subheadline.bold())
                                 .foregroundStyle(AnchorPalette.ink)
                             Text(L10n.status(process.status))
+                                .contentTransition(.opacity)
                                 .font(.caption2)
                                 .foregroundStyle(AnchorPalette.secondaryInk)
                             if !process.detail.isEmpty {
@@ -344,12 +345,15 @@ struct ProfileDetailSheet: View {
                                     .frame(width: 64)
                             } else {
                                 Text(L10n.compactStatus(process.status))
+                                    .contentTransition(.opacity)
                                     .font(.caption.bold())
                                     .foregroundStyle(AnchorPalette.secondaryInk)
                             }
                         }
                     }
                     .padding(.vertical, 10)
+                    // A status that changes while you read crossfades instead of jumping.
+                    .animation(AnchorMotion.micro, value: process.status)
                     if process.id != processes.last?.id {
                         Divider().padding(.leading, 44)
                     }
@@ -424,7 +428,7 @@ struct ProfileDetailSheet: View {
     }
 
     private var timeline: [ProcessEvent] {
-        Array((projection.session?.timeline ?? []).sorted { $0.occurredAt > $1.occurredAt }.prefix(6))
+        Array((projection.session?.records ?? []).sorted { $0.occurredAt > $1.occurredAt }.prefix(6))
     }
 
     /// The person's own checked steps when they wrote some; a source's percentage otherwise.

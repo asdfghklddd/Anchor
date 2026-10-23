@@ -37,7 +37,8 @@ struct PortraitDashboard: View {
                         Spacer()
                         Button { onSheet(.hostedTasks) } label: {
                             HStack(spacing: 4) {
-                                Circle().fill(projection.hostedSessions.isEmpty ? AnchorIOSStyle.border : AnchorIOSStyle.success)
+                                // Neutral: green belongs to "done" (D02), and a count is not a state.
+                                Circle().fill(AnchorIOSStyle.border)
                                 .frame(width: 7, height: 7)
                                 Text("\(projection.hostedSessions.count)")
                                 HarborAnchorGlyph(color: AnchorIOSStyle.secondaryText, lineWidth: 1.2)
@@ -56,19 +57,28 @@ struct PortraitDashboard: View {
                             .frame(maxWidth: .infinity, minHeight: 120)
                             .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: 16))
                             .accessibilityIdentifier("workspace.empty.processes")
+                            // Fades as the first anchor drops, so the drop isn't fighting a jump.
+                            .transition(.opacity)
                     } else {
-                        taskGrid
+                        // The first card's own drop choreography brings it in.
+                        taskGrid.transition(.asymmetric(insertion: .identity, removal: .opacity))
                     }
                     let recap = TodayRecap(open: projection.hostedSessions, archived: projection.archivedSessions, now: .now)
                     if !recap.isEmpty {
                         TodayRecapCard(recap: recap, onTask: onTask)
                             .padding(.top, 16)
+                            .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 8)))
                     }
                 }
+                .animation(AnchorMotion.micro, value: projection.hostedSessions.isEmpty)
+                .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: showsRecap)
                 .padding(.horizontal, 20).padding(.top, 8).padding(.bottom, 12)
                 .frame(maxWidth: 760).frame(maxWidth: .infinity)
             }
             .scrollIndicators(.hidden)
+            // Cards fade under the anchor button instead of meeting a hard band; the top
+            // keeps the system's firmer edge, which keeps the name and link status readable.
+            .scrollEdgeEffectStyle(.soft, for: .bottom)
             .accessibilityIdentifier("workspace.screen")
             if let invitation {
                 // Behind the anchor button, which floats on the water.
@@ -81,13 +91,13 @@ struct PortraitDashboard: View {
                 .transition(.opacity)
             }
         }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            HarborTopBar(connection: projection.connection, unreadCount: projection.unreadNotificationsCount,
+        .safeAreaBar(edge: .top, spacing: 0) {
+            HarborTopBar(connection: projection.connection,
                 auxiliaryLabel: auxiliaryToolbarLabel, onProfile: { onRoute(.profile) },
-                onNotifications: { onSheet(.notifications) }, onAuxiliary: auxiliaryToolbarAction,
+                onSettings: { onSheet(.account) }, onAuxiliary: auxiliaryToolbarAction,
                 onConnection: { onSheet(.connections) })
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        .safeAreaBar(edge: .bottom, spacing: 0) {
             HarborAnchorButton(
                 isInviting: invitation == .inviting,
                 drops: anchorDrops,
@@ -98,6 +108,11 @@ struct PortraitDashboard: View {
             .padding(.top, 8).padding(.bottom, 4)
         }
         .toolbar(.hidden, for: .navigationBar)
+    }
+
+    /// The day's recap shows once something happened today.
+    private var showsRecap: Bool {
+        !TodayRecap(open: projection.hostedSessions, archived: projection.archivedSessions, now: .now).isEmpty
     }
 
     private var taskGrid: some View {

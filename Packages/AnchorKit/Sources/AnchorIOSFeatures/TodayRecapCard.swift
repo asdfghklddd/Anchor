@@ -39,7 +39,7 @@ struct TodayRecapCard: View {
                     .font(.subheadline)
                     .contentShape(.rect)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(AnchorPressButtonStyle())
                 .accessibilityElement(children: .combine)
             }
             if recap.finishedSteps.count > 4 {
@@ -69,7 +69,8 @@ struct TodayRecapCard: View {
             Image(systemName: symbol).foregroundStyle(tint).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(label).font(.caption.weight(.semibold)).foregroundStyle(AnchorIOSStyle.secondaryText)
-                ForEach(text, id: \.self) { item in
+                // Two tasks can share a title and an action; position keeps rows distinct.
+                ForEach(Array(text.enumerated()), id: \.offset) { _, item in
                     Text(item).font(.subheadline).foregroundStyle(AnchorIOSStyle.text).lineLimit(2)
                 }
             }

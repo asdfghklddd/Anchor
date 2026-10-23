@@ -5,10 +5,9 @@ import SwiftUI
 
 struct HarborTopBar: View {
     let connection: ConnectionState
-    let unreadCount: Int
     let auxiliaryLabel: String?
     let onProfile: () -> Void
-    let onNotifications: () -> Void
+    let onSettings: () -> Void
     let onAuxiliary: (() -> Void)?
 
 
@@ -40,7 +39,7 @@ struct HarborTopBar: View {
             brandBlock
             Spacer()
             auxiliaryButton
-            notificationsButton
+            settingsButton
         }
         .frame(minHeight: 56)
     }
@@ -56,7 +55,7 @@ struct HarborTopBar: View {
             HStack(spacing: AnchorSpacing.small) {
                 Spacer(minLength: 0)
                 auxiliaryButton
-                notificationsButton
+                settingsButton
             }
         }
     }
@@ -74,13 +73,19 @@ struct HarborTopBar: View {
         Button { onConnection?() } label: {
             VStack(alignment: .leading, spacing: 0) {
                 Text(displayName).font(.headline.bold()).foregroundStyle(AnchorPalette.brandDeep)
-                Label(connectionLabel, systemImage: connectionSymbol)
-                    .font(.caption).foregroundStyle(connectionColor)
+                // The link changing state morphs in place: icon replaced, words crossfaded.
+                Label {
+                    Text(connectionLabel).contentTransition(.opacity)
+                } icon: {
+                    Image(systemName: connectionSymbol).contentTransition(.symbolEffect(.replace))
+                }
+                .font(.caption).foregroundStyle(connectionColor)
+                .animation(AnchorMotion.micro, value: connectionLabel)
             }
             .frame(minWidth: 44, minHeight: 44, alignment: .leading)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AnchorPressButtonStyle())
         .accessibilityIdentifier("workspace.connection.action")
     }
 
@@ -100,20 +105,11 @@ struct HarborTopBar: View {
         }
     }
 
-    private var notificationsButton: some View {
-        Button(action: onNotifications) {
-            ZStack(alignment: .topTrailing) {
-                Image(systemName: "bell")
-                    .font(.body.bold())
-                    .frame(width: 18, height: 18)
-                if unreadCount > 0 {
-                    Circle()
-                        .fill(AnchorPalette.attention)
-                        .frame(width: 8, height: 8)
-                        .overlay { Circle().stroke(AnchorPalette.canvas, lineWidth: 2) }
-                        .offset(x: -4, y: 4)
-                }
-            }
+    private var settingsButton: some View {
+        Button(action: onSettings) {
+            Image(systemName: "gearshape")
+                .font(.body.bold())
+                .frame(width: 18, height: 18)
         }
         .foregroundStyle(AnchorIOSStyle.action)
         .frame(width: 44, height: 44)
@@ -121,8 +117,8 @@ struct HarborTopBar: View {
         .overlay { Circle().strokeBorder(AnchorIOSStyle.border, lineWidth: 1) }
         .shadow(color: AnchorIOSStyle.heading.opacity(0.08), radius: 6, y: 3)
         .buttonStyle(AnchorPressButtonStyle())
-        .accessibilityLabel(L10n.notifications)
-        .accessibilityValue(unreadCount == 0 ? "" : "\(unreadCount)")
+        .accessibilityLabel(L10n.settings)
+        .accessibilityIdentifier("topbar.settings.button")
     }
 
     private var connectionLabel: String {
