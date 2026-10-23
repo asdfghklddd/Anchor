@@ -3,7 +3,7 @@
 A proposal, not an implementation. It reads the intent behind Anchor's existing design,
 checks whether the Mac side completes the product loop, and suggests what to add,
 streamline or leave out. Principles P1–P6 and rules D01–D13 refer to
-[DESIGN.md](../DESIGN.md); findings H1–H5 refer to
+[DESIGN.md](https://github.com/asdfghklddd/Anchor/blob/backup/agent-design-docs/DESIGN.md); findings H1–H5 refer to
 [the 2026-10-09 macOS review](UI_UX_REVIEW_2026-10-09_macOS.md). ⚠️ marks proposals that touch
 a user-confirmed layout or rule.
 

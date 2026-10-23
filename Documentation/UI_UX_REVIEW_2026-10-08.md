@@ -3,7 +3,7 @@
 Second-round review of the iOS and macOS apps, focused on visual design, interaction and
 animation. It complements [the 2026-10-02 review](UI_UX_REVIEW_2026-10-02.md) and does not
 repeat its open candidates (I4–I8, M3–M6). Design rules referenced as P1–P6 and D01–D13
-come from [DESIGN.md](../DESIGN.md).
+come from [DESIGN.md](https://github.com/asdfghklddd/Anchor/blob/backup/agent-design-docs/DESIGN.md).
 
 ## Status
 

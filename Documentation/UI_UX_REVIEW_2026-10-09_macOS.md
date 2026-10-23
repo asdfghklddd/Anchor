@@ -4,7 +4,7 @@ Third review round, macOS only (detail window, Settings, edge boat/anchor panels
 It complements [the 2026-10-02 review](UI_UX_REVIEW_2026-10-02.md) and
 [the 2026-10-08 review](UI_UX_REVIEW_2026-10-08.md) and does not repeat their open
 candidates (listed at the end). Rules referenced as P1–P6 and D01–D13 come from
-[DESIGN.md](../DESIGN.md). Nothing in the app was changed by this review.
+[DESIGN.md](https://github.com/asdfghklddd/Anchor/blob/backup/agent-design-docs/DESIGN.md). Nothing in the app was changed by this review.
 
 ## Status
 
