@@ -33,7 +33,6 @@ enum SetupCopy {
     static let removePhoto = AnchorStrings.value("setup.plan.photo.remove", default: "Remove image")
     static let photo = AnchorStrings.value("setup.plan.photo", default: "Reference image")
     static let doneEditing = AnchorStrings.value("setup.plan.edit.done", default: "Done editing")
-    static let draftKept = AnchorStrings.value("setup.draft.kept", default: "Close and reopen to continue this draft.")
     static let discardDraft = AnchorStrings.value("setup.draft.discard", default: "Discard draft")
     static let discardDraftQuestion = AnchorStrings.value("setup.draft.discard.question", default: "Discard this draft?")
 

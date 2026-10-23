@@ -33,7 +33,7 @@ struct AnchorSetupVoiceButton: View {
             .font(.system(active ? .body : .title3, weight: .regular))
             .foregroundStyle(active ? AnchorSetupStyle.accent : .white)
             .frame(width: 48, height: 48)
-            .background(active ? AnchorSetupStyle.card : AnchorSetupStyle.accent, in: .circle)
+            .background { face }
             .overlay { if active { Circle().stroke(AnchorSetupStyle.accent, lineWidth: 1.2) } }
             // A ring that breathes with the voice while it is heard.
             .background {
@@ -44,7 +44,6 @@ struct AnchorSetupVoiceButton: View {
                         .animation(reduceMotion ? nil : .easeOut(duration: 0.08), value: level)
                 }
             }
-            .shadow(color: active ? AnchorSetupStyle.accent.opacity(0.12) : .clear, radius: 3, y: 2)
             .scaleEffect(holding ? 1.12 : (pressed ? 0.94 : 1))
             .animation(AnchorMotion.micro, value: holding)
             .animation(AnchorMotion.micro, value: pressed)
@@ -63,6 +62,31 @@ struct AnchorSetupVoiceButton: View {
             .accessibilityHint(SetupCopy.voiceHoldHint)
             .accessibilityAction { active ? end() : begin() }
             .accessibilityIdentifier("setup.voice.input.button")
+    }
+
+    /// At rest it is a small dome, lit from above with a soft shadow under it;
+    /// a press sinks it. While listening it stays pressed in, shaded inside.
+    @ViewBuilder private var face: some View {
+        if active {
+            Circle().fill(AnchorSetupStyle.card
+                .shadow(.inner(color: AnchorPalette.deepSea.opacity(0.18), radius: 2.5, y: 1.5)))
+        } else {
+            let sunk = pressed
+            Circle()
+                .fill(LinearGradient(
+                    colors: [
+                        AnchorSetupStyle.accent.mix(with: .white, by: 0.2),
+                        AnchorSetupStyle.accent.mix(with: AnchorSetupStyle.heading, by: 0.22),
+                    ],
+                    startPoint: .top, endPoint: .bottom))
+                .overlay {
+                    Circle().strokeBorder(
+                        LinearGradient(colors: [.white.opacity(0.6), .white.opacity(0)], startPoint: .top, endPoint: .center),
+                        lineWidth: 1)
+                }
+                .shadow(color: AnchorPalette.deepSea.opacity(0.22), radius: 1, y: 1)
+                .shadow(color: AnchorSetupStyle.accent.opacity(sunk ? 0.18 : 0.38), radius: sunk ? 3 : 7, y: sunk ? 1.5 : 4)
+        }
     }
 
     private func pressBegan() {

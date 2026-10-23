@@ -101,9 +101,6 @@
         .padding(.vertical, 8)
       } else if draft.hasContent {
         HStack(spacing: 12) {
-          Text(SetupCopy.draftKept).font(.caption)
-            .foregroundStyle(AnchorIOSStyle.secondaryText)
-            .fixedSize(horizontal: false, vertical: true)
           Spacer(minLength: 0)
           Button(SetupCopy.discardDraft, role: .destructive) {
             showsDiscardConfirmation = true

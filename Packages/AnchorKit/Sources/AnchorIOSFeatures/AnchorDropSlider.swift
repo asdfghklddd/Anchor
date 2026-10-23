@@ -65,10 +65,18 @@ struct AnchorDropSlider: View {
 
     // MARK: Parts
 
-    /// The channel: pale water, with a rim the current runs along.
+    /// The channel: pale water set into the page, shaded under its top edge and
+    /// catching light on its lower lip, with a rim the current runs along.
     private func channel(time: TimeInterval) -> some View {
         Capsule()
-            .fill(AnchorSetupStyle.card.opacity(enabled ? 0.92 : 0.6))
+            .fill(AnchorSetupStyle.card.opacity(enabled ? 0.92 : 0.6)
+                .shadow(.inner(color: AnchorPalette.deepSea.opacity(enabled ? 0.16 : 0.07), radius: 3, y: 2)))
+            .overlay {
+                Capsule().strokeBorder(
+                    LinearGradient(colors: [.clear, .white.opacity(0.55)], startPoint: .center, endPoint: .bottom),
+                    lineWidth: 1)
+                    .padding(1.5)
+            }
             .overlay {
                 Capsule().strokeBorder(rim(time: time), lineWidth: enabled ? 1.6 : 1)
             }
@@ -151,9 +159,25 @@ struct AnchorDropSlider: View {
 
     private func anchorKnob(progress: CGFloat) -> some View {
         ZStack {
+            // A domed knob: lit from above, a bright bevel on top, a faint
+            // shade along the bottom edge, a tight contact shadow under a soft
+            // one. Picked up, it rises and its shadow spreads.
             Circle()
-                .fill(AnchorSetupStyle.card)
-                .shadow(color: AnchorPalette.deepSea.opacity(enabled ? 0.22 : 0.08), radius: dragging ? 9 : 5, y: dragging ? 5 : 3)
+                .fill(LinearGradient(
+                    colors: [AnchorSetupStyle.card, AnchorSetupStyle.knobShade],
+                    startPoint: .top, endPoint: .bottom))
+                .overlay {
+                    Circle().strokeBorder(
+                        LinearGradient(colors: [.white.opacity(0.95), .white.opacity(0)], startPoint: .top, endPoint: .center),
+                        lineWidth: 1.2)
+                }
+                .overlay {
+                    Circle().strokeBorder(
+                        LinearGradient(colors: [.clear, AnchorPalette.deepSea.opacity(0.14)], startPoint: .center, endPoint: .bottom),
+                        lineWidth: 1)
+                }
+                .shadow(color: AnchorPalette.deepSea.opacity(enabled ? 0.24 : 0.1), radius: 1.2, y: 1)
+                .shadow(color: AnchorPalette.deepSea.opacity(enabled ? 0.2 : 0.06), radius: dragging ? 11 : 5, y: dragging ? 7 : 3)
             AnchorFigure(color: enabled ? AnchorSetupStyle.accent : AnchorSetupStyle.secondary.opacity(0.5), depth: enabled)
                 .frame(width: 28, height: 28)
                 // Trails back as it is pulled, then sinks a little when it lets go.
@@ -168,7 +192,8 @@ struct AnchorDropSlider: View {
             }
         }
         .frame(width: knob, height: knob)
-        .scaleEffect(dragging ? 1.06 : 1)
+        .scaleEffect(dragging ? 1.04 : 1)
+        .offset(y: dragging ? -1 : 0)
         .animation(AnchorMotion.micro, value: dragging)
         .animation(AnchorMotion.micro, value: dropped)
         .contentShape(.circle)
@@ -180,12 +205,16 @@ struct AnchorDropSlider: View {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
                 dragging = true
-                offset = min(travel, max(0, value.translation.width))
-                armed = offset / travel >= threshold
+                offset = Self.rubberBand(value.translation.width, travel: travel)
+                // A little slack below the mark, so a hand resting on it ticks once.
+                let reach = offset / travel
+                if reach >= threshold { armed = true } else if reach < threshold - 0.06 { armed = false }
             }
-            .onEnded { _ in
+            .onEnded { value in
                 dragging = false
-                if offset / travel >= threshold {
+                // A firm flick from past halfway carries it the rest of the way.
+                let flung = offset / travel > 0.45 && value.predictedEndTranslation.width >= travel * 1.15
+                if offset / travel >= threshold || flung {
                     withAnimation(reduceMotion ? .easeOut(duration: 0.12) : .spring(duration: 0.28, bounce: 0.15)) {
                         offset = travel
                     }
@@ -204,6 +233,16 @@ struct AnchorDropSlider: View {
                     }
                 }
             }
+    }
+
+    /// Follows the finger across the channel and gives a little, with growing
+    /// resistance, past either end instead of stopping dead.
+    private static func rubberBand(_ x: CGFloat, travel: CGFloat) -> CGFloat {
+        let give: CGFloat = 10
+        func stretch(_ over: CGFloat) -> CGFloat { give * (1 - 1 / (over / give * 0.55 + 1)) }
+        if x < 0 { return -stretch(-x) }
+        if x > travel { return travel + stretch(x - travel) }
+        return x
     }
 
     private func reset() {

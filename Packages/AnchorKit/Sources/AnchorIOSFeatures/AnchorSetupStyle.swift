@@ -13,6 +13,8 @@ enum AnchorSetupStyle {
     static let controlSurface = adaptive(0xEFF8FA, dark: 0x29414B)
     static let card = adaptive(0xFFFFFF, dark: 0x20343E)
     static let wave = adaptive(0x3BD5EF, dark: 0x257D92)
+    /// The underside of a raised control (slider knob), a step below `card`.
+    static let knobShade = adaptive(0xDDEDF2, dark: 0x16262E)
     static let inputRadius: CGFloat = 15
     static var background: LinearGradient {
         LinearGradient(colors: [top, bottom], startPoint: .top, endPoint: .bottom)

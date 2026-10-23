@@ -4,7 +4,7 @@ import Foundation
 import Observation
 
 /// Where "down" is on the screen, from the motion sensor, while the work
-/// invitation is visible. It runs only between `start()` and `stop()`, never
+/// invitation (or the setup wave) is visible. It runs only between `start()` and `stop()`, never
 /// in the background, and needs no permission (device motion only).
 @MainActor
 @Observable
