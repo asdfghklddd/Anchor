@@ -21,8 +21,17 @@ final class AnchorSetupDraft {
         !originalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !imageData.isEmpty
     }
 
-    /// Lines, or a spoken sequence ("先…然后…"), become steps.
-    var steps: [String] { PlanStepSplitter.steps(from: actionPlan) }
+    /// Lines, or a spoken sequence ("先…然后…"), become steps. Read several
+    /// times per render, so the split runs once per change to the plan.
+    var steps: [String] {
+        if splitPlan != actionPlan {
+            splitSteps = PlanStepSplitter.steps(from: actionPlan)
+            splitPlan = actionPlan
+        }
+        return splitSteps
+    }
+    @ObservationIgnored private var splitPlan: String?
+    @ObservationIgnored private var splitSteps: [String] = []
     /// A title is enough to drop an anchor; a plan is recommended, not required.
     var isValid: Bool { !goalTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     var titleUnits: Int { AnchorTitleLength.units(of: goalTitle) }
