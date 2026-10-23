@@ -56,6 +56,8 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
     public let descriptor: SourceDescriptor
     /// Shown as the conversation's title, typically its workspace folder name.
     public let conversationTitle: String?
+    /// The conversation's short name as of each read, preferred over `conversationTitle`.
+    private let conversationName: (@Sendable () async -> String?)?
     /// The plan step this conversation serves, carried on every event it emits.
     public let stepID: UUID?
     private let checkpointStore: CodexLifecycleCheckpointStore?
@@ -70,9 +72,11 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                     id: CodexLifecycleFileSource.defaultSourceID, name: "Codex", kind: .integration,
                     symbol: "C", tone: "cyan", capabilities: [.observe]),
                 conversationTitle: String? = nil,
+                conversationName: (@Sendable () async -> String?)? = nil,
                 stepID: UUID? = nil) {
         self.fileURL = fileURL; self.pollInterval = max(0.05, pollInterval)
         self.conversationTitle = conversationTitle
+        self.conversationName = conversationName
         self.stepID = stepID
         self.maximumReadBytes = max(1, maximumReadBytes)
         self.sessionContextProvider = sessionContextProvider; self.checkpointStore = checkpointStore; self.descriptor = descriptor
@@ -137,6 +141,8 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                             let latestTurn = offset >= size ? scannedRecords.last?.record.turnID : nil
                             let request = latestTurn == nil ? nil
                                 : CodexAutoAssociation.latestUserRequest(at: fileURL).flatMap(CodexGlanceText.request(from:))
+                            // Each turn carries the name as of now, so a rename reaches the phone with the next turn.
+                            let name = scannedRecords.isEmpty ? nil : await conversationName?()
                             for scanned in scannedRecords {
                                 if scanned.record.timestamp < context.startedAt {
                                     if let store = checkpointStore, let identity {
@@ -159,7 +165,7 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                                     sourceName: descriptor.name,
                                     sourceSymbol: descriptor.symbol,
                                     sourceTone: descriptor.tone,
-                                    title: conversationTitle ?? CodexLifecycleRecord.legacyTurnTitle,
+                                    title: name ?? conversationTitle ?? CodexLifecycleRecord.legacyTurnTitle,
                                     end: scanned.end,
                                     stepID: stepID,
                                     tests: scanned.tests,

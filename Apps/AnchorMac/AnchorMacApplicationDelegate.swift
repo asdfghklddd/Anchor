@@ -102,6 +102,7 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         let edgePanelController = AnchorEdgePanelController(
             model: model,
             phoneAnchorState: phoneAnchorState,
+            summaryBook: sourceSetupModel.summaryBook,
             onOpenDetails: { [weak detailWindowController] in
                 detailWindowController?.present()
             }

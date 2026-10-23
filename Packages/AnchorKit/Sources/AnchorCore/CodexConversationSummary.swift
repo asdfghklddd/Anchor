@@ -41,11 +41,15 @@ public struct CodexConversationSummary: Identifiable, Hashable, Sendable {
     /// Next steps the latest reply suggested under a clear heading, for the
     /// person to add to their plan or not. Mac display only, like `reply`.
     public let suggestedSteps: [String]
+    /// The opening of the conversation's first request, which it is named from
+    /// when it has no name of its own.
+    public let firstRequest: String?
 
     public var id: String { candidate.id }
 
     public init(candidate: CodexTaskCandidate, title: String?, state: State, reply: String?,
-                tests: TestOutcome? = nil, isWaitingForReply: Bool = false, suggestedSteps: [String] = []) {
+                tests: TestOutcome? = nil, isWaitingForReply: Bool = false, suggestedSteps: [String] = [],
+                firstRequest: String? = nil) {
         self.candidate = candidate
         self.title = title
         self.state = state
@@ -53,11 +57,18 @@ public struct CodexConversationSummary: Identifiable, Hashable, Sendable {
         self.tests = tests
         self.isWaitingForReply = isWaitingForReply
         self.suggestedSteps = suggestedSteps
+        self.firstRequest = firstRequest
+    }
+
+    /// What a short name for the desk can be drawn from.
+    public var nameSource: ConversationNameSource {
+        ConversationNameSource(ownName: title == firstRequest ? nil : title, firstRequest: firstRequest)
     }
 
     func titled(_ newTitle: String?) -> Self {
         Self(candidate: candidate, title: newTitle ?? title, state: state, reply: reply,
-             tests: tests, isWaitingForReply: isWaitingForReply, suggestedSteps: suggestedSteps)
+             tests: tests, isWaitingForReply: isWaitingForReply, suggestedSteps: suggestedSteps,
+             firstRequest: firstRequest)
     }
 }
 

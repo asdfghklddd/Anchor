@@ -20,6 +20,10 @@ final class AnchorEdgePanelController {
     private var awayMonitor: MacAwayMonitor?
     private var welcomePanel: AnchorWelcomePanel?
     private var welcomeTimeout: Task<Void, Never>?
+    private let summaryBook: SummaryBook?
+    /// Each open task's state when the person left, for the welcome back.
+    private var leaveRecaps: [UUID: String] = [:]
+    private var recapTask: Task<Void, Never>?
     /// A card nobody answered leaves on its own: the buoy still says what needs the person.
     private static let welcomeLifetime: Duration = .seconds(5 * 60)
 
@@ -34,10 +38,12 @@ final class AnchorEdgePanelController {
     init(
         model: AnchorSessionModel,
         phoneAnchorState: AnchorPhoneAnchorState,
+        summaryBook: SummaryBook? = nil,
         onOpenDetails: @escaping () -> Void
     ) {
         self.model = model
         self.phoneAnchorState = phoneAnchorState
+        self.summaryBook = summaryBook
         self.onOpenDetails = onOpenDetails
         if UserDefaults.standard.object(forKey: Self.buoySeenKey) == nil {
             UserDefaults.standard.set(Date.now, forKey: Self.buoySeenKey)
@@ -86,7 +92,10 @@ final class AnchorEdgePanelController {
         }
         // After time away, a small card above the boat catches the person up (M4).
         let awayMonitor = MacAwayMonitor(
-            onLeave: { [weak self] in self?.dismissWelcome() },
+            onLeave: { [weak self] in
+                self?.dismissWelcome()
+                self?.recapTasksAsLeft()
+            },
             onReturn: { [weak self] awaySince in self?.welcomeBack(awaySince: awaySince) }
         )
         self.awayMonitor = awayMonitor
@@ -99,6 +108,8 @@ final class AnchorEdgePanelController {
         activationObserver = nil
         awayMonitor?.stop()
         awayMonitor = nil
+        recapTask?.cancel()
+        recapTask = nil
         dismissWelcome()
         soundPlayer.stop()
         controlPanel.orderOut(nil)
@@ -145,13 +156,30 @@ final class AnchorEdgePanelController {
 
     // MARK: Welcome back
 
+    /// Writes down where each task stands as the person leaves; a model may
+    /// take a while, and they are away for minutes at least.
+    private func recapTasksAsLeft() {
+        recapTask?.cancel()
+        leaveRecaps = [:]
+        guard let summaryBook else { return }
+        let tasks = model.projection.hostedSessions
+        recapTask = Task { [weak self] in
+            let recaps = await summaryBook.leaveRecaps(for: tasks)
+            guard !Task.isCancelled else { return }
+            self?.leaveRecaps = recaps
+        }
+    }
+
     private func welcomeBack(awaySince: Date) {
         let welcome = MacWelcomeBack(
             tasks: model.projection.hostedSessions,
             currentID: model.projection.session?.id,
             awaySince: awaySince,
-            returnedAt: .now
+            returnedAt: .now,
+            recaps: leaveRecaps
         )
+        // A recap belongs to one time away.
+        leaveRecaps = [:]
         // With no open task there is nothing to catch up on.
         guard !welcome.isEmpty else { return }
         dismissWelcome()

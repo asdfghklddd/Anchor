@@ -1,4 +1,5 @@
 import AnchorCore
+import AnchorDesign
 import AnchorMacFeatures
 import AnchorTransport
 import AppKit
@@ -216,8 +217,10 @@ struct AnchorMacApp: App {
         self.server = server
         proximityAdvertiser = advertiser
         self.cloudSyncRunner = cloudSyncRunner
+        // Short conversation names and leave recaps. Written locally until a model is set up.
+        let summaryBook = SummaryBook(local: LocalSummarizer())
         let codexBinder = CodexSessionBinder(repository: repository, coordinator: sourceCoordinator,
-            taskRunStore: taskRunStore, checkpointStore: codexCheckpointStore)
+            taskRunStore: taskRunStore, checkpointStore: codexCheckpointStore, names: summaryBook)
         let setupModel = MacSourceSetupModel(
             defaults: validationDefaults ?? .standard,
             currentAnchorSessionID: currentSessionID,
@@ -231,7 +234,8 @@ struct AnchorMacApp: App {
             },
             onCodexSessionUnbound: { url, sessionID in
                 try await codexBinder.unbind(fileURL: url, sessionID: sessionID)
-            }
+            },
+            summaryBook: summaryBook
         )
         sourceSetupModel = setupModel
         model = AnchorSessionModel(

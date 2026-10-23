@@ -3902,6 +3902,23 @@
         }
       }
     },
+    "mac.welcome.left" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When you left"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开时"
+          }
+        }
+      }
+    },
     "mac.welcome.more" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3949,6 +3966,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "打开任务"
+          }
+        }
+      }
+    },
+    "mac.welcome.since" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "While you were away"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开期间"
           }
         }
       }
@@ -8161,6 +8195,57 @@
         }
       }
     },
+    "setup.mac.connect" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接"
+          }
+        }
+      }
+    },
+    "setup.mac.offline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac not connected. This anchor syncs when it connects."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 未连接 · 连接后会自动同步"
+          }
+        }
+      }
+    },
+    "setup.mac.pairing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting to your Mac…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在连接 Mac…"
+          }
+        }
+      }
+    },
     "setup.mantra" : {
       "localizations" : {
         "en" : {
@@ -8937,6 +9022,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "任务投锚"
+          }
+        }
+      }
+    },
+    "setup.plan.title-only" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With only a title, the Mac has little to recognize related conversations by, so you may need to sort some yourself."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有标题时，Mac 能认出的相关对话较少，有些可能需要你手动归类。"
           }
         }
       }
@@ -11106,6 +11208,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "完成总结"
+          }
+        }
+      }
+    },
+    "summary.recap.and" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@，%2$@"
+          }
+        }
+      }
+    },
+    "summary.recap.join" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@; %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@；%2$@"
+          }
+        }
+      }
+    },
+    "summary.recap.quiet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No conversations yet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有对话"
+          }
+        }
+      }
+    },
+    "summary.recap.step" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Step %1$lld/%2$lld: %3$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第 %1$lld/%2$lld 步：%3$@"
           }
         }
       }

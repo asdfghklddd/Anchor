@@ -151,6 +151,9 @@ public final class MacSourceSetupModel {
     private let autoAssociationSessions: (@Sendable () async -> [AnchorSession])?
     private let onCodexSessionAssociated: (@MainActor @Sendable (URL, UUID, Bool, UUID?) async throws -> Void)?
     private let onCodexSessionUnbound: (@MainActor @Sendable (URL, UUID) async throws -> Void)?
+    /// Learns what each scanned conversation is called, for the names the phone shows
+    /// and the recaps written when the person leaves.
+    public let summaryBook: SummaryBook?
     private let currentAnchorSessionID: (@Sendable () async -> UUID?)?
     private let taskStateProvider: (@Sendable () async -> AnchorTaskState?)?
     private var codexSecurityScopedURL: URL?
@@ -194,7 +197,8 @@ public final class MacSourceSetupModel {
         taskStateProvider: (@Sendable () async -> AnchorTaskState?)? = nil,
         autoAssociationSessions: (@Sendable () async -> [AnchorSession])? = nil,
         onCodexSessionAssociated: (@MainActor @Sendable (URL, UUID, Bool, UUID?) async throws -> Void)? = nil,
-        onCodexSessionUnbound: (@MainActor @Sendable (URL, UUID) async throws -> Void)? = nil
+        onCodexSessionUnbound: (@MainActor @Sendable (URL, UUID) async throws -> Void)? = nil,
+        summaryBook: SummaryBook? = nil
     ) {
         commandURL = bundle.bundleURL.appending(path: "Contents/Helpers/anchor")
         self.defaults = defaults
@@ -204,6 +208,7 @@ public final class MacSourceSetupModel {
         self.autoAssociationSessions = autoAssociationSessions
         self.onCodexSessionAssociated = onCodexSessionAssociated
         self.onCodexSessionUnbound = onCodexSessionUnbound
+        self.summaryBook = summaryBook
         if let data = defaults.data(forKey: Self.matchMemoryKey),
            let memory = try? JSONDecoder().decode(TaskMatcher.Memory.self, from: data) {
             matchMemory = memory
@@ -498,7 +503,13 @@ public final class MacSourceSetupModel {
 
     /// Assigns only real changes, so a quiet two-second scan redraws nothing.
     private func publish(_ summaries: [CodexConversationSummary]) {
-        if codexConversations != summaries { codexConversations = summaries }
+        if codexConversations != summaries {
+            codexConversations = summaries
+            if let summaryBook {
+                let seen = Dictionary(summaries.map { ($0.candidate.fileURL, $0.nameSource) }) { first, _ in first }
+                Task { await summaryBook.note(seen) }
+            }
+        }
         let candidates = summaries.map(\.candidate)
         if codexCandidates != candidates { codexCandidates = candidates }
         // A conversation the person said is not part of a task never pings.

@@ -208,6 +208,18 @@ func codexFileSourceSendsLatestRequest() async throws {
     #expect(requests == [nil, nil, "Plan Make the cards swap with a spring"])
 }
 
+@Test("Codex file source names each turn by the conversation's short name when it has one")
+func codexFileSourceUsesShortName() async throws {
+    let url = URL.temporaryDirectory.appending(path: "codex-name-" + UUID().uuidString + ".jsonl")
+    defer { try? FileManager.default.removeItem(at: url) }
+    try Data(lifecycleLine(type: "task_started", turnID: "named").utf8).write(to: url)
+    let context = ProcessSourceSessionContext(sessionID: UUID(), startedAt: .distantPast)
+    let source = CodexLifecycleFileSource(fileURL: url, pollInterval: 0.05, sessionContextProvider: { context },
+                                          conversationTitle: "Anchor", conversationName: { "卡片切换动效" })
+    var iterator = source.events().makeAsyncIterator()
+    #expect(try #require(await iterator.next()).process.title == "卡片切换动效")
+}
+
 private func lifecycleLine(type: String, turnID: String) -> String {
     #"{"timestamp":"2026-09-09T01:02:03.123Z","type":"event_msg","payload":{"type":"\#(type)","turn_id":"\#(turnID)"}}"# + "\n"
 }

@@ -4,25 +4,37 @@ import AnchorDesign
 import SwiftUI
 
 /// What the Mac says when the person comes back (M4): how long they were away,
-/// what they were on, what changed on each task, and what to do first.
+/// where each task stood when they left, what changed, and what to do first.
 public struct MacWelcomeBack: Sendable {
+    /// A task as it stood when the person left, in at most 60 characters.
+    public struct Left: Identifiable, Sendable {
+        public let task: AnchorSession
+        public let recap: String
+        public var id: UUID { task.id }
+    }
+
     public let awaySince: Date
     public let returnedAt: Date
     /// The task the person was on, while it is still open.
     public let current: AnchorSession?
     public let overview: ReturnOverview
+    /// Open tasks with their recaps from the moment the person left, the one
+    /// they were on first. Empty when the Mac did not see them leave.
+    public let left: [Left]
 
-    public init(tasks: [AnchorSession], currentID: UUID?, awaySince: Date, returnedAt: Date) {
+    public init(tasks: [AnchorSession], currentID: UUID?, awaySince: Date, returnedAt: Date,
+                recaps: [UUID: String] = [:]) {
         self.awaySince = awaySince
         self.returnedAt = returnedAt
-        current = currentID.flatMap { id in
-            tasks.first { $0.id == id && ($0.status == .active || $0.status == .draft) }
-        }
+        let open = tasks.filter { $0.status == .active || $0.status == .draft }
+        current = currentID.flatMap { id in open.first { $0.id == id } }
         overview = ReturnOverview(tasks: tasks, awaySince: awaySince)
+        let ordered = open.filter { $0.id == currentID } + open.filter { $0.id != currentID }
+        left = ordered.compactMap { task in recaps[task.id].map { Left(task: task, recap: $0) } }
     }
 
     /// No open task, so there is nothing to come back to.
-    public var isEmpty: Bool { current == nil && overview.items.isEmpty }
+    public var isEmpty: Bool { current == nil && overview.items.isEmpty && left.isEmpty }
 
     /// One click opens what needs the person first, else the task they were on.
     public var taskToOpen: UUID? {
@@ -68,10 +80,19 @@ public struct MacWelcomeBackCard: View {
                 .accessibilityIdentifier("mac.welcome.close")
             }
 
-            if let current = welcome.current { wereOn(current) }
+            if welcome.left.isEmpty {
+                if let current = welcome.current { wereOn(current) }
+            } else {
+                whenYouLeft
+            }
 
             Divider()
 
+            if !welcome.left.isEmpty {
+                Text(MacWelcomeCopy.whileAway)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(AnchorPalette.secondaryInk)
+            }
             if welcome.overview.items.isEmpty {
                 Text(MacWelcomeCopy.nothingChanged)
                     .font(.callout)
@@ -153,6 +174,40 @@ public struct MacWelcomeBackCard: View {
         .accessibilityIdentifier("mac.welcome.current")
     }
 
+    /// Where each task stood when the person left, so they recall it before reading what changed.
+    private var whenYouLeft: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(MacWelcomeCopy.whenYouLeft)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AnchorPalette.secondaryInk)
+            ForEach(welcome.left.prefix(4)) { left in
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Circle().fill(AnchorTaskIdentity.color(for: left.task)).frame(width: 8, height: 8)
+                            .accessibilityHidden(true)
+                        Text(left.task.goal.title)
+                            .font(.callout.weight(.semibold))
+                            .foregroundStyle(AnchorPalette.ink)
+                            .lineLimit(1)
+                        if left.id == welcome.current?.id {
+                            Text(PlanText.current)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(AnchorPalette.secondaryInk)
+                        }
+                    }
+                    Text(left.recap)
+                        .font(.callout)
+                        .foregroundStyle(AnchorPalette.ink)
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.leading, 14)
+                }
+                .accessibilityElement(children: .combine)
+            }
+        }
+        .accessibilityIdentifier("mac.welcome.left")
+    }
+
     /// One task that changed: its newest change, or the result it still waits on.
     private func change(_ item: ReturnOverview.Item) -> some View {
         let fact = item.changes.first.map { "\($0.title) · \(L10n.runState($0))" }
@@ -177,6 +232,8 @@ public struct MacWelcomeBackCard: View {
 enum MacWelcomeCopy {
     static let title = AnchorStrings.value("mac.welcome.title", default: "Welcome back")
     static let wereOn = AnchorStrings.value("mac.welcome.were-on", default: "You were on")
+    static let whenYouLeft = AnchorStrings.value("mac.welcome.left", default: "When you left")
+    static let whileAway = AnchorStrings.value("mac.welcome.since", default: "While you were away")
     static let nothingChanged = AnchorStrings.value(
         "mac.welcome.nothing", default: "Nothing changed while you were away.")
     static let openTask = AnchorStrings.value("mac.welcome.open", default: "Open task")

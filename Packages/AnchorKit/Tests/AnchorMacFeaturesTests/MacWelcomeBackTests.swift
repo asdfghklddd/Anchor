@@ -1,5 +1,6 @@
 #if os(macOS)
 import AnchorCore
+import AnchorDesign
 import Foundation
 import Testing
 @testable import AnchorMacFeatures
@@ -70,6 +71,40 @@ struct MacWelcomeBackTests {
         #expect(quiet.overview.items.isEmpty)
         #expect(quiet.taskToOpen == homework.id)
         #expect(MacWelcomeBack(tasks: [], currentID: nil, awaySince: ago(30), returnedAt: now).isEmpty)
+    }
+
+    @Test("Recaps from the moment the person left lead the card, the task they were on first")
+    func recaps() {
+        let homework = AnchorSession(goal: AnchorGoal(title: "Homework", completionCriteria: ""), status: .active,
+                                     startedAt: ago(120))
+        let website = AnchorSession(goal: AnchorGoal(title: "Website", completionCriteria: ""), status: .active,
+                                    startedAt: ago(200))
+        let welcome = MacWelcomeBack(tasks: [website, homework], currentID: homework.id, awaySince: ago(30),
+                                     returnedAt: now, recaps: [homework.id: "Step 2/2: Delete", website.id: "Deploy failed"])
+        #expect(welcome.left.map(\.task.id) == [homework.id, website.id])
+        #expect(welcome.left.first?.recap == "Step 2/2: Delete")
+        #expect(!welcome.isEmpty)
+        // Without a recap (the Mac did not see them leave) the card stays as it was.
+        #expect(MacWelcomeBack(tasks: [homework], currentID: homework.id, awaySince: ago(30), returnedAt: now).left.isEmpty)
+    }
+
+    @Test("The local recap names the step and what the agents were doing, in sixty characters")
+    func localRecap() async throws {
+        func conversation(_ title: String, _ status: ProcessStatus, _ minutes: Double) -> AnchorProcess {
+            AnchorProcess(sourceID: UUID(), sourceName: "Codex", sourceSymbol: "C", sourceTone: "cyan",
+                          title: title, status: status, updatedAt: ago(minutes))
+        }
+        let task = AnchorSession(
+            goal: AnchorGoal(title: "作业", completionCriteria: "",
+                             userPlan: AnchorUserPlan(steps: ["实现插入", "实现删除"], completedSteps: [0])),
+            processes: [conversation("红黑树删除", .completed, 3), conversation("实验报告", .needsDecision, 1)])
+        let recap = try await LocalSummarizer().leaveRecap(TaskLeaveFacts(task: task))
+        #expect(recap.hasPrefix("第 2/2 步：实现删除；实验报告 "), "\(recap)")
+        #expect(recap.contains("红黑树删除"))
+        #expect(recap.count <= SummaryLimit.leaveRecap)
+
+        let quiet = AnchorSession(goal: AnchorGoal(title: "空", completionCriteria: ""))
+        #expect(try await LocalSummarizer().leaveRecap(TaskLeaveFacts(task: quiet)) == "还没有对话")
     }
 }
 #endif

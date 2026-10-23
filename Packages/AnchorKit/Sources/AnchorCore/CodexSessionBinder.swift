@@ -7,13 +7,17 @@ public actor CodexSessionBinder {
     private let coordinator: ProcessSourceCoordinator
     private let taskRunStore: TaskRunStore
     private let checkpointStore: CodexLifecycleCheckpointStore
+    /// Short conversation names for the phone; without it, the workspace folder names them.
+    private let names: SummaryBook?
 
     public init(repository: any SessionRepository, coordinator: ProcessSourceCoordinator,
-                taskRunStore: TaskRunStore, checkpointStore: CodexLifecycleCheckpointStore) {
+                taskRunStore: TaskRunStore, checkpointStore: CodexLifecycleCheckpointStore,
+                names: SummaryBook? = nil) {
         self.repository = repository
         self.coordinator = coordinator
         self.taskRunStore = taskRunStore
         self.checkpointStore = checkpointStore
+        self.names = names
     }
 
     public func bind(fileURL: URL, sessionID: UUID, automaticallyMatched: Bool, stepID: UUID? = nil) async throws {
@@ -44,6 +48,10 @@ public actor CodexSessionBinder {
         try await taskRunStore.host(task: task)
         try await taskRunStore.upsert(workItem: workItem)
         let repository = self.repository
+        var conversationName: (@Sendable () async -> String?)?
+        if let names = self.names {
+            conversationName = { await names.name(for: fileURL) }
+        }
         let boundSessionContext: @Sendable () async -> ProcessSourceSessionContext? = {
             guard let bound = await repository.currentProjection().hostedSessions.first(where: { $0.id == session.id }) else { return nil }
             return ProcessSourceSessionContext(sessionID: bound.id, startedAt: bound.startedAt)
@@ -62,6 +70,7 @@ public actor CodexSessionBinder {
                 permission: .granted
             ),
             conversationTitle: conversation?.workspaceName,
+            conversationName: conversationName,
             stepID: stepID
         )
         try await coordinator.setAssociation(

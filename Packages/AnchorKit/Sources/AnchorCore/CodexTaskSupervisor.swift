@@ -189,14 +189,16 @@ public actor CodexTaskSupervisor {
             state = .unknown
         }
         let ownName = threadNames.names[session.id] ?? latest?.title.flatMap { CodexGlanceText.title(from: $0) }
+        let firstRequest = requestTitle(for: session.id, at: metadata.fileURL)
         return CodexConversationSummary(
             candidate: candidate,
-            title: ownName ?? requestTitle(for: session.id, at: metadata.fileURL),
+            title: ownName ?? firstRequest,
             state: state,
             reply: reply,
             tests: tests,
             isWaitingForReply: waiting,
-            suggestedSteps: suggestions
+            suggestedSteps: suggestions,
+            firstRequest: firstRequest
         )
     }
 
