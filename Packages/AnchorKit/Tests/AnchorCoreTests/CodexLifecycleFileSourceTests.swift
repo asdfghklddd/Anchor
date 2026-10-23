@@ -190,8 +190,30 @@ func codexFileSourceDetectsTruncation() async throws {
     #expect(event.process.status == .completed)
 }
 
+@Test("Codex file source sends the opening of the latest request with the latest turn only")
+func codexFileSourceSendsLatestRequest() async throws {
+    let url = URL.temporaryDirectory.appending(path: "codex-request-" + UUID().uuidString + ".jsonl")
+    defer { try? FileManager.default.removeItem(at: url) }
+    let lines = lifecycleLine(type: "task_started", turnID: "earlier")
+        + userMessageLine("Fix the login crash")
+        + lifecycleLine(type: "task_complete", turnID: "earlier")
+        + lifecycleLine(type: "task_started", turnID: "latest")
+        + userMessageLine("## Plan\\nMake the **cards** swap\\n\\nwith a spring")
+    try Data(lines.utf8).write(to: url)
+    let context = ProcessSourceSessionContext(sessionID: UUID(), startedAt: .distantPast)
+    let source = CodexLifecycleFileSource(fileURL: url, pollInterval: 0.05, sessionContextProvider: { context })
+    var iterator = source.events().makeAsyncIterator()
+    var requests: [String?] = []
+    for _ in 0..<3 { requests.append(try #require(await iterator.next()).process.request) }
+    #expect(requests == [nil, nil, "Plan Make the cards swap with a spring"])
+}
+
 private func lifecycleLine(type: String, turnID: String) -> String {
     #"{"timestamp":"2026-09-09T01:02:03.123Z","type":"event_msg","payload":{"type":"\#(type)","turn_id":"\#(turnID)"}}"# + "\n"
+}
+
+private func userMessageLine(_ message: String) -> String {
+    #"{"timestamp":"2026-09-09T01:02:03.123Z","type":"event_msg","payload":{"type":"user_message","message":"\#(message)"}}"# + "\n"
 }
 
 private func append(_ text: String, to url: URL) throws {

@@ -115,11 +115,6 @@ public extension L10n {
     static let workInvitationLock = AnchorStrings.value(
         "work.invitation.lock", default: "Orientation lock is on. Turn it off in Control Center, then turn your phone."
     )
-    static let ambientElapsed = AnchorStrings.value("ambient.elapsed", default: "Since start")
-    static let ambientElapsedHint = AnchorStrings.value(
-        "ambient.elapsed.hint",
-        default: "Time since the selected task started, including breaks."
-    )
     static func minutesShort(_ minutes: Int) -> String {
         String.localizedStringWithFormat(AnchorStrings.value("ambient.minutes", default: "%lld min"), minutes)
     }

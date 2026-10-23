@@ -100,6 +100,9 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
     public var stepID: UUID?
     /// Whether the work ran tests and how they ended; `nil` when unknown.
     public var testOutcome: TestOutcome?
+    /// The opening of the person's latest request in this conversation, as
+    /// plain text; `nil` for commands and from Macs that do not send it.
+    public var request: String?
 
     public init(
         id: UUID = UUID(),
@@ -121,7 +124,8 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
         tileSize: ProcessTileSize = .standard,
         events: [ProcessEvent] = [],
         stepID: UUID? = nil,
-        testOutcome: TestOutcome? = nil
+        testOutcome: TestOutcome? = nil,
+        request: String? = nil
     ) {
         self.id = id
         self.sessionID = sessionID
@@ -143,6 +147,7 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
         self.events = events
         self.stepID = stepID
         self.testOutcome = testOutcome
+        self.request = request
     }
 }
 

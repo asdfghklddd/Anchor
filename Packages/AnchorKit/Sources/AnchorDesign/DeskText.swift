@@ -31,6 +31,18 @@ public enum DeskText {
         }
     }
 
+    // MARK: Task library (the landscape desk)
+
+    public static let library = AnchorStrings.value("home.task.library", default: "Task library")
+    public static let openTask = AnchorStrings.value("desk.library.open", default: "Tap to open the task")
+    public static let noConversations = AnchorStrings.value(
+        "desk.library.empty", default: "Conversations the Mac files under this task appear here")
+    public static let noReply = AnchorStrings.value("desk.library.no-reply", default: "No reply yet")
+    public static let showConversation = AnchorStrings.value(
+        "desk.library.show", default: "Brings this conversation to the front")
+    public static let you = AnchorStrings.value("desk.library.you", default: "You")
+    public static let reply = AnchorStrings.value("desk.library.reply", default: "Reply")
+
     // MARK: Settings
 
     public static let settingsSection = AnchorStrings.value("desk.settings.section", default: "Desk reminder")

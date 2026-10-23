@@ -45,8 +45,8 @@ private actor CodexLifecycleDeliveryState {
 }
 
 /// Read-only Codex lifecycle source. It observes JSONL growth and emits
-/// lifecycle events; of a message body it forwards only the opening of a
-/// turn's final reply (or its error), bounded for a glance.
+/// lifecycle events; of message bodies it forwards only the opening of a
+/// turn's final reply (or its error) and of the latest request, bounded for a glance.
 public struct CodexLifecycleFileSource: ProcessSource, Sendable {
     public static let defaultSourceID = BuiltInProcessSourceID.codex
 
@@ -133,6 +133,10 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                             try handle.close()
                             offset += UInt64(bytes.count)
                             let scannedRecords = scanner.appendWithOffsets(bytes)
+                            // Only the turn at the end of the log answers the person's latest request.
+                            let latestTurn = offset >= size ? scannedRecords.last?.record.turnID : nil
+                            let request = latestTurn == nil ? nil
+                                : CodexAutoAssociation.latestUserRequest(at: fileURL).flatMap(CodexGlanceText.request(from:))
                             for scanned in scannedRecords {
                                 if scanned.record.timestamp < context.startedAt {
                                     if let store = checkpointStore, let identity {
@@ -159,7 +163,8 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                                     end: scanned.end,
                                     stepID: stepID,
                                     tests: scanned.tests,
-                                    waitingForReply: scanned.waitingForReply
+                                    waitingForReply: scanned.waitingForReply,
+                                    request: scanned.record.turnID == latestTurn ? request : nil
                                 )
                                 if let identity, checkpointStore != nil {
                                     await deliveryState.prepare(

@@ -129,6 +129,7 @@ struct CodexTurnEnd {
 /// tables, link targets or emphasis markers.
 enum CodexGlanceText {
     static let replyLength = 360
+    static let requestLength = 200
     static let titleLength = 80
 
     static func reply(from markdown: String) -> String? {
@@ -186,6 +187,14 @@ enum CodexGlanceText {
         let lower = text.lowercased()
         return lower.contains("next step") || lower.contains("follow-up") || lower.contains("follow up")
             || text.contains("下一步") || text.contains("后续") || text.contains("接下来")
+    }
+
+    /// The opening of a request as one plain paragraph, for the desk board.
+    static func request(from text: String) -> String? {
+        let lines = text.split(whereSeparator: \.isNewline)
+            .map { plain($0.trimmingCharacters(in: .whitespaces)) }
+            .filter { !$0.isEmpty }
+        return capped(lines.joined(separator: " ").replacing(/\s+/, with: " "), at: requestLength)
     }
 
     static func title(from request: String) -> String? {

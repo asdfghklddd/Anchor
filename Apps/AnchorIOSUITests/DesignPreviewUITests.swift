@@ -27,7 +27,7 @@ final class DesignPreviewUITests: XCTestCase {
             app.frame.width > app.frame.height
         }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [landscape], timeout: 5), .completed)
-        XCTAssertTrue(app.descendants(matching: .any)["ambient.glance"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.descendants(matching: .any)["ambient.task.library"].waitForExistence(timeout: 4))
         capture("glance-landscape")
 
         app.terminate()
@@ -39,7 +39,7 @@ final class DesignPreviewUITests: XCTestCase {
     }
 
     /// The desk board with the live-plan fixture from DesignPreviewFixtureTests:
-    /// the current task's step large, the other tasks as chips.
+    /// each task a column in the task library, its conversation in front.
     @MainActor
     func testLivePlanDeskBoard() throws {
         continueAfterFailure = false
@@ -56,17 +56,9 @@ final class DesignPreviewUITests: XCTestCase {
         capture("live-plan-home-portrait")
 
         XCUIDevice.shared.orientation = .landscapeLeft
-        let step = app.descendants(matching: .any)["ambient.step"]
-        XCTAssertTrue(step.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["ambient.task.library"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["hosted.task.1A7E0000-7215-40E0-8B0B-000000000002"].exists)
         capture("desk-board")
-
-        // A chip makes its task the one the person is on.
-        let website = app.buttons["hosted.task.1A7E0000-7215-40E0-8B0B-000000000002"]
-        XCTAssertTrue(website.exists)
-        website.tap()
-        let switched = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in step.label.contains("做项目页") }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [switched], timeout: 5), .completed)
-        capture("desk-board-switched")
 
         app.terminate()
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXL"]
@@ -93,9 +85,8 @@ final class DesignPreviewUITests: XCTestCase {
         }
 
         XCUIDevice.shared.orientation = .landscapeLeft
-        let meanwhile = app.descendants(matching: .any)["ambient.meanwhile"]
-        XCTAssertTrue(meanwhile.waitForExistence(timeout: 5))
-        XCTAssertTrue(meanwhile.label.contains("个人网站"), meanwhile.label)
+        let library = app.descendants(matching: .any)["ambient.task.library"]
+        XCTAssertTrue(library.waitForExistence(timeout: 5))
         capture("desk-wait-board")
 
         // Picking the phone up interrupts; using it anyway is a deliberate choice.
@@ -109,7 +100,7 @@ final class DesignPreviewUITests: XCTestCase {
 
         // Each pick-up interrupts again, and the Meanwhile card switches to that task.
         XCUIDevice.shared.orientation = .landscapeLeft
-        XCTAssertTrue(meanwhile.waitForExistence(timeout: 5))
+        XCTAssertTrue(library.waitForExistence(timeout: 5))
         XCUIDevice.shared.orientation = .portrait
         XCTAssertTrue(card.waitForExistence(timeout: 5))
         app.descendants(matching: .any)["desk.pickup.meanwhile"].firstMatch.tap()
@@ -121,6 +112,46 @@ final class DesignPreviewUITests: XCTestCase {
         capture("desk-pickup-switched")
         XCUIDevice.shared.orientation = .landscapeLeft
         XCTAssertTrue(card.waitForNonExistence(timeout: 5))
+    }
+
+    /// The task library with the fixture from DesignPreviewFixtureTests: three
+    /// tasks, each with its newest conversations stacked; a card behind comes
+    /// to the front when tapped.
+    @MainActor
+    func testTaskLibrary() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["ANCHOR_UI_TESTING"] = "1"
+        app.launchEnvironment["ANCHOR_UI_TEST_STORAGE_ID"] = "1B7A0000-7215-40E0-8B0B-000000000099"
+        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
+        XCUIDevice.shared.orientation = .portrait
+        app.launch()
+        defer { app.terminate(); XCUIDevice.shared.orientation = .portrait }
+        guard app.descendants(matching: .any)["home.glance"].waitForExistence(timeout: 8) else {
+            throw XCTSkip("Import the isolated task-library repository first.")
+        }
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        XCTAssertTrue(app.descendants(matching: .any)["ambient.task.library"].waitForExistence(timeout: 5))
+        let front = app.buttons["ambient.conversation.1B7A0000-7215-40E0-8B0B-000000000033"]
+        let behind = app.buttons["ambient.conversation.1B7A0000-7215-40E0-8B0B-000000000031"]
+        XCTAssertTrue(front.waitForExistence(timeout: 3))
+        XCTAssertTrue(front.isSelected)
+        XCTAssertFalse(behind.isSelected)
+        capture("task-library")
+
+        // Only the top strip of a card behind shows; the card in front covers the rest.
+        behind.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.05)).tap()
+        let picked = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in behind.isSelected && !front.isSelected },
+                                               object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [picked], timeout: 3), .completed)
+        capture("task-library-picked")
+
+        app.terminate()
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXL"]
+        app.launch()
+        XCTAssertTrue(app.descendants(matching: .any)["ambient.screen"].waitForExistence(timeout: 8))
+        capture("task-library-accessibility")
     }
 
     @MainActor private func capture(_ name: String) {

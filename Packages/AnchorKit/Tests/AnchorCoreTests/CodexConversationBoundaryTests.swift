@@ -94,6 +94,33 @@ struct CodexConversationBoundaryTests {
         #expect(presented.timeline.allSatisfy { $0.processID == firstTurnID })
     }
 
+    @Test("A conversation shows the latest request one of its turns carried")
+    func conversationKeepsLatestRequest() throws {
+        let sourceID = UUID()
+        var session = AnchorSession(goal: AnchorGoal(title: "Anchor", completionCriteria: "Done"))
+        let base = Date(timeIntervalSince1970: 1_800_000_000)
+        let records: [(String, String, Double, String?)] = [
+            ("turn-1", "task_complete", 0, "Make the cards swap"),
+            ("turn-2", "task_complete", 10, "Soften the voice"),
+            ("turn-3", "task_started", 20, nil),
+        ]
+        for (turn, lifecycle, offset, request) in records {
+            let line = #"{"timestamp":"\#(ISO8601DateFormatter().string(from: base.addingTimeInterval(offset)))","type":"event_msg","payload":{"type":"\#(lifecycle)","turn_id":"\#(turn)"}}"#
+            let event = try #require(CodexLifecycleRecord(json: Data(line.utf8)))
+                .externalEvent(sessionID: session.id, sourceID: sourceID, title: "Anchor", end: nil, request: request)
+            var process = event.process
+            process.events = [try #require(event.event)]
+            session.processes.append(process)
+        }
+        session.captureJoiningOrder()
+
+        let presented = try #require(TaskDashboardPolicy.presentation(of: SessionProjection(session: session)).session)
+
+        #expect(presented.processes.count == 1)
+        #expect(presented.processes.first?.status == .running)
+        #expect(presented.processes.first?.request == "Soften the voice")
+    }
+
     private func metadata(threadSource: String?, originator: String = "Codex Desktop",
                           extra: String = "") -> CodexSessionMetadata? {
         CodexSessionMetadata(firstLine: sessionLog(id: "id", threadSource: threadSource,

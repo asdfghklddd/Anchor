@@ -1,7 +1,8 @@
 import Foundation
 
 /// Local keyword matching. Conversation text is read transiently and is never
-/// copied into a projection, sync event, or persistent matching index.
+/// copied into a projection, sync event, or persistent matching index; only
+/// the opening of the latest request travels, on its conversation's turn events.
 public enum CodexAutoAssociation {
 
     public static func matchingSession(

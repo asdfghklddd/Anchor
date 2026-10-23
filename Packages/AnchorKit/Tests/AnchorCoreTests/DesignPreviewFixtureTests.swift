@@ -214,4 +214,77 @@ struct DesignPreviewFixtureTests {
             try Data(contentsOf: storage).write(to: output.appending(path: "session-repository.json"))
         }
     }
+
+    @Test("The task library stacks each task's newest conversations with the latest in front")
+    func taskLibrary() async throws {
+        let directory = URL.temporaryDirectory.appending(path: "anchor-task-library-preview-\(UUID())")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let storage = directory.appending(path: "session-repository.json")
+        let repository = LocalSessionRepository(storageURL: storage, sourceID: UUID())
+        let now = Date.now
+
+        func at(_ minutesAgo: Double) -> Date { now.addingTimeInterval(-minutesAgo * 60) }
+        func id(_ index: Int) -> UUID { UUID(uuidString: String(format: "1B7A0000-7215-40E0-8B0B-%012d", index))! }
+        func conversation(_ index: Int, _ title: String, task: UUID, status: ProcessStatus, started: Double,
+                          ended: Double? = nil, request: String, reply: String = "") -> AnchorProcess {
+            let processID = id(index), sourceID = UUID()
+            var events = [ProcessEvent(sessionID: task, processID: processID, sourceID: sourceID,
+                                       occurredAt: at(started), kind: .created, title: "Codex task_started", metric: nil)]
+            if let ended {
+                events.append(ProcessEvent(sessionID: task, processID: processID, sourceID: sourceID, occurredAt: at(ended),
+                                           kind: status == .failed ? .failed : .completed,
+                                           title: status == .failed ? "Codex task_failed" : "Codex task_complete",
+                                           metric: nil))
+            }
+            return AnchorProcess(id: processID, sessionID: task, sourceID: sourceID, sourceName: "Claude Code",
+                                 sourceSymbol: "C", sourceTone: "cyan", title: title, status: status, detail: reply,
+                                 updatedAt: events.map(\.occurredAt).max() ?? now, events: events, request: request)
+        }
+
+        let desk = AnchorSession(id: id(1), goal: AnchorGoal(title: "横屏工作台", completionCriteria: "按设计稿完成"),
+            startedAt: at(180), processes: [
+                conversation(11, "iOS app UI polish", task: id(1), status: .completed, started: 150, ended: 120,
+                             request: "把竖屏首页的卡片间距再收一点，标题和头像对齐。",
+                             reply: "已调整：卡片间距从 16 改为 12，标题与头像基线对齐，深色模式也检查过。"),
+                conversation(12, "任务进程库", task: id(1), status: .completed, started: 40, ended: 8,
+                             request: "按设计稿重做横屏工作页：左边大时钟，右边三列任务，每列最多三段对话叠成卡片。",
+                             reply: "已完成：左侧换成加宽粗体时钟，右侧按任务分三列，每列最多三张对话卡，点上面的卡会滑到最前面。"),
+                conversation(13, "卡片切换动效", task: id(1), status: .running, started: 5,
+                             request: "卡片切换时加一点简单的物理光影反馈。"),
+            ], taskColorIndex: 0)
+        let homework = AnchorSession(id: id(2), goal: AnchorGoal(title: "数据结构作业", completionCriteria: "红黑树通过测试"),
+            startedAt: at(240), processes: [
+                conversation(21, "红黑树删除", task: id(2), status: .completed, started: 70, ended: 52,
+                             request: "帮我实现红黑树的删除，包括 fixup，写完跑一下测试。",
+                             reply: "已实现 delete 和 fixup，所有测试通过。另外补了一个回归测试，覆盖删除根节点的情况。"),
+                conversation(22, "实验报告", task: id(2), status: .needsDecision, started: 30, ended: 14,
+                             request: "根据测试结果写实验报告的第三节。",
+                             reply: "第三节写到复杂度分析时需要你确认：报告里用平均情况还是最坏情况？"),
+            ], taskColorIndex: 1)
+        let voice = AnchorSession(id: id(3), goal: AnchorGoal(title: "语音陪练", completionCriteria: "语音自然"),
+            startedAt: at(300), processes: [
+                conversation(31, "唤醒词误触", task: id(3), status: .failed, started: 90, ended: 75,
+                             request: "排查安静环境下的误唤醒。",
+                             reply: "测试失败：安静环境下 20 次里仍有 2 次误唤醒。"),
+                conversation(32, "节奏提示音", task: id(3), status: .completed, started: 60, ended: 44,
+                             request: "每组动作之间加一个轻的提示音。",
+                             reply: "加好了，提示音在每组结束前 3 秒响起，音量跟随系统。"),
+                conversation(33, "语音更柔和", task: id(3), status: .completed, started: 25, ended: 3,
+                             request: "另外还有一个不是P0关键，但是可以探索的点就是这个语音是不是比较机械，就是能不能让它更加柔和一点的一些语音呢……",
+                             reply: "可以。我已经做了3条“柔和、自然女声”的试听稿，换用了本机的神经网络女声，放慢一点语速，并调整了措辞和停顿。1.保持不动 “很好，就这样，保持不动。”"),
+            ], taskColorIndex: 2)
+        for task in [desk, homework, voice] { try await repository.send(.hostSession(task)) }
+
+        let projection = TaskDashboardPolicy.presentation(
+            of: await LocalSessionRepository(storageURL: storage, sourceID: UUID()).currentProjection())
+        let fronts = projection.hostedSessions.map { TaskConversationStack(task: $0).front?.title }
+        #expect(Set(fronts) == ["卡片切换动效", "实验报告", "语音更柔和"])
+        #expect(projection.hostedSessions.flatMap(\.processes).allSatisfy { $0.request != nil })
+        if let export = ProcessInfo.processInfo.environment["ANCHOR_DESIGN_PREVIEW_EXPORT"].map({ URL(fileURLWithPath: $0) }) {
+            let output = export.appending(path: "task-library")
+            try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+            try Data(contentsOf: storage).write(to: output.appending(path: "session-repository.json"))
+        }
+    }
 }
