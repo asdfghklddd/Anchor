@@ -2,7 +2,7 @@ import AnchorDesign
 import Foundation
 import Testing
 
-/// Enforces the rules in Documentation/COLOR_SYSTEM.md on the shared tokens.
+/// Enforces the color rules on the shared tokens.
 /// Set ANCHOR_COLOR_TABLE_EXPORT to a file path to write the contrast table.
 @Suite("Color tokens")
 struct AnchorColorTokenTests {

@@ -7,7 +7,7 @@ import AppKit
 #endif
 
 /// One light/dark color value. Every Anchor color on iPhone and Mac comes from
-/// a token in `AnchorColorTokens`; see Documentation/COLOR_SYSTEM.md.
+/// a token in `AnchorColorTokens`.
 public struct AnchorColorToken: Hashable, Sendable {
     public let name: String
     public let light: UInt32

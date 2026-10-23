@@ -33,7 +33,7 @@ Open `http://127.0.0.1:8765`. A modern browser is required for native HTML dialo
 
 ## Updating the snapshot
 
-1. Read `DESIGN.md` and the current iPhone/Mac navigation and core implementations.
+1. Read the current iPhone/Mac navigation and core implementations.
 2. Update the date and `baseline` in `data.js`, and the corresponding snapshot copy
    in `index.html`. The baseline must be a published commit containing the referenced
    code. Source links are pinned to this commit so a discussion stays reproducible.

@@ -61,7 +61,7 @@
   <div class="boundary-note"><strong>这个网页怎么协作？</strong><p>它是一份公开的产品说明，不连接个人工作数据。每个节点可复制独立链接，并跳转到对应代码或预填反馈的 GitHub Issue 页面。只有你在 GitHub 点击提交后，反馈才会发布。</p></div>
 </section>
 <section id="design" class="section">
-  <div class="section-heading"><div><span class="eyebrow">04 / DESIGN & VERSION</span><h2>把最新的共识，写在同一个地方。</h2></div><a class="text-link" href="https://github.com/asdfghklddd/Anchor/blob/main/DESIGN.md" target="_blank" rel="noopener">阅读完整设计规范 ↗</a></div>
+  <div class="section-heading"><div><span class="eyebrow">04 / DESIGN & VERSION</span><h2>把最新的共识，写在同一个地方。</h2></div><a class="text-link" href="https://github.com/asdfghklddd/Anchor/blob/backup/agent-design-docs/DESIGN.md" target="_blank" rel="noopener">阅读完整设计规范 ↗</a></div>
   <div class="principles"><article><b>01</b><h3>帮助人保持和恢复注意力</h3><p>总览呈现重点，详情留住上下文，返航帮助人接着做。</p></article><article><b>02</b><h3>低干扰，也有足够的信息</h3><p>真实进展应容易察觉；重要结果持续可查，无需一直盯着屏幕。</p></article><article><b>03</b><h3>反馈清楚，交互自然</h3><p>操作有回应，动画解释变化，手机和电脑都保持良好的交互品质。</p></article></div>
   <div class="change-table-wrap"><table><caption>相对旧版交互地图，需要更新的关键认识</caption><thead><tr><th>主题</th><th>当前版本</th><th>阅读时注意</th></tr></thead><tbody>
     <tr><td>产品职责</td><td>手机工作副屏 + Mac 任务观察</td><td>已移除代决策、外部作答和恢复执行入口。</td></tr>
@@ -72,11 +72,11 @@
     <tr><td>完成表达</td><td>对勾徽章 + 用户最终完成确认</td><td>五角星已退役；来源执行结束不自动完成整体锚点。</td></tr>
     <tr><td>通知与云同步</td><td>应用内变化记录；可选 CloudKit 事件适配</td><td>后台通知未提供；生产 CloudKit 仍需配置和验收。</td></tr>
   </tbody></table></div>
-  <div class="evidence-grid"><article><span class="tag">源码快照</span><h3>可追溯的实现依据</h3><p>基于 <a id="baseline-link" href="https://github.com/asdfghklddd/Anchor/commit/3ed3e0c25e3734f94945c2b1a921b5c7e3cbe285">3ed3e0c</a> 整理主体结构，并纳入 2026-10-02 最新本地可读性素材。首页、横屏和创建表单的本地修订已单独标注；源码链接固定到已提交基线。</p><p>本页是人工核对的版本快照；后续产品变化需要同步维护地图数据。</p></article><article><span class="tag amber">验收边界</span><h3>实现存在，不等于全部实机通过</h3><p>BLE / Bonjour 配对、签名 CLI、语音权限、CloudKit、完整辅助功能体验仍需对应设备与账号验收。当前截图不证明这些服务已完成验收。</p><a class="text-link" href="https://github.com/asdfghklddd/Anchor/blob/main/Documentation/VALIDATION.md" target="_blank" rel="noopener">查看验证记录 ↗</a></article></div>
+  <div class="evidence-grid"><article><span class="tag">源码快照</span><h3>可追溯的实现依据</h3><p>基于 <a id="baseline-link" href="https://github.com/asdfghklddd/Anchor/commit/3ed3e0c25e3734f94945c2b1a921b5c7e3cbe285">3ed3e0c</a> 整理主体结构，并纳入 2026-10-02 最新本地可读性素材。首页、横屏和创建表单的本地修订已单独标注；源码链接固定到已提交基线。</p><p>本页是人工核对的版本快照；后续产品变化需要同步维护地图数据。</p></article><article><span class="tag amber">验收边界</span><h3>实现存在，不等于全部实机通过</h3><p>BLE / Bonjour 配对、签名 CLI、语音权限、CloudKit、完整辅助功能体验仍需对应设备与账号验收。当前截图不证明这些服务已完成验收。</p><a class="text-link" href="https://github.com/asdfghklddd/Anchor/blob/backup/agent-design-docs/Documentation/VALIDATION.md" target="_blank" rel="noopener">查看验证记录 ↗</a></article></div>
 </section>
 <footer><div class="brand"><img src="assets/logo.png" alt="" width="30" height="30"><strong>Anchor<span>让工作有处可回。</span></strong></div><p>更新于 2026 年 10 月 2 日 · 页面与交互地图</p><a href="https://github.com/asdfghklddd/Anchor/blob/main/docs/MAINTAINING.md" target="_blank" rel="noopener">维护这份地图 ↗</a><a href="#overview">回到顶部 ↑</a></footer>
 </main>
 <dialog id="detail-dialog" aria-labelledby="detail-title"><div class="dialog-toolbar"><span id="detail-kicker"></span><button class="close" id="close-dialog" aria-label="关闭详情">✕</button></div><div id="detail-content"></div></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
-<noscript><div class="noscript">启用 JavaScript 可使用地图筛选与节点详情。也可以直接查看 <a href="https://github.com/asdfghklddd/Anchor/blob/main/DESIGN.md">设计规范</a>与<a href="https://github.com/asdfghklddd/Anchor/blob/main/docs/project-map.md">项目结构</a>。</div></noscript>
+<noscript><div class="noscript">启用 JavaScript 可使用地图筛选与节点详情。也可以直接查看 <a href="https://github.com/asdfghklddd/Anchor/blob/backup/agent-design-docs/DESIGN.md">设计规范</a>与<a href="https://github.com/asdfghklddd/Anchor/blob/main/docs/project-map.md">项目结构</a>。</div></noscript>
 </body></html>

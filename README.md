@@ -5,8 +5,7 @@ to an iPhone work dashboard. Each task you anchor on the iPhone carries your own
 plan of steps; Anchor files agent work under the right task and step and always
 shows your next action, so you can switch projects or step away and pick up where
 you were. The Mac is an observation companion; it does not answer questions, make
-decisions, or resume external tools on the user’s behalf. The direction behind
-this is in [the product direction](Documentation/PRODUCT_DIRECTION_2026-10-17.md).
+decisions, or resume external tools on the user’s behalf.
 
 ## 页面与交互地图 · Product atlas
 
@@ -33,8 +32,6 @@ GitHub Pages publishes the `docs/` directory on `main`.
   contracts, presence inference, return summaries, and event deduplication.
 - `AnchorDesign`: adaptive iOS colors from the approved Figma homepage,
   platform-aware components, and an English/Simplified Chinese String Catalog.
-  See [DESIGN.md](DESIGN.md) for the frozen design philosophy, current iOS/macOS
-  experience, and detailed design requirements.
 - `AnchorIOSFeatures`: setup (goal and steps; criteria optional), a live plan
   you check off and edit, portrait dashboard with each task's next action, a
   landscape desk board centered on the step you're on (kept awake while
@@ -165,8 +162,7 @@ do not mutate the installed app's task data or source permissions.
 
 GitHub Actions builds both production Release schemes, runs the package tests,
 compiles both formal UI-test bundles, archives both apps, and checks that Demo
-resources are absent. The local acceptance record and remaining device checks are in
-[`Documentation/VALIDATION.md`](Documentation/VALIDATION.md).
+resources are absent.
 
 ## Public repository boundary
 
@@ -222,6 +218,4 @@ Local task edits now finish after local persistence and replicate in the backgro
 Codex/CLI observations retain their task ownership; the production dashboard
 rejects decision commands and has no decision UI or notification sender. Photo
 processing and file access run off the UI thread; recording cleanup is scoped to
-the correct speech request. See the latest section of
-[the validation record](Documentation/VALIDATION.md) for regression, native UI,
-command execution and event stress-test results and remaining device checks.
+the correct speech request.

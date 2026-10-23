@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Names the iPhone and Mac screens already use. Every name now resolves through
 /// `AnchorColorTokens`, so both platforms share one palette. Several names are
-/// aliases kept for the discipline pass (see Documentation/COLOR_SYSTEM.md).
+/// aliases kept for the discipline pass.
 public enum AnchorPalette {
     public static let surface = Color(AnchorColorTokens.surface)
     public static let ink = Color(AnchorColorTokens.text)

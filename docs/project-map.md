@@ -18,13 +18,10 @@ Generic app/browser tracking and decision execution have been retired.
 
 - [Public product atlas](https://asdfghklddd.github.io/Anchor/): interactive page maps, screenshots, functional structure, and design changes. [Maintenance](MAINTAINING.md).
 
-- [Design](../DESIGN.md): frozen design philosophy, current iOS/macOS experience, and derived visual, interaction, motion, and verification requirements.
 - [README](../README.md): setup and source submission.
-- [Validation](../Documentation/VALIDATION.md): latest verified results and device acceptance still needed.
 - [CLI contract](../Documentation/CLI_EVENT_CONTRACT.md): active terminal integration.
 - [CloudKit](../Documentation/CLOUDKIT_MVP.md): optional cloud configuration and acceptance still needed.
 - [Retired web contract](../Documentation/WEB_OBSERVATION_CONTRACT.md): historical data compatibility; no browser adapter ships.
-- [Launch motion](../Documentation/IOS_LAUNCH_MOTION.md): iOS transition behavior.
 - [Third-party notices](../Documentation/THIRD_PARTY_NOTICES.md): attribution.
 
 ## Verification
