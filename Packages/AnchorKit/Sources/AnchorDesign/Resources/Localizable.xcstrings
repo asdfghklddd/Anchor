@@ -10,6 +10,12 @@
     "%1$@ needs you · %2$@" : {
 
     },
+    "%1$@, %2$@" : {
+
+    },
+    "%1$@; %2$@" : {
+
+    },
     "%1$lld automatic · %2$lld queued" : {
 
     },
@@ -764,6 +770,9 @@
     "Bluetooth proximity" : {
 
     },
+    "Brings this conversation to the front" : {
+
+    },
     "cancel" : {
       "localizations" : {
         "en" : {
@@ -1164,6 +1173,9 @@
 
     },
     "Continue working" : {
+
+    },
+    "Conversations the Mac files under this task appear here" : {
 
     },
     "Copied" : {
@@ -2355,23 +2367,6 @@
         }
       }
     },
-    "goal.title.over" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A title fits about 16 Chinese or 32 Latin characters. Shorten it to save."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "标题最多约 16 个汉字或 32 个字母，缩短后才能保存。"
-          }
-        }
-      }
-    },
     "Goal: %@" : {
 
     },
@@ -2451,6 +2446,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你要完成什么？"
+          }
+        }
+      }
+    },
+    "goal.title.over" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A title fits about 16 Chinese or 32 Latin characters. Shorten it to save."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标题最多约 16 个汉字或 32 个字母，缩短后才能保存。"
           }
         }
       }
@@ -3367,6 +3379,295 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "当前工作"
+          }
+        }
+      }
+    },
+    "mac.edge.all-done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All steps done"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "步骤都完成了"
+          }
+        }
+      }
+    },
+    "mac.edge.catch-up" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Catch me up"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回顾"
+          }
+        }
+      }
+    },
+    "mac.edge.copied" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已复制"
+          }
+        }
+      }
+    },
+    "mac.edge.copy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy next step"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制下一步"
+          }
+        }
+      }
+    },
+    "mac.edge.copy.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The task you're on has no open step to copy"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前任务没有可复制的步骤"
+          }
+        }
+      }
+    },
+    "mac.edge.current" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're on"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在做"
+          }
+        }
+      }
+    },
+    "mac.edge.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click for your next step and quick actions; drag to move"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点按查看下一步与快捷操作，拖动可移动"
+          }
+        }
+      }
+    },
+    "mac.edge.more" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更多"
+          }
+        }
+      }
+    },
+    "mac.edge.more-tasks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld more"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还有 %lld 个"
+          }
+        }
+      }
+    },
+    "mac.edge.no-conversation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No conversation yet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有对话"
+          }
+        }
+      }
+    },
+    "mac.edge.no-plan" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No steps yet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有步骤"
+          }
+        }
+      }
+    },
+    "mac.edge.no-task" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No task yet. Drop an anchor on your phone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有任务。在手机上投下一只锚吧。"
+          }
+        }
+      }
+    },
+    "mac.edge.phone.off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phone not connected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手机未连接"
+          }
+        }
+      }
+    },
+    "mac.edge.phone.on" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phone connected · details are on the phone"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手机已连接 · 详情在手机上"
+          }
+        }
+      }
+    },
+    "mac.edge.step" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Step %1$lld of %2$lld · %3$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第 %1$lld/%2$lld 步 · %3$@"
+          }
+        }
+      }
+    },
+    "mac.edge.switch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch task"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换任务"
+          }
+        }
+      }
+    },
+    "mac.edge.you" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你："
           }
         }
       }
@@ -4427,6 +4728,9 @@
     "No changes received yet. This summary updates as records arrive." : {
 
     },
+    "No conversations yet" : {
+
+    },
     "No events yet" : {
 
     },
@@ -4434,6 +4738,9 @@
 
     },
     "No records yet" : {
+
+    },
+    "No reply yet" : {
 
     },
     "No result yet" : {
@@ -7111,6 +7418,9 @@
     "Reorder the processes or change their dashboard footprint." : {
 
     },
+    "Reply" : {
+
+    },
     "Reply: %@ is waiting for you" : {
 
     },
@@ -9503,15 +9813,6 @@
         }
       }
     },
-    "Show all %lld processes" : {
-
-    },
-    "Show fewer processes" : {
-
-    },
-    "Since start" : {
-
-    },
     "setup.voice.tap-stop" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9528,6 +9829,12 @@
           }
         }
       }
+    },
+    "Show all %lld processes" : {
+
+    },
+    "Show fewer processes" : {
+
     },
     "snapshot.running.waiting" : {
       "localizations" : {
@@ -11171,6 +11478,9 @@
     "Step" : {
 
     },
+    "Step %1$lld/%2$lld: %3$@" : {
+
+    },
     "Step %lld" : {
 
     },
@@ -11489,7 +11799,13 @@
         }
       }
     },
+    "Tap to open the task" : {
+
+    },
     "Task layout" : {
+
+    },
+    "Task library" : {
 
     },
     "Task lifecycle" : {
@@ -11863,9 +12179,6 @@
           }
         }
       }
-    },
-    "Time since the selected task started, including breaks." : {
-
     },
     "timeline" : {
       "localizations" : {
@@ -12263,6 +12576,9 @@
       }
     },
     "Workspace" : {
+
+    },
+    "You" : {
 
     },
     "Your agent was working when you left. Meanwhile: %@" : {

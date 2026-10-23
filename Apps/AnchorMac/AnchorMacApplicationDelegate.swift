@@ -56,11 +56,6 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
-    /// The menu bar's "Open Anchor".
-    func openWindow() {
-        detailWindowController?.present()
-    }
-
     func applicationWillTerminate(_ notification: Notification) {
         sourceSetupModel?.stopObserving()
         edgePanelController?.stop()
@@ -104,6 +99,10 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
             phoneAnchorState: phoneAnchorState,
             summaryBook: sourceSetupModel.summaryBook,
             onOpenDetails: { [weak detailWindowController] in
+                detailWindowController?.present()
+            },
+            onOpenSettings: { [weak detailWindowController, interfaceDefaults] in
+                AnchorMacRootView.showSettings(in: interfaceDefaults ?? .standard)
                 detailWindowController?.present()
             }
         )

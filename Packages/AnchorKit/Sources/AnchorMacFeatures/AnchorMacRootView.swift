@@ -4,6 +4,12 @@ import AnchorDesign
 import SwiftUI
 
 public struct AnchorMacRootView: View {
+    /// Opens the window on Settings next time it shows; the boat's "More" uses
+    /// this now that the menu bar item is gone.
+    public static func showSettings(in defaults: UserDefaults) {
+        defaults.set(MacSection.settings.rawValue, forKey: "anchor.mac.selected-section")
+    }
+
     private let model: AnchorSessionModel
     private let linkController: (any LocalLinkControlling)?
     private let sourceSetupModel: MacSourceSetupModel?

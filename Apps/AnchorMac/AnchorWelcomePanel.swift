@@ -1,8 +1,8 @@
 import AppKit
 
-/// The welcome-back card's own small panel above the boat. It never takes
-/// focus on its own; a click makes it key without activating Anchor, so Esc
-/// can dismiss it.
+/// A small panel beside the boat: the welcome-back card, or the buttons the
+/// boat opens. It takes key focus without activating Anchor, so Esc closes it
+/// while the person's own app stays in front.
 final class AnchorWelcomePanel: NSPanel {
     var onCancel: (() -> Void)?
 

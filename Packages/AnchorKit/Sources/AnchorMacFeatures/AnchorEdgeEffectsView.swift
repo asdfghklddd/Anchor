@@ -83,6 +83,8 @@ public struct AnchorEdgeEffectsView: View {
         .frame(width: AnchorEdgeEffectsMetrics.panelWidth, height: AnchorEdgeEffectsMetrics.height,
                alignment: .topLeading)
         .clipped()
+        // On the left edge the whole berth is mirrored, so the rope still leaves the stern.
+        .scaleEffect(x: presentation.side == .leading ? -1 : 1)
         .accessibilityHidden(true)
         .allowsHitTesting(false)
     }

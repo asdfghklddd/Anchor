@@ -20,6 +20,8 @@ public final class AnchorEdgePresentationModel {
     /// How many tasks need the person since they last opened Anchor, in the
     /// color of the most pressing reason. It floats beside the boat until they look.
     public private(set) var buoy: EdgeBuoy?
+    /// The screen edge the boat rests against; it sails toward that edge when idle.
+    public var side: AnchorEdgeSide = .trailing
     @ObservationIgnored private let effectsMetrics = AnchorEdgeEffectsMetrics()
     private(set) var waterImpactIntensity: CGFloat = 0
     private(set) var waterImpactXOffset: CGFloat = 0
@@ -35,6 +37,7 @@ public final class AnchorEdgePresentationModel {
     private var reduceMotion = false
     private var isPointerInside = false
     private var isKeyboardFocused = false
+    private var isMenuOpen = false
     private var transitionTask: Task<Void, Never>?
     private var tuckTask: Task<Void, Never>?
 
@@ -139,6 +142,16 @@ public final class AnchorEdgePresentationModel {
     public func keyboardFocusChanged(_ isFocused: Bool) {
         isKeyboardFocused = isFocused
         if isFocused {
+            revealControl()
+        } else {
+            scheduleTuck()
+        }
+    }
+
+    /// The buttons around the boat are out: it stays in view until they close.
+    public func menuPresenceChanged(_ isOpen: Bool) {
+        isMenuOpen = isOpen
+        if isOpen {
             revealControl()
         } else {
             scheduleTuck()
@@ -310,7 +323,7 @@ public final class AnchorEdgePresentationModel {
     }
 
     private var hasActiveInteraction: Bool {
-        isPointerInside || isKeyboardFocused
+        isPointerInside || isKeyboardFocused || isMenuOpen
     }
 
     private func registerWaterImpact(

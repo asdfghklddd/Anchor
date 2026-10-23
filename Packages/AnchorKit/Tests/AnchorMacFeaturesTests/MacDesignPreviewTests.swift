@@ -64,12 +64,25 @@ struct MacDesignPreviewTests {
                      EdgeBuoy(signal: .finished, count: 1)], id: \.self) { buoy in
                 let model = AnchorEdgePresentationModel(defaults: Self.previewDefaults)
                 let _ = model.showBuoy(buoy)
-                AnchorEdgeControlView(presentation: model, onOpenDetails: {})
+                AnchorEdgeControlView(presentation: model, onActivate: {}, onDrag: { _ in })
             }
         }
         .padding(20)
         .background(Color(red: 0.30, green: 0.42, blue: 0.40))
         try export(row, name: "mac-edge-buoys")
+
+        // The boat's buttons, with the phone away (the short list) and connected.
+        for connection in [ConnectionState.disconnected, .connected] {
+            var projection = SessionProjection(session: tasks[0], additionalSessions: Array(tasks.dropFirst()),
+                                               connection: connection)
+            projection.session?.goal.userPlan = AnchorUserPlan(steps: ["整理作品集", "写个人介绍", "上线"],
+                                                               completedSteps: [0])
+            let menu = AnchorEdgeMenuView(menu: AnchorEdgeMenu(projection: projection), side: .trailing,
+                                          boatY: 200, onAction: { _ in })
+                .background(Color(red: 0.30, green: 0.42, blue: 0.40))
+                .environment(\.locale, AnchorStrings.interfaceLocale)
+            try export(menu, name: "mac-edge-menu-\(connection == .connected ? "phone" : "no-phone")")
+        }
 
         let current = tasks[0]
         for scheme in [ColorScheme.light, .dark] {
