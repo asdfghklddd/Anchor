@@ -32,6 +32,9 @@ struct LandscapeAmbientDashboard: View {
     @State private var seenResults: Set<ResultKey>?
     @State private var swellsByConversation: [UUID: Int] = [:]
     @State private var swellTone = AnchorStateTone.attention.ink
+    @AppStorage(DeskPetKind.defaultsKey, store: ProfilePreferences.store) private var petKind = DeskPetKind.crab
+    /// When the board came up; the pet sleeps only after a long quiet since then.
+    @State private var boardSince = Date()
 
     // Desk sizes may grow with Dynamic Type but never shrink below these.
     private var clockSize: CGFloat { max(68, clockScaled) }
@@ -70,6 +73,11 @@ struct LandscapeAmbientDashboard: View {
                             VStack(alignment: .leading, spacing: 0) {
                                 clock(now: context.date)
                                 Spacer(minLength: 8)
+                                if petKind != .off {
+                                    DeskPet(kind: petKind, mood: petMood(now: context.date),
+                                            waves: swellsByConversation.values.reduce(0, +))
+                                        .padding(.bottom, 4)
+                                }
                                 status(now: context.date)
                             }
                             .padding(.bottom, 8)
@@ -92,6 +100,7 @@ struct LandscapeAmbientDashboard: View {
         .toolbar(.hidden, for: .navigationBar)
         .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: contacts)
         .onAppear {
+            boardSince = .now
             keepAwake.start()
             if playsArrival, !tasks.isEmpty { playArrival() }
         }
@@ -114,6 +123,16 @@ struct LandscapeAmbientDashboard: View {
               let task = tasks.first(where: { $0.id == newest.task }) else { return }
         swellTone = TaskNextAction(task: task).map { PlanCopy.symbol(for: $0).color } ?? AnchorStateTone.attention.ink
         swellsByConversation[newest.process, default: 0] += 1
+    }
+
+    // MARK: The pet (left, under the clock)
+
+    /// Typing while any agent runs; asleep after 20 minutes with no run and no news.
+    private func petMood(now: Date) -> DeskPetMood {
+        let processes = tasks.flatMap(\.taskProcesses)
+        if processes.contains(where: { $0.status == .running || $0.status == .queued }) { return .working }
+        let lastNews = max(processes.map(\.updatedAt).max() ?? .distantPast, boardSince)
+        return now.timeIntervalSince(lastNews) > 20 * 60 ? .quiet : .yourMove
     }
 
     // MARK: The clock (left)

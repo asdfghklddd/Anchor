@@ -435,6 +435,7 @@
       }
     },
     "ambient.elapsed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -451,6 +452,7 @@
       }
     },
     "ambient.elapsed.hint" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8256,6 +8258,86 @@
     },
     "Settings" : {
 
+    },
+    "settings.deskPet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desk pet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "桌面小宠物"
+          }
+        }
+      }
+    },
+    "settings.deskPet.crab" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crab"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "小螃蟹"
+          }
+        }
+      }
+    },
+    "settings.deskPet.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lives under the clock on the landscape desk. It types while an agent runs and waves when a result arrives."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "住在横屏桌面的时钟下方：智能体运行时它在打字，有新结果时向你挥手。"
+          }
+        }
+      }
+    },
+    "settings.deskPet.octopus" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Octopus"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "小章鱼"
+          }
+        }
+      }
+    },
+    "settings.deskPet.off" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭"
+          }
+        }
+      }
     },
     "settings.icloud" : {
       "extractionState" : "stale",
