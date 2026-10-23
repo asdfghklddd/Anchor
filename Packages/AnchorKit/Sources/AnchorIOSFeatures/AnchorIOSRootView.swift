@@ -23,6 +23,11 @@ public struct AnchorIOSRootView: View {
     @State private var arrivalPending = false
     @State private var invitationDeferred = false
     @State private var anchorDrops = 0
+    /// The task just anchored floats until its anchor catches, then settles (D10).
+    @State private var settlingTaskID: UUID?
+    @State private var settledTaskID: UUID?
+    @State private var anchorSettles = 0
+    @AnchorReducedMotion private var reduceMotion
     @State private var anchorWeighs = 0
     @State private var gravity = DeviceGravityMonitor()
     @State private var posture = DevicePosture.unknown
@@ -80,7 +85,10 @@ public struct AnchorIOSRootView: View {
                             onInvitationEnd: endHarbor,
                             anchorDrops: anchorDrops,
                             anchorWeighs: anchorWeighs,
-                            gravity: gravity
+                            gravity: gravity,
+                            settlingTaskID: settlingTaskID,
+                            settledTaskID: settledTaskID,
+                            anchorSettles: anchorSettles
                         )
                         .overlay {
                             if pickedUp, let hold = deskHold {
@@ -179,8 +187,8 @@ public struct AnchorIOSRootView: View {
             }
             // The success ending plays first; a waiting invitation follows it.
             let dropped = previousSheet == .setup && setupDraft.wasCreated
-            if dropped { anchorDrops += 1 }
-            presentDeferredInvitation(after: dropped ? 1.1 : 0.4)
+            if dropped { playDrop(of: setupDraft.hostedTaskID, titled: setupDraft.goalTitle) }
+            presentDeferredInvitation(after: dropped ? 1.9 : 0.4)
             if suspendedSetup, posture == .portrait {
                 suspendedSetup = false
                 sheet = .setup
@@ -327,6 +335,23 @@ public struct AnchorIOSRootView: View {
         gravity.stop()
     }
 
+    /// The anchor falls once the sheet has gone; the new task's card waits,
+    /// floating, until the anchor catches, then settles in its place.
+    private func playDrop(of taskID: UUID, titled title: String) {
+        settlingTaskID = taskID
+        Task { @MainActor in
+            try? await Task.sleep(for: AnchorDrop.lead)
+            anchorDrops += 1
+            try? await Task.sleep(for: .seconds(reduceMotion ? 0.1 : AnchorDrop.hold))
+            withAnimation(reduceMotion ? .easeOut(duration: 0.2) : AnchorMotion.continuity) {
+                if settlingTaskID == taskID { settlingTaskID = nil }
+            }
+            settledTaskID = taskID
+            anchorSettles += 1
+            AccessibilityNotification.Announcement(String(format: SetupCopy.dropped, title)).post()
+        }
+    }
+
     private func presentDeferredInvitation(after delay: Double) {
         guard invitationDeferred else { return }
         Task { @MainActor in
@@ -419,10 +444,7 @@ public struct AnchorIOSRootView: View {
             .presentationDetents([.large])
         case .setup:
             NavigationStack {
-                AnchorSetupView(
-                    model: model,
-                    draft: setupDraft
-                )
+                AnchorSetupView(model: model, draft: setupDraft)
             }
             .presentationDetents([.large])
         case .note:

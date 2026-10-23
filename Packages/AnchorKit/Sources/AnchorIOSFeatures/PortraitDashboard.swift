@@ -17,6 +17,11 @@ struct PortraitDashboard: View {
     var anchorDrops = 0
     var anchorWeighs = 0
     var gravity = DeviceGravityMonitor()
+    /// The task just anchored, floating until its anchor catches.
+    var settlingTaskID: UUID? = nil
+    /// The task whose anchor last caught, and a count that changes each time.
+    var settledTaskID: UUID? = nil
+    var anchorSettles = 0
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AnchorReducedMotion private var reduceMotion
 
@@ -107,6 +112,10 @@ struct PortraitDashboard: View {
                                            isCurrent: tasks.count > 1 && task.id == projection.session?.id)
                         }
                         .buttonStyle(AnchorPressButtonStyle())
+                        .modifier(DropSettle(
+                            floating: task.id == settlingTaskID, settles: anchorSettles,
+                            isSettled: task.id == settledTaskID, tint: HostedTaskAppearance.tint(task),
+                            reduceMotion: reduceMotion))
                         .accessibilityIdentifier("hosted.task.\(task.id)")
                         .transition(reduceMotion ? .opacity : .scale(scale: 0.95).combined(with: .opacity))
                     }
@@ -115,6 +124,37 @@ struct PortraitDashboard: View {
         }
         // Only membership changes animate; ordinary refreshes keep cards still.
         .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: tasks.map(\.id))
+    }
+}
+
+/// A new task's card in the moment after its anchor drops: lifted and pale while
+/// the anchor falls, then settled with one ring of its color as the anchor catches.
+private struct DropSettle: ViewModifier {
+    let floating: Bool
+    let settles: Int
+    let isSettled: Bool
+    let tint: Color
+    let reduceMotion: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(floating ? 0.55 : 1)
+            .scaleEffect(floating && !reduceMotion ? 0.97 : 1)
+            .offset(y: floating && !reduceMotion ? -10 : 0)
+            .keyframeAnimator(initialValue: 0.0, trigger: settles) { content, ring in
+                content.overlay {
+                    RoundedRectangle(cornerRadius: AnchorIOSStyle.cardRadius)
+                        .strokeBorder(tint, lineWidth: 2.5)
+                        .opacity(isSettled ? ring : 0)
+                        .allowsHitTesting(false)
+                }
+            } keyframes: { _ in
+                KeyframeTrack {
+                    MoveKeyframe(1.0)
+                    LinearKeyframe(1.0, duration: 0.25)
+                    LinearKeyframe(0.0, duration: 0.9, timingCurve: .easeIn)
+                }
+            }
     }
 }
 

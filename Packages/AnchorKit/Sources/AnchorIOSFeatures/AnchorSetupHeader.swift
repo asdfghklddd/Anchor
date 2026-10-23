@@ -2,64 +2,45 @@
 import AnchorDesign
 import SwiftUI
 
+/// Close on the left and the title in the middle; the drop itself is the
+/// slider under the plan, where the hand already is.
 struct AnchorSetupHeader: View {
-    let reviewing: Bool
-    let canGoBack: Bool
-    let back: () -> Void
     let close: () -> Void
-    @ScaledMetric(relativeTo: .title) private var inputTitleSize: CGFloat = 28
-    @ScaledMetric(relativeTo: .title3) private var reviewTitleSize: CGFloat = 20
-    @ScaledMetric(relativeTo: .subheadline) private var subtitleSize: CGFloat = 16
+
+    @ScaledMetric(relativeTo: .title2) private var figureSize: CGFloat = 26
 
     var body: some View {
-        VStack(spacing: 0) {
-            HarborAnchorGlyph(color: AnchorSetupStyle.accent, lineWidth: 2)
-                .frame(width: reviewing ? 32 : 40, height: reviewing ? 36 : 40)
-                // Compensate for the shared glyph’s internal Canvas inset.
-                .scaleEffect(reviewing ? 1.15 : 1.2)
-                .accessibilityHidden(true)
-            Text(SetupCopy.title)
-                .font(.system(size: reviewing ? reviewTitleSize : inputTitleSize, weight: .heavy))
-                .foregroundStyle(AnchorSetupStyle.heading)
-                .frame(minHeight: reviewing ? 28 : 39)
-                .padding(.top, reviewing ? 6 : 13)
-                .accessibilityAddTraits(.isHeader)
-                .accessibilityIdentifier("setup.screen")
-            Text(reviewing ? SetupCopy.reviewSubtitle : SetupCopy.subtitle)
-                .font(reviewing ? .caption : .system(size: subtitleSize, weight: .medium))
-                .foregroundStyle(AnchorSetupStyle.secondary)
-                .frame(minHeight: reviewing ? 18 : 22)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, reviewing ? 12 : 36)
-        .padding(.bottom, reviewing ? 16 : 29)
-        .overlay(alignment: .top) {
-            HStack {
-                if canGoBack {
-                    Button(action: back) {
-                        Image(systemName: "chevron.left").font(.subheadline)
-                            .frame(width: 28, height: 28)
-                            .background(AnchorSetupStyle.controlSurface, in: .circle)
-                            .frame(width: 44, height: 44).contentShape(.rect)
-                    }
-                    .accessibilityLabel(SetupCopy.back)
-                    .accessibilityIdentifier("setup.back.button")
-                }
-                Spacer()
-                Button(action: close) {
-                    Image(systemName: "xmark").font(.system(.subheadline, weight: .medium))
-                        .frame(width: 32, height: 32)
-                        .background(AnchorSetupStyle.controlSurface, in: .circle)
-                        .frame(width: 44, height: 44).contentShape(.rect)
-                }
-                .accessibilityLabel(L10n.close)
-                .accessibilityIdentifier("setup.close.button")
+        HStack(spacing: 8) {
+            Button(action: close) {
+                Image(systemName: "xmark").font(.system(.subheadline, weight: .medium))
+                    .frame(width: 32, height: 32)
+                    .background(AnchorSetupStyle.controlSurface, in: .circle)
+                    .frame(width: 44, height: 44).contentShape(.rect)
             }
-            .foregroundStyle(AnchorSetupStyle.ink)
             .buttonStyle(.plain)
-            .padding(.top, 14)
+            .foregroundStyle(AnchorSetupStyle.ink)
+            .accessibilityLabel(L10n.close)
+            .accessibilityIdentifier("setup.close.button")
+            Spacer(minLength: 4)
+            HStack(spacing: 8) {
+                AnchorFigure(color: AnchorSetupStyle.accent, depth: true)
+                    .frame(width: figureSize, height: figureSize)
+                    .accessibilityHidden(true)
+                Text(SetupCopy.title)
+                    .font(.title2.weight(.heavy))
+                    .foregroundStyle(AnchorSetupStyle.heading)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier("setup.screen")
+            }
+            Spacer(minLength: 4)
+            // Balances the close button so the title stays centered.
+            Color.clear.frame(width: 44, height: 44).accessibilityHidden(true)
         }
+        .padding(.horizontal, 12)
+        .padding(.top, 14)
+        .padding(.bottom, 8)
     }
 }
 #endif

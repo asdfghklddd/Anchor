@@ -38,14 +38,6 @@ final class SpeechInputController {
     private var recognitionTask: SFSpeechRecognitionTask?
     private var baseText = ""
 
-    func toggle(initialText: String) {
-        if isRecording {
-            stop()
-        } else {
-            start(initialText: initialText)
-        }
-    }
-
     func start(initialText: String) {
         guard !isRecording, !isRequestingPermission else { return }
         recognitionID = UUID()
@@ -103,6 +95,27 @@ final class SpeechInputController {
         isRecording = false
         audioLevel = 0
         pendingMeterLevel = 0
+    }
+
+    /// Ends a hold: the microphone closes at once, and the recognizer gets a
+    /// moment to deliver the last words before everything stops.
+    func finish() {
+        guard isRecording, let audioEngine else {
+            stop()
+            return
+        }
+        audioEngine.stop()
+        audioEngine.inputNode.removeTap(onBus: 0)
+        recognitionRequest?.endAudio()
+        audioLevel = 0
+        pendingMeterLevel = 0
+        // The final result calls stop(); this covers a recognizer that never sends one.
+        let finishingID = recognitionID
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(1.2))
+            guard let self, self.recognitionID == finishingID else { return }
+            self.stop()
+        }
     }
 
     func clearError() {

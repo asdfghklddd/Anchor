@@ -280,10 +280,20 @@ struct GoalEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(L10n.currentGoal) {
+                Section {
                     TextField(L10n.goalTitle, text: $title, axis: .vertical)
+                        .accessibilityIdentifier("goal.title.field")
                     TextField(L10n.completionCriteria, text: $criteria, axis: .vertical)
                     TextField(L10n.contextNote, text: $note, axis: .vertical)
+                } header: {
+                    Text(L10n.currentGoal)
+                } footer: {
+                    // The same room a title has when the anchor is dropped.
+                    if titleIsTooLong {
+                        Text(SetupCopy.titleTooLongToSave)
+                            .foregroundStyle(AnchorIOSStyle.attentionInk)
+                            .accessibilityIdentifier("goal.title.over")
+                    }
                 }
             .listRowBackground(AnchorIOSStyle.surface)
                 if goal.userPlan != nil {
@@ -308,10 +318,17 @@ struct GoalEditorView: View {
                             dismiss()
                         }
                     }
-                    .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || titleIsTooLong)
                 }
             }
         }
+    }
+
+    /// Only a title that grows past the limit blocks saving; an older, longer
+    /// title can still be kept or shortened.
+    private var titleIsTooLong: Bool {
+        let units = AnchorTitleLength.units(of: title)
+        return units > AnchorTitleLength.limit && units > AnchorTitleLength.units(of: goal.title)
     }
 }
 

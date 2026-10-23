@@ -4,46 +4,57 @@ import AnchorDesign
 /// Copy stays in the shared string catalog alongside the rest of the app.
 enum SetupCopy {
     static let title = AnchorStrings.value("setup.plan.title", default: "Task anchoring")
-    static let subtitle = AnchorStrings.value("setup.plan.subtitle", default: "Turn your thoughts into a plan")
-    static let reviewSubtitle = AnchorStrings.value("setup.plan.review.subtitle", default: "Your words, ready for a final review")
-    static let goal = AnchorStrings.value("setup.plan.goal", default: "Goal")
-    static let criteria = AnchorStrings.value("setup.plan.criteria", default: "Completion criteria")
     static let steps = AnchorStrings.value("setup.plan.steps", default: "Action plan")
-    static let goalPrompt = AnchorStrings.value("setup.plan.goal.prompt", default: "What would you like to do?")
-    static let criteriaPrompt = AnchorStrings.value("setup.plan.criteria.prompt", default: "What will done look like?")
-    static let stepsPrompt = AnchorStrings.value("setup.plan.steps.prompt", default: "How will you get there?")
-    static let goalPlaceholder = AnchorStrings.value("setup.plan.goal.placeholder", default: "Start with a goal, a question, or an idea…")
-    static let criteriaPlaceholder = AnchorStrings.value("setup.plan.criteria.placeholder", default: "Write each completion criterion on a new line…")
-    static let stepsPlaceholder = AnchorStrings.value("setup.plan.steps.placeholder", default: "Write each action step on a new line…")
-    static let goalHint = AnchorStrings.value("setup.plan.goal.hint", default: "For example: finish redesigning the Anchor homepage")
-    static let criteriaHint = AnchorStrings.value("setup.plan.criteria.hint", default: "For example: clear hierarchy, a working prototype. Put each criterion on a new line.")
-    static let stepsHint = AnchorStrings.value("setup.plan.steps.hint", default: "For example: review the content, then sketch the layout, then build the prototype. Write a step per line or say them in order; Anchor splits them.")
-    static let hintTitle = AnchorStrings.value("setup.plan.hint.title", default: "Try describing it like this")
-    static let next = AnchorStrings.value("setup.plan.next", default: "Next")
-    static let skip = AnchorStrings.value("setup.plan.skip", default: "Skip")
-    static let review = AnchorStrings.value("setup.plan.review", default: "Review plan")
-    static let original = AnchorStrings.value("setup.plan.original", default: "Your description")
-    static let edit = AnchorStrings.value("setup.plan.edit", default: "Edit")
-    static let back = AnchorStrings.value("setup.plan.back", default: "Back")
-    static let start = AnchorStrings.value("setup.plan.start", default: "Start")
+    static let titleLabel = AnchorStrings.value("setup.title.label", default: "Title")
+    static let titlePlaceholder = AnchorStrings.value("setup.title.placeholder", default: "What's the task?")
+    static let titleMeter = AnchorStrings.value("setup.title.meter", default: "Title length")
+    static let titleTooLong = AnchorStrings.value("setup.title.over", default: "Too long for a title. The extra words will move to the plan.")
+    static let titleTooLongToSave = AnchorStrings.value("goal.title.over", default: "A title fits about 16 Chinese or 32 Latin characters. Shorten it to save.")
+    static let titleMoved = AnchorStrings.value("setup.title.moved", default: "The extra words moved to the plan.")
+    static let planLabel = AnchorStrings.value("setup.plan.label", default: "Plan (optional)")
+    static let planExample = AnchorStrings.value("setup.plan.example", default: "One step per line ✍️\nread → build → test (＾▽＾)ノ")
+    static let planExampleHint = AnchorStrings.value("setup.plan.example.hint", default: "One step per line, or say them in order")
+    static let splitOne = AnchorStrings.value("setup.plan.split.one", default: "Becomes 1 step")
+    static let splitMany = AnchorStrings.value("setup.plan.split", default: "Becomes %lld steps")
+    static let splitHint = AnchorStrings.value("setup.plan.split.hint", default: "Shows the steps")
+    static let drop = AnchorStrings.value("setup.drop", default: "Drop anchor")
+    static let dropOne = AnchorStrings.value("setup.drop.one", default: "Drop · 1 step")
+    static let dropMany = AnchorStrings.value("setup.drop.steps", default: "Drop · %lld steps")
+    static let slide = AnchorStrings.value("setup.slide.drop", default: "Slide to drop anchor")
+    static let slideOne = AnchorStrings.value("setup.slide.drop.one", default: "Slide to drop · 1 step")
+    static let slideMany = AnchorStrings.value("setup.slide.drop.steps", default: "Slide to drop · %lld steps")
+    static let slideHint = AnchorStrings.value("setup.slide.hint", default: "Slide the anchor to the right to drop it")
+    static let voiceRelease = AnchorStrings.value("setup.voice.release", default: "Listening · release to finish")
+    static let voiceTapStop = AnchorStrings.value("setup.voice.tap-stop", default: "Listening · tap to stop")
+    static let voiceHoldHint = AnchorStrings.value("setup.voice.hold.hint", default: "Hold to talk, or tap to start and stop")
+    static let dropped = AnchorStrings.value("setup.dropped", default: "Anchor dropped: %@")
     static let saving = AnchorStrings.value("setup.plan.saving", default: "Saving…")
     static let saveFailed = AnchorStrings.value("setup.plan.save.failed", default: "Could not save this task. Your input is still here. Please try again.")
-    static let photos = AnchorStrings.value("setup.plan.photos", default: "Add images")
     static let removePhoto = AnchorStrings.value("setup.plan.photo.remove", default: "Remove image")
     static let photo = AnchorStrings.value("setup.plan.photo", default: "Reference image")
-    static let photoFailed = AnchorStrings.value("setup.plan.photo.failed", default: "An image could not be added. Try choosing it again.")
-    static let keyboard = AnchorStrings.value("setup.plan.keyboard", default: "Use keyboard")
-    static let newLine = AnchorStrings.value("setup.plan.newline", default: "New line")
-    static let addCriterion = AnchorStrings.value("setup.plan.criterion.add", default: "Add a criterion")
-    static let addStep = AnchorStrings.value("setup.plan.step.add", default: "Add a step")
-    static let reorder = AnchorStrings.value("setup.plan.reorder", default: "Reorder step")
-    static let up = AnchorStrings.value("setup.plan.up", default: "Move up")
-    static let down = AnchorStrings.value("setup.plan.down", default: "Move down")
     static let doneEditing = AnchorStrings.value("setup.plan.edit.done", default: "Done editing")
-    static let inputRequired = AnchorStrings.value("setup.plan.required", default: "Write or say a few words to continue")
     static let draftKept = AnchorStrings.value("setup.draft.kept", default: "Close and reopen to continue this draft.")
     static let discardDraft = AnchorStrings.value("setup.draft.discard", default: "Discard draft")
-    static let discardDraftQuestion = AnchorStrings.value("setup.draft.discard.question", default: "Discard this draft and its images?")
+    static let discardDraftQuestion = AnchorStrings.value("setup.draft.discard.question", default: "Discard this draft?")
 
+    static func split(_ count: Int) -> String {
+        count == 1 ? splitOne : String(format: splitMany, count)
+    }
+
+    static func slideLabel(steps count: Int) -> String {
+        switch count {
+        case 0: slide
+        case 1: slideOne
+        default: String(format: slideMany, count)
+        }
+    }
+
+    static func dropButton(steps count: Int) -> String {
+        switch count {
+        case 0: drop
+        case 1: dropOne
+        default: String(format: dropMany, count)
+        }
+    }
 }
 #endif

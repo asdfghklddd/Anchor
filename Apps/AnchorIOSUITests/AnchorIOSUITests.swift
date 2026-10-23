@@ -15,39 +15,27 @@ final class AnchorIOSUITests: XCTestCase {
         XCTAssertTrue(create.waitForExistence(timeout: 8))
         create.tap()
         type("Keep this draft", into: element("setup.goal.field", in: app))
-        advanceSetup(in: app)
-        type("Keep my criteria too", into: element("setup.criteria.field", in: app))
+        type("Keep my plan too", into: element("setup.steps.field", in: app))
         app.buttons["setup.close.button"].tap()
         XCTAssertTrue(element("setup.screen", in: app).waitForNonExistence(timeout: 5))
         create.tap()
-        let criteria = element("setup.criteria.field", in: app)
-        XCTAssertTrue(criteria.waitForExistence(timeout: 5))
-        XCTAssertEqual(criteria.value as? String, "Keep my criteria too")
-        app.buttons["setup.segment.0"].tap()
+        let plan = element("setup.steps.field", in: app)
+        XCTAssertTrue(plan.waitForExistence(timeout: 5))
+        XCTAssertEqual(plan.value as? String, "Keep my plan too")
         XCTAssertEqual(element("setup.goal.field", in: app).value as? String, "Keep this draft")
-        // Switching segments scrolls to the heading. Bring the bottom of the
-        // scrollable form back into view before comparing visible controls.
-        app.scrollViews.firstMatch.swipeUp()
         capture("Draft restored after close", app: app)
-        XCTAssertLessThanOrEqual(app.buttons["setup.segment.0"].frame.maxY, app.buttons["setup.next.button"].frame.minY)
         app.buttons["setup.draft.discard"].tap()
         let discard = app.buttons.matching(identifier: "setup.draft.discard.confirm").firstMatch
         XCTAssertTrue(discard.waitForExistence(timeout: 3))
         discard.tap()
         XCTAssertTrue(element("setup.screen", in: app).waitForNonExistence(timeout: 5))
         create.tap()
-        XCTAssertEqual(element("setup.goal.field", in: app).value as? String, "")
-        type("Fresh task", into: element("setup.goal.field", in: app))
-        advanceSetup(in: app)
-        type("Confirmed", into: element("setup.criteria.field", in: app))
-        advanceSetup(in: app)
-        type("One step", into: element("setup.steps.field", in: app))
-        advanceSetup(in: app)
-        app.buttons["setup.start.button"].tap()
+        assertEmpty(element("setup.goal.field", in: app))
+        dropAnchor("Fresh task", plan: "One step", in: app)
         XCTAssertTrue(app.buttons["Fresh task"].waitForExistence(timeout: 5))
         create.tap()
         XCTAssertTrue(element("setup.goal.field", in: app).waitForExistence(timeout: 5))
-        XCTAssertEqual(element("setup.goal.field", in: app).value as? String, "")
+        assertEmpty(element("setup.goal.field", in: app))
     }
 
     @MainActor
@@ -59,13 +47,7 @@ final class AnchorIOSUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.buttons["anchor.note.button"].waitForExistence(timeout: 8))
         app.buttons["anchor.note.button"].tap()
-        type("Note test task", into: element("setup.goal.field", in: app))
-        advanceSetup(in: app)
-        type("Note is retained", into: element("setup.criteria.field", in: app))
-        advanceSetup(in: app)
-        type("Save context", into: element("setup.steps.field", in: app))
-        advanceSetup(in: app)
-        app.buttons["setup.start.button"].tap()
+        dropAnchor("Note test task", plan: "Save context", in: app)
         XCTAssertTrue(app.buttons["Note test task"].waitForExistence(timeout: 5))
         app.buttons["Manage hosted tasks"].tap()
         XCTAssertTrue(app.buttons["Drop an anchor"].waitForExistence(timeout: 5))
@@ -109,6 +91,8 @@ final class AnchorIOSUITests: XCTestCase {
         createButton.tap()
         let voiceButton = app.buttons["setup.voice.input.button"]
         XCTAssertTrue(voiceButton.waitForExistence(timeout: 5))
+        // A new anchor opens at its title; put the keyboard away to reach the voice button.
+        closeKeyboard(in: app)
         voiceButton.tap()
 
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
@@ -146,7 +130,7 @@ final class AnchorIOSUITests: XCTestCase {
         // A late callback from the first request must not disable the controls.
         for _ in 0..<2 {
             if voiceButton.isEnabled { voiceButton.tap() }
-            app.buttons["setup.keyboard.button"].tap()
+            element("setup.steps.field", in: app).tap()
             XCTAssertTrue(app.buttons["setup.keyboard.done"].waitForExistence(timeout: 3))
             app.buttons["setup.keyboard.done"].tap()
             XCTAssertTrue(voiceButton.waitForExistence(timeout: 3))
@@ -221,16 +205,9 @@ final class AnchorIOSUITests: XCTestCase {
         XCTAssertTrue(element("setup.screen", in: app).waitForExistence(timeout: 3))
         capture("Anchor input", app: app)
         type("Production UI test task", into: element("setup.goal.field", in: app))
-        advanceSetup(in: app)
-        type("The task remains after relaunch", into: element("setup.criteria.field", in: app))
-        advanceSetup(in: app)
         type("Build the formal experience", into: element("setup.steps.field", in: app))
-        advanceSetup(in: app)
-
-        capture("Anchor review", app: app)
-        let startButton = app.buttons["setup.start.button"]
-        XCTAssertTrue(startButton.isEnabled)
-        startButton.tap()
+        capture("Anchor filled", app: app)
+        slideToDrop(in: app)
 
         XCTAssertTrue(element("setup.screen", in: app).waitForNonExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Production UI test task"].exists)
@@ -313,7 +290,7 @@ final class AnchorIOSUITests: XCTestCase {
     }
 
     @MainActor
-    func testSetupRequiresGoalAndStepsWithoutMacProcesses() throws {
+    func testSetupNeedsOnlyATitleWithoutMacProcesses() throws {
         XCUIDevice.shared.orientation = .portrait
         let app = isolatedApplication()
         defer { app.terminate() }
@@ -331,45 +308,32 @@ final class AnchorIOSUITests: XCTestCase {
         XCTAssertTrue(anchorButton.waitForExistence(timeout: 8))
         anchorButton.tap()
         XCTAssertTrue(element("setup.screen", in: app).waitForExistence(timeout: 3))
+        capture("Visual 07 keyboard on the title", app: app)
+        closeKeyboard(in: app)
 
-        capture("Visual 01 goal empty", app: app)
+        capture("Visual 01 empty", app: app)
         let card = element("setup.input.card", in: app)
         XCTAssertEqual(card.frame.width, app.frame.width - 40, accuracy: 1)
-        XCTAssertEqual(card.frame.height, 346, accuracy: 2)
-        XCTAssertEqual(card.frame.minY, 241, accuracy: 3)
-        app.buttons["setup.photos.button"].tap()
-        let cancelPhotos = app.buttons["取消"].waitForExistence(timeout: 3) ? app.buttons["取消"] : app.buttons["Cancel"]
-        XCTAssertTrue(cancelPhotos.waitForExistence(timeout: 5))
-        capture("Visual 08 system photo picker", app: app)
-        cancelPhotos.tap()
-        let nextButton = app.buttons["setup.next.button"]
-        XCTAssertFalse(nextButton.isEnabled)
-        XCTAssertFalse(element("setup.process.field.0", in: app).exists)
-        app.buttons["setup.keyboard.button"].tap()
+        let drop = app.buttons["setup.start.button"]
+        XCTAssertFalse(drop.isEnabled)
+        // No hint lines and no image button: the card and the slider are the whole page.
+        XCTAssertFalse(element("setup.plan.principle", in: app).exists)
+        XCTAssertFalse(element("setup.mac.status", in: app).exists)
+        XCTAssertFalse(app.buttons["setup.photos.button"].exists)
+
+        // A title alone is enough.
         type("完成 Anchor 首页重新设计", into: element("setup.goal.field", in: app))
-        capture("Visual 07 keyboard", app: app)
-        app.buttons["setup.keyboard.done"].tap()
-        capture("Visual 02 goal filled", app: app)
-        advanceSetup(in: app)
-        capture("Visual 03 criteria empty", app: app)
-        // Completion criteria are optional: an empty page offers to skip.
-        XCTAssertTrue(nextButton.isEnabled)
-        XCTAssertTrue(["跳过", "Skip"].contains { nextButton.label.contains($0) }, nextButton.label)
-        type("信息层级明确\n完成可演示的首页原型\n这周内完成", into: element("setup.criteria.field", in: app))
-        advanceSetup(in: app)
-        capture("Visual 04 steps empty", app: app)
-        XCTAssertFalse(nextButton.isEnabled)
+        closeKeyboard(in: app)
+        XCTAssertTrue(drop.isEnabled)
+        capture("Visual 02 title only", app: app)
+
         type("梳理现有信息架构\n确定首页内容层级\n完成视觉设计\n制作交互原型", into: element("setup.steps.field", in: app))
-        advanceSetup(in: app)
-        XCTAssertTrue(app.buttons["setup.start.button"].isEnabled)
-        app.buttons["setup.edit.0"].tap()
-        XCTAssertEqual(element("setup.goal.field", in: app).value as? String, "完成 Anchor 首页重新设计")
-        advanceSetup(in: app)
-        XCTAssertTrue(app.buttons["setup.start.button"].isEnabled)
-        capture("Visual 05 review", app: app)
-        app.swipeUp()
-        capture("Visual 09 review bottom", app: app)
-        app.buttons["setup.start.button"].tap()
+        closeKeyboard(in: app)
+        XCTAssertTrue(drop.label.contains("4"), drop.label)
+        app.buttons["setup.steps.preview"].tap()
+        XCTAssertTrue(app.staticTexts["制作交互原型"].waitForExistence(timeout: 3))
+        capture("Visual 03 plan split into steps", app: app)
+        slideToDrop(in: app)
         XCTAssertTrue(element("setup.screen", in: app).waitForNonExistence(timeout: 5))
         app.terminate()
         app.launch()
@@ -383,15 +347,19 @@ final class AnchorIOSUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["制作交互原型"].exists)
         app.terminate()
         app.launch()
+
+        // A title too long for the boards moves its extra words to the plan.
         XCTAssertTrue(app.buttons["anchor.note.button"].waitForExistence(timeout: 8))
         app.buttons["anchor.note.button"].tap()
         type("今天计划完成竞品分析初步调研，上午还有一个小组工作会议。", into: element("setup.goal.field", in: app))
-        app.buttons["setup.keyboard.done"].tap()
-        capture("Visual 06 voice input idle", app: app)
+        XCTAssertTrue(element("setup.title.over", in: app).waitForExistence(timeout: 3))
+        capture("Visual 04 title too long", app: app)
+        closeKeyboard(in: app)
+        XCTAssertTrue(element("setup.title.moved", in: app).waitForExistence(timeout: 3))
+        XCTAssertEqual(element("setup.goal.field", in: app).value as? String, "今天计划完成竞品分析初步调研")
+        XCTAssertEqual(element("setup.steps.field", in: app).value as? String, "上午还有一个小组工作会议。")
+        capture("Visual 06 extra words moved to the plan", app: app)
         XCTAssertTrue(app.buttons["setup.voice.input.button"].exists)
-
-
-
     }
 
     @MainActor
@@ -414,13 +382,7 @@ final class AnchorIOSUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.buttons["anchor.note.button"].waitForExistence(timeout: 8))
         app.buttons["anchor.note.button"].tap()
-        type("Anchor 工作看板", into: element("setup.goal.field", in: app))
-        advanceSetup(in: app)
-        type("回来后继续完善任务同步", into: element("setup.criteria.field", in: app))
-        advanceSetup(in: app)
-        type("检查 iOS 与 Mac 的任务状态", into: element("setup.steps.field", in: app))
-        advanceSetup(in: app)
-        app.buttons["setup.start.button"].tap()
+        dropAnchor("Anchor 工作看板", plan: "检查 iOS 与 Mac 的任务状态", in: app)
         // The task appears as a library card and as a lane in the glance; open the card.
         let card = app.buttons.matching(NSPredicate(
             format: "identifier BEGINSWITH 'hosted.task.' AND label == %@", "Anchor 工作看板"
@@ -468,15 +430,13 @@ final class AnchorIOSUITests: XCTestCase {
         let anchorButton = app.buttons["anchor.note.button"]
         XCTAssertTrue(anchorButton.waitForExistence(timeout: 8))
         anchorButton.tap()
-        type("Archived production task", into: element("setup.goal.field", in: app))
-        advanceSetup(in: app)
-        type("The full task remains available in history", into: element("setup.criteria.field", in: app))
-        advanceSetup(in: app)
-        type("Validate the final boundary", into: element("setup.steps.field", in: app))
-        advanceSetup(in: app)
-        app.buttons["setup.start.button"].tap()
+        dropAnchor("Archived production task",
+                   plan: "Validate the final boundary\nThe full task remains available in history", in: app)
 
-        let taskCard = app.buttons["Archived production task"]
+        // The task is both a library card and a lane in the glance; open the card.
+        let taskCard = app.buttons.matching(NSPredicate(
+            format: "identifier BEGINSWITH 'hosted.task.' AND label == %@", "Archived production task"
+        )).firstMatch
         XCTAssertTrue(taskCard.waitForExistence(timeout: 5))
         taskCard.tap()
         let finishShortcut = app.buttons["profile.session.finish.button"]
@@ -530,13 +490,7 @@ final class AnchorIOSUITests: XCTestCase {
         let anchorButton = app.buttons["anchor.note.button"]
         XCTAssertTrue(anchorButton.waitForExistence(timeout: 8))
         anchorButton.tap()
-        type("Long-running task", into: element("setup.goal.field", in: app))
-        advanceSetup(in: app)
-        type("Review before continuing", into: element("setup.criteria.field", in: app))
-        advanceSetup(in: app)
-        type("Preserve unfinished work", into: element("setup.steps.field", in: app))
-        advanceSetup(in: app)
-        app.buttons["setup.start.button"].tap()
+        dropAnchor("Long-running task", plan: "Preserve unfinished work", in: app)
 
         XCTAssertTrue(element("recovery.screen", in: app).waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["recovery.continue.button"].exists)
@@ -576,18 +530,12 @@ final class AnchorIOSUITests: XCTestCase {
             let anchor = app.buttons["anchor.note.button"]
             XCTAssertTrue(anchor.waitForExistence(timeout: 8))
             anchor.tap()
-            type(title, into: element("setup.goal.field", in: app))
-            advanceSetup(in: app)
-            type("Reviewed", into: element("setup.criteria.field", in: app))
-            advanceSetup(in: app)
-            type("Main conversation", into: element("setup.steps.field", in: app))
-            advanceSetup(in: app)
-            app.buttons["setup.start.button"].tap()
+            // A title alone is enough to drop an anchor.
+            dropAnchor(title, plan: title == "Portfolio" ? nil : "Main conversation", in: app)
             XCTAssertTrue(app.buttons[title].waitForExistence(timeout: 5))
         }
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "hosted.task.")).count, 2)
-        app.buttons["topbar.profile.button"].tap()
-        app.buttons["profile.account.button"].tap()
+        app.buttons["topbar.settings.button"].tap()
         let name = app.textFields["profile.name.field"]
         XCTAssertTrue(name.waitForExistence(timeout: 3))
         name.tap()
@@ -602,45 +550,34 @@ final class AnchorIOSUITests: XCTestCase {
     }
 
     @MainActor
-    func testSetupKeyboardControlsSurviveRepeatedEditingAndReview() throws {
+    func testSetupKeyboardControlsSurviveRepeatedEditing() throws {
         let app = isolatedApplication()
         defer { app.terminate() }
         app.launch()
         XCTAssertTrue(app.buttons["anchor.note.button"].waitForExistence(timeout: 8))
         app.buttons["anchor.note.button"].tap()
 
-        func assertControls() {
-            for id in ["setup.keyboard.newline", "setup.keyboard.done", "setup.keyboard.next"] {
-                XCTAssertTrue(app.buttons[id].waitForExistence(timeout: 3), id)
-                XCTAssertTrue(app.buttons[id].isHittable, id)
-            }
-        }
+        let title = element("setup.goal.field", in: app)
+        let plan = element("setup.steps.field", in: app)
+        // Return in the title moves on to the plan, as in Reminders.
+        type("Editable title\n", into: title)
+        app.typeText("First step\nSecond step")
+        XCTAssertEqual(title.value as? String, "Editable title")
+        XCTAssertTrue((plan.value as? String)?.contains("Second step") == true)
+        XCTAssertTrue(app.buttons["setup.start.button"].label.contains("2"), app.buttons["setup.start.button"].label)
 
-        for field in ["setup.goal.field", "setup.criteria.field", "setup.steps.field"] {
-            // Direct text taps and the explicit keyboard button must behave alike.
-            type("Editable text", into: element(field, in: app))
-            assertControls()
-            app.buttons["setup.keyboard.newline"].tap()
-            XCTAssertTrue((element(field, in: app).value as? String)?.contains("\n") == true)
-            element(field, in: app).typeText("Second line")
-            app.buttons["setup.keyboard.done"].tap()
+        let done = app.buttons["setup.keyboard.done"]
+        for field in [title, plan] {
+            field.tap()
+            XCTAssertTrue(done.waitForExistence(timeout: 3))
+            XCTAssertTrue(done.isHittable)
+            // A downward gesture while correcting text must not close the sheet.
+            field.swipeDown()
+            XCTAssertTrue(element("setup.screen", in: app).exists)
+            if done.exists { done.tap() }
             XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 3))
             XCTAssertTrue(element("setup.screen", in: app).exists)
-            app.buttons["setup.keyboard.button"].tap()
-            assertControls()
-            // A downward gesture while correcting text must not close the sheet.
-            element(field, in: app).swipeDown()
-            XCTAssertTrue(element("setup.screen", in: app).exists)
-            assertControls()
-            app.buttons["setup.keyboard.next"].tap()
         }
-        XCTAssertTrue(app.buttons["setup.edit.0"].waitForExistence(timeout: 3))
-        app.buttons["setup.edit.0"].tap()
-        element("setup.goal.field", in: app).tap()
-        assertControls()
-        app.buttons["setup.keyboard.done"].tap()
-        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 3))
-        XCTAssertTrue(element("setup.screen", in: app).exists)
     }
 
     @MainActor
@@ -659,11 +596,39 @@ final class AnchorIOSUITests: XCTestCase {
         return app
     }
 
+    /// Drops an anchor from the one-page setup: a title, and a plan when given.
     @MainActor
-    private func advanceSetup(in app: XCUIApplication) {
-        let keyboardNext = app.buttons["setup.keyboard.next"]
-        if keyboardNext.exists { keyboardNext.tap() }
-        else { app.buttons["setup.next.button"].tap() }
+    private func dropAnchor(_ title: String, plan: String? = nil, in app: XCUIApplication) {
+        type(title, into: element("setup.goal.field", in: app))
+        if let plan { type(plan, into: element("setup.steps.field", in: app)) }
+        slideToDrop(in: app)
+    }
+
+    /// The drop is a slide: the anchor is dragged to the far end of its channel.
+    @MainActor
+    private func slideToDrop(in app: XCUIApplication) {
+        closeKeyboard(in: app)
+        let slider = app.buttons["setup.start.button"]
+        XCTAssertTrue(slider.waitForExistence(timeout: 3))
+        XCTAssertTrue(slider.isEnabled)
+        let anchor = slider.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.5))
+        let end = slider.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.5))
+        anchor.press(forDuration: 0.1, thenDragTo: end)
+    }
+
+    /// An empty text field may report its placeholder as its value.
+    @MainActor
+    private func assertEmpty(_ field: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(field.waitForExistence(timeout: 5), file: file, line: line)
+        let value = field.value as? String
+        XCTAssertTrue(value == "" || value == field.placeholderValue, value ?? "nil", file: file, line: line)
+    }
+
+    @MainActor
+    private func closeKeyboard(in app: XCUIApplication) {
+        let done = app.buttons["setup.keyboard.done"]
+        if done.waitForExistence(timeout: 2) { done.tap() }
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 3))
     }
 
     @MainActor

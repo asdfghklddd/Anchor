@@ -3,21 +3,16 @@ import AnchorCore
 import Foundation
 import Observation
 
-/// User-authored segments survive closing the sheet and temporary rotation.
+/// User-authored text survives closing the sheet and temporary rotation.
 @MainActor
 @Observable
 final class AnchorSetupDraft {
     let hostedTaskID = UUID()
     let goalID = UUID()
     var goalTitle = ""
-    var completionCriteria = ""
     var actionPlan = ""
     var imageData: [Data] = []
     var isImportingImages = false
-    var isKeyboardEditing = false
-    var segment: AnchorSetupSegment = .goal
-    var isReviewing = false
-    var editingReview = false
     var isConsumed = false
     /// The anchor was dropped (not discarded); the home plays its success ending.
     var wasCreated = false
@@ -26,34 +21,29 @@ final class AnchorSetupDraft {
         !originalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !imageData.isEmpty
     }
 
-    var criteria: [String] { lines(completionCriteria) }
-    /// Lines, or a spoken sequence ("先…然后…"), become steps the review shows before starting.
+    /// Lines, or a spoken sequence ("先…然后…"), become steps.
     var steps: [String] { PlanStepSplitter.steps(from: actionPlan) }
-    /// A goal and one step are enough to start; completion criteria are optional (I3).
-    var isValid: Bool { !goalTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !steps.isEmpty }
-    var originalText: String { [goalTitle, completionCriteria, actionPlan].filter { !$0.isEmpty }.joined(separator: "\n\n") }
+    /// A title is enough to drop an anchor; a plan is recommended, not required.
+    var isValid: Bool { !goalTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    var titleUnits: Int { AnchorTitleLength.units(of: goalTitle) }
+    var titleIsTooLong: Bool { titleUnits > AnchorTitleLength.limit }
+    var originalText: String { [goalTitle, actionPlan].filter { !$0.isEmpty }.joined(separator: "\n\n") }
 
-    func text(for segment: AnchorSetupSegment) -> String {
-        switch segment {
-        case .goal: goalTitle
-        case .criteria: completionCriteria
-        case .steps: actionPlan
-        }
-    }
-
-    func setText(_ text: String, for segment: AnchorSetupSegment) {
-        switch segment {
-        case .goal: goalTitle = text
-        case .criteria: completionCriteria = text
-        case .steps: actionPlan = text
-        }
-    }
-
-    private func lines(_ text: String) -> [String] {
-        // Criteria are split only at line breaks.
-        text.components(separatedBy: .newlines)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+    /// A title is one line that fits the boards. Extra lines, and words past the
+    /// limit, move to the top of the plan instead of being lost.
+    /// Returns whether anything moved.
+    @discardableResult
+    func settleTitle() -> Bool {
+        let lines = goalTitle.components(separatedBy: .newlines)
+        let split = AnchorTitleLength.split(lines.first ?? "")
+        let moved = ([split.rest] + lines.dropFirst())
+            .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
+        if goalTitle != split.title { goalTitle = split.title }
+        guard !moved.isEmpty else { return false }
+        let plan = actionPlan.trimmingCharacters(in: .newlines)
+        actionPlan = (moved + (plan.isEmpty ? [] : [plan])).joined(separator: "\n")
+        return true
     }
 }
 #endif
