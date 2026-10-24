@@ -289,7 +289,24 @@ public enum L10n {
     )
     public static let sourceSetupDetail = AnchorStrings.value(
         "source.setup.detail",
-        default: "Authorize the local Codex sessions folder once to discover matching new tasks, including Codex tasks in the ChatGPT app. Terminal commands use the shell connection below."
+        default: "Connect your local Codex and Claude Code session folders once. Anchor will discover new conversations, titles, and turn status automatically; adjust task placement when needed. Terminal commands use the shell connection below."
+    )
+    public static let sourceSetupAgentFoldersConnect = AnchorStrings.value(
+        "source.setup.agents.connect", default: "Connect Codex and Claude folders once…"
+    )
+    public static let sourceSetupAgentFoldersPanelTitle = AnchorStrings.value(
+        "source.setup.agents.panel.title", default: "Connect local agent sessions"
+    )
+    public static let sourceSetupAgentFoldersPanelMessage = AnchorStrings.value(
+        "source.setup.agents.panel.message",
+        default: "Select the Codex sessions folder and Claude Code projects folder together, when both are installed. Anchor remembers access and discovers new conversations automatically."
+    )
+    public static let sourceSetupAgentFoldersPanelPrompt = AnchorStrings.value(
+        "source.setup.agents.panel.prompt", default: "Connect selected folders"
+    )
+    public static let sourceSetupAgentFoldersSelectionError = AnchorStrings.value(
+        "source.setup.agents.selection-error",
+        default: "Select the Codex sessions folder or Claude Code projects folder."
     )
     public static let sourceSetupMacApps = AnchorStrings.value(
         "source.setup.mac-apps",
@@ -383,54 +400,22 @@ public enum L10n {
     public static let sourceSetupCodex = AnchorStrings.value("source.setup.codex", default: "Codex")
     public static let sourceSetupCodexDetail = AnchorStrings.value(
         "source.setup.codex.detail",
-        default: "Authorize the Codex sessions folder once. Anchor discovers task metadata, then tracks only tasks you associate."
-    )
-    public static let sourceSetupChooseCodexSession = AnchorStrings.value(
-        "source.setup.codex.choose-session", default: "Choose Session File"
-    )
-    public static let sourceSetupCodexAuthorizeFolder = AnchorStrings.value(
-        "source.setup.codex.authorize-folder", default: "Authorize Sessions Folder…"
+        default: "Anchor automatically discovers conversation titles, the latest request, turn reply summaries, and live status, then associates conversations with matching tasks."
     )
     public static let sourceSetupCodexFolderReady = AnchorStrings.value(
-        "source.setup.codex.folder-ready", default: "Folder access granted"
-    )
-    public static let sourceSetupCodexFolderPanelTitle = AnchorStrings.value(
-        "source.setup.codex.folder-panel.title", default: "Choose Codex Sessions Folder"
-    )
-    public static let sourceSetupCodexFolderPanelMessage = AnchorStrings.value(
-        "source.setup.codex.folder-panel.message",
-        default: "Grant read-only access so Anchor can discover Codex tasks. Nothing is associated until you choose Track."
-    )
-    public static let sourceSetupCodexRecentTasks = AnchorStrings.value(
-        "source.setup.codex.recent-tasks", default: "Recent Codex tasks"
-    )
-    public static let sourceSetupCodexRecentTasksDetail = AnchorStrings.value(
-        "source.setup.codex.recent-tasks.detail",
-        default: "Discovered from local metadata and lifecycle events. Track once to associate future runs with this Anchor task."
-    )
-    public static let sourceSetupCodexTrack = AnchorStrings.value(
-        "source.setup.codex.track", default: "Track"
-    )
-    public static let sourceSetupCodexTracked = AnchorStrings.value(
-        "source.setup.codex.tracked", default: "Tracking"
+        "source.setup.codex.folder-ready", default: "Automatically discovering conversations"
     )
     public static func sourceSetupCodexTrackedCount(_ count: Int) -> String {
         String.localizedStringWithFormat(
             AnchorStrings.value(
                 "source.setup.codex.tracked-count",
-                default: "%lld Codex tasks tracked"
+                default: "%lld Codex conversations followed for this task"
             ),
             count
         )
     }
     public static let sourceSetupNotConnected = AnchorStrings.value(
         "source.setup.not-connected", default: "Not connected"
-    )
-    public static let sourceSetupCodexPanelTitle = AnchorStrings.value(
-        "source.setup.codex.panel.title", default: "Choose Codex Session"
-    )
-    public static let sourceSetupCodexPanelMessage = AnchorStrings.value(
-        "source.setup.codex.panel.message", default: "Confirm the JSONL session that belongs to the current Anchor task."
     )
     public static let sourceSetupTaskObservation = AnchorStrings.value(
         "source.setup.task-observation", default: "Current task observation"

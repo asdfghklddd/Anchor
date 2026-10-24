@@ -37,7 +37,7 @@
     "%lld automatic" : {
 
     },
-    "%lld Codex tasks tracked" : {
+    "%lld Codex conversations followed for this task" : {
 
     },
     "%lld decisions" : {
@@ -541,6 +541,9 @@
     "ANCHOR ACTIVE" : {
 
     },
+    "Anchor automatically discovers conversation titles, the latest request, turn reply summaries, and live status, then associates conversations with matching tasks." : {
+
+    },
     "Anchor cannot confirm that you left. Check Mac, local network, and Bluetooth access." : {
 
     },
@@ -631,16 +634,10 @@
         }
       }
     },
-    "Authorize Sessions Folder…" : {
-
-    },
-    "Authorize the Codex sessions folder once. Anchor discovers task metadata, then tracks only tasks you associate." : {
-
-    },
-    "Authorize the local Codex sessions folder once to discover matching new tasks, including Codex tasks in the ChatGPT app. Terminal commands use the shell connection below." : {
-
-    },
     "Automatic pairing is unavailable. Enter the six-digit code shown on your Mac." : {
+
+    },
+    "Automatically discovering conversations" : {
 
     },
     "Available" : {
@@ -853,16 +850,7 @@
     "Choose an option" : {
 
     },
-    "Choose Codex Session" : {
-
-    },
-    "Choose Codex Sessions Folder" : {
-
-    },
     "Choose direction" : {
-
-    },
-    "Choose Session File" : {
 
     },
     "close" : {
@@ -949,10 +937,19 @@
     "Confirm direction" : {
 
     },
-    "Confirm the JSONL session that belongs to the current Anchor task." : {
+    "Confirmed" : {
 
     },
-    "Confirmed" : {
+    "Connect Codex and Claude folders once…" : {
+
+    },
+    "Connect local agent sessions" : {
+
+    },
+    "Connect selected folders" : {
+
+    },
+    "Connect your local Codex and Claude Code session folders once. Anchor will discover new conversations, titles, and turn status automatically; adjust task placement when needed. Terminal commands use the shell connection below." : {
 
     },
     "connected" : {
@@ -1797,9 +1794,6 @@
         }
       }
     },
-    "Discovered from local metadata and lifecycle events. Track once to associate future runs with this Anchor task." : {
-
-    },
     "Display accommodations" : {
 
     },
@@ -2350,9 +2344,6 @@
         }
       }
     },
-    "Folder access granted" : {
-
-    },
     "Full animations are enabled by default. You can enable Reduce Motion here. Anchor follows system Dynamic Type, VoiceOver, Increase Contrast, and Reduce Transparency settings." : {
 
     },
@@ -2476,9 +2467,6 @@
 
     },
     "Good morning" : {
-
-    },
-    "Grant read-only access so Anchor can discover Codex tasks. Nothing is associated until you choose Track." : {
 
     },
     "greeting.afternoon" : {
@@ -3906,13 +3894,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reads your Claude Code sessions' requests, turn ends and the start of each reply, and files them under your tasks like Codex conversations."
+            "value" : "Automatically discovers Claude Code conversation titles, the latest request, turn reply summaries and live status, then associates conversations with matching tasks."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "读取 Claude Code 会话的请求、每轮结束和回复开头，像 Codex 对话一样归到你的任务下。"
+            "value" : "自动发现 Claude Code 会话标题、最新请求、每轮回复摘要和实时状态，并匹配到相关任务。"
           }
         }
       }
@@ -3991,13 +3979,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reading recent sessions"
+            "value" : "Automatically discovering conversations"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在读取最近的会话"
+            "value" : "正在自动发现会话"
           }
         }
       }
@@ -4059,13 +4047,64 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ ✓"
+            "value" : "%@ folder access ✓"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ ✓"
+            "value" : "%@ 文件夹已授权 ✓"
+          }
+        }
+      }
+    },
+    "mac.status.agent.sources.connect" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect Codex and Claude Code once…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一次连接 Codex 和 Claude Code…"
+          }
+        }
+      }
+    },
+    "mac.status.agent.sources.connect.hint" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select either or both conversation folders in one step"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可在同一步里选择其中一个或两个会话文件夹"
+          }
+        }
+      }
+    },
+    "mac.status.agent.sources.ready" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codex and Claude Code connected ✓"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codex 和 Claude Code 已连接 ✓"
           }
         }
       }
@@ -4134,6 +4173,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已连接 iPhone · 局域网"
+          }
+        }
+      }
+    },
+    "mac.status.copy.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't copy the next step"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制下一步失败"
           }
         }
       }
@@ -4223,6 +4279,57 @@
         }
       }
     },
+    "mac.status.login.disabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor won't open at login"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已取消登录时打开"
+          }
+        }
+      }
+    },
+    "mac.status.login.enabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor will open at login"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已设置为登录时打开"
+          }
+        }
+      }
+    },
+    "mac.status.login.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't change login setting: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法更改登录启动设置：%@"
+          }
+        }
+      }
+    },
     "mac.status.not-paired" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4236,6 +4343,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未配对"
+          }
+        }
+      }
+    },
+    "mac.status.open.connection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click to view connection settings"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点击查看连接设置"
+          }
+        }
+      }
+    },
+    "mac.status.open.sources" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click to manage connected folders"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点击管理已连接的文件夹"
           }
         }
       }
@@ -7713,9 +7854,6 @@
     "Recent activity" : {
 
     },
-    "Recent Codex tasks" : {
-
-    },
     "Recent source activity" : {
 
     },
@@ -8543,6 +8681,12 @@
     "Securing your context…" : {
 
     },
+    "Select the Codex sessions folder and Claude Code projects folder together, when both are installed. Anchor remembers access and discovers new conversations automatically." : {
+
+    },
+    "Select the Codex sessions folder or Claude Code projects folder." : {
+
+    },
     "Selected process" : {
 
     },
@@ -8668,6 +8812,7 @@
       }
     },
     "settings.deskPet.hermit" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8684,6 +8829,7 @@
       }
     },
     "settings.deskPet.jelly" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8734,6 +8880,7 @@
       }
     },
     "settings.deskPet.squid" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10468,6 +10615,86 @@
         }
       }
     },
+    "source.setup.agents.connect" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect Codex and Claude folders once…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一次连接 Codex 和 Claude 文件夹…"
+          }
+        }
+      }
+    },
+    "source.setup.agents.panel.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select the Codex sessions folder and Claude Code projects folder together, when both are installed. Anchor remembers access and discovers new conversations automatically."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如果两者都已安装，请在此窗口中同时选择 Codex 的 sessions 文件夹和 Claude Code 的 projects 文件夹。Anchor 会记住访问权限并自动发现新对话。"
+          }
+        }
+      }
+    },
+    "source.setup.agents.panel.prompt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect selected folders"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接所选文件夹"
+          }
+        }
+      }
+    },
+    "source.setup.agents.panel.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect local agent sessions"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接本机 Agent 会话"
+          }
+        }
+      }
+    },
+    "source.setup.agents.selection-error" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select the Codex sessions folder or Claude Code projects folder."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择 Codex 的 sessions 文件夹或 Claude Code 的 projects 文件夹。"
+          }
+        }
+      }
+    },
     "source.setup.available" : {
       "localizations" : {
         "en" : {
@@ -10501,6 +10728,7 @@
       }
     },
     "source.setup.codex.authorize-folder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10517,6 +10745,7 @@
       }
     },
     "source.setup.codex.choose-session" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10537,18 +10766,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Authorize the Codex sessions folder once. Anchor discovers task metadata, then tracks only tasks you associate."
+            "value" : "Anchor automatically discovers conversation titles, the latest request, turn reply summaries, and live status, then associates conversations with matching tasks."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "连接一次，Anchor 会按任务关键词自动查找会话。确认或修改匹配结果后开始追踪。"
+            "value" : "自动发现会话标题、最新请求、每轮回复摘要和实时状态，并匹配到相关任务；归属不准时再调整。"
           }
         }
       }
     },
     "source.setup.codex.folder-panel.message" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10565,6 +10795,7 @@
       }
     },
     "source.setup.codex.folder-panel.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10585,18 +10816,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Folder access granted"
+            "value" : "Automatically discovering sessions"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已授权文件夹"
+            "value" : "正在自动发现会话"
           }
         }
       }
     },
     "source.setup.codex.panel.message" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10613,6 +10845,7 @@
       }
     },
     "source.setup.codex.panel.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10629,6 +10862,7 @@
       }
     },
     "source.setup.codex.recent-tasks" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10645,6 +10879,7 @@
       }
     },
     "source.setup.codex.recent-tasks.detail" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10661,6 +10896,7 @@
       }
     },
     "source.setup.codex.track" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10677,6 +10913,7 @@
       }
     },
     "source.setup.codex.tracked" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10697,13 +10934,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld Codex tasks tracked"
+            "value" : "%lld Codex conversations followed for this task"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在跟踪 %lld 个 Codex 任务"
+            "value" : "当前任务自动跟踪 %lld 个 Codex 对话"
           }
         }
       }
@@ -10777,13 +11014,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Authorize the local Codex sessions folder once to discover matching new tasks, including Codex tasks in the ChatGPT app. Terminal commands use the shell connection below."
+            "value" : "Connect your local Codex and Claude Code session folders once. Anchor will discover new conversations, titles, and turn status automatically; adjust task placement when needed. Terminal commands use the shell connection below."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "首次授权本地 Codex 会话文件夹后，自动发现并匹配新任务，包括 ChatGPT 应用内的 Codex 任务。终端命令使用下方 Shell 接入。"
+            "value" : "首次连接本机 Codex 和 Claude Code 会话文件夹后，Anchor 会自动发现新对话、标题和轮次状态并匹配任务；需要时再调整归属。终端命令使用下方 Shell 接入。"
           }
         }
       }
@@ -12831,12 +13068,6 @@
           }
         }
       }
-    },
-    "Track" : {
-
-    },
-    "Tracking" : {
-
     },
     "Trusted device connected" : {
 

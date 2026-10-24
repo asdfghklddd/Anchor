@@ -64,6 +64,8 @@ public struct AnchorStatusMenu: Sendable, Equatable {
     public let unsent: Int
     public let codexReady: Bool
     public let claudeReady: Bool
+    /// A detail reported by the authenticated phone, when the peer supports it.
+    public let peerDeviceSummary: String?
     /// The next step as a ready-to-paste request, when the task you're on has one.
     public let prompt: String?
     /// "Step 2 of 5 · …", shown under the copy item.
@@ -80,6 +82,11 @@ public struct AnchorStatusMenu: Sendable, Equatable {
         unsent = projection.unsentChanges
         self.codexReady = codexReady
         self.claudeReady = claudeReady
+        if case .connected = link {
+            peerDeviceSummary = pairing.peerDeviceInfo?.shortDescription
+        } else {
+            peerDeviceSummary = nil
+        }
         let edgeMenu = AnchorEdgeMenu(projection: projection)
         prompt = edgeMenu.prompt
         nextStepLine = edgeMenu.nextStep.map(EdgeMenuCopy.step)
@@ -170,21 +177,32 @@ public enum StatusMenuCopy {
     public static let pairingCodeHint = AnchorStrings.value(
         "mac.status.pairing-code.hint", default: "Enter it in Anchor on your iPhone")
 
-    public static func agentReady(_ name: String) -> String {
-        String.localizedStringWithFormat(
-            AnchorStrings.value("mac.status.agent.ready", default: "%@ ✓"), name)
-    }
-
-    public static func agentGrant(_ name: String) -> String {
-        String.localizedStringWithFormat(
-            AnchorStrings.value("mac.status.agent.grant", default: "Allow %@ access…"), name)
-    }
-
-    public static let agentGrantHint = AnchorStrings.value(
-        "mac.status.agent.grant.hint", default: "Anchor only reads its conversation folder, never your code")
+    public static let agentSourcesReady = AnchorStrings.value(
+        "mac.status.agent.sources.ready", default: "Codex and Claude Code connected ✓")
+    public static let agentSourcesConnect = AnchorStrings.value(
+        "mac.status.agent.sources.connect", default: "Connect Codex and Claude Code once…")
+    public static let agentSourcesConnectHint = AnchorStrings.value(
+        "mac.status.agent.sources.connect.hint",
+        default: "Choose both conversation folders in one step")
 
     public static let copyNextStep = EdgeMenuCopy.copyNextStep
     public static let copyUnavailable = EdgeMenuCopy.copyUnavailable
+    public static let nextStepCopied = AnchorStrings.value("mac.edge.copied", default: "Copied")
+    public static let copyFailed = AnchorStrings.value(
+        "mac.status.copy.failed", default: "Couldn't copy the next step")
+    public static let loginEnabled = AnchorStrings.value(
+        "mac.status.login.enabled", default: "Anchor will open at login")
+    public static let loginDisabled = AnchorStrings.value(
+        "mac.status.login.disabled", default: "Anchor won't open at login")
+    public static let openConnectionSettings = AnchorStrings.value(
+        "mac.status.open.connection", default: "Click to view connection settings")
+    public static let openSourcesSettings = AnchorStrings.value(
+        "mac.status.open.sources", default: "Click to manage connected folders")
+    public static func loginFailed(_ reason: String) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value("mac.status.login.failed", default: "Couldn't change login setting: %@"),
+            reason)
+    }
     public static let openAtLogin = L10n.startAtLogin
     public static let settings = EdgeMenuCopy.settings
     public static let quit = EdgeMenuCopy.quit

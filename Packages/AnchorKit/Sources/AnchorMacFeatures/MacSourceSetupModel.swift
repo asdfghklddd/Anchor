@@ -4,7 +4,6 @@ import AnchorDesign
 import AppKit
 import Foundation
 import Observation
-import UniformTypeIdentifiers
 
 @MainActor
 @Observable
@@ -284,134 +283,110 @@ public final class MacSourceSetupModel {
         startCodexDiscoveryIfNeeded()
     }
 
-    public func selectCodexSession(suggestedURL: URL? = nil) async {
-        let panel = NSOpenPanel()
-        let locator = CodexSessionFileLocator()
-        panel.title = L10n.sourceSetupCodexPanelTitle
-        panel.message = L10n.sourceSetupCodexPanelMessage
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = false
-        panel.allowedContentTypes = [UTType(filenameExtension: "jsonl") ?? .data]
-        // Discovery reads metadata only. The system panel remains the single
-        // user confirmation that grants Anchor access to the proposed file.
-        if let proposedURL = suggestedURL ?? locator.newestSessionFile() {
-            panel.directoryURL = proposedURL.deletingLastPathComponent()
-            panel.nameFieldStringValue = proposedURL.lastPathComponent
-            panel.message = "\(L10n.sourceSetupCodexPanelMessage)\n\(proposedURL.lastPathComponent)"
-        } else {
-            panel.directoryURL = locator.rootURL
-        }
-        guard await panel.begin() == .OK, let url = panel.url else { return }
-
-        isWorking = true
-        defer { isWorking = false }
-        do {
-            let bookmark = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
-            let didAccess = url.startAccessingSecurityScopedResource()
-            guard didAccess else { throw CocoaError(.fileReadNoPermission) }
-            do { try await connectCodexSession(url) }
-            catch { url.stopAccessingSecurityScopedResource(); throw error }
-            codexSecurityScopedURL?.stopAccessingSecurityScopedResource()
-            codexSecurityScopedURL = url
-            defaults.set(bookmark, forKey: Self.codexBookmarkKey)
-            if let owner = await currentAnchorSessionID?() {
-                defaults.set(owner.uuidString, forKey: Self.codexBookmarkKey + ".owner")
-            }
-        } catch { errorMessage = error.localizedDescription }
-    }
-
-    public func authorizeCodexSessionsFolder() async {
+    /// Grants one persistent, folder-scoped access flow for the local agent logs.
+    /// The person can select Codex `sessions` and Claude Code `projects` in the
+    /// same panel; discovery then follows new conversations without per-session
+    /// approval. Only these two log folders are accepted.
+    public func authorizeAgentSessionFolders() async {
         guard !isWorking else { return }
         isWorking = true
         errorMessage = nil
         defer { isWorking = false }
+
+        let codexSessionsURL = CodexSessionFileLocator().rootURL.standardizedFileURL
+        let homeURL = codexSessionsURL
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let claudeProjectsURL = homeURL
+            .appending(path: ".claude/projects", directoryHint: .isDirectory)
+            .standardizedFileURL
+
         let panel = NSOpenPanel()
-        panel.title = L10n.sourceSetupCodexFolderPanelTitle
-        panel.message = L10n.sourceSetupCodexFolderPanelMessage
+        panel.title = L10n.sourceSetupAgentFoldersPanelTitle
+        panel.message = L10n.sourceSetupAgentFoldersPanelMessage
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
-        panel.allowsMultipleSelection = false
-        panel.directoryURL = CodexSessionFileLocator().rootURL
+        panel.allowsMultipleSelection = true
+        panel.directoryURL = homeURL
         panel.showsHiddenFiles = true
-        panel.prompt = "授权并开始查找"
-        guard await panel.begin() == .OK, let url = panel.url else { return }
+        panel.prompt = L10n.sourceSetupAgentFoldersPanelPrompt
+        guard await panel.begin() == .OK else { return }
 
-        do {
-            let bookmark = try url.bookmarkData(
-                options: .withSecurityScope,
-                includingResourceValuesForKeys: nil,
-                relativeTo: nil
-            )
-            guard url.startAccessingSecurityScopedResource() else {
-                throw CocoaError(.fileReadNoPermission)
+        var codexSelection: URL?
+        var claudeSelection: URL?
+        for url in panel.urls {
+            let selection = url.standardizedFileURL
+            if selection == codexSessionsURL {
+                codexSelection = url
+            } else if selection == claudeProjectsURL {
+                claudeSelection = url
             }
-            do {
-                let sessionsURL = url.lastPathComponent == ".codex" ? url.appending(path: "sessions") : url
-                _ = try FileManager.default.contentsOfDirectory(at: sessionsURL, includingPropertiesForKeys: nil)
-                guard url.lastPathComponent == "sessions" || url.lastPathComponent == ".codex" else {
-                    throw NSError(domain: "Anchor.CodexSetup", code: 1, userInfo: [NSLocalizedDescriptionKey: "请选择 Codex 的 sessions 文件夹或 .codex 文件夹。"])
+        }
+        guard codexSelection != nil || claudeSelection != nil else {
+            errorMessage = L10n.sourceSetupAgentFoldersSelectionError
+            return
+        }
+
+        var accessedURLs: [URL] = []
+        var codexBookmark: Data?
+        var claudeBookmark: Data?
+        do {
+            if let codexSelection {
+                codexBookmark = try Self.folderBookmark(for: codexSelection)
+                guard codexSelection.startAccessingSecurityScopedResource() else {
+                    throw CocoaError(.fileReadNoPermission)
                 }
-            } catch {
-                url.stopAccessingSecurityScopedResource()
-                throw error
+                accessedURLs.append(codexSelection)
+                _ = try FileManager.default.contentsOfDirectory(
+                    at: codexSelection,
+                    includingPropertiesForKeys: nil
+                )
             }
-            codexSessionsRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
-            codexSessionsRootSecurityScopedURL = url
-            defaults.set(bookmark, forKey: Self.codexRootBookmarkKey)
-            await observeAuthorizedCodexFolder(url)
+            if let claudeSelection {
+                claudeBookmark = try Self.folderBookmark(for: claudeSelection)
+                guard claudeSelection.startAccessingSecurityScopedResource() else {
+                    throw CocoaError(.fileReadNoPermission)
+                }
+                accessedURLs.append(claudeSelection)
+                _ = try FileManager.default.contentsOfDirectory(
+                    at: claudeSelection,
+                    includingPropertiesForKeys: nil
+                )
+            }
         } catch {
+            for url in accessedURLs { url.stopAccessingSecurityScopedResource() }
             errorMessage = error.localizedDescription
+            return
         }
+
+        if let codexSelection, let codexBookmark {
+            codexSessionsRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
+            codexSessionsRootSecurityScopedURL = codexSelection
+            defaults.set(codexBookmark, forKey: Self.codexRootBookmarkKey)
+            await observeAuthorizedCodexFolder(codexSelection)
+        }
+        if let claudeSelection, let claudeBookmark {
+            claudeRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
+            claudeRootSecurityScopedURL = claudeSelection
+            defaults.set(claudeBookmark, forKey: Self.claudeRootBookmarkKey)
+            await observeAuthorizedClaudeFolder(claudeSelection)
+        }
+        if hasConversationSource { finishCodexOnboarding() }
     }
 
-    /// Asks for Claude Code's `projects` folder only: the rest of `~/.claude`
-    /// holds settings and credentials Anchor has no reason to read.
+    /// Compatibility entry point. Both integrations use the combined picker.
+    public func authorizeCodexSessionsFolder() async {
+        await authorizeAgentSessionFolders()
+    }
+
+    /// Compatibility entry point. Both integrations share the same first-run
+    /// folder picker so neither can prompt once per provider or conversation.
     public func authorizeClaudeCodeFolder() async {
-        guard !isWorking else { return }
-        isWorking = true
-        errorMessage = nil
-        defer { isWorking = false }
-        let panel = NSOpenPanel()
-        panel.title = MacClaudeCodeCopy.panelTitle
-        panel.message = MacClaudeCodeCopy.panelMessage
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.allowsMultipleSelection = false
-        let home = NSHomeDirectoryForUser(NSUserName()).map { URL(filePath: $0) }
-            ?? FileManager.default.homeDirectoryForCurrentUser
-        panel.directoryURL = home.appending(path: ".claude/projects")
-        panel.showsHiddenFiles = true
-        panel.prompt = MacClaudeCodeCopy.panelPrompt
-        guard await panel.begin() == .OK, let url = panel.url else { return }
-        do {
-            guard url.lastPathComponent == "projects" else {
-                throw NSError(domain: "Anchor.ClaudeCodeSetup", code: 1,
-                              userInfo: [NSLocalizedDescriptionKey: MacClaudeCodeCopy.wrongFolder])
-            }
-            let bookmark = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil,
-                                                relativeTo: nil)
-            guard url.startAccessingSecurityScopedResource() else { throw CocoaError(.fileReadNoPermission) }
-            do {
-                _ = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
-            } catch {
-                url.stopAccessingSecurityScopedResource()
-                throw error
-            }
-            claudeRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
-            claudeRootSecurityScopedURL = url
-            defaults.set(bookmark, forKey: Self.claudeRootBookmarkKey)
-            await observeAuthorizedClaudeFolder(url)
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        await authorizeAgentSessionFolders()
     }
 
     public func trackCodexSession(_ candidate: CodexTaskCandidate) async {
-        guard let rootURL = codexSessionsRootURL else {
-            await selectCodexSession(suggestedURL: candidate.fileURL)
-            return
-        }
+        guard let rootURL = codexSessionsRootURL else { return }
 
         do {
             try await connectCodexSession(
@@ -813,6 +788,14 @@ public final class MacSourceSetupModel {
         return String(filePath.dropFirst(prefix.count))
     }
 
+    private static func folderBookmark(for url: URL) throws -> Data {
+        try url.bookmarkData(
+            options: [.withSecurityScope, .securityScopeAllowOnlyReadAccess],
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+    }
+
     private static let matchMemoryKey = "anchor.mac.source-setup.match-memory.v1"
     private static let commandBookmarkKey = "anchor.mac.source-setup.command"
     private static let codexBookmarkKey = "anchor.mac.source-setup.codex-session"
@@ -825,16 +808,9 @@ enum MacClaudeCodeCopy {
     static let title = AnchorStrings.value("mac.sources.claude", default: "Claude Code")
     static let detail = AnchorStrings.value(
         "mac.sources.claude.detail",
-        default: "Reads your Claude Code sessions' requests, turn ends and the start of each reply, and files them under your tasks like Codex conversations.")
-    static let authorize = AnchorStrings.value("mac.sources.claude.authorize", default: "Allow the projects folder")
-    static let ready = AnchorStrings.value("mac.sources.claude.ready", default: "Reading recent sessions")
-    static let panelTitle = AnchorStrings.value("mac.sources.claude.panel.title", default: "Allow Claude Code sessions")
-    static let panelMessage = AnchorStrings.value(
-        "mac.sources.claude.panel.message",
-        default: "Choose the projects folder inside .claude. Anchor reads only the session logs there.")
-    static let panelPrompt = AnchorStrings.value("mac.sources.claude.panel.prompt", default: "Allow and start")
-    static let wrongFolder = AnchorStrings.value(
-        "mac.sources.claude.wrong-folder", default: "Choose the projects folder inside .claude, not .claude itself.")
+        default: "Automatically discovers Claude Code conversations, titles, turn status and reply summaries, then associates them with matching tasks.")
+    static let ready = AnchorStrings.value(
+        "mac.sources.claude.ready", default: "Automatically discovering conversations")
     static let lostAccess = AnchorStrings.value(
         "mac.sources.claude.lost-access", default: "The Claude Code folder can no longer be read. Allow it again.")
 }

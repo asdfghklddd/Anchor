@@ -127,7 +127,6 @@ struct MacTimelineView: View {
 }
 
 struct MacSettingsView: View {
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
     let projection: SessionProjection
     let controller: (any LocalLinkControlling)?
     let sourceSetupModel: MacSourceSetupModel?
@@ -258,26 +257,6 @@ struct MacSettingsView: View {
                         .foregroundStyle(AnchorPalette.coral)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-            }
-            Section(L10n.privacy) {
-                Label(L10n.localOnly, systemImage: "lock.shield.fill")
-                Text(L10n.localOnlyDetail).foregroundStyle(.secondary)
-            }
-            Section(L10n.accessibility) {
-                VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
-                    Label(L10n.displaySupport, systemImage: "accessibility")
-                        .font(.headline)
-                    Text(L10n.displaySupportDetail)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Label(L10n.voiceOver, systemImage: "speaker.wave.3")
-                Label(L10n.dynamicType, systemImage: "textformat.size")
-                Toggle(L10n.reduceMotion, isOn: $reduceMotion)
-                    .accessibilityIdentifier("settings.reduceMotion")
-                Label(L10n.increaseContrast, systemImage: "circle.lefthalf.filled")
-                Label(L10n.reduceTransparency, systemImage: "square.on.square")
             }
         }
         .formStyle(.grouped)

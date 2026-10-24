@@ -559,18 +559,24 @@ final class AnchorEdgePanelController {
 }
 
 /// Menu items that run a closure, for menus built in code.
+@MainActor
 private final class AnchorMenuAction: NSObject {
-    /// Items hold their target weakly; one shared target outlives every menu.
-    static let shared = AnchorMenuAction()
+    private let runAction: () -> Void
+
+    private init(runAction: @escaping () -> Void) {
+        self.runAction = runAction
+    }
 
     static func item(_ title: String, run: @escaping () -> Void) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: #selector(perform(_:)), keyEquivalent: "")
-        item.target = shared
-        item.representedObject = run
+        let action = AnchorMenuAction(runAction: run)
+        // AppKit keeps targets weakly; retain this target through the item itself.
+        item.target = action
+        item.representedObject = action
         return item
     }
 
     @objc private func perform(_ item: NSMenuItem) {
-        (item.representedObject as? () -> Void)?()
+        (item.representedObject as? AnchorMenuAction)?.runAction()
     }
 }

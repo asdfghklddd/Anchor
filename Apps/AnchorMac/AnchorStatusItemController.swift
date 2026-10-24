@@ -17,6 +17,9 @@ final class AnchorStatusItemController: NSObject, NSMenuDelegate {
     private var pairing = DevicePairingStatus.automatic
     private var pairingCode: String?
     private var pairingTask: Task<Void, Never>?
+    private var feedbackTask: Task<Void, Never>?
+    private var feedbackMessage: String?
+    private var feedbackIsError = false
     private var isStarted = false
 
     init(
@@ -63,6 +66,8 @@ final class AnchorStatusItemController: NSObject, NSMenuDelegate {
         isStarted = false
         pairingTask?.cancel()
         pairingTask = nil
+        feedbackTask?.cancel()
+        feedbackTask = nil
         if let statusItem { NSStatusBar.system.removeStatusItem(statusItem) }
         statusItem = nil
     }
@@ -93,8 +98,19 @@ final class AnchorStatusItemController: NSObject, NSMenuDelegate {
     private func updateIcon() {
         guard let button = statusItem?.button else { return }
         let state = state
+        if let feedbackMessage {
+            let symbol = feedbackIsError ? "exclamationmark.circle.fill" : "checkmark.circle.fill"
+            let image = NSImage(systemSymbolName: symbol, accessibilityDescription: feedbackMessage)
+            image?.isTemplate = true
+            button.image = image
+            button.appearsDisabled = false
+            button.toolTip = feedbackMessage
+            button.setAccessibilityLabel("\(L10n.appName), \(feedbackMessage)")
+            return
+        }
         button.image = Self.image(withDot: state.icon == .needsAttention)
         button.appearsDisabled = state.icon == .away
+        button.toolTip = L10n.appName
         button.setAccessibilityLabel("\(L10n.appName), \(StatusMenuCopy.link(state.link))")
     }
 
@@ -121,7 +137,14 @@ final class AnchorStatusItemController: NSObject, NSMenuDelegate {
         menu.removeAllItems()
         let state = state
 
-        menu.addItem(Self.note(StatusMenuCopy.link(state.link)))
+        let connection = actionItem(
+            StatusMenuCopy.link(state.link),
+            selector: #selector(showConnectionSettings(_:))
+        )
+        connection.subtitle = [state.peerDeviceSummary, StatusMenuCopy.openConnectionSettings]
+            .compactMap { $0 }
+            .joined(separator: " · ")
+        menu.addItem(connection)
         if !state.isConnected, state.unsent > 0 {
             menu.addItem(Self.note(StatusMenuCopy.unsent(state.unsent), secondary: true))
         }
@@ -131,65 +154,105 @@ final class AnchorStatusItemController: NSObject, NSMenuDelegate {
             menu.addItem(code)
         }
         if let fix = state.fix {
-            let item = StatusMenuAction.item(StatusMenuCopy.fix(fix)) { [weak self] in self?.perform(fix) }
+            let selector: Selector = switch fix {
+            case .reconnect: #selector(reconnect(_:))
+            case .openBluetoothSettings: #selector(openBluetoothSettings(_:))
+            case .openBluetoothPrivacy: #selector(openBluetoothPrivacy(_:))
+            }
+            let item = actionItem(StatusMenuCopy.fix(fix), selector: selector)
             if fix == .reconnect { item.subtitle = StatusMenuCopy.reconnectHint }
             menu.addItem(item)
         }
 
         menu.addItem(.separator())
-        menu.addItem(agentItem("Codex", ready: state.codexReady) { [weak self] in
-            await self?.sourceSetupModel.authorizeCodexSessionsFolder()
-        })
-        menu.addItem(agentItem("Claude Code", ready: state.claudeReady) { [weak self] in
-            await self?.sourceSetupModel.authorizeClaudeCodeFolder()
-        })
+        menu.addItem(agentItem(ready: state.codexReady && state.claudeReady))
 
         menu.addItem(.separator())
-        let copy = StatusMenuAction.item(StatusMenuCopy.copyNextStep) {
-            guard let prompt = state.prompt else { return }
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(prompt, forType: .string)
-        }
+        let copy = actionItem(StatusMenuCopy.copyNextStep, selector: #selector(copyNextStep(_:)))
         copy.isEnabled = state.prompt != nil
         copy.subtitle = state.nextStepLine ?? StatusMenuCopy.copyUnavailable
         menu.addItem(copy)
 
         menu.addItem(.separator())
-        let login = StatusMenuAction.item(StatusMenuCopy.openAtLogin) {
-            try? MacLaunchAtLogin.setEnabled(!MacLaunchAtLogin.isEnabled)
-        }
+        let login = actionItem(StatusMenuCopy.openAtLogin, selector: #selector(toggleLoginAtLaunch(_:)))
         login.state = MacLaunchAtLogin.isEnabled ? .on : .off
         menu.addItem(login)
-        let settings = StatusMenuAction.item(StatusMenuCopy.settings) { [weak self] in self?.onOpenSettings() }
+        let settings = actionItem(StatusMenuCopy.settings, selector: #selector(showConnectionSettings(_:)))
         settings.keyEquivalent = ","
         menu.addItem(settings)
-        let quit = StatusMenuAction.item(StatusMenuCopy.quit) { NSApp.terminate(nil) }
+        let quit = actionItem(StatusMenuCopy.quit, selector: #selector(quit(_:)))
         quit.keyEquivalent = "q"
         menu.addItem(quit)
     }
 
-    private func agentItem(_ name: String, ready: Bool,
-                           authorize: @escaping @MainActor () async -> Void) -> NSMenuItem {
-        if ready { return Self.note(StatusMenuCopy.agentReady(name)) }
-        let item = StatusMenuAction.item(StatusMenuCopy.agentGrant(name)) {
-            // A menu bar app has no window in front; the folder panel needs one.
-            NSApp.activate(ignoringOtherApps: true)
-            Task { await authorize() }
+    private func agentItem(ready: Bool) -> NSMenuItem {
+        if ready {
+            let item = actionItem(StatusMenuCopy.agentSourcesReady, selector: #selector(showSourceSettings(_:)))
+            item.subtitle = StatusMenuCopy.openSourcesSettings
+            return item
         }
-        item.subtitle = StatusMenuCopy.agentGrantHint
+        let item = actionItem(StatusMenuCopy.agentSourcesConnect, selector: #selector(authorizeAgentFolders(_:)))
+        item.subtitle = StatusMenuCopy.agentSourcesConnectHint
         return item
     }
 
-    private func perform(_ fix: AnchorStatusMenu.Fix) {
-        switch fix {
-        case .reconnect:
-            Task { await linkController.retryConnection() }
-        case .openBluetoothSettings:
-            Self.openSystemSettings("x-apple.systempreferences:com.apple.BluetoothSettings")
-        case .openBluetoothPrivacy:
-            Self.openSystemSettings(
-                "x-apple.systempreferences:com.apple.preference.security?Privacy_Bluetooth")
+    private func actionItem(_ title: String, selector: Selector) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: selector, keyEquivalent: "")
+        item.target = self
+        return item
+    }
+
+    @objc private func showConnectionSettings(_ item: NSMenuItem) {
+        onOpenSettings()
+    }
+
+    @objc private func showSourceSettings(_ item: NSMenuItem) {
+        onOpenSettings()
+    }
+
+    @objc private func reconnect(_ item: NSMenuItem) {
+        Task { await linkController.retryConnection() }
+    }
+
+    @objc private func openBluetoothSettings(_ item: NSMenuItem) {
+        Self.openSystemSettings("x-apple.systempreferences:com.apple.BluetoothSettings")
+    }
+
+    @objc private func openBluetoothPrivacy(_ item: NSMenuItem) {
+        Self.openSystemSettings("x-apple.systempreferences:com.apple.preference.security?Privacy_Bluetooth")
+    }
+
+    @objc private func authorizeAgentFolders(_ item: NSMenuItem) {
+        authorizeFolders { await self.sourceSetupModel.authorizeAgentSessionFolders() }
+    }
+
+    private func authorizeFolders(_ action: @escaping @MainActor () async -> Void) {
+        NSApp.activate(ignoringOtherApps: true)
+        Task { await action() }
+    }
+
+    @objc private func copyNextStep(_ item: NSMenuItem) {
+        guard let prompt = state.prompt else { return }
+        NSPasteboard.general.clearContents()
+        if NSPasteboard.general.setString(prompt, forType: .string) {
+            showFeedback(StatusMenuCopy.nextStepCopied)
+        } else {
+            showFeedback(StatusMenuCopy.copyFailed, isError: true)
         }
+    }
+
+    @objc private func toggleLoginAtLaunch(_ item: NSMenuItem) {
+        let enabled = !MacLaunchAtLogin.isEnabled
+        do {
+            try MacLaunchAtLogin.setEnabled(enabled)
+            showFeedback(enabled ? StatusMenuCopy.loginEnabled : StatusMenuCopy.loginDisabled)
+        } catch {
+            showFeedback(StatusMenuCopy.loginFailed(error.localizedDescription), isError: true)
+        }
+    }
+
+    @objc private func quit(_ item: NSMenuItem) {
+        NSApp.terminate(nil)
     }
 
     private static func openSystemSettings(_ address: String) {
@@ -198,30 +261,29 @@ final class AnchorStatusItemController: NSObject, NSMenuDelegate {
     }
 
     /// A line of status: not clickable, but not greyed out like a disabled action.
-    private static func note(_ title: String, secondary: Bool = false) -> NSMenuItem {
+    private static func note(_ title: String, secondary: Bool = false, subtitle: String? = nil) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         item.attributedTitle = NSAttributedString(string: title, attributes: [
             .font: NSFont.menuFont(ofSize: 0),
             .foregroundColor: secondary ? NSColor.secondaryLabelColor : NSColor.labelColor,
         ])
+        if let subtitle { item.subtitle = subtitle }
         item.isEnabled = false
         return item
     }
-}
 
-/// Menu items that run a closure, for menus built in code.
-private final class StatusMenuAction: NSObject {
-    /// Items hold their target weakly; one shared target outlives every menu.
-    static let shared = StatusMenuAction()
-
-    static func item(_ title: String, run: @escaping @MainActor () -> Void) -> NSMenuItem {
-        let item = NSMenuItem(title: title, action: #selector(perform(_:)), keyEquivalent: "")
-        item.target = shared
-        item.representedObject = run
-        return item
-    }
-
-    @MainActor @objc private func perform(_ item: NSMenuItem) {
-        (item.representedObject as? @MainActor () -> Void)?()
+    private func showFeedback(_ message: String, isError: Bool = false) {
+        feedbackTask?.cancel()
+        feedbackMessage = message
+        feedbackIsError = isError
+        updateIcon()
+        feedbackTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 1_800_000_000)
+            guard let self, !Task.isCancelled else { return }
+            self.feedbackMessage = nil
+            self.feedbackIsError = false
+            self.feedbackTask = nil
+            self.updateIcon()
+        }
     }
 }

@@ -24,25 +24,22 @@ struct MacSourceSetupView: View {
                     Divider()
                 }
 
+                if model.codexSessionsFolderName == nil || model.claudeProjectsFolderName == nil {
+                    Button(L10n.sourceSetupAgentFoldersConnect, systemImage: "folder.badge.plus") {
+                        Task { await model.authorizeAgentSessionFolders() }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(model.isWorking)
+                    .accessibilityIdentifier("mac.sources.setup.agents.authorize")
+                }
+
                 MacSourceSetupRow(
                     symbol: "bubble.left.and.text.bubble.right",
                     title: L10n.sourceSetupCodex,
                     detail: L10n.sourceSetupCodexDetail,
                     status: codexStatus,
-                    isReady: !model.trackedCodexSessionIDs.isEmpty
-                ) {
-                    Button(L10n.sourceSetupCodexAuthorizeFolder, systemImage: "folder.badge.plus") {
-                        Task { await model.authorizeCodexSessionsFolder() }
-                    }
-                    .disabled(model.isWorking)
-                    .accessibilityIdentifier("mac.sources.setup.codex.authorize-folder")
-
-                    Button(L10n.sourceSetupChooseCodexSession, systemImage: "doc.badge.plus") {
-                        Task { await model.selectCodexSession() }
-                    }
-                    .disabled(model.isWorking)
-                    .accessibilityIdentifier("mac.sources.setup.codex.choose-session")
-                }
+                    isReady: model.codexSessionsFolderName != nil
+                )
 
                 Divider()
 
@@ -52,23 +49,7 @@ struct MacSourceSetupView: View {
                     detail: MacClaudeCodeCopy.detail,
                     status: model.claudeProjectsFolderName == nil ? L10n.sourceSetupNotConnected : MacClaudeCodeCopy.ready,
                     isReady: model.claudeProjectsFolderName != nil
-                ) {
-                    Button(MacClaudeCodeCopy.authorize, systemImage: "folder.badge.plus") {
-                        Task { await model.authorizeClaudeCodeFolder() }
-                    }
-                    .disabled(model.isWorking)
-                    .accessibilityIdentifier("mac.sources.setup.claude.authorize-folder")
-                }
-
-                if !model.codexCandidates.isEmpty {
-                    MacCodexCandidateList(
-                        candidates: model.codexCandidates,
-                        isTracking: model.isTracking,
-                        onTrack: { candidate in
-                            Task { await model.trackCodexSession(candidate) }
-                        }
-                    )
-                }
+                )
 
                 Divider()
 
