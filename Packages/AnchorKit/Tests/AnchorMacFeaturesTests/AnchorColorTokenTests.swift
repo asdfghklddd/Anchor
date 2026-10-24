@@ -104,7 +104,7 @@ struct AnchorColorTokenTests {
         #expect(T.landscapeCanvasLeading.dark == T.canvasTop.dark)
         #expect(T.landscapeCanvasTrailing.dark == T.canvasBottom.dark)
 
-        let expected: [UInt32] = [0xFFB400, 0x3DD4FE, 0xFF64DB]
+        let expected: [UInt32] = [0xFFB400, 0x49C8FF, 0xFF69DC]
         #expect(T.landscapeTaskTabs.count == expected.count)
         #expect(T.landscapeTaskTabs.map(\.light) == expected)
         #expect(T.landscapeTaskTabs.map(\.dark) == expected)

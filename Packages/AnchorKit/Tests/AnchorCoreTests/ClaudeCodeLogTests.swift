@@ -86,9 +86,9 @@ struct ClaudeCodeLogTests {
         let records = claudeScan([ClaudeLine.textEnd("msg-9", "Done.", at: "08:09:00.000")], scanner: &resumed)
         #expect(records.map(\.record.lifecycle) == [.completed])
         #expect(records.first?.record.turnID == "u-1")
-        // Codex checkpoints keep their old shape.
+        // Codex checkpoints keep their old shape, plus the counted working time.
         let codex = try JSONSerialization.jsonObject(with: CodexIncrementalScanner().checkpoint()) as? [String: Any]
-        #expect(codex?.keys.sorted() == ["offset", "version"])
+        #expect(codex?.keys.sorted() == ["offset", "version", "work"])
     }
 
     @Test("A question to the person holds the turn until its answer")

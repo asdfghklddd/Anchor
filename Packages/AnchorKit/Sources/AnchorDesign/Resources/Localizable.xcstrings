@@ -1400,6 +1400,22 @@
         }
       }
     },
+    "desk.library.conversations" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld conversations"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 对话"
+          }
+        }
+      }
+    },
     "desk.library.empty" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1413,6 +1429,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mac 上归到这个任务的对话会出现在这里"
+          }
+        }
+      }
+    },
+    "desk.library.no-other-task" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No other task"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无其他任务"
           }
         }
       }

@@ -62,7 +62,8 @@ public struct CodexLifecycleRecord: Codable, Hashable, Sendable {
         stepID: UUID? = nil,
         tests: TestOutcome? = nil,
         waitingForReply: Bool = false,
-        request: String? = nil
+        request: String? = nil,
+        workedSeconds: TimeInterval? = nil
     ) -> ExternalProcessEvent {
         let failedByError = lifecycle == .completed && end?.hasError == true
         let finished = lifecycle == .completed && !failedByError
@@ -89,7 +90,7 @@ public struct CodexLifecycleRecord: Codable, Hashable, Sendable {
                                                            progress: nil, detail: detail, updatedAt: timestamp,
                                                            stepID: stepID,
                                                            testOutcome: lifecycle == .started ? nil : tests,
-                                                           request: request),
+                                                           request: request, workedSeconds: workedSeconds),
                                     event: event, deduplicationKey: key,
                                     observedOutcome: lifecycle == .aborted ? .interrupted : nil)
     }

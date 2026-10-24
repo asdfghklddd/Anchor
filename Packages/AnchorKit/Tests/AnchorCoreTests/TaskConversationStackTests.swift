@@ -36,7 +36,7 @@ struct TaskConversationStackTests {
     func pickHoldsUntilNews() {
         let older = conversation("older", minutesAgo: 20)
         let newer = conversation("newer", minutesAgo: 10)
-        let pick = TaskConversationStack.Pick(conversation: older.id, at: now.addingTimeInterval(-5 * 60))
+        let pick = TaskConversationStack.Pick(conversation: older.conversationKey, at: now.addingTimeInterval(-5 * 60))
 
         let picked = TaskConversationStack(task: task([older, newer]), pick: pick)
         #expect(picked.cards.map(\.title) == ["newer", "older"])

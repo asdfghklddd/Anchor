@@ -38,6 +38,11 @@ public enum DeskText {
     public static let noConversations = AnchorStrings.value(
         "desk.library.empty", default: "Conversations the Mac files under this task appear here")
     public static let noReply = AnchorStrings.value("desk.library.no-reply", default: "No reply yet")
+    public static let noOtherTask = AnchorStrings.value("desk.library.no-other-task", default: "No other task")
+    /// "7 对话": how many conversations the desk's tasks hold.
+    public static func conversationCount(_ count: Int) -> String {
+        String.localizedStringWithFormat(AnchorStrings.value("desk.library.conversations", default: "%lld conversations"), count)
+    }
     public static let showConversation = AnchorStrings.value(
         "desk.library.show", default: "Brings this conversation to the front")
     public static let you = AnchorStrings.value("desk.library.you", default: "You")

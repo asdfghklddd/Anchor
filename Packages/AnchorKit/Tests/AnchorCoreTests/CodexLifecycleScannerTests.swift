@@ -13,7 +13,8 @@ func checkpointRestoresScanner() throws {
     #expect(first.append(partial).isEmpty)
     let checkpoint = try first.checkpoint()
     let dictionary = try #require(JSONSerialization.jsonObject(with: checkpoint) as? [String: Any])
-    #expect(Set(dictionary.keys) == ["version", "offset"])
+    // Only positions and counted working time; never log text.
+    #expect(Set(dictionary.keys) == ["version", "offset", "work"])
     #expect(!String(decoding: checkpoint, as: UTF8.self).contains("secret-body"))
     var second = try CodexIncrementalScanner(checkpoint: checkpoint)
     #expect(second.offset == UInt64(complete.count))

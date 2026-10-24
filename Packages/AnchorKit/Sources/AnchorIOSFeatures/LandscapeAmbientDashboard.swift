@@ -70,35 +70,21 @@ struct LandscapeAmbientDashboard: View {
                             .padding(16)
                         }
                     } else {
-                        HStack(alignment: .top, spacing: 16) {
-                            VStack(alignment: .leading, spacing: 0) {
-                                clock(now: context.date)
-                                Spacer(minLength: 8)
-                                if petKind != .off {
-                                    DeskPet(kind: petKind, mood: petMood(now: context.date), signals: petSignals,
-                                            hour: Calendar.current.component(.hour, from: context.date))
-                                        .padding(.bottom, 4)
-                                }
-                                status(now: context.date)
-                            }
-                            .padding(.bottom, 8)
-                            // Wide enough for the clock at full size (68pt rounded heavy).
-                            .frame(width: max(0, geometry.size.width * 0.27), alignment: .leading)
-                            VStack(alignment: .leading, spacing: 0) {
-                                library(now: context.date)
-                            }
-                            // With no landscape heading, columns use the full desk height.
-                            .frame(maxHeight: .infinity, alignment: .top)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.top, 10)
-                        .padding(.bottom, 8)
+                        // The Figma desk is drawn on the whole 874 × 402 screen and scaled to fit others.
+                        let scale = min(geometry.size.width / Self.canvas.width, geometry.size.height / Self.canvas.height)
+                        desk(now: context.date)
+                            .frame(width: Self.canvas.width, height: Self.canvas.height, alignment: .topLeading)
+                            .scaleEffect(scale, anchor: .topLeading)
+                            .frame(width: Self.canvas.width * scale, height: Self.canvas.height * scale,
+                                   alignment: .topLeading)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
             }
             .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
         }
-        .background { LandscapeHarborBackground() }
+        .ignoresSafeArea(edges: dynamicTypeSize.isAccessibilitySize ? [] : .all)
+        .background { DeskBackground() }
         .toolbar(.hidden, for: .navigationBar)
         .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: contacts)
         .onAppear {
@@ -131,6 +117,72 @@ struct LandscapeAmbientDashboard: View {
         if statuses.contains(.failed) { petSignals.failures += 1 }
         else if statuses.contains(.needsDecision) { petSignals.questions += 1 }
         else { petSignals.results += 1 }
+    }
+
+    // MARK: The Figma desk
+
+    static let canvas = CGSize(width: 874, height: 402)
+    private static let ink = Color(anchorHex: 0x26599D)
+    private static let quietInk = Color(anchorHex: 0x8F8F8F)
+
+    /// Every part at its Figma place: the clock and date top left, the pet
+    /// below them, the conversation count at the foot, the folders on the right.
+    private func desk(now: Date) -> some View {
+        ZStack(alignment: .topLeading) {
+            DeskClockText(text: Self.time(now), color: Self.ink)
+                .accessibilityIdentifier("ambient.time")
+                .offset(x: 27, y: 41)
+            HStack(spacing: 12) {
+                Text(now.formatted(.dateTime.weekday(.wide).locale(AnchorStrings.interfaceLocale)))
+                Text(now.formatted(.dateTime.month().day().locale(AnchorStrings.interfaceLocale)))
+            }
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(Self.ink)
+            .lineLimit(1)
+            .frame(width: 242, alignment: .trailing)
+            .offset(y: 103)
+            if petKind != .off {
+                DeskPet(kind: petKind, mood: petMood(now: now), signals: petSignals,
+                        hour: Calendar.current.component(.hour, from: now))
+                    .frame(width: 236)
+                    .offset(x: 15, y: 339 - DeskPet.height)
+            }
+            if case .behind = projection.freshness, !tasks.isEmpty {
+                Label(SyncText.line(for: projection.freshness, now: now), systemImage: SyncText.symbol(for: projection.freshness))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Self.quietInk)
+                    .lineLimit(2)
+                    .frame(width: 150, alignment: .leading)
+                    .offset(x: 24, y: 358)
+                    .accessibilityIdentifier("ambient.freshness")
+            }
+            Button(action: onManage) {
+                Text(DeskText.conversationCount(conversationCount))
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Self.quietInk)
+                    .frame(minHeight: 44)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .frame(width: 243, alignment: .trailing)
+            .offset(y: 350)
+            .accessibilityLabel(AnchorStrings.value("home.tasks.manage", default: "Manage hosted tasks"))
+            .accessibilityValue(DeskText.conversationCount(conversationCount))
+            .accessibilityIdentifier("ambient.tasks.manage")
+            DeskTaskLibrary(tasks: tasks, now: now, swells: swellsByConversation, swellTone: swellTone,
+                            settled: settled, onTask: onTask)
+                .offset(x: 290, y: 32)
+        }
+    }
+
+    private var conversationCount: Int {
+        tasks.reduce(0) { $0 + TaskConversationStack.conversations(of: $1).count }
+    }
+
+    /// "21:27": the desk always shows a 24-hour clock, as the design does.
+    private static func time(_ date: Date) -> String {
+        let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
+        return String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
     }
 
     // MARK: The pet (left, under the clock)
@@ -229,6 +281,14 @@ struct LandscapeAmbientDashboard: View {
             settled = true
             contacts += 1
         }
+    }
+}
+/// The desk's water: the Figma gradient from near white on the left to light cyan on the right.
+private struct DeskBackground: View {
+    var body: some View {
+        LinearGradient(colors: [Color(anchorHex: 0xF9FCFE), Color(anchorHex: 0xD4F7FF)],
+                       startPoint: .leading, endPoint: .trailing)
+            .ignoresSafeArea()
     }
 }
 #endif

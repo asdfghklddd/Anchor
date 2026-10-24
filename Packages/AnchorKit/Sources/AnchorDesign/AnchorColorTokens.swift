@@ -103,8 +103,8 @@ public enum AnchorColorTokens {
     /// identity and state colors used elsewhere in the product.
     public static let landscapeTaskTabs: [AnchorColorToken] = [
         AnchorColorToken("landscapeTaskTabAmber", light: 0xFFB400, dark: 0xFFB400),
-        AnchorColorToken("landscapeTaskTabCyan", light: 0x3DD4FE, dark: 0x3DD4FE),
-        AnchorColorToken("landscapeTaskTabPink", light: 0xFF64DB, dark: 0xFF64DB)
+        AnchorColorToken("landscapeTaskTabCyan", light: 0x49C8FF, dark: 0x49C8FF),
+        AnchorColorToken("landscapeTaskTabPink", light: 0xFF69DC, dark: 0xFF69DC)
     ]
     /// Deep ink that remains readable on every approved landscape task-tab fill.
     public static let onLandscapeTaskTab = AnchorColorToken("onLandscapeTaskTab", light: 0x123B54, dark: 0x123B54)

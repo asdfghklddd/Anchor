@@ -279,7 +279,8 @@ struct DesignPreviewFixtureTests {
         let projection = TaskDashboardPolicy.presentation(
             of: await LocalSessionRepository(storageURL: storage, sourceID: UUID()).currentProjection())
         let fronts = projection.hostedSessions.map { TaskConversationStack(task: $0).front?.title }
-        #expect(Set(fronts) == ["卡片切换动效", "实验报告", "语音更柔和"])
+        // A failed or waiting conversation (the old red light) is in front; otherwise the newest.
+        #expect(Set(fronts) == ["卡片切换动效", "实验报告", "唤醒词误触"])
         #expect(projection.hostedSessions.flatMap(\.processes).allSatisfy { $0.request != nil })
         if let export = ProcessInfo.processInfo.environment["ANCHOR_DESIGN_PREVIEW_EXPORT"].map({ URL(fileURLWithPath: $0) }) {
             let output = export.appending(path: "task-library")

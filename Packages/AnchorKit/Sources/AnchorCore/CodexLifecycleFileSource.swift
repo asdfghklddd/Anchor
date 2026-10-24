@@ -106,6 +106,10 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                         scanner = restored
                         offset = scanner.offset
                         identity = currentIdentity
+                        if scanner.needsWorkBackfill,
+                           let measured = ConversationWork.measure(fileURL, dialect: dialect, upTo: offset) {
+                            scanner.backfill(measured)
+                        }
                     }
                     while !Task.isCancelled {
                         let attributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path)
@@ -150,7 +154,7 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                                             CodexLifecycleCheckpoint(
                                                 identity: identity,
                                                 scannerCheckpoint: try scanner.checkpoint(
-                                                    committedThrough: scanned.committedOffset
+                                                    committedThrough: scanned.committedOffset, work: scanned.work
                                                 )
                                             ),
                                             for: sourceKey
@@ -170,14 +174,15 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                                     stepID: stepID,
                                     tests: scanned.tests,
                                     waitingForReply: scanned.waitingForReply,
-                                    request: scanned.record.turnID == latestTurn ? request : nil
+                                    request: scanned.record.turnID == latestTurn ? request : nil,
+                                    workedSeconds: scanned.work.seconds
                                 )
                                 if let identity, checkpointStore != nil {
                                     await deliveryState.prepare(
                                         eventID: event.id,
                                         identity: identity,
                                         scannerCheckpoint: try scanner.checkpoint(
-                                            committedThrough: scanned.committedOffset
+                                            committedThrough: scanned.committedOffset, work: scanned.work
                                         )
                                     )
                                 }

@@ -103,6 +103,10 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
     /// The opening of the person's latest request in this conversation, as
     /// plain text; `nil` for commands and from Macs that do not send it.
     public var request: String?
+    /// The agent's working time in this conversation so far, summed over its
+    /// turns as the Mac read them from the log: through this turn once it
+    /// ends, before it while it runs. `nil` from Macs that do not send it.
+    public var workedSeconds: TimeInterval?
 
     public init(
         id: UUID = UUID(),
@@ -125,7 +129,8 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
         events: [ProcessEvent] = [],
         stepID: UUID? = nil,
         testOutcome: TestOutcome? = nil,
-        request: String? = nil
+        request: String? = nil,
+        workedSeconds: TimeInterval? = nil
     ) {
         self.id = id
         self.sessionID = sessionID
@@ -148,6 +153,7 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
         self.stepID = stepID
         self.testOutcome = testOutcome
         self.request = request
+        self.workedSeconds = workedSeconds
     }
 }
 
