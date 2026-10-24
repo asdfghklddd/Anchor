@@ -30,6 +30,7 @@ public enum SessionOperation: Codable, Hashable, Sendable {
     case observeProcess(ProcessObservation)
     case updatePresence(status: PresenceStatus, at: Date, eventID: UUID, awaySince: Date? = nil)
     case acknowledgeReturn(at: Date)
+    case recordReturnRecap(ReturnRecap)
     case completeSession(at: Date)
     case archiveSession(at: Date)
     case resumeSession(at: Date)
@@ -66,6 +67,7 @@ public enum SessionOperation: Codable, Hashable, Sendable {
             .now
         case let .updatePresence(_, at, _, _): at
         case let .acknowledgeReturn(at): at
+        case let .recordReturnRecap(recap): recap.writtenAt
         case let .completeSession(at): at
         case let .archiveSession(at): at
         case let .resumeSession(at): at
@@ -232,6 +234,8 @@ public enum SessionOperation: Codable, Hashable, Sendable {
             return .updatePresence(status: status, at: at, eventID: UUID(), awaySince: awaySince)
         case .acknowledgeReturn:
             return .acknowledgeReturn(at: now)
+        case let .recordReturnRecap(recap):
+            return .recordReturnRecap(recap)
         case .completeSession:
             return .completeSession(at: now)
         case .archiveSession:

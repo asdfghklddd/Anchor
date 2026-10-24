@@ -423,11 +423,6 @@ public struct AnchorIOSRootView: View {
                 kind: kind,
                 onManage: { sheet = .layout },
                 onFinish: { sheet = .finish },
-                onLeave: {
-                    Task {
-                        if await model.leaveDesk() { sheet = nil }
-                    }
-                },
                 onToggleStep: { id, done in
                     Task { _ = await model.send(.setPlanStep(id: id, done: done)) }
                 },

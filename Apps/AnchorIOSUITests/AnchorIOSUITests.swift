@@ -369,64 +369,6 @@ final class AnchorIOSUITests: XCTestCase {
     }
 
     @MainActor
-    func testLeaveAndReturnReviewsSummaryBeforeResuming() throws {
-        try exerciseLeaveAndReturn(reduceMotion: false)
-    }
-
-    @MainActor
-    func testReturnReviewWithReducedMotion() throws {
-        try exerciseLeaveAndReturn(reduceMotion: true)
-    }
-
-    @MainActor
-    private func exerciseLeaveAndReturn(reduceMotion: Bool) throws {
-        XCUIDevice.shared.orientation = .portrait
-        let app = isolatedApplication()
-        defer { app.terminate() }
-        app.launchArguments += ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN",
-            "-anchor.accessibility.reduceMotion", reduceMotion ? "YES" : "NO"]
-        app.launch()
-        XCTAssertTrue(app.buttons["anchor.note.button"].waitForExistence(timeout: 8))
-        app.buttons["anchor.note.button"].tap()
-        dropAnchor("Anchor 工作看板", plan: "检查 iOS 与 Mac 的任务状态", in: app)
-        // The task appears as a library card and as a lane in the glance; open the card.
-        let card = app.buttons.matching(NSPredicate(
-            format: "identifier BEGINSWITH 'hosted.task.' AND label == %@", "Anchor 工作看板"
-        )).firstMatch
-        XCTAssertTrue(card.waitForExistence(timeout: 5))
-        card.tap()
-        let leave = app.buttons["profile.session.leave.button"]
-        XCTAssertTrue(leave.waitForExistence(timeout: 5))
-        if !leave.isHittable { app.swipeUp() }
-        capture("01-manual-leave-button", app: app)
-        leave.tap()
-        XCTAssertTrue(element("away.screen", in: app).waitForExistence(timeout: 5))
-        XCUIDevice.shared.orientation = .landscapeRight
-        XCTAssertTrue(element("away.screen", in: app).waitForExistence(timeout: 5))
-        XCTAssertFalse(element("return.screen", in: app).exists)
-        XCUIDevice.shared.orientation = .portrait
-        let comeBack = app.buttons["away.return.button"]
-        if !comeBack.isHittable { app.swipeUp() }
-        comeBack.tap()
-        XCTAssertTrue(element("return.screen", in: app).waitForExistence(timeout: 5))
-        XCTAssertTrue(element("return.task.card", in: app).exists)
-        XCTAssertFalse(element("work.invitation", in: app).exists)
-        capture("02-return-in-portrait", app: app)
-        let back = app.buttons["return.back.button"]
-        if !back.isHittable { app.swipeUp() }
-        back.tap()
-        XCTAssertTrue(card.waitForExistence(timeout: 5))
-        XCTAssertFalse(element("return.screen", in: app).exists)
-        // The wordless landscape invitation needs a connected Mac, which UI tests
-        // never have; it is covered by WorkInvitationTests instead.
-        XCTAssertFalse(element("work.invitation", in: app).exists)
-        capture("03-workspace-after-review", app: app)
-        XCUIDevice.shared.orientation = .landscapeLeft
-        XCTAssertTrue(element("ambient.screen", in: app).waitForExistence(timeout: 5))
-        XCUIDevice.shared.orientation = .portrait
-    }
-
-    @MainActor
     func testFinalConfirmationClearsCurrentWorkAndRestoresDetailedHistory() throws {
         XCUIDevice.shared.orientation = .portrait
         let app = isolatedApplication()

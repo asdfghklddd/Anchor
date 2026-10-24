@@ -707,7 +707,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
                 throw SessionRepositoryError.eventSessionMismatch
             }
         case .selectSession, .updateGoal, .resolveDecision, .removeProcess, .reorderProcesses,
-             .updateTileSize, .updatePresence, .acknowledgeReturn,
+             .updateTileSize, .updatePresence, .acknowledgeReturn, .recordReturnRecap,
              .completeSession, .archiveSession, .resumeSession:
             break
         }
@@ -767,6 +767,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
         if remote.returnSummary != nil {
             merged.returnSummary = remote.returnSummary
         }
+        for recap in remote.returnRecaps ?? [] { merged.keep(recap) }
         _ = envelopeTimestamp
         return merged
     }
@@ -879,6 +880,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
         case let .observeProcess(observation): observation.event?.occurredAt ?? observation.process.updatedAt
         case let .updatePresence(_, at, _, _): at
         case let .acknowledgeReturn(at): at
+        case let .recordReturnRecap(recap): recap.writtenAt
         case let .completeSession(at): at
         case let .archiveSession(at): at
         case let .resumeSession(at): at

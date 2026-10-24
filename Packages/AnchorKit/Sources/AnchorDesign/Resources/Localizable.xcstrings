@@ -2661,6 +2661,22 @@
         }
       }
     },
+    "history.return.recaps" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When you came back"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回溯"
+          }
+        }
+      }
+    },
     "home.empty.tasks" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3407,23 +3423,6 @@
         }
       }
     },
-    "mac.edge.catch-up" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Catch me up"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "回顾"
-          }
-        }
-      }
-    },
     "mac.edge.copied" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3867,6 +3866,150 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "收起进程"
+          }
+        }
+      }
+    },
+    "mac.recap.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When your iPhone comes back after five minutes away, this Mac sends the last five rounds of each task’s newest conversations to DeepSeek and shows a short recap of each on the phone. Without a key, the recap is the latest request."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone 离开五分钟以上再回来时，这台 Mac 会把每个任务最新几个对话的最近五轮发给 DeepSeek，在手机上显示每个对话的简短回溯。没有密钥时，回溯显示最近一次请求。"
+          }
+        }
+      }
+    },
+    "mac.recap.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The key couldn’t be saved to the Keychain."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密钥没能存入钥匙串。"
+          }
+        }
+      }
+    },
+    "mac.recap.field" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste API key"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴 API 密钥"
+          }
+        }
+      }
+    },
+    "mac.recap.keyMissing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not set"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未设置"
+          }
+        }
+      }
+    },
+    "mac.recap.keySet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved in Keychain"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已存入钥匙串"
+          }
+        }
+      }
+    },
+    "mac.recap.remove" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除"
+          }
+        }
+      }
+    },
+    "mac.recap.save" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        }
+      }
+    },
+    "mac.recap.state" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepSeek key"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepSeek 密钥"
+          }
+        }
+      }
+    },
+    "mac.recap.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Return recaps"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回溯摘要"
           }
         }
       }
@@ -4784,142 +4927,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未归类"
-          }
-        }
-      }
-    },
-    "mac.welcome.close" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Close (Esc)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "关闭（Esc）"
-          }
-        }
-      }
-    },
-    "mac.welcome.left" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When you left"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "离开时"
-          }
-        }
-      }
-    },
-    "mac.welcome.more" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Other tasks with changes: %lld"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "另有 %lld 个任务有变化"
-          }
-        }
-      }
-    },
-    "mac.welcome.nothing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nothing changed while you were away."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "离开期间没有变化。"
-          }
-        }
-      }
-    },
-    "mac.welcome.open" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open task"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开任务"
-          }
-        }
-      }
-    },
-    "mac.welcome.since" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "While you were away"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "离开期间"
-          }
-        }
-      }
-    },
-    "mac.welcome.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Welcome back"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "欢迎回来"
-          }
-        }
-      }
-    },
-    "mac.welcome.were-on" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You were on"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "你在做"
           }
         }
       }
@@ -6725,22 +6732,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "我回来了"
-          }
-        }
-      }
-    },
-    "presence.back.at.desk" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I’m back at my desk"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "我回到桌前了"
           }
         }
       }
@@ -8553,6 +8544,70 @@
         }
       }
     },
+    "return.page.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No AI conversations in this task yet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个任务还没有 AI 对话"
+          }
+        }
+      }
+    },
+    "return.page.home" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to Home"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to Home"
+          }
+        }
+      }
+    },
+    "return.page.loading" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Catching up on your conversations"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在回顾你离开时的对话"
+          }
+        }
+      }
+    },
+    "return.page.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Here’s what happened in Anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Here’s what happened in Anchor"
+          }
+        }
+      }
+    },
     "return.progress" : {
       "localizations" : {
         "en" : {
@@ -8681,22 +8736,6 @@
         }
       }
     },
-    "return.saved.records" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mac is disconnected. Showing saved records."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mac 未连接，先显示已保存的记录。"
-          }
-        }
-      }
-    },
     "return.still.running" : {
       "localizations" : {
         "en" : {
@@ -8709,22 +8748,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "个持续运行"
-          }
-        }
-      }
-    },
-    "return.subtitle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Here’s what happened in Anchor"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "这是 Anchor 为你记录的进展"
           }
         }
       }
@@ -8789,7 +8812,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "离开期间..."
+            "value" : "当你离开的时候..."
           }
         }
       }
@@ -8891,23 +8914,6 @@
     },
     "Session summary" : {
 
-    },
-    "session.leave" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Step away"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "暂时离开"
-          }
-        }
-      }
     },
     "session.started.at" : {
       "localizations" : {
@@ -12672,74 +12678,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "完成总结"
-          }
-        }
-      }
-    },
-    "summary.recap.and" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@, %2$@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@，%2$@"
-          }
-        }
-      }
-    },
-    "summary.recap.join" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@; %2$@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@；%2$@"
-          }
-        }
-      }
-    },
-    "summary.recap.quiet" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No conversations yet"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "还没有对话"
-          }
-        }
-      }
-    },
-    "summary.recap.step" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Step %1$lld/%2$lld: %3$@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "第 %1$lld/%2$lld 步：%3$@"
           }
         }
       }

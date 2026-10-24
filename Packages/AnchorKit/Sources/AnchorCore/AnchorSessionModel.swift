@@ -259,25 +259,6 @@ public final class AnchorSessionModel {
         return succeeded
     }
 
-    /// A manual return follows the same summary path as a confirmed
-    /// authenticated reconnection. Only the summary's Back action
-    /// acknowledges the return and restores the workspace.
-    @discardableResult
-    public func beginReturn() async -> Bool {
-        guard await repository.currentProjection().session?.presence == .away else {
-            return false
-        }
-        return await correctPresence(to: .returning)
-    }
-
-    /// A reliable explicit path when proximity is unavailable. A nearby radio
-    /// reading must not immediately undo the user's choice to leave.
-    @discardableResult
-    public func leaveDesk() async -> Bool {
-        guard projection.session != nil else { return false }
-        return await correctPresence(to: .away)
-    }
-
     @discardableResult
     public func correctPresence(to status: PresenceStatus) async -> Bool {
         presenceReducer.correct(to: status)
@@ -315,6 +296,12 @@ public final class AnchorSessionModel {
         // session-scoped. Do not publish a presence command until an Anchor
         // session exists.
         guard projection.session != nil else { return }
+        // Being away is worth noticing only once an anchored task has an AI
+        // conversation to recap; a return already under way still finishes.
+        if !hasConversationToRecap, ![.away, .handingOff, .returning].contains(projection.session?.presence) {
+            presenceReducer.correct(to: signals.connection == .connected ? .atDesk : .unknown)
+            return
+        }
         let absenceBeganAt = presenceReducer.absenceBeganAt
         let newStatus = presenceReducer.reduce(signals)
         if newStatus != projection.session?.presence {
@@ -328,6 +315,10 @@ public final class AnchorSessionModel {
                 awaySince: newStatus == .away ? absenceBeganAt : nil)
         }
         schedulePresenceEvaluation(for: signals)
+    }
+
+    private var hasConversationToRecap: Bool {
+        projection.hostedSessions.contains { $0.taskProcesses.contains(where: \.isConversation) }
     }
 
     @discardableResult

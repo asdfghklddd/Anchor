@@ -167,14 +167,6 @@ struct AwayView: View {
                         awaySummary
                         processHeading
                         processGrid
-
-                        Button(L10n.backAtDesk) {
-                            Task { await model.beginReturn() }
-                        }
-                        .buttonStyle(HarborPrimaryButtonStyle())
-                        .accessibilityIdentifier("away.return.button")
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, AnchorSpacing.large)
                     }
                     .padding(.horizontal, AnchorSpacing.medium)
                     .padding(.vertical, AnchorSpacing.medium)

@@ -63,7 +63,6 @@ public enum EdgeMenuCopy {
     static let copyUnavailable = AnchorStrings.value(
         "mac.edge.copy.none", default: "The task you're on has no open step to copy")
     static let switchTask = AnchorStrings.value("mac.edge.switch", default: "Switch task")
-    static let catchUp = AnchorStrings.value("mac.edge.catch-up", default: "Catch me up")
     static let more = AnchorStrings.value("mac.edge.more", default: "More")
     static let current = AnchorStrings.value("mac.edge.current", default: "You're on")
     static let noTask = AnchorStrings.value("mac.edge.no-task", default: "No task yet. Drop an anchor on your phone.")

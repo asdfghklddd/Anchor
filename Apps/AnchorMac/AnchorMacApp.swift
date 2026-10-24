@@ -18,6 +18,7 @@ struct AnchorMacApp: App {
     private let taskLifecycleBridge: TaskSessionLifecycleBridge
     private let cloudSyncRunner: DurableSyncRunner?
     private let sourceSetupModel: MacSourceSetupModel
+    private let returnRecapper: ReturnRecapper
 
     init() {
         let environment = ProcessInfo.processInfo.environment
@@ -250,10 +251,18 @@ struct AnchorMacApp: App {
         self.server = server
         proximityAdvertiser = advertiser
         self.cloudSyncRunner = cloudSyncRunner
-        // Short conversation names and leave recaps. Written locally until a model is set up.
+        // Short conversation names, written locally.
         let summaryBook = SummaryBook(local: LocalSummarizer())
         let codexBinder = CodexSessionBinder(repository: repository, coordinator: sourceCoordinator,
             taskRunStore: taskRunStore, checkpointStore: codexCheckpointStore, names: summaryBook)
+        // The return page's conversation recaps, written by DeepSeek with the key from Settings.
+        let modelKeyStore = ModelKeyStore()
+        let recapper = ReturnRecapper(
+            repository: repository,
+            writer: DeepSeekRecapWriter(apiKey: { modelKeyStore.load() }),
+            logFile: { await codexBinder.logFile(forSource: $0) }
+        )
+        returnRecapper = recapper
         let setupModel = MacSourceSetupModel(
             defaults: validationDefaults ?? .standard,
             currentAnchorSessionID: currentSessionID,
@@ -270,6 +279,7 @@ struct AnchorMacApp: App {
             },
             summaryBook: summaryBook
         )
+        setupModel.modelKey = MacModelKeyAccess(load: { modelKeyStore.load() }, save: { modelKeyStore.save($0) })
         sourceSetupModel = setupModel
         model = AnchorSessionModel(
             repository: repository,
@@ -288,6 +298,7 @@ struct AnchorMacApp: App {
             defaults: validationDefaults
         )
         let startup: @MainActor @Sendable () async -> Void = {
+            if !isUITesting { await recapper.start() }
 #if DEBUG
             if let validationRootURL {
                 try? Data("startup-task-running".utf8).write(

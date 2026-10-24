@@ -522,6 +522,9 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
     private let deviceID: UUID
     private var manager: CBCentralManager?
     private var candidatePeripheral: CBPeripheral?
+    /// The candidate is the paired Mac that went out of reach, held by a
+    /// pending connection rather than a timed attempt.
+    private var awaitingReturn = false
     private var connectionAttemptWorkItem: DispatchWorkItem?
     private var eventCharacteristic: CBCharacteristic?
     private var peerID: UUID?
@@ -593,6 +596,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
             manager?.cancelPeripheralConnection(candidatePeripheral)
         }
         candidatePeripheral = nil
+        awaitingReturn = false
         eventCharacteristic = nil
         peerID = nil
         hasDeliveredPairingCredential = false
@@ -729,7 +733,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
             peripheral.discoverServices([AnchorBluetoothService.uuid])
             scheduleConnectionAttemptTimeout(for: peripheral)
         } else {
-            connect(peripheral, using: central)
+            awaitReturn(of: peripheral, using: central)
         }
     }
 
@@ -743,6 +747,14 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         // distance only after an encrypted exchange authenticates this peer.
         if candidatePeripheral == nil {
             connect(peripheral, using: central)
+        } else if awaitingReturn, let pending = candidatePeripheral,
+                  pending.identifier != peripheral.identifier, pending.state != .connected {
+            // The Mac advertises under another identity (its Bluetooth restarted):
+            // the pending connection would never complete, so follow the advertisement.
+            awaitingReturn = false
+            candidatePeripheral = nil
+            central.cancelPeripheralConnection(pending)
+            connect(peripheral, using: central)
         }
     }
 
@@ -750,6 +762,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         #if DEBUG
         print("[AnchorPairing] Bluetooth connected to peripheral")
         #endif
+        awaitingReturn = false
         central.stopScan()
         scheduleConnectionAttemptTimeout(for: peripheral)
         peripheral.discoverServices([AnchorBluetoothService.uuid])
@@ -765,6 +778,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         #endif
         guard candidatePeripheral === peripheral else { return }
         candidatePeripheral = nil
+        awaitingReturn = false
         connectionAttemptWorkItem?.cancel()
         connectionAttemptWorkItem = nil
         setDataLinkState(.disconnected)
@@ -780,7 +794,9 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         print("[AnchorPairing] Bluetooth disconnected \(error.map { String(describing: $0) } ?? "cleanly")")
         #endif
         guard candidatePeripheral === peripheral else { return }
+        let wasPaired = peerID != nil
         candidatePeripheral = nil
+        awaitingReturn = false
         connectionAttemptWorkItem?.cancel()
         connectionAttemptWorkItem = nil
         eventCharacteristic = nil
@@ -795,6 +811,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         failAllDeliveries(with: AnchorLinkError.connectionLost)
         failAllSnapshotRequests(with: AnchorLinkError.connectionLost)
         setDataLinkState(.disconnected)
+        if wasPaired { awaitReturn(of: peripheral, using: central) }
         startScanning(central)
     }
 
@@ -941,6 +958,17 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         peripheral.delegate = self
         central.connect(peripheral)
         scheduleConnectionAttemptTimeout(for: peripheral)
+    }
+
+    /// Waits for the paired Mac to come back. A pending connection never
+    /// times out and iOS completes it in the background as soon as the Mac is
+    /// in range again, waking Anchor, so the return is noticed without the
+    /// person opening the app.
+    private func awaitReturn(of peripheral: CBPeripheral, using central: CBCentralManager) {
+        candidatePeripheral = peripheral
+        peripheral.delegate = self
+        awaitingReturn = true
+        central.connect(peripheral)
     }
 
     private func scheduleConnectionAttemptTimeout(for peripheral: CBPeripheral) {
@@ -1239,6 +1267,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         manager?.cancelPeripheralConnection(peripheral)
         if candidatePeripheral === peripheral {
             candidatePeripheral = nil
+            awaitingReturn = false
             connectionAttemptWorkItem?.cancel()
             connectionAttemptWorkItem = nil
             eventCharacteristic = nil

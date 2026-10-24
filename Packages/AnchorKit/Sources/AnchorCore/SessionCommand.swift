@@ -28,6 +28,8 @@ public enum SessionCommand: Sendable {
     case updateSourceHealth([SourceHealth])
     case updateDurableSyncState(DurableSyncState)
     case acknowledgeReturn
+    /// The Mac's recap of a task's conversations for the return under way.
+    case recordReturnRecap(ReturnRecap)
     case completeSession
     case archiveSession
     case resumeSession

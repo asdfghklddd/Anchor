@@ -84,19 +84,6 @@ struct MacDesignPreviewTests {
             try export(menu, name: "mac-edge-menu-\(connection == .connected ? "phone" : "no-phone")")
         }
 
-        let current = tasks[0]
-        for scheme in [ColorScheme.light, .dark] {
-            let card = MacWelcomeBackCard(
-                welcome: MacWelcomeBack(tasks: tasks, currentID: current.id,
-                                        awaySince: .now.addingTimeInterval(-45 * 60), returnedAt: .now),
-                onOpen: { _ in }, onDismiss: {}
-            )
-            .padding(20)
-            .background(Color(red: 0.30, green: 0.42, blue: 0.40))
-            .environment(\.colorScheme, scheme)
-            .environment(\.locale, AnchorStrings.interfaceLocale)
-            try export(card, name: "mac-welcome-back-\(scheme == .dark ? "dark" : "light")")
-        }
         Self.previewDefaults.removePersistentDomain(forName: Self.previewDefaultsName)
     }
 

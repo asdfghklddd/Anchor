@@ -150,9 +150,10 @@ public final class MacSourceSetupModel {
     private let autoAssociationSessions: (@Sendable () async -> [AnchorSession])?
     private let onCodexSessionAssociated: (@MainActor @Sendable (URL, UUID, Bool, UUID?) async throws -> Void)?
     private let onCodexSessionUnbound: (@MainActor @Sendable (URL, UUID) async throws -> Void)?
-    /// Learns what each scanned conversation is called, for the names the phone shows
-    /// and the recaps written when the person leaves.
+    /// Learns what each scanned conversation is called, for the names the phone shows.
     public let summaryBook: SummaryBook?
+    /// The key of the model that writes return recaps, set in Settings.
+    public var modelKey: MacModelKeyAccess?
     private let currentAnchorSessionID: (@Sendable () async -> UUID?)?
     private let taskStateProvider: (@Sendable () async -> AnchorTaskState?)?
     private var codexSecurityScopedURL: URL?

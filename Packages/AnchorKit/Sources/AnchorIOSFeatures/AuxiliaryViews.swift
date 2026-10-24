@@ -436,6 +436,10 @@ struct HistoryDetailView: View {
                             .background(AnchorPalette.surface, in: .rect(cornerRadius: 18))
                     }
                 }
+                if let recaps = session?.returnRecaps, !recaps.isEmpty {
+                    Text(ReturnHistoryCopy.title).font(.title2.bold())
+                    ForEach(recaps.reversed()) { ReturnRecapHistoryCard(recap: $0) }
+                }
                 if let session, !session.records.isEmpty {
                     Text(L10n.activity).font(.title2.bold())
                     ForEach(session.records) { event in
@@ -454,6 +458,40 @@ struct HistoryDetailView: View {
     }
 
     private var session: AnchorSession? { projection.archivedSession(id: sessionID) }
+}
+
+/// One return's conversation recaps, as the return page showed them.
+private struct ReturnRecapHistoryCard: View {
+    let recap: ReturnRecap
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AnchorSpacing.small) {
+            Text(recap.returnedAt, format: .dateTime.month().day().hour().minute())
+                .font(.caption)
+                .foregroundStyle(AnchorPalette.secondaryInk)
+            if recap.conversations.isEmpty {
+                Text(ReturnCopy.noConversations)
+                    .font(.subheadline)
+                    .foregroundStyle(AnchorPalette.secondaryInk)
+            }
+            ForEach(recap.conversations) { conversation in
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(conversation.name).font(.subheadline.weight(.semibold))
+                    Text(conversation.text)
+                        .font(.subheadline)
+                        .foregroundStyle(AnchorPalette.secondaryInk)
+                }
+                .accessibilityElement(children: .combine)
+            }
+        }
+        .padding(AnchorSpacing.medium)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AnchorPalette.surface, in: .rect(cornerRadius: 18))
+    }
+}
+
+enum ReturnHistoryCopy {
+    static let title = AnchorStrings.value("history.return.recaps", default: "When you came back")
 }
 
 struct TaskManagementView: View {

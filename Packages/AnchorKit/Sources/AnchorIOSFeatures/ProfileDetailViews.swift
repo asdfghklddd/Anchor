@@ -157,7 +157,6 @@ struct ProfileDetailSheet: View {
     let kind: ProfileDetailKind
     let onManage: () -> Void
     let onFinish: () -> Void
-    var onLeave: (() -> Void)? = nil
     /// Checks a step of the current task's plan on or off.
     var onToggleStep: ((UUID, Bool) -> Void)? = nil
     /// Saves the current task's edited step list.
@@ -187,14 +186,6 @@ struct ProfileDetailSheet: View {
                         recentSection
 
                         if kind == .session {
-                            if let onLeave {
-                                Button(action: onLeave) {
-                                    Label(AnchorStrings.value("session.leave", default: "Step away"), systemImage: "figure.walk")
-                                        .frame(maxWidth: .infinity)
-                                }
-                                .buttonStyle(.bordered)
-                                .accessibilityIdentifier("profile.session.leave.button")
-                            }
                             HStack(spacing: AnchorSpacing.small) {
                                 Button(L10n.taskManagement, action: onManage)
                                     .buttonStyle(.borderedProminent)

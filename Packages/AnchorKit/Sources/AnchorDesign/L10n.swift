@@ -177,9 +177,7 @@ public enum L10n {
     public static let synchronizedWork = AnchorStrings.value("away.synchronized.work", default: "Work that keeps syncing")
     public static let currentAnchor = AnchorStrings.value("away.current.anchor", default: "CURRENT ANCHOR · CURRENT GOAL")
     public static let atDeskCorrection = AnchorStrings.value("presence.at.desk", default: "I’m still at my desk")
-    public static let backAtDesk = AnchorStrings.value("presence.back.at.desk", default: "I’m back at my desk")
     public static let returning = AnchorStrings.value("return.title", default: "Welcome back")
-    public static let returnSavedRecords = AnchorStrings.value("return.saved.records", default: "Mac is disconnected. Showing saved records.")
     public static let returnNoReceivedChanges = AnchorStrings.value("return.no.received.changes", default: "No changes received yet. This summary updates as records arrive.")
     public static let returnNoTaskRecords = AnchorStrings.value("return.no.task.records", default: "No task status has been received from Mac yet.")
     public static let returnAnchorRecord = AnchorStrings.value("return.anchor.record", default: "Last anchor note")
@@ -203,7 +201,6 @@ public enum L10n {
         String(format: AnchorStrings.value("return.metric.queued", default: "%lld waiting to start"), count)
     }
     public static let returnWhileAway = AnchorStrings.value("return.while.away", default: "While you were away...")
-    public static let returnSubtitle = AnchorStrings.value("return.subtitle", default: "Here’s what happened in Anchor")
     public static let returnBack = AnchorStrings.value("return.back", default: "Back")
     public static let returnNoChanges = AnchorStrings.value("return.no.changes", default: "No new changes while you were away.")
     public static let returnWorkNow = AnchorStrings.value("return.work.now", default: "Work now")

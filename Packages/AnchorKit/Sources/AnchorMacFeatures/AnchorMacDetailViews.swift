@@ -259,6 +259,9 @@ struct MacSettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            if let modelKey = sourceSetupModel?.modelKey {
+                MacRecapKeySection(access: modelKey)
+            }
             if let sourceSetupModel {
                 Section {
                     VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {

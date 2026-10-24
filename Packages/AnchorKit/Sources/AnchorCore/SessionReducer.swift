@@ -279,6 +279,9 @@ public enum SessionReducer {
                 session.awayStartedAt = nil
             }
 
+        case let .recordReturnRecap(recap):
+            try result.withSession { session in session.keep(recap) }
+
         case .completeSession:
             guard var session = result.session else {
                 throw SessionRepositoryError.noActiveSession
@@ -596,6 +599,9 @@ public enum SessionReducer {
                 session.returnSummary = nil
                 session.awayStartedAt = nil
             }
+
+        case let .recordReturnRecap(recap):
+            try result.withSession { session in session.keep(recap) }
 
         case let .completeSession(at):
             guard var session = result.session else {

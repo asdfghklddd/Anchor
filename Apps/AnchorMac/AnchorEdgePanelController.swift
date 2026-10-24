@@ -18,9 +18,6 @@ final class AnchorEdgePanelController {
     private let effectsPanel: AnchorDecorativePanel
     private var isStarted = false
     private var activationObserver: NSObjectProtocol?
-    private var awayMonitor: MacAwayMonitor?
-    private var welcomePanel: AnchorWelcomePanel?
-    private var welcomeTimeout: Task<Void, Never>?
     /// The buttons around the boat, while they are out.
     private var menuPanel: AnchorWelcomePanel?
     private var menuMonitors: [Any] = []
@@ -29,14 +26,6 @@ final class AnchorEdgePanelController {
     private var dock = AnchorEdgeDock.load(from: .standard)
     /// The pointer and the boat's origin when a drag began.
     private var drag: (mouse: NSPoint, origin: NSPoint)?
-    /// The last time away and its recaps, for "Catch me up".
-    private var lastAway: (since: Date, recaps: [UUID: String])?
-    private let summaryBook: SummaryBook?
-    /// Each open task's state when the person left, for the welcome back.
-    private var leaveRecaps: [UUID: String] = [:]
-    private var recapTask: Task<Void, Never>?
-    /// A card nobody answered leaves on its own: the buoy still says what needs the person.
-    private static let welcomeLifetime: Duration = .seconds(5 * 60)
 
     /// The last time the person looked at Anchor. Persisted so a relaunch does
     /// not re-announce work they already saw.
@@ -49,13 +38,11 @@ final class AnchorEdgePanelController {
     init(
         model: AnchorSessionModel,
         phoneAnchorState: AnchorPhoneAnchorState,
-        summaryBook: SummaryBook? = nil,
         onOpenDetails: @escaping () -> Void,
         onOpenSettings: @escaping () -> Void
     ) {
         self.model = model
         self.phoneAnchorState = phoneAnchorState
-        self.summaryBook = summaryBook
         self.onOpenDetails = onOpenDetails
         self.onOpenSettings = onOpenSettings
         if UserDefaults.standard.object(forKey: Self.buoySeenKey) == nil {
@@ -102,30 +89,14 @@ final class AnchorEdgePanelController {
         ) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.markBuoySeen()
-                self?.dismissWelcome()
             }
         }
-        // After time away, a small card above the boat catches the person up (M4).
-        let awayMonitor = MacAwayMonitor(
-            onLeave: { [weak self] in
-                self?.dismissWelcome()
-                self?.recapTasksAsLeft()
-            },
-            onReturn: { [weak self] awaySince in self?.welcomeBack(awaySince: awaySince) }
-        )
-        self.awayMonitor = awayMonitor
-        awayMonitor.start()
         Task { await MacNotificationSettings.removeRetiredDecisionNotifications() }
     }
 
     func stop() {
         if let activationObserver { NotificationCenter.default.removeObserver(activationObserver) }
         activationObserver = nil
-        awayMonitor?.stop()
-        awayMonitor = nil
-        recapTask?.cancel()
-        recapTask = nil
-        dismissWelcome()
         closeMenu(animated: false)
         soundPlayer.stop()
         controlPanel.orderOut(nil)
@@ -138,7 +109,6 @@ final class AnchorEdgePanelController {
         place(control: berth(in: screen.visibleFrame))
         effectsPanel.orderFrontRegardless()
         controlPanel.orderFrontRegardless()
-        positionWelcome()
     }
 
     private func berth(in visible: CGRect) -> CGRect {
@@ -170,7 +140,6 @@ final class AnchorEdgePanelController {
         switch phase {
         case .began:
             closeMenu(animated: false)
-            dismissWelcome()
             drag = (NSEvent.mouseLocation, controlPanel.frame.origin)
             effectsPanel.orderOut(nil)
         case .moved:
@@ -219,7 +188,6 @@ final class AnchorEdgePanelController {
 
     private func openMenu() {
         guard let screen = targetScreen() else { return }
-        dismissWelcome()
         markBuoySeen()
         let visible = screen.visibleFrame
         let control = controlPanel.frame
@@ -310,9 +278,6 @@ final class AnchorEdgePanelController {
                 item.state = row.id == menu.current?.id ? .on : .off
                 return item
             })
-        case .catchUp:
-            closeMenu(animated: true)
-            catchUp()
         case .more:
             popUp([
                 AnchorMenuAction.item(EdgeMenuCopy.openWindow) { [weak self] in
@@ -342,109 +307,12 @@ final class AnchorEdgePanelController {
 
     /// Opens a task in the main window and makes it the one the person is on.
     func openTask(_ id: UUID) {
-        dismissWelcome()
         Task { [weak self] in
             guard let self else { return }
             _ = await self.model.selectHostedTask(id)
             self.markBuoySeen()
             self.onOpenDetails()
         }
-    }
-
-    // MARK: Welcome back
-
-    /// Writes down where each task stands as the person leaves; a model may
-    /// take a while, and they are away for minutes at least.
-    private func recapTasksAsLeft() {
-        recapTask?.cancel()
-        leaveRecaps = [:]
-        guard let summaryBook else { return }
-        let tasks = model.projection.hostedSessions
-        recapTask = Task { [weak self] in
-            let recaps = await summaryBook.leaveRecaps(for: tasks)
-            guard !Task.isCancelled else { return }
-            self?.leaveRecaps = recaps
-        }
-    }
-
-    private func welcomeBack(awaySince: Date) {
-        lastAway = (awaySince, leaveRecaps)
-        // A recap belongs to one time away.
-        let recaps = leaveRecaps
-        leaveRecaps = [:]
-        presentWelcome(awaySince: awaySince, recaps: recaps)
-    }
-
-    /// The welcome back on request: since the last time away, or today.
-    private func catchUp() {
-        presentWelcome(awaySince: lastAway?.since ?? Calendar.current.startOfDay(for: .now),
-                       recaps: lastAway?.recaps ?? [:])
-    }
-
-    private func presentWelcome(awaySince: Date, recaps: [UUID: String]) {
-        let welcome = MacWelcomeBack(
-            tasks: model.projection.hostedSessions,
-            currentID: model.projection.session?.id,
-            awaySince: awaySince,
-            returnedAt: .now,
-            recaps: recaps
-        )
-        // With no open task there is nothing to catch up on.
-        guard !welcome.isEmpty else { return }
-        dismissWelcome()
-
-        let panel = AnchorWelcomePanel(
-            contentRect: .zero,
-            styleMask: [.borderless, .nonactivatingPanel],
-            backing: .buffered,
-            defer: false
-        )
-        configureFloating(panel)
-        panel.onCancel = { [weak self] in self?.dismissWelcome() }
-
-        let card = MacWelcomeBackCard(
-            welcome: welcome,
-            onOpen: { [weak self] id in self?.openTask(id) },
-            onDismiss: { [weak self] in self?.dismissWelcome() }
-        )
-        let host = NSHostingController(
-            rootView: card.environment(\.locale, AnchorStrings.interfaceLocale)
-        )
-        host.view.wantsLayer = true
-        host.view.layer?.backgroundColor = NSColor.clear.cgColor
-        panel.contentViewController = host
-        panel.setContentSize(host.view.fittingSize)
-        welcomePanel = panel
-        positionWelcome()
-
-        let reduceMotion = reducesMotion
-        panel.alphaValue = reduceMotion ? 1 : 0
-        panel.orderFrontRegardless()
-        if !reduceMotion {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.2
-                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                panel.animator().alphaValue = 1
-            }
-        }
-        welcomeTimeout = Task { [weak self] in
-            try? await Task.sleep(for: Self.welcomeLifetime)
-            guard !Task.isCancelled else { return }
-            self?.dismissWelcome()
-        }
-    }
-
-    /// Above the boat on its side of the screen, or below it when the boat sits
-    /// high, so the card never covers it.
-    private func positionWelcome() {
-        guard let welcomePanel, let screen = targetScreen() else { return }
-        let visible = screen.visibleFrame
-        let control = controlPanel.frame
-        let size = welcomePanel.frame.size
-        let x = dock.side == .leading ? visible.minX + 16 : visible.maxX - size.width - 16
-        let above = control.maxY + 8
-        let y = above + size.height <= visible.maxY ? above : max(visible.minY, control.minY - size.height - 8)
-        welcomePanel.setFrameOrigin(NSPoint(x: x, y: y))
     }
 
     /// A small panel that floats over every Space without taking Anchor's focus.
@@ -459,13 +327,6 @@ final class AnchorEdgePanelController {
         panel.isExcludedFromWindowsMenu = true
         panel.becomesKeyOnlyIfNeeded = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
-    }
-
-    private func dismissWelcome() {
-        welcomeTimeout?.cancel()
-        welcomeTimeout = nil
-        welcomePanel?.orderOut(nil)
-        welcomePanel = nil
     }
 
     private func configurePanels() {

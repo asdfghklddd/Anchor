@@ -1,14 +1,14 @@
 import Foundation
 
 /// How long the glance texts may be: a conversation's name on a desk card
-/// (about 8 to 10 Chinese characters) and a task's state when the person left
-/// (at most 60 characters). Every draft is held to these, whoever wrote it,
+/// (about 8 to 10 Chinese characters) and its recap on the return page (at
+/// most 60 characters). Every draft is held to these, whoever wrote it,
 /// so a model that says too much still fits the card.
 public enum SummaryLimit {
     /// `AnchorTitleLength` units: about 10 Chinese characters or 20 Latin ones.
     public static let conversationName = 20
     /// Characters, as the person counts them.
-    public static let leaveRecap = 60
+    public static let recap = 60
 
     /// One line, cut at a natural break when one is near; `nil` when nothing is left.
     public static func name(_ text: String) -> String? {
@@ -21,7 +21,7 @@ public enum SummaryLimit {
     public static func recap(_ text: String) -> String? {
         let line = oneLine(text)
         guard !line.isEmpty else { return nil }
-        return line.count > leaveRecap ? String(line.prefix(leaveRecap - 1)) + "…" : line
+        return line.count > Self.recap ? String(line.prefix(Self.recap - 1)) + "…" : line
     }
 
     private static func oneLine(_ text: String) -> String {
@@ -66,54 +66,12 @@ public struct ConversationNameSource: Hashable, Sendable {
     ]
 }
 
-/// A task's state at the moment the person left: what a recap is written from.
-public struct TaskLeaveFacts: Hashable, Sendable {
-    /// One of the task's conversations, newest first.
-    public struct Conversation: Hashable, Sendable {
-        public let name: String
-        public let status: ProcessStatus
-        public let isInterrupted: Bool
-        public let request: String?
-        public let reply: String?
-    }
-
-    public let taskID: UUID
-    public let title: String
-    public let stepCount: Int
-    public let stepsDone: Int
-    /// The first step not done, numbered from 1.
-    public let nextStepNumber: Int?
-    public let nextStepText: String?
-    /// What the task needed from the person, if anything.
-    public let action: TaskNextAction?
-    /// At most three, newest first.
-    public let conversations: [Conversation]
-
-    public init(task: AnchorSession) {
-        taskID = task.id
-        title = task.goal.title
-        let plan = task.goal.userPlan
-        stepCount = plan?.steps.count ?? 0
-        stepsDone = plan?.doneCount ?? 0
-        nextStepNumber = plan?.nextStepIndex.map { $0 + 1 }
-        nextStepText = plan.flatMap { plan in plan.nextStepIndex.map { plan.items[$0].text } }
-        action = TaskNextAction(task: task)
-        conversations = task.taskProcesses.filter(\.isConversation)
-            .sorted { $0.updatedAt > $1.updatedAt }
-            .prefix(TaskConversationStack.capacity)
-            .map { Conversation(name: $0.title, status: $0.status, isInterrupted: $0.isInterrupted,
-                                request: $0.request, reply: $0.latestReply) }
-    }
-}
-
-/// Writes the glance texts. The app always has a local writer that works
+/// Writes conversation names. The app always has a local writer that works
 /// offline from the facts; a model-backed writer (an LLM API) can be added
 /// alongside it and is preferred once it answers.
 public protocol AnchorSummarizer: Sendable {
     /// A name of about 8 to 10 Chinese characters.
     func conversationName(_ source: ConversationNameSource) async throws -> String
-    /// The task's state when the person left, in at most 60 characters.
-    func leaveRecap(_ facts: TaskLeaveFacts) async throws -> String
 }
 
 /// The glance texts the Mac sends and shows. It answers at once with the
@@ -150,26 +108,6 @@ public actor SummaryBook {
         let draft = (try? await local.conversationName(source)).flatMap(SummaryLimit.name)
         drafts[source] = draft
         return draft
-    }
-
-    /// Each open task's state as the person leaves, by task. The model writes
-    /// a recap when it answers; otherwise, or when it fails, the local writer does.
-    public func leaveRecaps(for tasks: [AnchorSession]) async -> [UUID: String] {
-        var recaps: [UUID: String] = [:]
-        for task in tasks {
-            let facts = TaskLeaveFacts(task: task)
-            let modelRecap: String? = if let model {
-                (try? await model.leaveRecap(facts)).flatMap(SummaryLimit.recap)
-            } else {
-                nil
-            }
-            if let recap = modelRecap {
-                recaps[task.id] = recap
-            } else {
-                recaps[task.id] = (try? await local.leaveRecap(facts)).flatMap(SummaryLimit.recap)
-            }
-        }
-        return recaps
     }
 
     private func write(_ source: ConversationNameSource, with model: any AnchorSummarizer) async {

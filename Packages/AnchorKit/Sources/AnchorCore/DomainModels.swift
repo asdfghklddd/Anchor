@@ -403,6 +403,8 @@ public struct AnchorSession: Identifiable, Codable, Hashable, Sendable {
     public var timeline: [ProcessEvent]
     public var snapshots: [ContextSnapshot]
     public var returnSummary: ReturnSummary?
+    /// What each conversation was doing at each return; kept as history.
+    public var returnRecaps: [ReturnRecap]? = nil
     public var processedEventIDs: Set<UUID>
 
     public init(

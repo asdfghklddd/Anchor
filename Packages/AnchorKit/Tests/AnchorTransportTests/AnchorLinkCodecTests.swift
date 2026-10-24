@@ -697,7 +697,7 @@ struct AnchorLinkCodecTests {
             repository: clientRepository,
             initialProjection: await clientBase.currentProjection()
         )
-        #expect(await phoneModel.beginReturn())
+        #expect(await phoneModel.correctPresence(to: .returning))
         #expect(await clientBase.currentProjection().session?.returnSummary?.changes.isEmpty == true)
 
         client.startDiscovery()
@@ -866,7 +866,7 @@ struct AnchorLinkCodecTests {
             repository: phoneRepository,
             initialProjection: await phoneBase.currentProjection()
         )
-        #expect(await phoneModel.beginReturn())
+        #expect(await phoneModel.correctPresence(to: .returning))
         #expect(await phoneBase.currentProjection().session?.returnSummary?.changes.isEmpty == true)
         client.startDiscovery()
         try await waitForProcessStatus(.completed, in: phoneBase)

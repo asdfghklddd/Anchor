@@ -141,11 +141,10 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func startEdgePanel() {
-        guard edgePanelController == nil, let model, let sourceSetupModel, let phoneAnchorState else { return }
+        guard edgePanelController == nil, let model, let phoneAnchorState else { return }
         let edgePanelController = AnchorEdgePanelController(
             model: model,
             phoneAnchorState: phoneAnchorState,
-            summaryBook: sourceSetupModel.summaryBook,
             onOpenDetails: { [weak self] in
                 self?.detailWindowController?.present()
             },

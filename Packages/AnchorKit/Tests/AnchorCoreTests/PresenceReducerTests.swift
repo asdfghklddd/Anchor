@@ -81,7 +81,7 @@ struct PresenceReducerTests {
         #expect(status == .away)
     }
 
-    @Test("Nearby interruptions remain work while Wi-Fi stays connected")
+    @Test("Until Bluetooth has worked, a connected Wi-Fi link keeps working")
     func wifiConnectionKeepsWorking() {
         let start = Date(timeIntervalSince1970: 1_000)
         var reducer = PresenceReducer(status: .atDesk)
@@ -93,6 +93,21 @@ struct PresenceReducerTests {
         }
         #expect(reducer.reduce(PresenceSignals(posture: .portrait, connection: .connected,
             proximity: .near, bluetoothConnection: .connected)) == .atDesk)
+    }
+
+    @Test("Once Bluetooth has worked, it decides: down five minutes is away even on Wi-Fi")
+    func bluetoothDecidesOverWifi() {
+        let start = Date(timeIntervalSince1970: 1_000)
+        var reducer = PresenceReducer(status: .atDesk)
+        func signal(_ bluetooth: ConnectionState, _ offset: Double) -> PresenceSignals {
+            PresenceSignals(posture: .portrait, connection: .connected, proximity: .unknown,
+                observedAt: start.addingTimeInterval(offset), bluetoothConnection: bluetooth)
+        }
+        #expect(reducer.reduce(signal(.connected, -1)) == .atDesk)
+        #expect(reducer.reduce(signal(.disconnected, 0)) == .atDesk)
+        #expect(reducer.reduce(signal(.disconnected, 300)) == .handingOff)
+        #expect(reducer.reduce(signal(.disconnected, 303)) == .away)
+        #expect(reducer.reduce(signal(.connected, 900)) == .returning)
     }
 
     @Test("Short loss reconnects without a return screen; five minutes qualifies")
@@ -150,22 +165,24 @@ struct PresenceReducerTests {
         #expect(reducer.reduce(PresenceSignals(posture: .portrait, connection: .connected, proximity: .unknown, observedAt: start.addingTimeInterval(1_200))) == .atDesk)
     }
 
-    @Test("Explicit leave survives nearby signals until explicit return")
+    @Test("Being away is not tracked until an anchored task has an AI conversation")
     @MainActor
-    func manualLeaveIsStable() async throws {
-        let initial = SessionProjection(session: AnchorSession(goal: AnchorGoal(title: "Work", completionCriteria: "Done")), connection: .connected, proximity: .near)
+    func awayNeedsAConversation() async throws {
+        let initial = SessionProjection(session: AnchorSession(goal: AnchorGoal(title: "Work", completionCriteria: "Done")),
+                                        connection: .connected, proximity: .near)
         let repository = InMemorySessionRepository(initialProjection: initial)
-        let model = AnchorSessionModel(repository: repository, initialProjection: initial)
-        #expect(await model.leaveDesk())
-        await model.updatePosture(.landscape)
-        #expect(await repository.currentProjection().session?.presence == .away)
-        #expect(await model.beginReturn())
-        #expect(await repository.currentProjection().session?.presence == .returning)
+        let provider = OneSignalProvider(value: PresenceSignals(posture: .portrait, connection: .disconnected, proximity: .far))
+        let model = AnchorSessionModel(repository: repository, presenceProvider: provider, initialProjection: initial,
+                                       presencePolicy: PresencePolicy(absenceConfirmation: 0.02, handoffDuration: 0.02))
+        model.start()
+        try await Task.sleep(for: .milliseconds(300))
+        model.stop()
+        #expect(await repository.currentProjection().session?.presence == .atDesk)
     }
 
-    @Test("Manual return opens the summary before resuming the workspace")
+    @Test("A return opens the summary before resuming the workspace")
     @MainActor
-    func manualReturnRequiresSummaryAcknowledgement() async throws {
+    func returnRequiresSummaryAcknowledgement() async throws {
         let awayAt = Date(timeIntervalSince1970: 1_000)
         let repository = InMemorySessionRepository(initialProjection: SessionProjection(
             session: AnchorSession(goal: AnchorGoal(title: "Return task", completionCriteria: "Resume"))
@@ -181,7 +198,7 @@ struct PresenceReducerTests {
             initialProjection: await repository.currentProjection()
         )
 
-        #expect(await model.beginReturn())
+        #expect(await model.correctPresence(to: .returning))
         let reviewing = await repository.currentProjection()
         #expect(reviewing.session?.presence == .returning)
         let feedbackModel = AnchorSessionModel(repository: repository, initialProjection: reviewing)
@@ -194,7 +211,6 @@ struct PresenceReducerTests {
         let resumed = await repository.currentProjection()
         #expect(resumed.session?.presence == .atDesk)
         #expect(resumed.session?.returnSummary == nil)
-        #expect(await model.beginReturn() == false)
     }
 
     @Test("Long interruption includes the waiting period without backdating its snapshot")
@@ -218,7 +234,9 @@ struct PresenceReducerTests {
     @MainActor
     func modelHandlesLongReconnect() async throws {
         let leftAt = Date.now.addingTimeInterval(-1_200)
-        let initial = SessionProjection(session: AnchorSession(goal: AnchorGoal(title: "Work", completionCriteria: "Done")), connection: .connected, proximity: .near)
+        let initial = SessionProjection(session: AnchorSession(goal: AnchorGoal(title: "Work", completionCriteria: "Done"),
+                                                               processes: [conversation()]),
+                                        connection: .connected, proximity: .near)
         let repository = InMemorySessionRepository(initialProjection: initial)
         try await repository.send(.recordEvent(ProcessEvent(occurredAt: leftAt.addingTimeInterval(100), kind: .progress, title: "Progress while away")))
         let provider = SignalSequenceProvider(values: [
@@ -247,7 +265,7 @@ struct PresenceReducerTests {
             goal: AnchorGoal(title: "Test", completionCriteria: "Done"),
             status: .active,
             presence: .atDesk,
-            processes: []
+            processes: [conversation()]
         )
         let initial = SessionProjection(
             session: session,
@@ -281,6 +299,12 @@ struct PresenceReducerTests {
 
         #expect(projection.session?.presence == .away)
     }
+}
+
+/// An AI conversation joined to the task, which makes being away worth noticing.
+private func conversation() -> AnchorProcess {
+    AnchorProcess(sourceID: UUID(), sourceName: "Codex", sourceSymbol: "C", sourceTone: "cyan",
+                  title: "Chat", status: .completed)
 }
 
 private struct OneSignalProvider: PresenceSignalProviding {

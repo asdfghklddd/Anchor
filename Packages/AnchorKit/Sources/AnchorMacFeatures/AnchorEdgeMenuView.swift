@@ -7,7 +7,6 @@ import SwiftUI
 public enum AnchorEdgeAction: Sendable {
     case copyNextStep
     case switchTask
-    case catchUp
     case more
     case selectTask(UUID)
 }
@@ -20,7 +19,7 @@ public enum AnchorEdgeMenuLayout {
     static let fanRadius: CGFloat = 98
     static let buttonSide: CGFloat = 46
     /// The fan's angles, measured from straight toward the middle of the screen.
-    static let angles: [Double] = [-69, -23, 23, 69]
+    static let angles: [Double] = [-50, 0, 50]
     static let fanWidth: CGFloat = 206
     static let cardWidth: CGFloat = 292
     public static let size = CGSize(width: fanWidth + cardWidth, height: 380)
@@ -99,8 +98,6 @@ public struct AnchorEdgeMenuView: View {
                       help: menu.prompt == nil ? EdgeMenuCopy.copyUnavailable : nil),
             FanButton(action: .switchTask, symbol: "arrow.left.arrow.right", title: EdgeMenuCopy.switchTask,
                       isEnabled: menu.rows.count > 1),
-            FanButton(action: .catchUp, symbol: "clock.arrow.circlepath", title: EdgeMenuCopy.catchUp,
-                      isEnabled: !menu.rows.isEmpty),
             FanButton(action: .more, symbol: "ellipsis", title: EdgeMenuCopy.more),
         ]
     }

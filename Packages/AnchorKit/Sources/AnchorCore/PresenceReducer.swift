@@ -33,13 +33,17 @@ public struct PresencePolicy: Codable, Hashable, Sendable {
     }
 }
 
+/// Whether the person is at the desk. Bluetooth decides: being away is the
+/// Bluetooth link to the Mac down for five minutes, and the return is the
+/// authenticated Bluetooth link coming back. Until Bluetooth has connected
+/// once (no radio, no permission), the effective link stands in for it.
 public struct PresenceReducer: Codable, Hashable, Sendable {
     public private(set) var status: PresenceStatus
     public private(set) var absenceBeganAt: Date?
     public private(set) var handoffBeganAt: Date?
     private var lastConnectedAt: Date?
-    private var previousConnection: ConnectionState?
-    private var previousBluetoothConnection: ConnectionState?
+    private var previousLink: ConnectionState?
+    private var bluetoothSeen: Bool?
     public var policy: PresencePolicy
 
     public init(status: PresenceStatus = .unknown, policy: PresencePolicy = PresencePolicy()) {
@@ -49,21 +53,20 @@ public struct PresenceReducer: Codable, Hashable, Sendable {
 
     @discardableResult
     public mutating func reduce(_ signals: PresenceSignals) -> PresenceStatus {
-        let reconnected = Self.isReconnect(from: previousConnection, to: signals.connection)
-            || Self.isReconnect(from: previousBluetoothConnection, to: signals.bluetoothConnection)
+        if signals.bluetoothConnection == .connected { bluetoothSeen = true }
+        let link = self.link(signals)
+        let reconnected = link == .connected && previousLink != .connected
         let longInterruption = absenceBeganAt.map {
             signals.observedAt.timeIntervalSince($0) >= policy.absenceConfirmation
         } ?? false
         defer {
-            previousConnection = signals.connection
-            previousBluetoothConnection = signals.bluetoothConnection
-            if signals.connection == .connected { lastConnectedAt = signals.observedAt }
+            previousLink = link
+            if link == .connected { lastConnectedAt = signals.observedAt }
         }
         if status == .returning { return status }
 
-        // Returning needs an authenticated reconnection, never rotation or RSSI
-        // alone. Either authenticated transport can keep the workspace connected.
-        if signals.connection == .connected {
+        // Returning needs an authenticated reconnection, never rotation or RSSI alone.
+        if link == .connected {
             if reconnected && (status == .away || status == .handingOff || longInterruption) {
                 status = .returning
             } else if status != .away {
@@ -102,15 +105,21 @@ public struct PresenceReducer: Codable, Hashable, Sendable {
 
     public func canConfirmAbsence(_ signals: PresenceSignals) -> Bool {
         guard lastConnectedAt != nil else { return false }
-        switch signals.connection {
+        switch link(signals) {
         case .disconnected, .failed: return true
         case .pairing: return absenceBeganAt != nil
         case .connected, .unavailable, .permissionDenied: return false
         }
     }
 
-    private static func isReconnect(from previous: ConnectionState?, to current: ConnectionState?) -> Bool {
-        current == .connected && previous != .connected
+    /// The link that says whether the person is near: Bluetooth once it has
+    /// worked, since it follows the phone; Wi-Fi alone can reach across a building.
+    private func link(_ signals: PresenceSignals) -> ConnectionState {
+        if bluetoothSeen == true, let bluetooth = signals.bluetoothConnection,
+           bluetooth != .unavailable, bluetooth != .permissionDenied {
+            return bluetooth
+        }
+        return signals.connection
     }
 
     public mutating func acknowledgeReturn() {

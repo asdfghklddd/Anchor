@@ -9,6 +9,8 @@ public actor CodexSessionBinder {
     private let checkpointStore: CodexLifecycleCheckpointStore
     /// Short conversation names for the phone; without it, the workspace folder names them.
     private let names: SummaryBook?
+    /// Each bound conversation's log, by the source its turns arrive from.
+    private var logFiles: [UUID: URL] = [:]
 
     public init(repository: any SessionRepository, coordinator: ProcessSourceCoordinator,
                 taskRunStore: TaskRunStore, checkpointStore: CodexLifecycleCheckpointStore,
@@ -79,6 +81,12 @@ public actor CodexSessionBinder {
             sourceID: codexSource.descriptor.id
         )
         await coordinator.register(codexSource)
+        logFiles[sourceID] = fileURL
+    }
+
+    /// The log of a bound conversation, for reading its latest rounds.
+    public func logFile(forSource sourceID: UUID) -> URL? {
+        logFiles[sourceID]
     }
 
     /// Stops observing a conversation for one task and removes its rows there,
@@ -86,6 +94,7 @@ public actor CodexSessionBinder {
     public func unbind(fileURL: URL, sessionID: UUID) async throws {
         let sourceID = Self.sourceID(fileURL: fileURL, sessionID: sessionID)
         await coordinator.unregister(sourceID: sourceID)
+        logFiles[sourceID] = nil
         let projection = await repository.currentProjection()
         guard let session = projection.hostedSessions.first(where: { $0.id == sessionID }) else { return }
         for process in session.processes where process.sourceID == sourceID {
