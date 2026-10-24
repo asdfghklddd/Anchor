@@ -30,6 +30,8 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
     private var listener: NWListener?
     private var peers: [ObjectIdentifier: LineConnection] = [:]
     private var peerIDs: [ObjectIdentifier: UUID] = [:]
+    private var peerDeviceInfos: [UUID: PeerDeviceInfo] = [:]
+    private var fallbackPeerID: UUID?
     private var peerChallenges: [ObjectIdentifier: Data] = [:]
     private var peerPairingRoutes: [ObjectIdentifier: DevicePairingRoute] = [:]
     private var pendingDeliveries: [UUID: PendingDelivery] = [:]
@@ -165,11 +167,26 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
             guard let self, fallbackConnectionState != state else { return }
             fallbackConnectionState = state
             if state == .connected, connectionState != .connected {
-                setPairingStatus(DevicePairingStatus(phase: .connected, route: .bluetooth))
+                setPairingStatus(connectedStatus(route: .bluetooth, peerID: fallbackPeerID))
             } else if connectionState != .connected, pairingStatus.phase == .connected {
+                fallbackPeerID = nil
                 setPairingStatus(.automatic)
+            } else if state != .connected {
+                fallbackPeerID = nil
             }
             publishEffectiveConnection()
+        }
+    }
+
+    /// Updates the menu's authenticated peer detail received over BLE.
+    public func updateFallbackPeerDeviceInfo(_ info: PeerDeviceInfo, for peerID: UUID) {
+        queue.async { [weak self] in
+            guard let self else { return }
+            peerDeviceInfos[peerID] = info
+            fallbackPeerID = peerID
+            if fallbackConnectionState == .connected, connectionState != .connected {
+                setPairingStatus(connectedStatus(route: .bluetooth, peerID: peerID))
+            }
         }
     }
 
@@ -362,7 +379,10 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
               let payload = try? AnchorLinkCodec.open(encrypted, using: key) else { return }
         setConnection(.connected)
         let route = peerPairingRoutes[peerObjectID] ?? .trustedDevice
-        setPairingStatus(DevicePairingStatus(phase: .connected, route: route))
+        if let senderDeviceInfo = payload.senderDeviceInfo {
+            peerDeviceInfos[frame.senderID] = senderDeviceInfo
+        }
+        setPairingStatus(connectedStatus(route: route, peerID: frame.senderID))
         guard replayWindow.accepts(payload.messageID) else {
             if payload.kind == .event,
                let event = payload.event {
@@ -442,11 +462,22 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
         guard connectionState != state else { return }
         connectionState = state
         if state != .connected, fallbackConnectionState == .connected {
-            setPairingStatus(DevicePairingStatus(phase: .connected, route: .bluetooth))
+            setPairingStatus(connectedStatus(route: .bluetooth, peerID: fallbackPeerID))
         } else if effectiveConnectionState != .connected {
             setPairingStatus(.automatic)
         }
         publishEffectiveConnection()
+    }
+
+    private func connectedStatus(
+        route: DevicePairingRoute,
+        peerID: UUID?
+    ) -> DevicePairingStatus {
+        DevicePairingStatus(
+            phase: .connected,
+            route: route,
+            peerDeviceInfo: peerID.flatMap { peerDeviceInfos[$0] }
+        )
     }
 
     private var effectiveConnectionState: ConnectionState {
@@ -477,7 +508,7 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
         if effectiveConnectionState == .connected, status.phase != .connected {
             visibleStatus = pairingStatus.phase == .connected
                 ? pairingStatus
-                : DevicePairingStatus(phase: .connected, route: .bluetooth)
+                : connectedStatus(route: .bluetooth, peerID: fallbackPeerID)
         } else {
             visibleStatus = status
         }

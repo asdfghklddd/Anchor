@@ -34,6 +34,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     private let queue = DispatchQueue(label: "com.andywang.anchor.bonjour.client")
     private let identityStore: PairingIdentityStore
     private let automaticPairing: AutomaticPairingConfiguration
+    private let localDeviceInfo: PeerDeviceInfo?
     private let deviceID: UUID
     private let serviceType: String
     private var browser: NWBrowser?
@@ -75,10 +76,12 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     public init(
         identityStore: PairingIdentityStore = PairingIdentityStore(),
         automaticPairing: AutomaticPairingConfiguration = .manualOnly,
-        serviceType: String = AnchorBonjourServer.serviceType
+        serviceType: String = AnchorBonjourServer.serviceType,
+        localDeviceInfo: PeerDeviceInfo? = nil
     ) {
         self.identityStore = identityStore
         self.automaticPairing = automaticPairing
+        self.localDeviceInfo = localDeviceInfo
         self.serviceType = serviceType
         deviceID = identityStore.localDeviceID()
     }
@@ -722,7 +725,10 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
             return
         }
         do {
-            let sealed = try AnchorLinkCodec.seal(LinkPayload(kind: .heartbeat), using: key)
+            let sealed = try AnchorLinkCodec.seal(
+                LinkPayload(kind: .heartbeat, senderDeviceInfo: localDeviceInfo),
+                using: key
+            )
             peer.send(
                 LinkFrame(kind: .encrypted, senderID: deviceID, encryptedPayload: sealed)
             ) { [weak self] result in

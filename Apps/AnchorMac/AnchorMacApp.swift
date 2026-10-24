@@ -193,6 +193,9 @@ struct AnchorMacApp: App {
         advertiser.onConnectionState = { state in
             server.updateFallbackConnection(state)
         }
+        advertiser.onPeerDeviceInfo = { peerID, info in
+            server.updateFallbackPeerDeviceInfo(info, for: peerID)
+        }
         let bluetoothRadio = MacBluetoothRadioState()
         advertiser.onRadioState = { state in
             let radio: MacBluetoothRadio = switch state {

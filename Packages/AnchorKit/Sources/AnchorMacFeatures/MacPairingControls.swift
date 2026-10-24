@@ -26,8 +26,16 @@ struct MacPairingControls: View {
                         Label(L10n.pairingAutomatically, systemImage: "arrow.triangle.2.circlepath")
                     }
                 case .connected:
-                    Label(connectedLabel, systemImage: "checkmark.shield.fill")
-                        .foregroundStyle(AnchorPalette.mintInk)
+                    VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
+                        Label(connectedLabel, systemImage: "checkmark.shield.fill")
+                            .foregroundStyle(AnchorPalette.mintInk)
+                        if let peerDeviceInfo = pairingStatus.peerDeviceInfo {
+                            Text(peerDeviceInfo.shortDescription)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .accessibilityIdentifier("mac.pairing.peer-device")
+                        }
+                    }
                 }
             } else {
                 Text(L10n.pairingUnavailable)

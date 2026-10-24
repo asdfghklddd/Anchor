@@ -159,6 +159,7 @@ struct LinkPayload: Codable, Sendable {
     let acknowledgedEventID: UUID?
     let requestID: UUID?
     let currentProcessSnapshot: CurrentProcessSnapshot?
+    let senderDeviceInfo: PeerDeviceInfo?
 
     init(
         kind: LinkPayloadKind,
@@ -167,6 +168,7 @@ struct LinkPayload: Codable, Sendable {
         acknowledgedEventID: UUID? = nil,
         requestID: UUID? = nil,
         currentProcessSnapshot: CurrentProcessSnapshot? = nil,
+        senderDeviceInfo: PeerDeviceInfo? = nil,
         messageID: UUID = UUID(),
         sequence: UInt64 = 0
     ) {
@@ -178,6 +180,7 @@ struct LinkPayload: Codable, Sendable {
         self.acknowledgedEventID = acknowledgedEventID
         self.requestID = requestID
         self.currentProcessSnapshot = currentProcessSnapshot
+        self.senderDeviceInfo = senderDeviceInfo
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -189,6 +192,7 @@ struct LinkPayload: Codable, Sendable {
         case acknowledgedEventID
         case requestID
         case currentProcessSnapshot
+        case senderDeviceInfo
     }
 
     init(from decoder: any Decoder) throws {
@@ -204,6 +208,7 @@ struct LinkPayload: Codable, Sendable {
             CurrentProcessSnapshot.self,
             forKey: .currentProcessSnapshot
         )
+        senderDeviceInfo = try container.decodeIfPresent(PeerDeviceInfo.self, forKey: .senderDeviceInfo)
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -216,6 +221,7 @@ struct LinkPayload: Codable, Sendable {
         try container.encodeIfPresent(acknowledgedEventID, forKey: .acknowledgedEventID)
         try container.encodeIfPresent(requestID, forKey: .requestID)
         try container.encodeIfPresent(currentProcessSnapshot, forKey: .currentProcessSnapshot)
+        try container.encodeIfPresent(senderDeviceInfo, forKey: .senderDeviceInfo)
     }
 }
 

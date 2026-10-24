@@ -2,6 +2,7 @@ import AnchorCore
 import AnchorIOSFeatures
 import AnchorTransport
 import SwiftUI
+import UIKit
 
 @main
 struct AnchorIOSApp: App {
@@ -56,9 +57,16 @@ struct AnchorIOSApp: App {
         let identityStore = isUITesting
             ? PairingIdentityStore.inMemory()
             : PairingIdentityStore(service: pairingIdentityService)
+        let peerDeviceInfo = PeerDeviceInfo(
+            name: UIDevice.current.name,
+            model: UIDevice.current.localizedModel,
+            systemName: UIDevice.current.systemName,
+            systemVersion: UIDevice.current.systemVersion
+        )
         let client = AnchorBonjourClient(
             identityStore: identityStore,
-            automaticPairing: usesAutomaticICloudPairing ? .iOSProduction() : .manualOnly
+            automaticPairing: usesAutomaticICloudPairing ? .iOSProduction() : .manualOnly,
+            localDeviceInfo: peerDeviceInfo
         )
         let scanner = AnchorProximityScanner(
             identityStore: identityStore,
@@ -67,7 +75,8 @@ struct AnchorIOSApp: App {
             },
             onPairingCredential: { deviceID, secret in
                 client.offerBluetoothPairingSecret(secret, for: deviceID)
-            }
+            },
+            localDeviceInfo: peerDeviceInfo
         )
         let localRepository = LocalSessionRepository(
             storageURL: uiTestStorageURL,

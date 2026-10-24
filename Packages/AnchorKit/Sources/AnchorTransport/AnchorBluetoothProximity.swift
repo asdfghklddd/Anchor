@@ -49,6 +49,8 @@ public final class AnchorProximityAdvertiser: NSObject, CBPeripheralManagerDeleg
     public var onEvent: (@Sendable (EventEnvelope) async throws -> Void)?
     public var onCurrentProcessSnapshot: (@Sendable () async throws -> CurrentProcessSnapshot)?
     public var onConnectionState: (@Sendable (ConnectionState) -> Void)?
+    /// Called after an encrypted frame authenticates the paired phone.
+    public var onPeerDeviceInfo: (@Sendable (UUID, PeerDeviceInfo) -> Void)?
     /// Whether the Mac's Bluetooth is on and allowed, which the connection
     /// state above folds into "unavailable".
     public var onRadioState: (@Sendable (CBManagerState) -> Void)?
@@ -286,6 +288,9 @@ public final class AnchorProximityAdvertiser: NSObject, CBPeripheralManagerDeleg
         subscribedCentrals[central.identifier] = central
         peerIDs[central.identifier] = frame.senderID
         setDataLinkState(.connected)
+        if let senderDeviceInfo = payload.senderDeviceInfo {
+            onPeerDeviceInfo?(frame.senderID, senderDeviceInfo)
+        }
 
         guard replayWindow.accepts(payload.messageID) else {
             if payload.kind == .event, let event = payload.event {
@@ -509,6 +514,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
     private let onUpdate: @Sendable (ProximityState) -> Void
     private let onPairingCredential: @Sendable (UUID, Data) -> Void
     private let identityStore: PairingIdentityStore
+    private let localDeviceInfo: PeerDeviceInfo?
     private let deviceID: UUID
     private var manager: CBCentralManager?
     private var candidatePeripheral: CBPeripheral?
@@ -535,9 +541,11 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
     public init(
         identityStore: PairingIdentityStore = PairingIdentityStore(),
         onUpdate: @escaping @Sendable (ProximityState) -> Void,
-        onPairingCredential: @escaping @Sendable (UUID, Data) -> Void = { _, _ in }
+        onPairingCredential: @escaping @Sendable (UUID, Data) -> Void = { _, _ in },
+        localDeviceInfo: PeerDeviceInfo? = nil
     ) {
         self.identityStore = identityStore
+        self.localDeviceInfo = localDeviceInfo
         deviceID = identityStore.localDeviceID()
         self.onUpdate = onUpdate
         self.onPairingCredential = onPairingCredential
@@ -602,7 +610,10 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
                 pairingWorkItem = nil
                 pairingAttempt = nil
             }
-            try? enqueue(LinkPayload(kind: .heartbeat), key: key)
+            try? enqueue(
+                LinkPayload(kind: .heartbeat, senderDeviceInfo: localDeviceInfo),
+                key: key
+            )
         }
     }
 
@@ -1096,7 +1107,10 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
             )
             try identityStore.saveSharedKey(key, peerID: frame.senderID)
             pairingAttempt = nil
-            try enqueue(LinkPayload(kind: .heartbeat), key: key)
+            try enqueue(
+                LinkPayload(kind: .heartbeat, senderDeviceInfo: localDeviceInfo),
+                key: key
+            )
         } catch {
             pairingAttempt = nil
         }
