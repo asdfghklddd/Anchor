@@ -169,6 +169,39 @@ public final class AnchorSessionModel {
         }
     }
 
+    /// Removes every active task, and with `includingHistory` every finished one,
+    /// on this device and the paired one. Returns the goals that were removed.
+    @discardableResult
+    public func forgetTasks(includingHistory: Bool) async -> [AnchorGoal]? {
+        guard let resetting = repository as? any DataResetting else { return nil }
+        let current = await repository.currentProjection()
+        let sessions = current.hostedSessions + (includingHistory ? current.archivedSessions : [])
+        do {
+            try await resetting.forgetTasks(Set(sessions.map(\.id)))
+            lastError = nil
+        } catch {
+            lastError = error.localizedDescription
+            return nil
+        }
+        projection = present(await repository.currentProjection())
+        return sessions.map(\.goal)
+    }
+
+    /// Removes agent conversations from active tasks here and on the paired device.
+    @discardableResult
+    public func clearConversations() async -> Bool {
+        guard let resetting = repository as? any DataResetting else { return false }
+        do {
+            try await resetting.clearConversations()
+            lastError = nil
+        } catch {
+            lastError = error.localizedDescription
+            return false
+        }
+        projection = present(await repository.currentProjection())
+        return true
+    }
+
     @discardableResult
     public func createSession(goal: AnchorGoal, processes: [AnchorProcess]) async -> Bool {
         await send(.createSession(goal: goal, processes: processes))

@@ -14,6 +14,7 @@ public enum AnchorRoute: Hashable {
     case notificationSettings
     case privacy
     case accessibility
+    case localData
 }
 
 enum ProfileDetailKind: Hashable {

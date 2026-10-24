@@ -89,6 +89,17 @@ struct AnchorMacApp: App {
             )
         }
 #endif
+        // A reset asked for by the previous copy runs before any store loads.
+        let resetDefaults = validationDefaults ?? .standard
+        let startsOver = MacLocalReset.takePending(defaults: resetDefaults)
+        let taskRunsURL = validationRootURL?.appending(path: "task-runs.json")
+            ?? TaskRunStore.defaultStorageURL()
+        let checkpointsURL = validationRootURL?.appending(path: "codex-checkpoints.json")
+            ?? CodexLifecycleCheckpointStore().storageURL
+        if startsOver {
+            MacLocalReset.waitForPreviousInstance()
+            MacLocalReset.wipe(files: [taskRunsURL, checkpointsURL], defaults: resetDefaults)
+        }
         let pairingKeychain: PairingIdentityStore.Keychain
 #if DEBUG && !ANCHOR_SIGNED_DEVELOPMENT
         // The ad-hoc development target has no Keychain access entitlements.
@@ -123,12 +134,8 @@ struct AnchorMacApp: App {
             storageURL: validationRootURL?.appending(path: "session-repository.json"),
             sourceID: deviceID
         )
-        let taskRunStore = validationRootURL.map {
-            TaskRunStore(url: $0.appending(path: "task-runs.json"))
-        } ?? TaskRunStore()
-        let codexCheckpointStore = validationRootURL.map {
-            CodexLifecycleCheckpointStore(storageURL: $0.appending(path: "codex-checkpoints.json"))
-        } ?? CodexLifecycleCheckpointStore()
+        let taskRunStore = TaskRunStore(url: taskRunsURL)
+        let codexCheckpointStore = CodexLifecycleCheckpointStore(storageURL: checkpointsURL)
         let cloudSyncRunner: DurableSyncRunner?
 #if DEBUG
         cloudSyncRunner = validationRootURL != nil
@@ -277,6 +284,10 @@ struct AnchorMacApp: App {
                 )
             }
 #endif
+            if startsOver {
+                // Before any folder is read: clear conversations here and on the phone.
+                try? await repository.clearConversations()
+            }
             await taskLifecycleBridge.start()
 #if DEBUG
             if let validationRootURL {

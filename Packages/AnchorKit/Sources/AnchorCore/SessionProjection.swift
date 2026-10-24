@@ -22,6 +22,8 @@ public struct SessionProjection: Codable, Hashable, Sendable {
     public var peerContactAt: Date?
     /// Changes made here that the peer has not acknowledged yet. Never sent.
     public var unsentChanges: Int
+    /// Tasks the person cleared, so stores that mirror tasks can drop them. Never sent.
+    public var forgottenTaskIDs: Set<UUID> = []
 
     public init(
         session: AnchorSession? = nil,
@@ -87,6 +89,7 @@ public struct SessionProjection: Codable, Hashable, Sendable {
         ) ?? .notConfigured
         peerContactAt = nil
         unsentChanges = 0
+        forgottenTaskIDs = []
     }
 
     public static let empty = SessionProjection()

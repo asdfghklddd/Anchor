@@ -33,6 +33,7 @@ public actor TaskSessionLifecycleBridge {
     }
 
     public func synchronize(_ projection: SessionProjection) async throws {
+        try await taskRunStore.forget(taskIDs: projection.forgottenTaskIDs)
         for archivedSession in projection.archivedSessions.sorted(by: {
             $0.startedAt < $1.startedAt
         }) {

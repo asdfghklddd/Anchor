@@ -38,6 +38,13 @@ enum AnchorPlanImages {
             .compactMap { try? Data(contentsOf: folder.appending(path: $0)) }
     }
 
+    static func remove(goalIDs: [UUID]) {
+        for goalID in goalIDs {
+            guard let folder = try? directory(goalID: goalID) else { continue }
+            try? FileManager.default.removeItem(at: folder)
+        }
+    }
+
     private static func directory(goalID: UUID) throws -> URL {
         try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appending(path: "Anchor/PlanImages/\(goalID.uuidString)", directoryHint: .isDirectory)

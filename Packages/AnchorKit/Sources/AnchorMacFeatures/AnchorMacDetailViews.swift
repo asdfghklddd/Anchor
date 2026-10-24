@@ -139,6 +139,7 @@ struct MacSettingsView: View {
     @State private var isLoadingSettings = true
     @State private var isApplyingSettings = false
     @State private var selectedSource: MacSourceGroup?
+    @State private var confirmsReset = false
 
     private var sourceGroups: [MacSourceGroup] {
         MacSourceGroup.groups(from: projection.session?.processes ?? [])
@@ -256,6 +257,26 @@ struct MacSettingsView: View {
                         .font(.caption)
                         .foregroundStyle(AnchorPalette.coral)
                         .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            if let sourceSetupModel {
+                Section {
+                    VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
+                        Button(MacLocalResetCopy.title, systemImage: "arrow.counterclockwise", role: .destructive) {
+                            confirmsReset = true
+                        }
+                        .accessibilityIdentifier("settings.resetLocalData")
+                        Text(MacLocalResetCopy.detail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .alert(MacLocalResetCopy.confirmTitle, isPresented: $confirmsReset) {
+                    Button(MacLocalResetCopy.confirm, role: .destructive) { sourceSetupModel.resetLocalData() }
+                    Button(L10n.cancel, role: .cancel) {}
+                } message: {
+                    Text(MacLocalResetCopy.confirmMessage)
                 }
             }
         }

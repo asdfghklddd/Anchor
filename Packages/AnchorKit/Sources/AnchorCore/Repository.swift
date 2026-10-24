@@ -56,7 +56,7 @@ public actor InMemorySessionRepository: SessionRepository {
 /// service is available. It starts with an empty projection and only persists
 /// state created by the user or received from a real peer; it never supplies
 /// demo fixtures.
-public actor LocalSessionRepository: EventBackedSessionRepository {
+public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting {
     private struct PersistedState: Codable, Sendable {
         let schemaVersion: Int
         let baseProjection: SessionProjection
@@ -64,6 +64,10 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         var outbox: [EventEnvelope]
         var nextSequence: UInt64
         var peerContactAt: Date?
+        /// Tasks the person cleared; anything still arriving about them is dropped.
+        var forgottenSessionIDs: Set<UUID>?
+        /// Per source, conversation rows below this sequence were cleared.
+        var conversationsClearedBefore: [UUID: UInt64]?
     }
 
     private struct LegacyPersistedState: Codable, Sendable {
@@ -81,6 +85,8 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
     private var projection: SessionProjection
     /// The last moment the peer was heard: while connected, a delivery or a remote event.
     private var peerContactAt: Date?
+    private var forgottenSessionIDs: Set<UUID>
+    private var conversationsClearedBefore: [UUID: UInt64]
     private let storageURL: URL
     private var continuations: [UUID: AsyncStream<SessionProjection>.Continuation] = [:]
 
@@ -92,10 +98,14 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         let storedData = try? Data(contentsOf: resolvedURL)
         var startupError: String?
         var restoredContact: Date?
+        var restoredForgotten: Set<UUID> = []
+        var restoredCleared: [UUID: UInt64] = [:]
         if let data = storedData,
            let persisted = Self.decodePersistedState(data),
            persisted.schemaVersion == Self.schemaVersion {
             restoredContact = persisted.peerContactAt
+            restoredForgotten = persisted.forgottenSessionIDs ?? []
+            restoredCleared = persisted.conversationsClearedBefore ?? [:]
             baseProjection = persisted.baseProjection
             events = persisted.events
             outbox = persisted.outbox
@@ -122,6 +132,8 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
             }
         }
 
+        forgottenSessionIDs = restoredForgotten
+        conversationsClearedBefore = restoredCleared
         let cleanedBase = RetiredRecordingCleanup.clean(baseProjection)
         let cleanedEvents = RetiredRecordingCleanup.filteredEvents(events)
         let retainedIDs = Set(cleanedEvents.map(\.id))
@@ -138,7 +150,8 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
                 }
                 let cleaned = PersistedState(schemaVersion: Self.schemaVersion,
                     baseProjection: cleanedBase, events: cleanedEvents, outbox: cleanedOutbox,
-                    nextSequence: nextSequence, peerContactAt: restoredContact)
+                    nextSequence: nextSequence, peerContactAt: restoredContact,
+                    forgottenSessionIDs: restoredForgotten, conversationsClearedBefore: restoredCleared)
                 try JSONEncoder.anchor.encode(cleaned).write(to: resolvedURL, options: .atomic)
                 baseProjection = cleanedBase
                 events = cleanedEvents
@@ -180,6 +193,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         var result = projection
         result.peerContactAt = peerContactAt
         result.unsentChanges = outbox.count
+        result.forgottenTaskIDs = forgottenSessionIDs
         return result
     }
 
@@ -278,8 +292,11 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         broadcast()
     }
 
+    /// A reset goes first: what follows it, such as conversations the Mac reads
+    /// again, carries older timestamps and must not reach the peer before it.
     public func pendingEvents() -> [EventEnvelope] {
-        outbox.sorted(by: Self.eventSort)
+        let sorted = outbox.sorted(by: Self.eventSort)
+        return sorted.filter(\.isDataReset) + sorted.filter { !$0.isDataReset }
     }
 
     /// Returns the immutable local event history, including events that a peer
@@ -356,6 +373,10 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
             return
         }
 
+        if envelope.isDataReset {
+            try applyRemoteReset(envelope)
+            return
+        }
         guard envelope.type == EventEnvelope.operationType else {
             throw SessionRepositoryError.malformedEvent
         }
@@ -367,6 +388,17 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         }
 
         try Self.validate(operation: operation, against: envelope)
+
+        // Consume what a reset already cleared, so a peer's replay cannot revive it.
+        if forgottenSessionIDs.contains(envelope.sessionID)
+            || operation.sessionID.map(forgottenSessionIDs.contains) == true {
+            return
+        }
+        if operation.isConversationRecord,
+           let clearedBefore = conversationsClearedBefore[envelope.sourceID],
+           envelope.sequence < clearedBefore {
+            return
+        }
 
         if events.contains(where: { $0.id == envelope.id }) {
             return
@@ -440,6 +472,92 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         broadcast()
     }
 
+    // MARK: Starting over
+
+    public func forgetTasks(_ ids: Set<UUID>) throws {
+        guard !ids.isEmpty else { return }
+        try recordReset(AnchorDataReset(scope: .tasks(ids)))
+    }
+
+    public func clearConversations() throws {
+        try recordReset(AnchorDataReset(scope: .conversations))
+    }
+
+    /// Clears here, then queues the reset for the peer ahead of anything newer.
+    private func recordReset(_ reset: AnchorDataReset) throws {
+        let envelope = EventEnvelope(
+            sessionID: reset.id,
+            sourceID: sourceID,
+            sequence: nextSequence,
+            timestamp: reset.at,
+            type: AnchorDataReset.envelopeType,
+            payload: try JSONEncoder.anchor.encode(reset),
+            schemaVersion: SessionOperation.latestEnvelopeSchemaVersion
+        )
+        try apply(reset, from: envelope, queueForPeer: true)
+        nextSequence &+= 1
+        try write(baseProjection: baseProjection, events: events, outbox: outbox, nextSequence: nextSequence)
+    }
+
+    private func applyRemoteReset(_ envelope: EventEnvelope) throws {
+        guard !events.contains(where: { $0.id == envelope.id }) else { return }
+        guard let reset = try? JSONDecoder.anchor.decode(AnchorDataReset.self, from: envelope.payload) else {
+            throw SessionRepositoryError.malformedEvent
+        }
+        try apply(reset, from: envelope, queueForPeer: false)
+        try write(baseProjection: baseProjection, events: events, outbox: outbox, nextSequence: nextSequence)
+    }
+
+    /// Deletes the cleared history itself rather than hiding it, and remembers
+    /// enough to drop stale copies a peer may still send.
+    private func apply(_ reset: AnchorDataReset, from envelope: EventEnvelope, queueForPeer: Bool) throws {
+        var nextBase = baseProjection
+        let keeps: (EventEnvelope) -> Bool
+        switch reset.scope {
+        case let .tasks(ids):
+            nextBase.forget(ids)
+            forgottenSessionIDs.formUnion(ids)
+            keeps = { envelope in
+                guard !ids.contains(envelope.sessionID) else { return false }
+                guard let operation = Self.operation(in: envelope) else { return true }
+                return operation.sessionID.map { !ids.contains($0) } ?? true
+            }
+        case .conversations:
+            let active = Set(projection.hostedSessions.map(\.id))
+            nextBase.clearConversations(in: active)
+            // Rows already sent from any source are stale from here on.
+            var marks = conversationsClearedBefore
+            for event in events where event.type == EventEnvelope.operationType {
+                marks[event.sourceID] = max(marks[event.sourceID] ?? 0, event.sequence &+ 1)
+            }
+            marks[envelope.sourceID] = max(marks[envelope.sourceID] ?? 0, envelope.sequence)
+            marks[sourceID] = max(marks[sourceID] ?? 0, nextSequence)
+            conversationsClearedBefore = marks
+            keeps = { envelope in
+                guard active.contains(envelope.sessionID),
+                      let operation = Self.operation(in: envelope) else { return true }
+                return !operation.isConversationRecord
+            }
+        }
+        baseProjection = nextBase
+        events = events.filter(keeps) + [envelope]
+        outbox = outbox.filter(keeps) + (queueForPeer ? [envelope] : [])
+        projection = Self.replay(
+            baseProjection: baseProjection,
+            events: events,
+            connection: projection.connection,
+            proximity: projection.proximity,
+            sourceHealth: projection.sourceHealth,
+            durableSyncState: projection.durableSyncState
+        )
+        broadcast()
+    }
+
+    private static func operation(in envelope: EventEnvelope) -> SessionOperation? {
+        guard envelope.type == EventEnvelope.operationType else { return nil }
+        return try? JSONDecoder.anchor.decode(SessionOperation.self, from: envelope.payload)
+    }
+
     private func shouldPersist(_ command: SessionCommand) -> Bool {
         switch command {
         case .updateSignals, .updateSourceHealth, .updateDurableSyncState, .clearError:
@@ -465,7 +583,9 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
             events: events,
             outbox: outbox,
             nextSequence: nextSequence,
-            peerContactAt: peerContactAt
+            peerContactAt: peerContactAt,
+            forgottenSessionIDs: forgottenSessionIDs,
+            conversationsClearedBefore: conversationsClearedBefore
         )
         let data = try JSONEncoder.anchor.encode(state)
         try data.write(to: storageURL, options: .atomic)
@@ -493,6 +613,8 @@ public actor LocalSessionRepository: EventBackedSessionRepository {
         var result = RetiredRecordingCleanup.clean(baseProjection)
         var latestObservedAt = baseProjection.dataObservedAt
         for envelope in RetiredRecordingCleanup.filteredEvents(events).sorted(by: eventSort) {
+            // A reset changed the stored history when it happened; replay has nothing to do.
+            guard envelope.type == EventEnvelope.operationType else { continue }
             guard let operation = try? JSONDecoder.anchor.decode(
                 SessionOperation.self,
                 from: envelope.payload

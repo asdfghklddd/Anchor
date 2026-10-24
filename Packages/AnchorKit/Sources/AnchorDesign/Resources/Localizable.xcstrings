@@ -3854,6 +3854,91 @@
         }
       }
     },
+    "mac.reset.confirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset and Restart"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置并重启"
+          }
+        }
+      }
+    },
+    "mac.reset.confirm.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conversations disappear from your tasks on this Mac and your iPhone, then come back as Anchor reads the folders again. Conversations you ignored or moved will be filed afresh."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务里的会话会先从这台 Mac 和你的 iPhone 上消失，Anchor 重新读取文件夹后再出现。忽略过或手动移动过的会话会重新归类。"
+          }
+        }
+      }
+    },
+    "mac.reset.confirm.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset Anchor on this Mac?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置这台 Mac 上的 Anchor？"
+          }
+        }
+      }
+    },
+    "mac.reset.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clears every conversation Anchor has read and how it filed them, here and on your iPhone. Folder access and pairing stay. Anchor restarts and reads the folders again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除 Anchor 已读取的所有会话和归类，iPhone 上对应的会话也一起清除。文件夹授权和配对保留。Anchor 会重启并重新读取文件夹。"
+          }
+        }
+      }
+    },
+    "mac.reset.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset Mac Data…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置本机会话数据…"
+          }
+        }
+      }
+    },
     "mac.sources.claude" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8759,6 +8844,244 @@
     },
     "Settings" : {
 
+    },
+    "settings.data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local Data"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地数据"
+          }
+        }
+      }
+    },
+    "settings.data.anchor-count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld current tasks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前 %lld 个任务"
+          }
+        }
+      }
+    },
+    "settings.data.anchors-cleared" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchors cleared"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已清空投锚"
+          }
+        }
+      }
+    },
+    "settings.data.clear-anchors" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Anchors"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空投锚"
+          }
+        }
+      }
+    },
+    "settings.data.clear-anchors.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removes every task you're hosting, on this iPhone and on your paired Mac. History stays."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除你正在投锚的所有任务，这台 iPhone 和已配对的 Mac 上都会删除。历史记录保留。"
+          }
+        }
+      }
+    },
+    "settings.data.clear-everything" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear All Local Data"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除全部本地数据"
+          }
+        }
+      }
+    },
+    "settings.data.clear-everything.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also removes finished tasks and everything on the Me page. Your name, desk pet, reminders and pairing stay."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同时删除已完成的任务和“我的”页面里的所有记录。名字、桌宠、提醒和配对会保留。"
+          }
+        }
+      }
+    },
+    "settings.data.confirm-anchors.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your current tasks disappear from this iPhone and your Mac. This can't be undone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前任务会从这台 iPhone 和你的 Mac 上消失，无法恢复。"
+          }
+        }
+      }
+    },
+    "settings.data.confirm-anchors.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear all anchors?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空所有投锚？"
+          }
+        }
+      }
+    },
+    "settings.data.confirm-everything.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every task and all history disappear from this iPhone and your Mac. This can't be undone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有任务和历史都会从这台 iPhone 和你的 Mac 上消失，无法恢复。"
+          }
+        }
+      }
+    },
+    "settings.data.confirm-everything.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear all local data?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除全部本地数据？"
+          }
+        }
+      }
+    },
+    "settings.data.everything-cleared" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local data cleared"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已清除本地数据"
+          }
+        }
+      }
+    },
+    "settings.data.everything-count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld current · %2$lld in history"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前 %1$lld 个 · 历史 %2$lld 个"
+          }
+        }
+      }
+    },
+    "settings.data.mac-later" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your Mac clears them the next time it connects."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 下次连接时会一起清除。"
+          }
+        }
+      }
     },
     "settings.deskPet" : {
       "extractionState" : "stale",

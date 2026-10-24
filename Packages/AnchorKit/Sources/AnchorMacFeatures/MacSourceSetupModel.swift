@@ -796,11 +796,24 @@ public final class MacSourceSetupModel {
         )
     }
 
-    private static let matchMemoryKey = "anchor.mac.source-setup.match-memory.v1"
+    /// Forgets which conversations went where, ignored ones and learned folders.
+    /// Folder access and the command-line tool stay.
+    nonisolated static func forgetConversationState(in defaults: UserDefaults) {
+        for key in [matchMemoryKey, codexTrackedSessionsKey, codexBookmarkKey, codexBookmarkKey + ".owner"] {
+            defaults.removeObject(forKey: key)
+        }
+    }
+
+    /// Restarts Anchor and reads the agent folders again from nothing.
+    public func resetLocalData() {
+        MacLocalReset.requestAndRelaunch(defaults: defaults)
+    }
+
+    nonisolated private static let matchMemoryKey = "anchor.mac.source-setup.match-memory.v1"
     private static let commandBookmarkKey = "anchor.mac.source-setup.command"
-    private static let codexBookmarkKey = "anchor.mac.source-setup.codex-session"
+    nonisolated private static let codexBookmarkKey = "anchor.mac.source-setup.codex-session"
     private static let codexRootBookmarkKey = "anchor.mac.source-setup.codex-root.v1"
-    private static let codexTrackedSessionsKey = "anchor.mac.source-setup.codex-tracked.v1"
+    nonisolated private static let codexTrackedSessionsKey = "anchor.mac.source-setup.codex-tracked.v1"
     private static let claudeRootBookmarkKey = "anchor.mac.source-setup.claude-root.v1"
 }
 

@@ -399,6 +399,8 @@ public struct AnchorIOSRootView: View {
             PrivacySettingsView()
         case .accessibility:
             AccessibilitySettingsView()
+        case .localData:
+            LocalDataSettingsView(model: model)
         }
     }
 

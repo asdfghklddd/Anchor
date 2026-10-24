@@ -27,6 +27,13 @@ struct ProfileEditorView<Destination: View>: View {
                 .listRowBackground(AnchorIOSStyle.surface)
                 deskPetSection
                 workStyleSection
+                Section {
+                    NavigationLink(value: AnchorRoute.localData) {
+                        row(LocalDataCopy.title, symbol: "externaldrive")
+                    }
+                    .accessibilityIdentifier("settings.data")
+                }
+                .listRowBackground(AnchorIOSStyle.surface)
             }
             .anchorIOSListSurface()
             .navigationTitle(L10n.settings)

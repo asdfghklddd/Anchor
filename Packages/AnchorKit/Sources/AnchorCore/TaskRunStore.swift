@@ -267,6 +267,18 @@ public actor TaskRunStore {
 
     public func associations() -> [AnchorSessionAssociation] { state.associations }
 
+    /// Drops tasks the person cleared, with everything recorded under them.
+    public func forget(taskIDs: Set<UUID>) throws {
+        guard state.tasks.contains(where: { taskIDs.contains($0.id) }) else { return }
+        var next = state
+        next.tasks.removeAll { taskIDs.contains($0.id) }
+        next.workItems.removeAll { taskIDs.contains($0.taskID) }
+        next.runs.removeAll { taskIDs.contains($0.taskID) }
+        next.events.removeAll { taskIDs.contains($0.taskID) }
+        next.associations.removeAll { taskIDs.contains($0.target.taskID) || taskIDs.contains($0.sessionID) }
+        try persist(next)
+    }
+
     private func taskRecord(for task: AnchorTask) -> AnchorTaskRecord {
         let workItems = state.workItems
             .filter { $0.taskID == task.id }

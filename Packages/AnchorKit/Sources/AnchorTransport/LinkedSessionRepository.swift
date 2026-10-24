@@ -5,7 +5,7 @@ public protocol AnchorEventTransport: Sendable {
     func send(_ event: EventEnvelope) async throws
 }
 
-public actor LinkedSessionRepository: SessionRepository {
+public actor LinkedSessionRepository: SessionRepository, DataResetting {
     private struct ActiveFlush {
         let id: UUID
         let task: Task<Void, Never>
@@ -70,6 +70,18 @@ public actor LinkedSessionRepository: SessionRepository {
         backgroundFlush = nil
     }
 
+    public func forgetTasks(_ ids: Set<UUID>) async throws {
+        guard let resetting = base as? any DataResetting else { throw SessionRepositoryError.malformedEvent }
+        try await resetting.forgetTasks(ids)
+        requestBackgroundFlush()
+    }
+
+    public func clearConversations() async throws {
+        guard let resetting = base as? any DataResetting else { throw SessionRepositoryError.malformedEvent }
+        try await resetting.clearConversations()
+        requestBackgroundFlush()
+    }
+
     public func applyRemote(_ envelope: EventEnvelope) async throws {
         guard let eventBackedBase else {
             throw SessionRepositoryError.malformedEvent
@@ -126,6 +138,13 @@ public actor LinkedSessionRepository: SessionRepository {
                 continue
             }
             guard let eventBackedBase else { return }
+            // History replays only after the peer has applied a pending reset;
+            // otherwise it could revive what the reset clears.
+            if await eventBackedBase.pendingEvents().contains(where: \.isDataReset) {
+                await flushPendingEvents()
+                guard await !eventBackedBase.pendingEvents().contains(where: \.isDataReset) else { return }
+                continue
+            }
             let projection = await eventBackedBase.currentProjection()
             let hostedSessionIDs = Set(projection.hostedSessions.map(\.id))
             let reconciliationSessionIDs = hostedSessionIDs.isEmpty
