@@ -90,14 +90,15 @@ struct DeskTaskLibrary: View {
 
     private func column(_ task: AnchorSession, width: CGFloat) -> some View {
         let stack = TaskConversationStack(task: task, pick: picks[task.id])
-        let tint = HostedTaskAppearance.tint(task)
+        let identityTint = HostedTaskAppearance.tint(task)
+        let headerTint = HostedTaskAppearance.landscapeTabTint(task)
         return VStack(alignment: .leading, spacing: 0) {
-            tab(task, tint: tint, width: width)
+            tab(task, tint: headerTint, width: width)
             Group {
                 if stack.cards.isEmpty {
                     emptyCard
                 } else {
-                    cards(stack, of: task, tint: tint)
+                    cards(stack, of: task, tint: identityTint)
                 }
             }
             .padding(.top, -Self.tabTuck)
@@ -111,8 +112,7 @@ struct DeskTaskLibrary: View {
         Button { onTask(task.id) } label: {
             Text(task.goal.title)
                 .font(.system(size: nameSize, weight: .bold))
-                .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.2), radius: 1, y: 1)
+                .foregroundStyle(HostedTaskAppearance.landscapeTabInk)
                 .lineLimit(1)
                 .padding(.horizontal, 14)
                 .padding(.top, 7)

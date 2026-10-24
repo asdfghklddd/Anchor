@@ -46,7 +46,8 @@ struct AnchorColorTokenTests {
     static let textTokens = [T.text, T.textSecondary, T.heading, T.action,
                              T.runningInk, T.attentionInk, T.failedInk, T.doneInk]
     static let fillTokens = [T.runningFill, T.attentionFill, T.failedFill, T.doneFill, T.borderStrong]
-    static let backgrounds = [T.surface, T.canvasTop, T.canvasBottom]
+    static let backgrounds = [T.surface, T.canvasTop, T.canvasBottom,
+                              T.landscapeCanvasLeading, T.landscapeCanvasTrailing]
 
     @Test("Text reads at 4.5:1 on every surface in both appearances")
     func textContrast() {
@@ -93,6 +94,28 @@ struct AnchorColorTokenTests {
         for index in T.identity.count..<64 {
             let degrees = AnchorTaskIdentity.generatedHue(index: index) * 360
             #expect(T.identityHueBand.contains(degrees), "generated identity \(index) at \(degrees)")
+        }
+    }
+
+    @Test("Landscape desk tokens match the approved Figma canvas and task tabs")
+    func landscapeDeskTokens() {
+        #expect(T.landscapeCanvasLeading.light == 0xFAFDFF)
+        #expect(T.landscapeCanvasTrailing.light == 0xD4F7FF)
+        #expect(T.landscapeCanvasLeading.dark == T.canvasTop.dark)
+        #expect(T.landscapeCanvasTrailing.dark == T.canvasBottom.dark)
+
+        let expected: [UInt32] = [0xFFB400, 0x3DD4FE, 0xFF64DB]
+        #expect(T.landscapeTaskTabs.count == expected.count)
+        #expect(T.landscapeTaskTabs.map(\.light) == expected)
+        #expect(T.landscapeTaskTabs.map(\.dark) == expected)
+        for index in 0..<12 {
+            #expect(T.landscapeTaskTab(index: index).name == T.landscapeTaskTabs[index % expected.count].name)
+        }
+        for tab in T.landscapeTaskTabs {
+            for mode in Mode.allCases {
+                #expect(Self.contrast(Self.value(T.onLandscapeTaskTab, mode), Self.value(tab, mode)) >= 4.5,
+                        "\(T.onLandscapeTaskTab.name) on \(tab.name) (\(mode))")
+            }
         }
     }
 

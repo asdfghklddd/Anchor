@@ -9,6 +9,14 @@ enum HostedTaskAppearance {
         AnchorTaskIdentity.color(for: task)
     }
 
+    /// Landscape tabs use the owner-approved Figma palette rather than the
+    /// global task-identity palette used by status-adjacent surfaces elsewhere.
+    static func landscapeTabTint(_ task: AnchorSession) -> Color {
+        Color(AnchorColorTokens.landscapeTaskTab(index: task.taskColorIndex ?? 0))
+    }
+
+    static let landscapeTabInk = Color(AnchorColorTokens.onLandscapeTaskTab)
+
     static func isComplete(_ task: AnchorSession) -> Bool {
         HostedTaskIndicator(task: task).isComplete
     }

@@ -23,6 +23,22 @@ public struct HarborBackground: View {
     }
 }
 
+/// The iPhone desk is a distinct, horizontal working surface. Its Figma-matched
+/// canvas must not change the portrait harbor shared by the rest of the app.
+public struct LandscapeHarborBackground: View {
+    public init() {}
+
+    public var body: some View {
+#if os(iOS)
+        AnchorIOSStyle.landscapeBackground
+            .ignoresSafeArea()
+            .accessibilityHidden(true)
+#else
+        HarborBackground()
+#endif
+    }
+}
+
 public struct HarborHeroSurface<Content: View>: View {
     private let content: Content
     private let cornerRadius: CGFloat

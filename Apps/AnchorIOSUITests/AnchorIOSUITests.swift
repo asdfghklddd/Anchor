@@ -142,6 +142,7 @@ final class AnchorIOSUITests: XCTestCase {
     func testWorkspaceFollowsLandscapeRotation() throws {
         XCUIDevice.shared.orientation = .portrait
         let app = isolatedApplication()
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         defer {
             XCUIDevice.shared.orientation = .portrait
             app.terminate()
@@ -153,6 +154,11 @@ final class AnchorIOSUITests: XCTestCase {
         // The ambient workspace is the primary landscape experience.
         XCUIDevice.shared.orientation = .landscapeRight
         XCTAssertTrue(element("ambient.screen", in: app).waitForExistence(timeout: 8))
+        let emptyLibrary = element("ambient.task.library", in: app)
+        XCTAssertTrue(emptyLibrary.waitForExistence(timeout: 3))
+        XCTAssertEqual(emptyLibrary.label, "Drop an anchor to host your first task")
+        XCTAssertFalse(app.staticTexts["Task library"].exists)
+        capture("Landscape empty desk", app: app)
 
         XCUIDevice.shared.orientation = .portrait
         XCTAssertTrue(element("workspace.screen", in: app).waitForExistence(timeout: 8))

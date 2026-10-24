@@ -8,6 +8,8 @@ public enum AnchorIOSStyle {
     // Every value resolves through AnchorColorTokens, shared with the Mac.
     public static let canvasTop = Color(AnchorColorTokens.canvasTop)
     public static let canvasBottom = Color(AnchorColorTokens.canvasBottom)
+    public static let landscapeCanvasLeading = Color(AnchorColorTokens.landscapeCanvasLeading)
+    public static let landscapeCanvasTrailing = Color(AnchorColorTokens.landscapeCanvasTrailing)
     public static let surface = Color(AnchorColorTokens.surface)
     public static let heading = Color(AnchorColorTokens.heading)
     public static let cyan = Color(AnchorColorTokens.brand)
@@ -33,6 +35,11 @@ public enum AnchorIOSStyle {
 
     public static var background: LinearGradient {
         LinearGradient(colors: [canvasTop, canvasBottom], startPoint: .top, endPoint: .bottom)
+    }
+
+    /// The landscape desk follows its separately approved, horizontal Figma canvas.
+    public static var landscapeBackground: LinearGradient {
+        LinearGradient(colors: [landscapeCanvasLeading, landscapeCanvasTrailing], startPoint: .leading, endPoint: .trailing)
     }
 
     public static func tint(for process: AnchorProcess) -> Color {

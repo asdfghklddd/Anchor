@@ -21,8 +21,8 @@ struct LandscapeAmbientDashboard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AnchorReducedMotion private var reduceMotion
     @ScaledMetric(relativeTo: .largeTitle) private var clockScaled: CGFloat = 68
-    @ScaledMetric(relativeTo: .title) private var titleScaled: CGFloat = 24
     @ScaledMetric(relativeTo: .body) private var detailScaled: CGFloat = 17
+    @ScaledMetric(relativeTo: .title2) private var emptyPromptScaled: CGFloat = 24
     @ScaledMetric(relativeTo: .subheadline) private var freshnessScaled: CGFloat = 15
 
     @State private var contacts = 0
@@ -40,8 +40,8 @@ struct LandscapeAmbientDashboard: View {
 
     // Desk sizes may grow with Dynamic Type but never shrink below these.
     private var clockSize: CGFloat { max(68, clockScaled) }
-    private var titleSize: CGFloat { max(24, titleScaled) }
     private var detailSize: CGFloat { max(17, detailScaled) }
+    private var emptyPromptSize: CGFloat { max(24, emptyPromptScaled) }
     private var freshnessSize: CGFloat { max(15, freshnessScaled) }
 
     private var tasks: [AnchorSession] { projection.hostedSessions }
@@ -64,7 +64,6 @@ struct LandscapeAmbientDashboard: View {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 20) {
                                 clock(now: context.date)
-                                libraryTitle
                                 library(now: context.date)
                                 status(now: context.date)
                             }
@@ -85,10 +84,11 @@ struct LandscapeAmbientDashboard: View {
                             .padding(.bottom, 8)
                             // Wide enough for the clock at full size (68pt rounded heavy).
                             .frame(width: max(0, geometry.size.width * 0.27), alignment: .leading)
-                            VStack(alignment: .leading, spacing: 8) {
-                                libraryTitle
+                            VStack(alignment: .leading, spacing: 0) {
                                 library(now: context.date)
                             }
+                            // With no landscape heading, columns use the full desk height.
+                            .frame(maxHeight: .infinity, alignment: .top)
                         }
                         .padding(.horizontal, 8)
                         .padding(.top, 10)
@@ -98,7 +98,7 @@ struct LandscapeAmbientDashboard: View {
             }
             .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
         }
-        .background { HarborBackground() }
+        .background { LandscapeHarborBackground() }
         .toolbar(.hidden, for: .navigationBar)
         .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: contacts)
         .onAppear {
@@ -196,24 +196,16 @@ struct LandscapeAmbientDashboard: View {
 
     // MARK: The task library (right)
 
-    private var libraryTitle: some View {
-        Text(DeskText.library)
-            .font(.system(size: titleSize, weight: .heavy))
-            .foregroundStyle(AnchorIOSStyle.heading)
-            .lineLimit(1)
-            .accessibilityAddTraits(.isHeader)
-    }
-
     @ViewBuilder
     private func library(now: Date) -> some View {
         if tasks.isEmpty {
             Text(AnchorStrings.value("home.empty.tasks", default: "Drop an anchor to host your first task"))
-                .font(.system(size: detailSize, weight: .medium))
+                // An empty desk is water and an invitation, not an empty white card.
+                .font(.system(size: emptyPromptSize, weight: .semibold))
                 .foregroundStyle(AnchorIOSStyle.secondaryText)
                 .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
                 .frame(maxWidth: .infinity, maxHeight: dynamicTypeSize.isAccessibilitySize ? nil : .infinity)
-                .padding(20)
-                .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: AnchorIOSStyle.heroRadius))
                 .accessibilityIdentifier("ambient.task.library")
         } else {
             DeskTaskLibrary(tasks: tasks, now: now, swells: swellsByConversation, swellTone: swellTone,

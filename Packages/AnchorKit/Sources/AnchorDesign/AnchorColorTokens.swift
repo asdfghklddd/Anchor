@@ -38,6 +38,11 @@ public enum AnchorColorTokens {
     public static let canvasTop = AnchorColorToken("canvasTop", light: 0xEAF6F9, dark: 0x101F29)
     /// Bottom of the harbor gradient.
     public static let canvasBottom = AnchorColorToken("canvasBottom", light: 0xD2F7FC, dark: 0x123641)
+    /// Leading edge of the iPhone landscape desk, matching the approved Figma reference.
+    /// This stays separate from the shared portrait harbor canvas.
+    public static let landscapeCanvasLeading = AnchorColorToken("landscapeCanvasLeading", light: 0xFAFDFF, dark: 0x101F29)
+    /// Trailing edge of the iPhone landscape desk, matching the approved Figma reference.
+    public static let landscapeCanvasTrailing = AnchorColorToken("landscapeCanvasTrailing", light: 0xD4F7FF, dark: 0x123641)
     /// Cards, rows, sheets and form fields.
     public static let surface = AnchorColorToken("surface", light: 0xFFFFFF, dark: 0x20343E)
     /// Selected rows and soft highlights; usually drawn with opacity.
@@ -91,6 +96,26 @@ public enum AnchorColorTokens {
     /// Generated identities stay inside this hue band (degrees), clear of state hues.
     public static let identityHueBand: ClosedRange<Double> = 180...318
 
+    // MARK: iPhone landscape task tabs
+
+    /// The approved three-color Figma palette for the header tab of a task card
+    /// in the iPhone landscape desk. It is intentionally separate from task
+    /// identity and state colors used elsewhere in the product.
+    public static let landscapeTaskTabs: [AnchorColorToken] = [
+        AnchorColorToken("landscapeTaskTabAmber", light: 0xFFB400, dark: 0xFFB400),
+        AnchorColorToken("landscapeTaskTabCyan", light: 0x3DD4FE, dark: 0x3DD4FE),
+        AnchorColorToken("landscapeTaskTabPink", light: 0xFF64DB, dark: 0xFF64DB)
+    ]
+    /// Deep ink that remains readable on every approved landscape task-tab fill.
+    public static let onLandscapeTaskTab = AnchorColorToken("onLandscapeTaskTab", light: 0x123B54, dark: 0x123B54)
+
+    /// There are deliberately only three approved landscape tab colors today.
+    /// More task cards repeat this sequence until the owner adds and maps another
+    /// approved tab color; this avoids inventing an unreviewed fourth hue.
+    public static func landscapeTaskTab(index: Int) -> AnchorColorToken {
+        landscapeTaskTabs[max(0, index) % landscapeTaskTabs.count]
+    }
+
     // MARK: Decorative
 
     /// Fixed artwork colors that do not change with appearance.
@@ -99,12 +124,13 @@ public enum AnchorColorTokens {
     public static let oceanHighlight: UInt32 = 0xA8EDE3
 
     public static let all: [AnchorColorToken] = [
-        canvasTop, canvasBottom, surface, selection, border, borderStrong,
+        canvasTop, canvasBottom, landscapeCanvasLeading, landscapeCanvasTrailing,
+        surface, selection, border, borderStrong,
         text, textSecondary, heading, action, onAction,
         brand, onBrand, oceanSurface, oceanDeep,
         runningFill, runningInk, attentionFill, attentionInk, failedFill, failedInk,
-        doneFill, doneInk
-    ] + identity
+        doneFill, doneInk, onLandscapeTaskTab
+    ] + identity + landscapeTaskTabs
 }
 
 /// The state colors as one vocabulary. Shapes use `fill`, words use `ink`.
