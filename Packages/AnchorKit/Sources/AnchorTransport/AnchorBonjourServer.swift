@@ -27,6 +27,7 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
     private let deviceID: UUID
     private let advertisedServiceType: String
     private let advertisedServiceName: String
+    private let localDeviceInfo: PeerDeviceInfo?
     private var listener: NWListener?
     private var peers: [ObjectIdentifier: LineConnection] = [:]
     private var peerIDs: [ObjectIdentifier: UUID] = [:]
@@ -50,8 +51,10 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
         automaticPairing: AutomaticPairingConfiguration = .manualOnly,
         bluetoothPairingToken: AnchorBluetoothPairingToken? = nil,
         serviceType: String = AnchorBonjourServer.serviceType,
-        serviceName: String = "Anchor"
+        serviceName: String = "Anchor",
+        localDeviceInfo: PeerDeviceInfo? = nil
     ) {
+        self.localDeviceInfo = localDeviceInfo
         self.identityStore = identityStore
         self.automaticPairing = automaticPairing
         self.bluetoothPairingToken = bluetoothPairingToken
@@ -396,7 +399,7 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
         }
         switch payload.kind {
         case .heartbeat:
-            sendEncrypted(LinkPayload(kind: .heartbeat), using: key, to: peer)
+            sendEncrypted(LinkPayload(kind: .heartbeat, senderDeviceInfo: localDeviceInfo), using: key, to: peer)
         case .event:
             guard let event = payload.event, let onEvent else { return }
             let precedingTask = eventApplicationTask
@@ -513,6 +516,7 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
             visibleStatus = status
         }
         guard pairingStatus != visibleStatus else { return }
+        if let info = visibleStatus.peerDeviceInfo { PeerDeviceMemory.remember(info) }
         pairingStatus = visibleStatus
         for continuation in pairingStatusContinuations.values {
             continuation.yield(visibleStatus)

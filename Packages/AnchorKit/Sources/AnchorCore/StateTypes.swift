@@ -96,6 +96,48 @@ public struct PeerDeviceInfo: Codable, Hashable, Sendable {
         let software = [cleanSystem, cleanVersion].filter { !$0.isEmpty }.joined(separator: " ")
         return [device, software].filter { !$0.isEmpty }.joined(separator: " · ")
     }
+
+    /// The name the person gave the device, or its kind when it has none.
+    public var displayName: String {
+        let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanModel = model.trimmingCharacters(in: .whitespacesAndNewlines)
+        return String((cleanName.isEmpty ? cleanModel : cleanName).prefix(48))
+    }
+
+    /// "iPhone · iOS 26.1", leaving out the kind when the name already says it.
+    public var detail: String {
+        let cleanModel = model.trimmingCharacters(in: .whitespacesAndNewlines)
+        let showsModel = !cleanModel.isEmpty
+            && displayName.range(of: cleanModel, options: .caseInsensitive) == nil
+        let software = [systemName, systemVersion]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }.joined(separator: " ")
+        return [showsModel ? String(cleanModel.prefix(24)) : "", software]
+            .filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+
+    /// An SF Symbol for the kind of device.
+    public var symbolName: String {
+        let kind = (systemName + " " + model).lowercased()
+        if kind.contains("mac") { return "laptopcomputer" }
+        if kind.contains("ipad") { return "ipad" }
+        return "iphone"
+    }
+}
+
+/// The last paired device that introduced itself, kept so a disconnected
+/// screen can still say which device it means.
+public enum PeerDeviceMemory {
+    static let key = "anchor.link.last-peer-device"
+
+    public static func remember(_ info: PeerDeviceInfo, in defaults: UserDefaults = .standard) {
+        guard last(in: defaults) != info, let data = try? JSONEncoder().encode(info) else { return }
+        defaults.set(data, forKey: key)
+    }
+
+    public static func last(in defaults: UserDefaults = .standard) -> PeerDeviceInfo? {
+        defaults.data(forKey: key).flatMap { try? JSONDecoder().decode(PeerDeviceInfo.self, from: $0) }
+    }
 }
 
 public struct DevicePairingStatus: Codable, Hashable, Sendable {

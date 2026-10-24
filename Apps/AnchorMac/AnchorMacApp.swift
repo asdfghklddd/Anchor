@@ -115,10 +115,21 @@ struct AnchorMacApp: App {
             ? identityStore.localDeviceID()
             : UUID(uuidString: "00000000-0000-4000-8000-0000000004F0")!
         let bluetoothPairingToken = AnchorBluetoothPairingToken()
+        // How this Mac introduces itself on the phone's connection screen.
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        let macDeviceInfo = PeerDeviceInfo(
+            name: Host.current().localizedName ?? "Mac",
+            model: "Mac",
+            systemName: "macOS",
+            systemVersion: version.patchVersion == 0
+                ? "\(version.majorVersion).\(version.minorVersion)"
+                : "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+        )
         let advertiser = AnchorProximityAdvertiser(
             deviceID: deviceID,
             pairingToken: bluetoothPairingToken,
-            identityStore: identityStore
+            identityStore: identityStore,
+            localDeviceInfo: macDeviceInfo
         )
         let server = AnchorBonjourServer(
             identityStore: identityStore,
@@ -128,7 +139,8 @@ struct AnchorMacApp: App {
             // Local validation must not appear as another production Mac to
             // the phone's Bonjour browser.
             serviceType: validationRootURL == nil
-                ? AnchorBonjourServer.serviceType : "_anchorval._tcp"
+                ? AnchorBonjourServer.serviceType : "_anchorval._tcp",
+            localDeviceInfo: macDeviceInfo
         )
         let localRepository = LocalSessionRepository(
             storageURL: validationRootURL?.appending(path: "session-repository.json"),

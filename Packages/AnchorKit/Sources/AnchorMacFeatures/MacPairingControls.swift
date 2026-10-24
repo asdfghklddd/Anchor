@@ -8,12 +8,16 @@ struct MacPairingControls: View {
     @State private var pairingStatus = DevicePairingStatus.automatic
     @State private var pairingCode: String?
     @State private var isShowingManualCode = false
+    @State private var lastDevice = PeerDeviceMemory.last()
 
     var body: some View {
         Group {
             if let controller {
                 switch pairingStatus.phase {
                 case .automatic:
+                    if let lastDevice {
+                        PeerDeviceRow(info: lastDevice, route: nil, isConnected: false)
+                    }
                     Label(L10n.pairingAutomatically, systemImage: "macbook.and.iphone")
                     Text(L10n.pairingAutomaticDetail)
                         .font(.caption)
@@ -26,15 +30,11 @@ struct MacPairingControls: View {
                         Label(L10n.pairingAutomatically, systemImage: "arrow.triangle.2.circlepath")
                     }
                 case .connected:
-                    VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
+                    if let device = pairingStatus.peerDeviceInfo ?? lastDevice {
+                        PeerDeviceRow(info: device, route: pairingStatus.route, isConnected: true)
+                    } else {
                         Label(connectedLabel, systemImage: "checkmark.shield.fill")
                             .foregroundStyle(AnchorPalette.mintInk)
-                        if let peerDeviceInfo = pairingStatus.peerDeviceInfo {
-                            Text(peerDeviceInfo.shortDescription)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .accessibilityIdentifier("mac.pairing.peer-device")
-                        }
                     }
                 }
             } else {
@@ -82,6 +82,7 @@ struct MacPairingControls: View {
     private func apply(_ status: DevicePairingStatus, controller: any LocalLinkControlling) async {
         guard pairingStatus != status else { return }
         pairingStatus = status
+        if let device = status.peerDeviceInfo { lastDevice = device }
         pairingCode = status.phase == .verificationCodeRequired
             ? await controller.currentPairingCode()
             : nil
@@ -89,7 +90,7 @@ struct MacPairingControls: View {
         let message = switch status.phase {
         case .automatic: L10n.pairingAutomatically
         case .verificationCodeRequired: L10n.pairingHint
-        case .connected: connectedLabel
+        case .connected: status.peerDeviceInfo.map { "\(PeerDeviceCopy.connected), \($0.displayName)" } ?? connectedLabel
         }
         if #available(macOS 14, *) {
             AccessibilityNotification.Announcement(message).post()

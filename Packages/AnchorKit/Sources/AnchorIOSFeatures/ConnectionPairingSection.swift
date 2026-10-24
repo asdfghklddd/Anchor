@@ -15,10 +15,15 @@ struct ConnectionPairingSection: View {
     @State private var pairingStatus = DevicePairingStatus.automatic
     @State private var isShowingManualCode = false
     @State private var errorMessage: String?
+    /// The Mac last seen, so a dropped link still names which one it means.
+    @State private var lastDevice = PeerDeviceMemory.last()
 
     var body: some View {
         VStack(spacing: 10) {
-            if connection == .connected {
+            if connection == .connected, let device = pairingStatus.peerDeviceInfo ?? lastDevice {
+                deviceRow(PeerDeviceRow(info: device, route: pairingStatus.route, isConnected: true))
+                    .accessibilityIdentifier("connections.pairing.connected")
+            } else if connection == .connected {
                 Label(connectedLabel, systemImage: "checkmark.circle.fill")
                     .accessibilityIdentifier("connections.pairing.connected")
             } else if connection == .permissionDenied || proximity == .permissionDenied {
@@ -34,6 +39,9 @@ struct ConnectionPairingSection: View {
                         pairingCode = String(value.filter { $0.isASCII && $0.isNumber }.prefix(6))
                     }
             } else {
+                if let lastDevice {
+                    deviceRow(PeerDeviceRow(info: lastDevice, route: nil, isConnected: false))
+                }
                 Label(connection == .failed ? L10n.actionFailed : L10n.pairingAutomatically,
                       systemImage: connection == .failed ? "exclamationmark.triangle" : "macbook.and.iphone")
                     .accessibilityIdentifier("connections.pairing.automatic")
@@ -96,6 +104,13 @@ struct ConnectionPairingSection: View {
         }
     }
 
+    private func deviceRow(_ row: PeerDeviceRow) -> some View {
+        row
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: 14, style: .continuous))
+    }
+
     private var proximityLabel: String {
         switch proximity {
         case .near: L10n.nearby
@@ -138,6 +153,7 @@ struct ConnectionPairingSection: View {
     private func apply(_ status: DevicePairingStatus) {
         guard pairingStatus != status else { return }
         pairingStatus = status
+        if let device = status.peerDeviceInfo { lastDevice = device }
         if status.phase == .connected {
             errorMessage = nil
             pairingCode = ""
@@ -150,7 +166,7 @@ struct ConnectionPairingSection: View {
         let message = switch status.phase {
         case .automatic: L10n.pairingAutomatically
         case .verificationCodeRequired: L10n.pairingFallbackDetail
-        case .connected: connectedLabel
+        case .connected: status.peerDeviceInfo.map { "\(PeerDeviceCopy.connected), \($0.displayName)" } ?? connectedLabel
         }
         if #available(iOS 17, *) {
             AccessibilityNotification.Announcement(message).post()

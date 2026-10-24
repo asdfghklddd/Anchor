@@ -35,6 +35,8 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
     private let identityStore: PairingIdentityStore
     private let automaticPairing: AutomaticPairingConfiguration
     private let localDeviceInfo: PeerDeviceInfo?
+    /// What the Mac said about itself, for the connection screen.
+    private var peerDeviceInfo: PeerDeviceInfo?
     private let deviceID: UUID
     private let serviceType: String
     private var browser: NWBrowser?
@@ -232,11 +234,22 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
             fallbackConnectionState = state
             if state != .connected { proximityState = .unknown }
             if state == .connected, connectionState != .connected {
-                setPairingStatus(DevicePairingStatus(phase: .connected, route: .bluetooth))
+                setPairingStatus(DevicePairingStatus(phase: .connected, route: .bluetooth, peerDeviceInfo: peerDeviceInfo))
             } else if connectionState != .connected, pairingStatus.phase == .connected {
                 setPairingStatus(.automatic)
             }
             publishEffectiveConnection()
+        }
+    }
+
+    /// The Mac introduced itself over the Bluetooth data link.
+    public func updateFallbackPeerDeviceInfo(_ info: PeerDeviceInfo) {
+        queue.async { [weak self] in
+            guard let self, peerDeviceInfo != info else { return }
+            peerDeviceInfo = info
+            if pairingStatus.phase == .connected {
+                setPairingStatus(DevicePairingStatus(phase: .connected, route: pairingStatus.route, peerDeviceInfo: info))
+            }
         }
     }
 
@@ -660,6 +673,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
               let key = identityStore.sharedKey(peerID: frame.senderID) else { return }
         do {
             let payload = try AnchorLinkCodec.open(encrypted, using: key)
+            if let info = payload.senderDeviceInfo { peerDeviceInfo = info }
             didAuthenticatePeer()
             guard replayWindow.accepts(payload.messageID) else {
                 if payload.kind == .event,
@@ -762,7 +776,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         onPeerContact?()
         cancelAutomaticPairingWork()
         setConnection(.connected)
-        setPairingStatus(DevicePairingStatus(phase: .connected, route: authenticatedRoute))
+        setPairingStatus(DevicePairingStatus(phase: .connected, route: authenticatedRoute, peerDeviceInfo: peerDeviceInfo))
         finishPairing(with: .success(()))
         scheduleHeartbeat()
     }
@@ -854,7 +868,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         guard connectionState != state else { return }
         connectionState = state
         if state != .connected, fallbackConnectionState == .connected {
-            setPairingStatus(DevicePairingStatus(phase: .connected, route: .bluetooth))
+            setPairingStatus(DevicePairingStatus(phase: .connected, route: .bluetooth, peerDeviceInfo: peerDeviceInfo))
         } else if effectiveConnectionState != .connected, pairingStatus.phase == .connected {
             setPairingStatus(.automatic)
         }
@@ -894,11 +908,12 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         if effectiveConnectionState == .connected, status.phase != .connected {
             visibleStatus = pairingStatus.phase == .connected
                 ? pairingStatus
-                : DevicePairingStatus(phase: .connected, route: .bluetooth)
+                : DevicePairingStatus(phase: .connected, route: .bluetooth, peerDeviceInfo: peerDeviceInfo)
         } else {
             visibleStatus = status
         }
         guard pairingStatus != visibleStatus else { return }
+        if let info = visibleStatus.peerDeviceInfo { PeerDeviceMemory.remember(info) }
         pairingStatus = visibleStatus
         for continuation in pairingStatusContinuations.values {
             continuation.yield(visibleStatus)

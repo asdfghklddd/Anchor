@@ -54,12 +54,15 @@ public final class AnchorProximityAdvertiser: NSObject, CBPeripheralManagerDeleg
     /// Whether the Mac's Bluetooth is on and allowed, which the connection
     /// state above folds into "unavailable".
     public var onRadioState: (@Sendable (CBManagerState) -> Void)?
+    private let localDeviceInfo: PeerDeviceInfo?
 
     public init(
         deviceID: UUID,
         pairingToken: AnchorBluetoothPairingToken,
-        identityStore: PairingIdentityStore = PairingIdentityStore()
+        identityStore: PairingIdentityStore = PairingIdentityStore(),
+        localDeviceInfo: PeerDeviceInfo? = nil
     ) {
+        self.localDeviceInfo = localDeviceInfo
         self.deviceID = deviceID
         self.pairingToken = pairingToken
         self.identityStore = identityStore
@@ -305,7 +308,7 @@ public final class AnchorProximityAdvertiser: NSObject, CBPeripheralManagerDeleg
 
         switch payload.kind {
         case .heartbeat:
-            try? enqueue(LinkPayload(kind: .heartbeat), key: key, central: central)
+            try? enqueue(LinkPayload(kind: .heartbeat, senderDeviceInfo: localDeviceInfo), key: key, central: central)
         case .event:
             guard let event = payload.event, let onEvent else { return }
             let precedingTask = eventApplicationTask
@@ -513,6 +516,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
 
     private let onUpdate: @Sendable (ProximityState) -> Void
     private let onPairingCredential: @Sendable (UUID, Data) -> Void
+    private let onPeerDeviceInfo: @Sendable (PeerDeviceInfo) -> Void
     private let identityStore: PairingIdentityStore
     private let localDeviceInfo: PeerDeviceInfo?
     private let deviceID: UUID
@@ -542,8 +546,10 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         identityStore: PairingIdentityStore = PairingIdentityStore(),
         onUpdate: @escaping @Sendable (ProximityState) -> Void,
         onPairingCredential: @escaping @Sendable (UUID, Data) -> Void = { _, _ in },
+        onPeerDeviceInfo: @escaping @Sendable (PeerDeviceInfo) -> Void = { _ in },
         localDeviceInfo: PeerDeviceInfo? = nil
     ) {
+        self.onPeerDeviceInfo = onPeerDeviceInfo
         self.identityStore = identityStore
         self.localDeviceInfo = localDeviceInfo
         deviceID = identityStore.localDeviceID()
@@ -983,6 +989,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         pairingWorkItem?.cancel()
         pairingWorkItem = nil
         setDataLinkState(.connected)
+        if let info = payload.senderDeviceInfo { onPeerDeviceInfo(info) }
 
         guard replayWindow.accepts(payload.messageID) else {
             if payload.kind == .event, let event = payload.event {

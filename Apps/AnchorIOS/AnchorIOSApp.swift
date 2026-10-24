@@ -58,7 +58,7 @@ struct AnchorIOSApp: App {
             ? PairingIdentityStore.inMemory()
             : PairingIdentityStore(service: pairingIdentityService)
         let peerDeviceInfo = PeerDeviceInfo(
-            name: UIDevice.current.name,
+            name: AnchorDeviceName.current(),
             model: UIDevice.current.localizedModel,
             systemName: UIDevice.current.systemName,
             systemVersion: UIDevice.current.systemVersion
@@ -75,6 +75,9 @@ struct AnchorIOSApp: App {
             },
             onPairingCredential: { deviceID, secret in
                 client.offerBluetoothPairingSecret(secret, for: deviceID)
+            },
+            onPeerDeviceInfo: { info in
+                client.updateFallbackPeerDeviceInfo(info)
             },
             localDeviceInfo: peerDeviceInfo
         )
