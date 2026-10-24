@@ -35,6 +35,8 @@ struct LandscapeAmbientDashboard: View {
     @AppStorage(DeskPetKind.defaultsKey, store: ProfilePreferences.store) private var petKind = DeskPetKind.crab
     /// When the board came up; the pet sleeps only after a long quiet since then.
     @State private var boardSince = Date()
+    /// News that arrived while the board is up, for the pet to react to.
+    @State private var petSignals = DeskPetSignals()
 
     // Desk sizes may grow with Dynamic Type but never shrink below these.
     private var clockSize: CGFloat { max(68, clockScaled) }
@@ -74,8 +76,8 @@ struct LandscapeAmbientDashboard: View {
                                 clock(now: context.date)
                                 Spacer(minLength: 8)
                                 if petKind != .off {
-                                    DeskPet(kind: petKind, mood: petMood(now: context.date),
-                                            waves: swellsByConversation.values.reduce(0, +))
+                                    DeskPet(kind: petKind, mood: petMood(now: context.date), signals: petSignals,
+                                            hour: Calendar.current.component(.hour, from: context.date))
                                         .padding(.bottom, 4)
                                 }
                                 status(now: context.date)
@@ -123,6 +125,12 @@ struct LandscapeAmbientDashboard: View {
               let task = tasks.first(where: { $0.id == newest.task }) else { return }
         swellTone = TaskNextAction(task: task).map { PlanCopy.symbol(for: $0).color } ?? AnchorStateTone.attention.ink
         swellsByConversation[newest.process, default: 0] += 1
+        let statuses = arrived.compactMap { key in
+            tasks.first { $0.id == key.task }?.taskProcesses.first { $0.id == key.process }?.status
+        }
+        if statuses.contains(.failed) { petSignals.failures += 1 }
+        else if statuses.contains(.needsDecision) { petSignals.questions += 1 }
+        else { petSignals.results += 1 }
     }
 
     // MARK: The pet (left, under the clock)

@@ -56,23 +56,14 @@ struct ProfileEditorView<Destination: View>: View {
 
     private var deskPetSection: some View {
         Section {
-            HStack(spacing: 16) {
-                DeskPet(kind: petKind == .off ? .crab : petKind, mood: .yourMove, walks: false)
-                    .frame(width: 64)
-                    .opacity(petKind == .off ? 0.25 : 1)
-                Picker(AnchorStrings.value("settings.deskPet", default: "Desk pet"), selection: $petKind) {
-                    ForEach(DeskPetKind.allCases) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .accessibilityIdentifier("settings.deskPet.picker")
-            }
-            .padding(.vertical, 4)
+            DeskPetPicker(selection: $petKind)
+                .padding(.vertical, 6)
         } header: {
             Text(AnchorStrings.value("settings.deskPet", default: "Desk pet"))
                 .textCase(.uppercase)
         } footer: {
             Text(AnchorStrings.value("settings.deskPet.footer",
-                                     default: "Lives under the clock on the landscape desk. It types while an agent runs and waves when a result arrives."))
+                                     default: "Lives under the clock on the landscape desk. It works while an agent runs and reacts when a result arrives. Tap it, or press and hold to pet it."))
         }
         .listRowBackground(AnchorIOSStyle.surface)
     }

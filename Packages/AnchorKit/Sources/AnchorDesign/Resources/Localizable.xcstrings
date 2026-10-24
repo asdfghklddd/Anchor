@@ -8260,6 +8260,7 @@
 
     },
     "settings.deskPet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8276,6 +8277,7 @@
       }
     },
     "settings.deskPet.crab" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8292,22 +8294,56 @@
       }
     },
     "settings.deskPet.footer" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lives under the clock on the landscape desk. It types while an agent runs and waves when a result arrives."
+            "value" : "Lives under the clock on the landscape desk. It works while an agent runs and reacts when a result arrives. Tap it, or press and hold to pet it."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "住在横屏桌面的时钟下方：智能体运行时它在打字，有新结果时向你挥手。"
+            "value" : "住在横屏桌面的时钟下方：智能体运行时它在干活，有新结果时会有反应。点一点它，或者长按摸摸它。"
+          }
+        }
+      }
+    },
+    "settings.deskPet.hermit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hermit crab"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "寄居蟹"
+          }
+        }
+      }
+    },
+    "settings.deskPet.jelly" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jellyfish"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "小水母"
           }
         }
       }
     },
     "settings.deskPet.octopus" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8324,6 +8360,7 @@
       }
     },
     "settings.deskPet.off" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8335,6 +8372,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "关闭"
+          }
+        }
+      }
+    },
+    "settings.deskPet.squid" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Squid kid"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "鱿鱼仔"
           }
         }
       }
