@@ -49,6 +49,9 @@ public final class AnchorProximityAdvertiser: NSObject, CBPeripheralManagerDeleg
     public var onEvent: (@Sendable (EventEnvelope) async throws -> Void)?
     public var onCurrentProcessSnapshot: (@Sendable () async throws -> CurrentProcessSnapshot)?
     public var onConnectionState: (@Sendable (ConnectionState) -> Void)?
+    /// Whether the Mac's Bluetooth is on and allowed, which the connection
+    /// state above folds into "unavailable".
+    public var onRadioState: (@Sendable (CBManagerState) -> Void)?
 
     public init(
         deviceID: UUID,
@@ -126,6 +129,7 @@ public final class AnchorProximityAdvertiser: NSObject, CBPeripheralManagerDeleg
         #if DEBUG
         print("[AnchorPairing] Bluetooth advertiser state \(peripheral.state.rawValue)")
         #endif
+        onRadioState?(peripheral.state)
         guard peripheral.state == .poweredOn else {
             peripheral.stopAdvertising()
             setDataLinkState(peripheral.state == .unauthorized ? .permissionDenied : .unavailable)

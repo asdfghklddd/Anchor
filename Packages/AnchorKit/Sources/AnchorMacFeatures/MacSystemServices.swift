@@ -4,12 +4,12 @@ import Foundation
 import ServiceManagement
 import UserNotifications
 
-enum MacLaunchAtLogin {
-    static var isEnabled: Bool {
+public enum MacLaunchAtLogin {
+    public static var isEnabled: Bool {
         SMAppService.mainApp.status == .enabled
     }
 
-    static func setEnabled(_ enabled: Bool) throws {
+    public static func setEnabled(_ enabled: Bool) throws {
         if enabled {
             try SMAppService.mainApp.register()
         } else {

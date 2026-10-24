@@ -10,6 +10,10 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     private var sourceSetupModel: MacSourceSetupModel?
     private var detailWindowController: AnchorMacDetailWindowController?
     private var edgePanelController: AnchorEdgePanelController?
+    private var statusItemController: AnchorStatusItemController?
+    private var bluetoothRadio: MacBluetoothRadioState?
+    private var styleObserver: NSObjectProtocol?
+    private var interfaceStyle: MacInterfaceStyle?
     private var codexTurnEndNotifier: MacCodexTurnEndNotifier?
     private var phoneAnchorState: AnchorPhoneAnchorState?
     private var interfaceDefaults: UserDefaults?
@@ -20,12 +24,14 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         linkController: any LocalLinkControlling,
         sourceSetupModel: MacSourceSetupModel,
         phoneAnchorState: AnchorPhoneAnchorState,
+        bluetoothRadio: MacBluetoothRadioState,
         defaults: UserDefaults?
     ) {
         self.model = model
         self.linkController = linkController
         self.sourceSetupModel = sourceSetupModel
         self.phoneAnchorState = phoneAnchorState
+        self.bluetoothRadio = bluetoothRadio
         interfaceDefaults = defaults
         startInterfaceIfReady()
     }
@@ -59,16 +65,15 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         sourceSetupModel?.stopObserving()
         edgePanelController?.stop()
+        statusItemController?.stop()
         model?.stop()
     }
 
     private func startInterfaceIfReady() {
         guard didFinishLaunching,
-              edgePanelController == nil,
+              detailWindowController == nil,
               let model,
-              let linkController,
-              let sourceSetupModel,
-              let phoneAnchorState else {
+              let sourceSetupModel else {
             return
         }
 
@@ -94,20 +99,77 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
             codexTurnEndNotifier?.notify(endings) { CodexTurnEndContext.of($0.id, setup: sourceSetupModel, tasks: tasks) }
         }
 
+        model.start()
+        applyInterfaceStyle()
+        // Settings writes the style; switch without a restart.
+        styleObserver = NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.applyInterfaceStyle() }
+        }
+    }
+
+    /// Shows Anchor as the menu bar icon (the default) or the floating boat.
+    private func applyInterfaceStyle() {
+        let style = MacInterfaceStyle.current(in: interfaceDefaults ?? .standard)
+        guard style != interfaceStyle else { return }
+        interfaceStyle = style
+        switch style {
+        case .menuBar:
+            edgePanelController?.stop()
+            edgePanelController = nil
+            startStatusItem()
+        case .boat:
+            statusItemController?.stop()
+            statusItemController = nil
+            startEdgePanel()
+        }
+    }
+
+    private func startStatusItem() {
+        guard statusItemController == nil, let model, let linkController, let sourceSetupModel,
+              let bluetoothRadio else { return }
+        let controller = AnchorStatusItemController(
+            model: model,
+            linkController: linkController,
+            sourceSetupModel: sourceSetupModel,
+            bluetooth: bluetoothRadio,
+            onOpenSettings: { [weak self] in self?.openSettings() }
+        )
+        statusItemController = controller
+        controller.start()
+    }
+
+    private func startEdgePanel() {
+        guard edgePanelController == nil, let model, let sourceSetupModel, let phoneAnchorState else { return }
         let edgePanelController = AnchorEdgePanelController(
             model: model,
             phoneAnchorState: phoneAnchorState,
             summaryBook: sourceSetupModel.summaryBook,
-            onOpenDetails: { [weak detailWindowController] in
-                detailWindowController?.present()
+            onOpenDetails: { [weak self] in
+                self?.detailWindowController?.present()
             },
-            onOpenSettings: { [weak detailWindowController, interfaceDefaults] in
-                AnchorMacRootView.showSettings(in: interfaceDefaults ?? .standard)
-                detailWindowController?.present()
-            }
+            onOpenSettings: { [weak self] in self?.openSettings() }
         )
         self.edgePanelController = edgePanelController
         edgePanelController.start()
+    }
+
+    private func openSettings() {
+        AnchorMacRootView.showSettings(in: interfaceDefaults ?? .standard)
+        detailWindowController?.present()
+    }
+
+    /// Opens a task in the window and makes it the one the person is on.
+    private func openTask(_ id: UUID) {
+        if let edgePanelController {
+            edgePanelController.openTask(id)
+            return
+        }
+        Task {
+            _ = await model?.selectHostedTask(id)
+            detailWindowController?.present()
+        }
     }
 }
 
@@ -123,9 +185,8 @@ extension AnchorMacApplicationDelegate: UNUserNotificationCenterDelegate {
             .hasPrefix(MacCodexTurnEndNotifier.identifierPrefix) else { return }
         await MainActor.run {
             let conversationID = String(thread.dropFirst(MacCodexTurnEndNotifier.identifierPrefix.count))
-            if let taskID = self.sourceSetupModel?.conversationTasks[conversationID],
-               let edgePanelController = self.edgePanelController {
-                edgePanelController.openTask(taskID)
+            if let taskID = self.sourceSetupModel?.conversationTasks[conversationID] {
+                self.openTask(taskID)
             } else {
                 self.detailWindowController?.present()
             }

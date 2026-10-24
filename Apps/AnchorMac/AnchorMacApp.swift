@@ -3,6 +3,7 @@ import AnchorDesign
 import AnchorMacFeatures
 import AnchorTransport
 import AppKit
+import CoreBluetooth
 import SwiftUI
 
 @main
@@ -192,6 +193,16 @@ struct AnchorMacApp: App {
         advertiser.onConnectionState = { state in
             server.updateFallbackConnection(state)
         }
+        let bluetoothRadio = MacBluetoothRadioState()
+        advertiser.onRadioState = { state in
+            let radio: MacBluetoothRadio = switch state {
+            case .poweredOn: .on
+            case .poweredOff: .off
+            case .unauthorized: .notAllowed
+            default: .unknown
+            }
+            Task { @MainActor in bluetoothRadio.radio = radio }
+        }
         server.onConnectionState = { state in
             Task {
                 try? await repository.send(
@@ -251,6 +262,7 @@ struct AnchorMacApp: App {
             linkController: server,
             sourceSetupModel: sourceSetupModel,
             phoneAnchorState: phoneAnchorState,
+            bluetoothRadio: bluetoothRadio,
             defaults: validationDefaults
         )
         let startup: @MainActor @Sendable () async -> Void = {
