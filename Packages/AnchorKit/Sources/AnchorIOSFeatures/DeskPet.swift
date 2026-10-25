@@ -47,11 +47,13 @@ struct DeskPetSignals: Equatable {
     var questions = 0
 }
 
-/// A small pixel pet at the foot of the desk clock. Its life runs in
-/// `DeskPetBrain` (desk events first, then touch, then daily life) and is
-/// drawn by `DeskPetRenderer` at 8 fps. A tap, a burst of taps and a long
-/// press each get an answer that depends on the pet and on how it feels.
-/// With reduced motion it holds still and only changes pose with the desk.
+/// A small pixel pet at the foot of the desk clock, in its own millennium-era
+/// nook (`DeskScene`). Its life runs in `DeskPetBrain` (desk events first,
+/// then touch, then daily life) and is drawn by `DeskPetRenderer` at 8 fps. A
+/// tap, a burst of taps and a long press each get an answer that depends on
+/// the pet and on how it feels; a tap on something in the nook works that
+/// thing, and the pet's own thing draws it over to use it. With reduced motion
+/// it holds still and only changes pose with the desk.
 struct DeskPet: View {
     let kind: DeskPetKind
     let mood: DeskPetMood
@@ -62,12 +64,12 @@ struct DeskPet: View {
     @State private var brain: DeskPetBrain?
     @State private var columns = 0
     @State private var touches = 0
+    @State private var scene = DeskScene.State()
 
     /// Points per sprite pixel.
     static let pixel: CGFloat = 3
-    /// The tallest pet plus room above for a hat, a bulb or z's.
-    static let rows = 30
-    static let height = CGFloat(rows) * pixel
+    static let height = CGFloat(DeskScene.rows) * pixel
+    private static let growthKey = "anchor.desk.plant.growth"
 
     var body: some View {
         Canvas { context, _ in
@@ -81,15 +83,12 @@ struct DeskPet: View {
             brain?.press()
             keepTrust()
         }
-        .onTapGesture {
-            touches += 1
-            brain?.tap()
-            keepTrust()
-        }
+        .gesture(SpatialTapGesture().onEnded { touch(at: $0.location) })
         .sensoryFeedback(.impact(weight: .light, intensity: 0.5), trigger: touches)
         .onChange(of: kind, initial: true) {
             let saved = ProfilePreferences.store.object(forKey: kind.trustKey) as? Double
             brain = DeskPetBrain(kind: kind, trust: saved ?? 0.3)
+            scene.growth = ProfilePreferences.store.integer(forKey: Self.growthKey)
         }
         .onChange(of: signals) { old, new in
             // The weightiest news wins when several land together.
@@ -121,13 +120,58 @@ struct DeskPet: View {
     /// Columns the pet can walk across; the right edge keeps room for z's.
     private var room: Int { max(0, columns - look.width - 6) }
 
-    private func keepTrust() {
-        guard let trust = brain?.trust else { return }
+    private var petLeft: Int { min(brain?.x ?? 0, room) + 1 }
+
+    /// A touch on the pet reaches the pet; one on a thing in the nook works it.
+    private func touch(at location: CGPoint) {
+        guard var brain else { return }
+        let cell = CGPoint(x: location.x / Self.pixel, y: location.y / Self.pixel)
+        let pet = CGRect(x: petLeft, y: DeskScene.floor - look.height - 3, width: look.width, height: look.height + 3)
+        let tick = brain.tick
+        defer {
+            self.brain = brain
+            touches += 1
+        }
+        if pet.contains(cell) {
+            brain.tap()
+            keepTrust(brain.trust)
+            return
+        }
+        switch DeskScene.thing(at: cell, for: kind) {
+        case .blinds: scene.blindsDown.toggle()
+        case .lamp: scene.lampOn = !(scene.lampOn ?? (hour >= 18 || hour < 7))
+        case .computer: scene.screensaver.toggle()
+        case .plant:
+            scene.wateredAt = tick
+            if scene.growth < 3 {
+                scene.growth += 1
+                ProfilePreferences.store.set(scene.growth, forKey: Self.growthKey)
+            }
+        case .own:
+            let own = DeskScene.own(kind)
+            scene.ownAt = tick
+            brain.visit(own.standAt, then: own.act)
+        case nil:
+            break
+        }
+    }
+
+    private func keepTrust(_ trust: Double? = nil) {
+        guard let trust = trust ?? brain?.trust else { return }
         ProfilePreferences.store.set(trust, forKey: kind.trustKey)
+    }
+
+    private var screen: DeskScene.Screen {
+        if brain?.sleeping == true { return .off }
+        if mood == .working { return .code }
+        return scene.screensaver ? .stars : .desktop
     }
 
     private func draw(in context: GraphicsContext) {
         guard kind != .off, let brain else { return }
+        DeskSceneRenderer(kind: kind, context: context, pixel: Self.pixel, tick: brain.tick, hour: hour,
+                          state: scene, screen: screen,
+                          music: !reduceMotion && (brain.act == .dance || brain.act == .sway)).draw()
         let frame: DeskPetFrame
         if reduceMotion {
             let pose: DeskPetAct = switch mood {
@@ -140,8 +184,8 @@ struct DeskPet: View {
             frame = DeskPetFrame(act: brain.act, progress: brain.progress, length: brain.length,
                                  tick: brain.tick, facing: brain.facing)
         }
-        DeskPetRenderer(look: look, kind: kind, context: context, left: min(brain.x, room) + 1,
-                        ground: Self.rows - 1, pixel: Self.pixel).draw(frame)
+        DeskPetRenderer(look: look, kind: kind, context: context, left: petLeft,
+                        ground: DeskScene.floor - 1, pixel: Self.pixel).draw(frame)
     }
 }
 

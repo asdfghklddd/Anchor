@@ -37,23 +37,26 @@ struct DeskTaskLibrary: View {
     @State private var landings = 0
     /// How far each card behind is being pulled down, by conversation.
     @State private var pulls: [UUID: CGFloat] = [:]
+    /// Each tab's measured width, so the folder's outline can follow it.
+    @State private var tabWidths: [UUID: CGFloat] = [:]
     /// A card pulled this far comes to the front.
     private static let pullToFront: CGFloat = 28
 
-    /// Figma metrics, in points on the 874 × 402 desk.
+    /// Figma metrics, in points on the 874 × 402 desk. The folders are narrower
+    /// than the Figma so the library clears the Dynamic Island on either edge.
     enum Metrics {
         static let slots = 3
-        static let folder = CGSize(width: 183, height: 343)
+        static let folder = CGSize(width: 164, height: 343)
         static let folderSpacing: CGFloat = 10
         static let width = folder.width * CGFloat(slots) + folderSpacing * CGFloat(slots - 1)
         /// The tab's height; the first card starts where it ends.
         static let tab: CGFloat = 32
-        static let card = CGSize(width: 177, height: 205)
+        static let card = CGSize(width: 158, height: 205)
         static let cardInset: CGFloat = 3
         /// How much of each card behind shows: its name and its time.
         static let peek: CGFloat = 51.5
         static let radius: CGFloat = 15
-        static let empty = CGRect(x: 1, y: 46, width: 178, height: 297)
+        static let empty = CGRect(x: 1, y: 46, width: 159, height: 297)
     }
 
     private static let slide = Animation.spring(response: 0.44, dampingFraction: 0.82)
@@ -102,15 +105,10 @@ struct DeskTaskLibrary: View {
         let stack = TaskConversationStack(task: task, pick: picks[task.id])
         let palette = DeskFolderPalette(task)
         return ZStack(alignment: .topLeading) {
-            ZStack(alignment: .topLeading) {
-                RoundedRectangle(cornerRadius: Metrics.radius, style: .continuous)
-                    .fill(palette.folder)
-                    .frame(width: Metrics.folder.width, height: Metrics.folder.height - Metrics.tab)
-                    .offset(y: Metrics.tab)
-                tab(task, palette: palette)
-            }
-            .compositingGroup()
-            .shadow(color: palette.glow.opacity(0.12), radius: 20, y: 2)
+            DeskFolderShape(tabWidth: tabWidths[task.id] ?? 72, tabHeight: Metrics.tab, radius: Metrics.radius)
+                .fill(palette.folder)
+                .shadow(color: palette.glow.opacity(0.12), radius: 20, y: 2)
+            tab(task, palette: palette)
 
             Group {
                 if stack.cards.isEmpty {
@@ -128,7 +126,9 @@ struct DeskTaskLibrary: View {
 
     /// The task's name on its folder's tab, as wide as the name (up to about
     /// twelve characters); tapping it opens the task.
-    private func tab(_ task: AnchorSession, palette: DeskFolderPalette) -> some View {
+    /// On the desk the folder's outline draws the tab; standing alone (the
+    /// accessibility list) it draws its own.
+    private func tab(_ task: AnchorSession, palette: DeskFolderPalette, standalone: Bool = false) -> some View {
         Button { onTask(task.id) } label: {
             Text(task.goal.title)
                 .font(.system(size: 14, weight: .bold))
@@ -136,10 +136,14 @@ struct DeskTaskLibrary: View {
                 .lineLimit(1)
                 .padding(.horizontal, 7)
                 .padding(.top, 5)
-                // Reaches under the first card, so tab and folder read as one piece.
-                .padding(.bottom, 7 + 10)
-                .background(palette.folder, in: UnevenRoundedRectangle(topLeadingRadius: 12, topTrailingRadius: 12,
-                                                                     style: .continuous))
+                .padding(.bottom, standalone ? 7 + 10 : 7)
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { tabWidths[task.id] = $0 }
+                .background {
+                    if standalone {
+                        UnevenRoundedRectangle(topLeadingRadius: 12, topTrailingRadius: 12, style: .continuous)
+                            .fill(palette.folder)
+                    }
+                }
                 .contentShape(.rect)
         }
         .buttonStyle(AnchorPressButtonStyle())
@@ -234,13 +238,13 @@ struct DeskTaskLibrary: View {
                 .lineSpacing(2.3)
                 .foregroundStyle(.black)
                 .lineLimit(4)
-                .frame(width: 149, height: 61, alignment: .topLeading)
+                .frame(width: 130, height: 61, alignment: .topLeading)
             Text(reply(for: process))
                 .font(.system(size: 10))
                 .lineSpacing(2)
                 .foregroundStyle(DeskFolderPalette.replyInk)
                 .lineLimit(6)
-                .frame(width: 143, height: 84, alignment: .topLeading)
+                .frame(width: 124, height: 84, alignment: .topLeading)
                 .padding(.top, 9)
         }
         .padding(.top, 3)
@@ -341,7 +345,7 @@ struct DeskTaskLibrary: View {
             ForEach(tasks) { task in
                 let stack = TaskConversationStack(task: task)
                 VStack(alignment: .leading, spacing: 0) {
-                    tab(task, palette: DeskFolderPalette(task))
+                    tab(task, palette: DeskFolderPalette(task), standalone: true)
                     VStack(alignment: .leading, spacing: 10) {
                         if stack.cards.isEmpty { noConversationsCard }
                         ForEach(stack.cards.reversed()) { process in
@@ -368,6 +372,42 @@ struct DeskTaskLibrary: View {
                 }
             }
         }
+    }
+}
+
+/// A folder with its tab as one outline: the tab's rounded top rises from
+/// the folder's left edge, and its right side curves into the folder's top,
+/// so the two never meet at a notch.
+struct DeskFolderShape: Shape {
+    var tabWidth: CGFloat
+    var tabHeight: CGFloat
+    var radius: CGFloat
+    var tabRadius: CGFloat = 12
+    /// The inside curve where the tab's right side meets the folder's top.
+    var fillet: CGFloat = 8
+
+    func path(in rect: CGRect) -> Path {
+        let width = rect.width, bottom = rect.maxY, top = tabHeight
+        let tab = min(max(tabWidth, tabRadius * 2), width)
+        var path = Path()
+        path.move(to: CGPoint(x: 0, y: bottom - radius))
+        path.addLine(to: CGPoint(x: 0, y: tabRadius))
+        path.addArc(tangent1End: .zero, tangent2End: CGPoint(x: tabRadius, y: 0), radius: tabRadius)
+        if tab + fillet + radius <= width {
+            path.addArc(tangent1End: CGPoint(x: tab, y: 0), tangent2End: CGPoint(x: tab, y: tabRadius), radius: tabRadius)
+            path.addArc(tangent1End: CGPoint(x: tab, y: top), tangent2End: CGPoint(x: tab + fillet, y: top), radius: fillet)
+            path.addArc(tangent1End: CGPoint(x: width, y: top), tangent2End: CGPoint(x: width, y: top + radius),
+                        radius: radius)
+        } else {
+            // A name as wide as the folder: the tab is the folder's top.
+            path.addArc(tangent1End: CGPoint(x: width, y: 0), tangent2End: CGPoint(x: width, y: tabRadius),
+                        radius: tabRadius)
+        }
+        path.addArc(tangent1End: CGPoint(x: width, y: bottom), tangent2End: CGPoint(x: width - radius, y: bottom),
+                    radius: radius)
+        path.addArc(tangent1End: CGPoint(x: 0, y: bottom), tangent2End: CGPoint(x: 0, y: bottom - radius), radius: radius)
+        path.closeSubpath()
+        return path
     }
 }
 

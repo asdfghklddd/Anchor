@@ -122,6 +122,13 @@ struct LandscapeAmbientDashboard: View {
     // MARK: The Figma desk
 
     static let canvas = CGSize(width: 874, height: 402)
+    /// The Dynamic Island takes one edge when the phone turns; its pill reaches
+    /// about 50 pt in, so the left column and the library keep 58 pt clear on both sides.
+    private static let islandGutter: CGFloat = 58
+    /// How far the left column moves right from the Figma's 15 pt margin.
+    private static let leftShift = islandGutter - 15
+    /// The library starts 10 pt past the pet's room.
+    private static let libraryX = islandGutter + CGFloat(DeskScene.columns) * DeskPet.pixel + 10
     private static let ink = Color(anchorHex: 0x26599D)
     private static let quietInk = Color(anchorHex: 0x8F8F8F)
 
@@ -131,7 +138,7 @@ struct LandscapeAmbientDashboard: View {
         ZStack(alignment: .topLeading) {
             DeskClockText(text: Self.time(now), color: Self.ink)
                 .accessibilityIdentifier("ambient.time")
-                .offset(x: 27, y: 41)
+                .offset(x: 27 + Self.leftShift, y: 41)
             HStack(spacing: 12) {
                 Text(now.formatted(.dateTime.weekday(.wide).locale(AnchorStrings.interfaceLocale)))
                 Text(now.formatted(.dateTime.month().day().locale(AnchorStrings.interfaceLocale)))
@@ -140,12 +147,12 @@ struct LandscapeAmbientDashboard: View {
             .foregroundStyle(Self.ink)
             .lineLimit(1)
             .frame(width: 242, alignment: .trailing)
-            .offset(y: 103)
+            .offset(x: Self.leftShift, y: 103)
             if petKind != .off {
                 DeskPet(kind: petKind, mood: petMood(now: now), signals: petSignals,
                         hour: Calendar.current.component(.hour, from: now))
-                    .frame(width: 236)
-                    .offset(x: 15, y: 339 - DeskPet.height)
+                    .frame(width: CGFloat(DeskScene.columns) * DeskPet.pixel)
+                    .offset(x: 15 + Self.leftShift, y: 339 - DeskPet.height)
             }
             if case .behind = projection.freshness, !tasks.isEmpty {
                 Label(SyncText.line(for: projection.freshness, now: now), systemImage: SyncText.symbol(for: projection.freshness))
@@ -153,7 +160,7 @@ struct LandscapeAmbientDashboard: View {
                     .foregroundStyle(Self.quietInk)
                     .lineLimit(2)
                     .frame(width: 150, alignment: .leading)
-                    .offset(x: 24, y: 358)
+                    .offset(x: 24 + Self.leftShift, y: 358)
                     .accessibilityIdentifier("ambient.freshness")
             }
             Button(action: onManage) {
@@ -165,13 +172,13 @@ struct LandscapeAmbientDashboard: View {
             }
             .buttonStyle(.plain)
             .frame(width: 243, alignment: .trailing)
-            .offset(y: 350)
+            .offset(x: Self.leftShift, y: 350)
             .accessibilityLabel(AnchorStrings.value("home.tasks.manage", default: "Manage hosted tasks"))
             .accessibilityValue(DeskText.conversationCount(conversationCount))
             .accessibilityIdentifier("ambient.tasks.manage")
             DeskTaskLibrary(tasks: tasks, now: now, swells: swellsByConversation, swellTone: swellTone,
                             settled: settled, onTask: onTask)
-                .offset(x: 290, y: 32)
+                .offset(x: Self.libraryX, y: 32)
         }
     }
 

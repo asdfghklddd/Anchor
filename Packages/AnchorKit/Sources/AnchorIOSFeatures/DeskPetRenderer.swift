@@ -160,7 +160,7 @@ struct DeskPetRenderer {
                 if pose.hidden {
                     guard look.shell.contains(c) else { continue }
                     // The shell sinks to the ground with everything tucked in.
-                    let drop = look.rows.count - 1 - 11
+                    let drop = look.rows.count - 1 - look.shellBottom
                     paint.dot(x, y + drop, look.color(c))
                     continue
                 }
@@ -177,9 +177,8 @@ struct DeskPetRenderer {
             }
         }
         if pose.peek {
-            let drop = look.rows.count - 1 - 11
-            paint.dot(6, 11 + drop, DeskPetLook.ink)
-            paint.dot(9, 11 + drop, DeskPetLook.ink)
+            let drop = look.rows.count - 1 - look.shellBottom
+            for eye in look.peekEyes { paint.dot(eye.x, eye.y + drop, DeskPetLook.ink) }
         }
     }
 
@@ -189,10 +188,10 @@ struct DeskPetRenderer {
         let still = frame.still || frame.act == .meditate || frame.act == .fail
         for (i, column) in look.strands.enumerated() {
             if pose.curlStrand, i == look.strands.count - 1 {
-                for (x, y) in [(15, 9), (16, 8), (17, 7), (18, 6), (18, 5), (17, 4)] { paint.dot(x, y, color) }
+                for cell in look.curl { paint.dot(cell.x, cell.y, color) }
                 continue
             }
-            for r in 0..<8 {
+            for r in 0..<look.strandLength {
                 let sway = still ? 0 : ((r + frame.tick / 3 + i * 2) % 6 < 3 ? 0 : 1)
                 let droop = frame.act == .fail ? 0 : sway
                 paint.dot(column + droop, base + r, color)
@@ -310,7 +309,7 @@ struct DeskPetRenderer {
         case .pebble:
             paint.grid(Prop.pebble, at: look.hand.x, look.hand.y, Prop.color)
         case .polish:
-            if (k / 3) % 2 == 0 { paint.glyph(Prop.sparkle, at: 13, 2 + (k / 6) % 3, Prop.color) }
+            if (k / 3) % 2 == 0 { paint.glyph(Prop.sparkle, at: w / 2 + 2, 2 + (k / 6) % 3, Prop.color) }
         case .glow, .meditate:
             if frame.act == .glow, (k / 4) % 2 == 0 { paint.glyph(Prop.sparkle, at: w - 2, 0, Prop.color) }
         case .idle, .move, .look, .yawn, .stretch, .wave, .happy, .sulk, .hide, .peek, .snap, .dash:

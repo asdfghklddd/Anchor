@@ -216,6 +216,19 @@ struct DeskPetBrain {
         }
     }
 
+    /// The person touched the pet's own thing in its nook: it walks over and
+    /// uses it, waking first if it slept.
+    mutating func visit(_ column: Int, then next: DeskPetAct) {
+        awakeUntil = tick + 120
+        guard !(act == .hide || act == .angry || act == .sulk) else { return }
+        act = .move
+        actStart = tick
+        then = next
+        target = min(max(0, column), room)
+        facing = target >= x ? 1 : -1
+        actEnd = tick + 160
+    }
+
     /// A long press: petting. It calms, and trust grows.
     mutating func press() {
         trust = min(1, trust + 0.03)

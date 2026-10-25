@@ -33,7 +33,7 @@ struct DeskPetPicker: View {
                     DeskPetPortrait(kind: kind)
                 }
             }
-            .frame(height: 46)
+            .frame(height: 54)
             Text(kind.title)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(chosen ? AnchorIOSStyle.heading : AnchorIOSStyle.secondaryText)
