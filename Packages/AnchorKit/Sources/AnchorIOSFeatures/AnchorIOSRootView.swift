@@ -387,18 +387,10 @@ public struct AnchorIOSRootView: View {
             HistoryView(projection: model.projection) { path.append(.historyDetail($0)) }
         case let .historyDetail(id):
             HistoryDetailView(projection: model.projection, sessionID: id)
-        case .taskManagement:
-            TaskManagementView(model: model)
         case .connections:
-            ConnectionSettingsView(projection: model.projection, controller: linkController)
+            ConnectionDetailView(projection: model.projection, controller: linkController)
         case .sources:
             SourceSettingsView(projection: model.projection)
-        case .notificationSettings:
-            NotificationSettingsView()
-        case .privacy:
-            PrivacySettingsView()
-        case .accessibility:
-            AccessibilitySettingsView()
         case .localData:
             LocalDataSettingsView(model: model)
         }

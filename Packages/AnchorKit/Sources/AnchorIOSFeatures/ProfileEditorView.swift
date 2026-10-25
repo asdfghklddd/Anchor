@@ -12,7 +12,6 @@ struct ProfileEditorView<Destination: View>: View {
     @AppStorage("anchor.profile.name", store: ProfilePreferences.store) private var savedName = "Anchor"
     @State private var name = ""
     @State private var hasLoaded = false
-    @State private var showsICloud = false
     /// Applies at once; Save only stores the name.
     @AppStorage(DeskPetKind.defaultsKey, store: ProfilePreferences.store) private var petKind = DeskPetKind.crab
 
@@ -38,10 +37,6 @@ struct ProfileEditorView<Destination: View>: View {
             .anchorIOSListSurface()
             .navigationTitle(L10n.settings)
             .navigationDestination(for: AnchorRoute.self) { destination($0) }
-            .sheet(isPresented: $showsICloud) {
-                ProfileInfoSheet(kind: .icloud, projection: projection)
-                    .presentationDetents([.large])
-            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(L10n.cancel) { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
@@ -68,41 +63,69 @@ struct ProfileEditorView<Destination: View>: View {
         } header: {
             Text(AnchorStrings.value("settings.deskPet", default: "Desk pet"))
                 .textCase(.uppercase)
-        } footer: {
-            Text(AnchorStrings.value("settings.deskPet.footer",
-                                     default: "Lives under the clock on the landscape desk. It works while an agent runs and reacts when a result arrives. Tap it, or press and hold to pet it."))
         }
         .listRowBackground(AnchorIOSStyle.surface)
     }
 
     private var workStyleSection: some View {
         Section(L10n.workStyle) {
-            NavigationLink(value: AnchorRoute.taskManagement) { row(L10n.taskManagement, symbol: "square.grid.2x2") }
-            Button { showsICloud = true } label: {
-                HStack {
-                    row(AnchorStrings.value("settings.icloud", default: "iCloud Sync"), symbol: "icloud")
-                    Spacer()
-                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
-                }
+            row(AnchorStrings.value("settings.icloud", default: "iCloud Sync"), symbol: "icloud",
+                value: projection.durableSyncState.label)
+                .accessibilityIdentifier("settings.icloud")
+            NavigationLink(value: AnchorRoute.connections) {
+                row(L10n.connections, symbol: "macbook.and.iphone", value: connectionValue)
             }
-            NavigationLink(value: AnchorRoute.connections) { row(L10n.connections, symbol: "macbook.and.iphone") }
-            NavigationLink(value: AnchorRoute.sources) { row(L10n.sources, symbol: "point.3.connected.trianglepath.dotted") }
-            NavigationLink(value: AnchorRoute.notificationSettings) { row(L10n.notificationsSettings, symbol: "bell") }
-            NavigationLink(value: AnchorRoute.privacy) { row(L10n.privacy, symbol: "hand.raised") }
-            NavigationLink(value: AnchorRoute.accessibility) { row(L10n.accessibility, symbol: "accessibility") }
+            .accessibilityIdentifier("settings.connections")
+            NavigationLink(value: AnchorRoute.sources) {
+                row(L10n.sources, symbol: "point.3.connected.trianglepath.dotted", value: sourcesValue)
+            }
+            .accessibilityIdentifier("settings.sources")
         }
         .listRowBackground(AnchorIOSStyle.surface)
     }
 
-    private func row(_ title: String, symbol: String) -> some View {
+    /// The Mac's name while it is connected; otherwise that it is not.
+    private var connectionValue: String {
+        guard projection.connection == .connected else { return PeerDeviceCopy.notConnected }
+        return PeerDeviceMemory.last()?.displayName ?? PeerDeviceCopy.connected
+    }
+
+    /// The agents heard from most recently.
+    private var sourcesValue: String? {
+        let names = SourceGroup.all(in: projection).prefix(2).map(\.name)
+        return names.isEmpty ? nil : names.joined(separator: " · ")
+    }
+
+    private func row(_ title: String, symbol: String, value: String? = nil) -> some View {
         HStack(spacing: 12) {
             Image(systemName: symbol)
                 .foregroundStyle(AnchorPalette.interaction)
                 .frame(width: 32, height: 32)
                 .background(AnchorPalette.softBlue.opacity(0.62), in: .rect(cornerRadius: 9))
             Text(title).font(.subheadline.bold()).foregroundStyle(AnchorPalette.ink)
+            if let value {
+                Spacer(minLength: 8)
+                Text(value)
+                    .font(.subheadline)
+                    .foregroundStyle(AnchorIOSStyle.secondaryText)
+                    .lineLimit(1)
+            }
         }
         .frame(minHeight: 40)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private extension DurableSyncState {
+    var label: String {
+        switch self {
+        case .notConfigured: AnchorStrings.value("sync.state.notConfigured", default: "Not configured")
+        case .idle: AnchorStrings.value("sync.state.idle", default: "Waiting to sync")
+        case .syncing: AnchorStrings.value("sync.state.syncing", default: "Syncing")
+        case .available: AnchorStrings.value("sync.state.available", default: "Last sync succeeded")
+        case .offline: AnchorStrings.value("sync.state.offline", default: "Offline")
+        case .failed: AnchorStrings.value("sync.state.failed", default: "Sync failed")
+        }
     }
 }
 #endif

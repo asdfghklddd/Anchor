@@ -1,6 +1,91 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "connection.far" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Far"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "较远"
+          }
+        }
+      }
+    },
+    "connection.history" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录"
+          }
+        }
+      }
+    },
+    "connection.history.disconnected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已断开"
+          }
+        }
+      }
+    },
+    "connection.reconnect" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnect"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新连接"
+          }
+        }
+      }
+    },
+    "settings.sources.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No sources yet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有来源"
+          }
+        }
+      }
+    },
     "%1$@ · %2$@ %3$@ awaiting judgment" : {
 
     },
@@ -8,12 +93,6 @@
 
     },
     "%1$@ needs you · %2$@" : {
-
-    },
-    "%1$@, %2$@" : {
-
-    },
-    "%1$@; %2$@" : {
 
     },
     "%1$lld automatic · %2$lld queued" : {
@@ -38,6 +117,9 @@
 
     },
     "%lld Codex conversations followed for this task" : {
+
+    },
+    "%lld conversations" : {
 
     },
     "%lld decisions" : {
@@ -764,6 +846,9 @@
 
     },
     "Blocked" : {
+
+    },
+    "Bluetooth" : {
 
     },
     "Bluetooth proximity" : {
@@ -2620,9 +2705,6 @@
     "Here is what changed while you were away." : {
 
     },
-    "Here’s what happened in Anchor" : {
-
-    },
     "history" : {
       "localizations" : {
         "en" : {
@@ -2694,6 +2776,7 @@
       }
     },
     "history.return.recaps" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3064,10 +3147,10 @@
         }
       }
     },
-    "I’m back at my desk" : {
+    "I’m still at my desk" : {
 
     },
-    "I’m still at my desk" : {
+    "iCloud" : {
 
     },
     "Idle" : {
@@ -3215,6 +3298,9 @@
     "Local by default" : {
 
     },
+    "Local Network" : {
+
+    },
     "Look over what this task has so far" : {
 
     },
@@ -3228,9 +3314,6 @@
 
     },
     "Mac disconnected" : {
-
-    },
-    "Mac is disconnected. Showing saved records." : {
 
     },
     "Mac online" : {
@@ -3903,6 +3986,7 @@
       }
     },
     "mac.recap.detail" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3919,6 +4003,7 @@
       }
     },
     "mac.recap.failed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3935,6 +4020,7 @@
       }
     },
     "mac.recap.field" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3951,6 +4037,7 @@
       }
     },
     "mac.recap.keyMissing" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3967,6 +4054,7 @@
       }
     },
     "mac.recap.keySet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3983,6 +4071,7 @@
       }
     },
     "mac.recap.remove" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3999,6 +4088,7 @@
       }
     },
     "mac.recap.save" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4015,6 +4105,7 @@
       }
     },
     "mac.recap.state" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4031,6 +4122,7 @@
       }
     },
     "mac.recap.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5369,13 +5461,13 @@
     "No changes received yet. This summary updates as records arrive." : {
 
     },
-    "No conversations yet" : {
-
-    },
     "No events yet" : {
 
     },
     "No new changes while you were away." : {
+
+    },
+    "No other task" : {
 
     },
     "No records yet" : {
@@ -5397,6 +5489,9 @@
 
     },
     "Not connected" : {
+
+    },
+    "Not Connected" : {
 
     },
     "Not done" : {
@@ -8577,6 +8672,7 @@
       }
     },
     "return.page.empty" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8593,6 +8689,7 @@
       }
     },
     "return.page.home" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8609,6 +8706,7 @@
       }
     },
     "return.page.loading" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8625,6 +8723,7 @@
       }
     },
     "return.page.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -12668,9 +12767,6 @@
       }
     },
     "Step" : {
-
-    },
-    "Step %1$lld/%2$lld: %3$@" : {
 
     },
     "Step %lld" : {

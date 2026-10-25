@@ -253,11 +253,8 @@ public enum L10n {
     public static let moveHint = AnchorStrings.value("task.move.hint", default: "Reorder the processes or change their dashboard footprint.")
     public static let connections = AnchorStrings.value("connections", default: "Connections")
     public static let sources = AnchorStrings.value("sources", default: "Sources")
-    public static let privacy = AnchorStrings.value("privacy", default: "Privacy")
-    public static let accessibility = AnchorStrings.value("accessibility", default: "Accessibility")
     public static let nearby = AnchorStrings.value("connection.nearby", default: "Nearby")
     public static let outOfRange = AnchorStrings.value("connection.out.of.range", default: "Out of range")
-    public static let notificationsSettings = AnchorStrings.value("notifications.settings", default: "Notifications")
     public static let macConnection = AnchorStrings.value("connection.mac", default: "Mac connection")
     public static let bluetoothProximity = AnchorStrings.value("connection.bluetooth", default: "Bluetooth proximity")
     public static let localOnly = AnchorStrings.value("privacy.local", default: "Local by default")
@@ -272,8 +269,6 @@ public enum L10n {
         "notifications.permission.detail",
         default: "Allow notifications in System Settings to get a ping when a Codex conversation ends."
     )
-    public static let displaySupport = AnchorStrings.value("accessibility.display", default: "Display accommodations")
-    public static let displaySupportDetail = AnchorStrings.value("accessibility.display.detail", default: "Full animations are enabled by default. You can enable Reduce Motion here. Anchor follows system Dynamic Type, VoiceOver, Increase Contrast, and Reduce Transparency settings.")
     public static let sourceHealth = AnchorStrings.value("source.health", default: "Source health")
     public static let connectedSources = AnchorStrings.value("source.connected", default: "Connected sources")
     public static let sourceDetails = AnchorStrings.value("source.details", default: "Source details")
@@ -595,12 +590,7 @@ public enum L10n {
         "system.settings.open",
         default: "Open System Settings"
     )
-    public static let voiceOver = AnchorStrings.value("accessibility.voiceover", default: "VoiceOver")
-    public static let dynamicType = AnchorStrings.value("accessibility.dynamic.type", default: "Dynamic Type")
-    public static let reduceMotion = AnchorStrings.value("accessibility.reduce.motion", default: "Reduce Motion")
     public static let launchSlogan = AnchorStrings.value("launch.slogan", default: "Let your thinking come ashore")
-    public static let increaseContrast = AnchorStrings.value("accessibility.increase.contrast", default: "Increase Contrast")
-    public static let reduceTransparency = AnchorStrings.value("accessibility.reduce.transparency", default: "Reduce Transparency")
 
     public static func processCount(_ count: Int) -> String {
         String.localizedStringWithFormat(AnchorStrings.value("process.count", default: "%lld processes"), count)

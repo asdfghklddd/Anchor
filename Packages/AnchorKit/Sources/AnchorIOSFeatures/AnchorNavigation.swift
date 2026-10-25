@@ -8,12 +8,8 @@ public enum AnchorRoute: Hashable {
     case profile
     case history
     case historyDetail(UUID)
-    case taskManagement
     case connections
     case sources
-    case notificationSettings
-    case privacy
-    case accessibility
     case localData
 }
 

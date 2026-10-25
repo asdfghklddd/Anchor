@@ -3,155 +3,6 @@ import AnchorCore
 import AnchorDesign
 import SwiftUI
 
-enum ProfileInfoKind: Hashable {
-    case account
-    case icloud
-}
-
-struct ProfileInfoSheet: View {
-    let kind: ProfileInfoKind
-    let projection: SessionProjection
-
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                HarborBackground()
-
-                ScrollView {
-                    VStack(alignment: .leading, spacing: AnchorSpacing.large) {
-                        HarborHeroSurface(cornerRadius: 26) {
-                            VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-                                Image(systemName: symbol)
-                                    .font(.title2.bold())
-                                    .foregroundStyle(AnchorPalette.deepSea)
-                                    .frame(width: 52, height: 52)
-                                    .background(AnchorPalette.oceanHighlight, in: .circle)
-
-                                Text(headline)
-                                    .font(.title2.bold())
-                                    .foregroundStyle(AnchorIOSStyle.heading)
-
-                                Text(copy)
-                                    .font(.body)
-                                    .foregroundStyle(AnchorIOSStyle.secondaryText)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                            .padding(AnchorSpacing.medium)
-                        }
-
-                        VStack(spacing: 0) {
-                            ForEach(Array(facts.enumerated()), id: \.offset) { index, fact in
-                                HStack(alignment: .firstTextBaseline, spacing: AnchorSpacing.small) {
-                                    Text(fact.label)
-                                        .font(.subheadline)
-                                        .foregroundStyle(AnchorPalette.secondaryInk)
-                                    Spacer(minLength: AnchorSpacing.small)
-                                    Text(fact.value)
-                                        .font(.subheadline.bold())
-                                        .foregroundStyle(AnchorPalette.ink)
-                                        .multilineTextAlignment(.trailing)
-                                }
-                                .frame(minHeight: 52)
-                                if index < facts.count - 1 {
-                                    Divider()
-                                }
-                            }
-                        }
-                        .padding(.horizontal, AnchorSpacing.medium)
-                        .background(AnchorPalette.surface, in: .rect(cornerRadius: 22, style: .continuous))
-
-                        Button(L10n.done) {
-                            dismiss()
-                        }
-                        .buttonStyle(HarborPrimaryButtonStyle())
-                    }
-                    .padding(AnchorSpacing.medium)
-                    .frame(maxWidth: 680)
-                    .frame(maxWidth: .infinity)
-                }
-                .scrollIndicators(.hidden)
-            }
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(L10n.close) { dismiss() }
-                }
-            }
-        }
-        .accessibilityIdentifier("profile.info.\(String(describing: kind))")
-    }
-
-    private var title: String {
-        switch kind {
-        case .account:
-            AnchorStrings.value("profile.account.title", default: "Account settings")
-        case .icloud:
-            AnchorStrings.value("profile.icloud.title", default: "iCloud sync")
-        }
-    }
-
-    private var headline: String {
-        switch kind {
-        case .account:
-            L10n.profile
-        case .icloud:
-            cloudStatus
-        }
-    }
-
-    private var copy: String {
-        switch kind {
-        case .account:
-            AnchorStrings.value(
-                "profile.account.copy",
-                default: "Anchor uses this iPhone as your local identity. No sign-in is required."
-            )
-        case .icloud:
-            AnchorStrings.value(
-                "profile.icloud.copy",
-                default: "iCloud sync requires a configured container and an available iCloud account. Nearby device pairing is managed separately in Connections."
-            )
-        }
-    }
-
-    private var symbol: String {
-        switch kind {
-        case .account: "person.crop.circle"
-        case .icloud: "icloud"
-        }
-    }
-
-    private var cloudStatus: String {
-        switch projection.durableSyncState {
-        case .notConfigured: AnchorStrings.value("sync.state.notConfigured", default: "Not configured")
-        case .idle: AnchorStrings.value("sync.state.idle", default: "Waiting to sync")
-        case .syncing: AnchorStrings.value("sync.state.syncing", default: "Syncing")
-        case .available: AnchorStrings.value("sync.state.available", default: "Last sync succeeded")
-        case .offline: AnchorStrings.value("sync.state.offline", default: "Offline")
-        case .failed: AnchorStrings.value("sync.state.failed", default: "Sync failed")
-        }
-    }
-
-    private var facts: [(label: String, value: String)] {
-        switch kind {
-        case .account:
-            [
-                (AnchorStrings.value("profile.account.device", default: "Device"), AnchorStrings.value("profile.account.device.value", default: "This iPhone")),
-                (AnchorStrings.value("profile.account.workspace", default: "Workspace"), AnchorStrings.value("profile.account.workspace.value", default: "Personal")),
-                (AnchorStrings.value("profile.account.identity", default: "Sync identity"), AnchorStrings.value("profile.account.identity.value", default: "Local device identity")),
-            ]
-        case .icloud:
-            [
-                (AnchorStrings.value("profile.icloud.status", default: "Current status"), cloudStatus),
-                (AnchorStrings.value("profile.icloud.scope", default: "Sync scope"), AnchorStrings.value("profile.icloud.scope.value", default: "Goals and process states")),
-            ]
-        }
-    }
-}
-
 struct ProfileDetailSheet: View {
     let projection: SessionProjection
     let kind: ProfileDetailKind
@@ -243,33 +94,16 @@ struct ProfileDetailSheet: View {
             }
         } else {
             AnchorCard(tint: kind.tint) {
-                VStack(alignment: .leading, spacing: AnchorSpacing.small) {
-                    HStack(alignment: .top, spacing: AnchorSpacing.small) {
-                        Image(systemName: kind.symbol)
-                            .font(.title3.bold())
-                            .foregroundStyle(kind.tint)
-                            .frame(width: 42, height: 42)
-                            .background(kind.tint.opacity(0.14), in: .circle)
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(kind.kicker)
-                                .font(.caption2.bold())
-                                .foregroundStyle(AnchorPalette.link)
-                            Text(kind.value(projection: projection))
-                                .font(.title.bold().monospacedDigit())
-                                .foregroundStyle(AnchorPalette.ink)
-                        }
-                        Spacer(minLength: 0)
-                    }
-
-                    Text(kind.headline)
-                        .font(.title2.bold())
+                HStack(spacing: AnchorSpacing.small) {
+                    Image(systemName: kind.symbol)
+                        .font(.title3.bold())
+                        .foregroundStyle(kind.tint)
+                        .frame(width: 42, height: 42)
+                        .background(kind.tint.opacity(0.14), in: .circle)
+                    Text(kind.value(projection: projection))
+                        .font(.title.bold().monospacedDigit())
                         .foregroundStyle(AnchorPalette.ink)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Text(kind.subline(projection: projection))
-                        .font(.body)
-                        .foregroundStyle(AnchorPalette.secondaryInk)
-                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
                 }
             }
         }
@@ -489,28 +323,6 @@ private extension ProfileDetailKind {
         }
     }
 
-    var kicker: String {
-        switch self {
-        case .focus: AnchorStrings.value("profile.detail.focus.kicker", default: "FOCUS ARCHIVE")
-        case .contexts: AnchorStrings.value("profile.detail.contexts.kicker", default: "CONTEXT VAULT")
-        case .anchors: AnchorStrings.value("profile.detail.anchors.kicker", default: "ANCHOR LOG")
-        case .session: AnchorStrings.value("profile.detail.session.kicker", default: "CURRENT ANCHOR")
-        case .returnMemory: AnchorStrings.value("profile.detail.return.kicker", default: "RETURN MEMORY")
-        case .contextSnapshot: AnchorStrings.value("profile.detail.snapshot.kicker", default: "CONTEXT SNAPSHOT")
-        }
-    }
-
-    var headline: String {
-        switch self {
-        case .focus: AnchorStrings.value("profile.detail.focus.headline", default: "Focus is not just time. It is continuity.")
-        case .contexts: AnchorStrings.value("profile.detail.contexts.headline", default: "Every departure keeps a world to return to.")
-        case .anchors: AnchorStrings.value("profile.detail.anchors.headline", default: "Completion preserves the thread of the work.")
-        case .session: AnchorStrings.value("profile.detail.session.headline", default: "The full shape of this work, held in one place.")
-        case .returnMemory: AnchorStrings.value("profile.detail.return.headline", default: "The work stayed in the right place while you were away.")
-        case .contextSnapshot: AnchorStrings.value("profile.detail.snapshot.headline", default: "Goal, processes, decisions, and position in one memory.")
-        }
-    }
-
     func value(projection: SessionProjection) -> String {
         switch self {
         case .focus: L10n.minuteCount(max(0, Int(Date.now.timeIntervalSince(projection.session?.startedAt ?? .now) / 60)))
@@ -518,17 +330,6 @@ private extension ProfileDetailKind {
         case .anchors: "\(projection.session?.taskProcesses.filter { $0.status == .completed }.count ?? 0)"
         case .session, .returnMemory: TaskStatusPresentation.text(for: projection.session)
         case .contextSnapshot: "\(projection.session?.snapshots.count ?? 0)"
-        }
-    }
-
-    func subline(projection: SessionProjection) -> String {
-        switch self {
-        case .focus: AnchorStrings.value("profile.detail.focus.subline", default: "Recent focus sessions and the judgments they protected.")
-        case .contexts: AnchorStrings.value("profile.detail.contexts.subline", default: "Saved goals, process states, and notes remain available.")
-        case .anchors: AnchorStrings.value("profile.detail.anchors.subline", default: "Completed work is preserved as a recoverable context.")
-        case .session: L10n.runningAndWaiting(running: projection.session?.taskProcesses.filter { $0.status == .running }.count ?? 0, attention: projection.openDecisions.count)
-        case .returnMemory: L10n.returnDetail
-        case .contextSnapshot: L10n.contextNote
         }
     }
 

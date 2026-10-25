@@ -47,17 +47,4 @@ public enum DeskText {
         "desk.library.show", default: "Brings this conversation to the front")
     public static let you = AnchorStrings.value("desk.library.you", default: "You")
     public static let reply = AnchorStrings.value("desk.library.reply", default: "Reply")
-
-    // MARK: Settings
-
-    public static let settingsSection = AnchorStrings.value("desk.settings.section", default: "Desk reminder")
-    public static let settingsToggle = AnchorStrings.value("desk.settings.toggle", default: "Remind me when I leave the desk")
-    public static let settingsDelay = AnchorStrings.value("desk.settings.delay", default: "After")
-    public static let settingsFooter = AnchorStrings.value(
-        "desk.settings.footer",
-        default: "If you leave Anchor while an agent works on your task or a result waits for you, a reminder comes after this long. It is made on this iPhone and needs no connection.")
-    public static let settingsAllow = AnchorStrings.value("desk.settings.allow", default: "Allow reminders")
-    public static let settingsDenied = AnchorStrings.value(
-        "desk.settings.denied", default: "Notifications are off for Anchor. Turn them on in Settings.")
-    public static let settingsOpen = AnchorStrings.value("desk.settings.open", default: "Open Settings")
 }

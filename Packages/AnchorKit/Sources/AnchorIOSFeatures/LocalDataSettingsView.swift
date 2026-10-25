@@ -29,8 +29,6 @@ struct LocalDataSettingsView: View {
                 }
                 .disabled(anchorCount == 0 || isWorking)
                 .accessibilityIdentifier("settings.data.clear-anchors")
-            } footer: {
-                Text(LocalDataCopy.clearAnchorsFooter)
             }
             .listRowBackground(AnchorIOSStyle.surface)
 
@@ -42,8 +40,6 @@ struct LocalDataSettingsView: View {
                 }
                 .disabled(anchorCount + historyCount == 0 || isWorking)
                 .accessibilityIdentifier("settings.data.clear-everything")
-            } footer: {
-                Text(LocalDataCopy.clearEverythingFooter)
             }
             .listRowBackground(AnchorIOSStyle.surface)
 
@@ -106,12 +102,6 @@ enum LocalDataCopy {
     static let title = AnchorStrings.value("settings.data", default: "Local Data")
     static let clearAnchors = AnchorStrings.value("settings.data.clear-anchors", default: "Clear Anchors")
     static let clearEverything = AnchorStrings.value("settings.data.clear-everything", default: "Clear All Local Data")
-    static let clearAnchorsFooter = AnchorStrings.value(
-        "settings.data.clear-anchors.footer",
-        default: "Removes every task you're hosting, on this iPhone and on your paired Mac. History stays.")
-    static let clearEverythingFooter = AnchorStrings.value(
-        "settings.data.clear-everything.footer",
-        default: "Also removes finished tasks and everything on the Me page. Your name, desk pet, reminders and pairing stay.")
     static let confirmAnchorsTitle = AnchorStrings.value(
         "settings.data.confirm-anchors.title", default: "Clear all anchors?")
     static let confirmAnchorsMessage = AnchorStrings.value(

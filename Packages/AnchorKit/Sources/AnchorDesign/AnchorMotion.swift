@@ -16,8 +16,9 @@ public enum AnchorMotion {
     public static let anchorLift = Animation.spring(response: 0.40, dampingFraction: 1.00)
 }
 
-/// True when either the system or the app's own setting asks for reduced motion.
-/// The app toggle can add a reduction but never overrides the system preference.
+/// True when the system asks for reduced motion. On the Mac, the app's own
+/// setting can add a reduction but never overrides the system preference;
+/// the iPhone follows the system alone.
 @propertyWrapper
 public struct AnchorReducedMotion: DynamicProperty {
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
@@ -25,5 +26,11 @@ public struct AnchorReducedMotion: DynamicProperty {
 
     public init() {}
 
-    public var wrappedValue: Bool { systemReduceMotion || appReduceMotion }
+    public var wrappedValue: Bool {
+        #if os(iOS)
+        systemReduceMotion
+        #else
+        systemReduceMotion || appReduceMotion
+        #endif
+    }
 }

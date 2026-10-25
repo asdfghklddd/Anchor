@@ -3,128 +3,132 @@ import AnchorCore
 import AnchorDesign
 import SwiftUI
 
+/// Settings › Sources: every agent the Mac has heard from, across all the
+/// tasks on this phone, newest first.
 struct SourceSettingsView: View {
     let projection: SessionProjection
 
     var body: some View {
+        let groups = SourceGroup.all(in: projection)
         List {
-            Section(L10n.sourceHealth) {
-                ForEach(projection.session?.processes ?? []) { process in
-                    HStack {
-                        Text(process.sourceSymbol)
-                            .font(.headline.bold())
-                            .frame(width: 38, height: 38)
-                            .background(
-                                AnchorPalette.source(process.sourceTone).opacity(0.55),
-                                in: .rect(cornerRadius: 11)
-                            )
-                            .accessibilityHidden(true)
-                        VStack(alignment: .leading) {
-                            Text(process.sourceName).font(.headline)
-                            Text(process.updatedAt, style: .relative).font(.caption)
-                        }
-                        Spacer()
-                        Label(L10n.status(process.status), systemImage: process.status == .disconnected ? "wifi.slash" : "checkmark.circle")
-                            .labelStyle(.iconOnly)
-                            .accessibilityLabel(L10n.status(process.status))
-                    }
-                    .frame(minHeight: 52)
+            if groups.isEmpty {
+                ContentUnavailableView(SourceCopy.empty, systemImage: "point.3.connected.trianglepath.dotted")
+                    .listRowBackground(Color.clear)
+            }
+            ForEach(groups) { group in
+                NavigationLink {
+                    SourceConversationsView(group: group)
+                } label: {
+                    SourceGroupRow(group: group)
                 }
             }
             .listRowBackground(AnchorIOSStyle.surface)
         }
         .anchorIOSListSurface()
         .navigationTitle(L10n.sources)
+        .accessibilityIdentifier("sources.screen")
     }
 }
 
-struct NotificationSettingsView: View {
-    @AppStorage(DeskReminder.enabledKey) private var reminderEnabled = true
-    @AppStorage(DeskReminder.minutesKey) private var reminderMinutes = DeskReminder.defaultMinutes
-    @State private var reminder = DeskReminder()
+/// One agent (Codex, Claude Code, a terminal) and its conversations, newest first.
+struct SourceGroup: Identifiable {
+    struct Conversation: Identifiable {
+        let process: AnchorProcess
+        let taskTitle: String
+        var id: UUID { process.id }
+    }
+
+    let name: String
+    let conversations: [Conversation]
+
+    var id: String { name }
+    var latest: AnchorProcess { conversations[0].process }
+    var runningCount: Int { conversations.filter { $0.process.status == .running }.count }
+
+    static func all(in projection: SessionProjection) -> [SourceGroup] {
+        let conversations = projection.hostedSessions.flatMap { task in
+            task.taskProcesses.map { Conversation(process: $0, taskTitle: task.goal.title) }
+        }
+        return Dictionary(grouping: conversations, by: \.process.sourceName)
+            .map { name, items in
+                SourceGroup(name: name, conversations: items.sorted { $0.process.updatedAt > $1.process.updatedAt })
+            }
+            .sorted { $0.latest.updatedAt > $1.latest.updatedAt }
+    }
+}
+
+private struct SourceGroupRow: View {
+    let group: SourceGroup
 
     var body: some View {
-        Form {
-            Section {
-                Toggle(DeskText.settingsToggle, isOn: $reminderEnabled)
-                    .accessibilityIdentifier("settings.desk-reminder")
-                if reminderEnabled {
-                    Picker(DeskText.settingsDelay, selection: $reminderMinutes) {
-                        ForEach(DeskReminder.minuteChoices, id: \.self) { minutes in
-                            Text(L10n.minutesShort(minutes)).tag(minutes)
-                        }
+        HStack(spacing: 12) {
+            SourceTile(process: group.latest)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(group.name).font(.headline).foregroundStyle(AnchorPalette.ink)
+                Text(DeskText.conversationCount(group.conversations.count)
+                     + " · " + group.latest.updatedAt.formatted(.relative(presentation: .named)))
+                    .font(.caption)
+                    .foregroundStyle(AnchorIOSStyle.secondaryText)
+            }
+            Spacer(minLength: 8)
+            if group.runningCount > 0 {
+                Text(L10n.status(.running))
+                    .font(.caption.bold())
+                    .foregroundStyle(AnchorPalette.interaction)
+            }
+        }
+        .frame(minHeight: 52)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct SourceConversationsView: View {
+    let group: SourceGroup
+
+    var body: some View {
+        List {
+            ForEach(group.conversations) { conversation in
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(conversation.process.title)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(AnchorPalette.ink)
+                            .lineLimit(2)
+                        Text(conversation.taskTitle + " · "
+                             + conversation.process.updatedAt.formatted(.relative(presentation: .named)))
+                            .font(.caption)
+                            .foregroundStyle(AnchorIOSStyle.secondaryText)
+                            .lineLimit(1)
                     }
-                    switch reminder.authorization {
-                    case .notDetermined:
-                        Button(DeskText.settingsAllow) { Task { await reminder.requestAuthorization() } }
-                    case .denied:
-                        Text(DeskText.settingsDenied).foregroundStyle(AnchorIOSStyle.secondaryText)
-                        Button(DeskText.settingsOpen) { DeskReminder.openSystemSettings() }
-                    default:
-                        EmptyView()
-                    }
+                    Spacer(minLength: 8)
+                    Text(L10n.status(conversation.process.status))
+                        .font(.caption)
+                        .foregroundStyle(conversation.process.status == .running
+                                         ? AnchorPalette.interaction : AnchorIOSStyle.secondaryText)
                 }
-            } header: {
-                Text(DeskText.settingsSection)
-            } footer: {
-                Text(DeskText.settingsFooter)
-            }
-            .listRowBackground(AnchorIOSStyle.surface)
-            Section(L10n.notificationsSettings) {
-                Text(AnchorStrings.value("notifications.availability", default: "Results from your agents show in Anchor. An alert on this iPhone when an agent finishes is not available yet."))
+                .accessibilityElement(children: .combine)
             }
             .listRowBackground(AnchorIOSStyle.surface)
         }
         .anchorIOSListSurface()
-        .navigationTitle(L10n.notificationsSettings)
-        .task { await reminder.refresh() }
+        .navigationTitle(group.name)
     }
 }
 
-struct PrivacySettingsView: View {
+private struct SourceTile: View {
+    let process: AnchorProcess
+
     var body: some View {
-        Form {
-            Section {
-                Label(L10n.localOnly, systemImage: "lock.shield.fill")
-                    .font(.headline)
-                Text(L10n.localOnlyDetail)
-            }
-            .listRowBackground(AnchorIOSStyle.surface)
-            Section(L10n.sources) {
-                Label(L10n.connections, systemImage: "network")
-                Label(L10n.bluetoothProximity, systemImage: "dot.radiowaves.left.and.right")
-            }
-            .listRowBackground(AnchorIOSStyle.surface)
-        }
-        .anchorIOSListSurface()
-        .navigationTitle(L10n.privacy)
+        Text(process.sourceSymbol)
+            .font(.headline.bold())
+            .frame(width: 38, height: 38)
+            .background(AnchorPalette.source(process.sourceTone).opacity(0.55), in: .rect(cornerRadius: 11))
+            .accessibilityHidden(true)
     }
 }
 
-struct AccessibilitySettingsView: View {
-    @AppStorage(AnchorMotion.reduceMotionDefaultsKey) private var reduceMotion = false
-
-    var body: some View {
-        Form {
-            Section {
-                Label(L10n.displaySupport, systemImage: "accessibility")
-                    .font(.headline)
-                Text(L10n.displaySupportDetail)
-            }
-            .listRowBackground(AnchorIOSStyle.surface)
-            Section {
-                Label(L10n.voiceOver, systemImage: "speaker.wave.3")
-                Label(L10n.dynamicType, systemImage: "textformat.size")
-                Toggle(L10n.reduceMotion, isOn: $reduceMotion)
-                    .accessibilityIdentifier("settings.reduceMotion")
-                Label(L10n.increaseContrast, systemImage: "circle.lefthalf.filled")
-                Label(L10n.reduceTransparency, systemImage: "square.on.square")
-            }
-            .listRowBackground(AnchorIOSStyle.surface)
-        }
-        .anchorIOSListSurface()
-        .navigationTitle(L10n.accessibility)
-    }
+enum SourceCopy {
+    static let empty = AnchorStrings.value("settings.sources.empty", default: "No sources yet")
 }
 
 #endif

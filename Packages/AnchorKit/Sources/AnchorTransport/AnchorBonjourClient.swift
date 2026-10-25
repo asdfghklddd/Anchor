@@ -898,6 +898,15 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
             broadcastSignals()
             return
         }
+        if state == .connected {
+            ConnectionHistory.record(
+                .connected,
+                device: pairingStatus.peerDeviceInfo ?? peerDeviceInfo,
+                route: pairingStatus.phase == .connected ? pairingStatus.route : nil
+            )
+        } else if publishedConnectionState == .connected {
+            ConnectionHistory.record(.disconnected, device: peerDeviceInfo ?? PeerDeviceMemory.last(), route: nil)
+        }
         publishedConnectionState = state
         onConnectionState?(state)
         broadcastSignals()
@@ -914,6 +923,9 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         }
         guard pairingStatus != visibleStatus else { return }
         if let info = visibleStatus.peerDeviceInfo { PeerDeviceMemory.remember(info) }
+        if visibleStatus.phase == .connected {
+            ConnectionHistory.describeLatestConnection(device: visibleStatus.peerDeviceInfo, route: visibleStatus.route)
+        }
         pairingStatus = visibleStatus
         for continuation in pairingStatusContinuations.values {
             continuation.yield(visibleStatus)
