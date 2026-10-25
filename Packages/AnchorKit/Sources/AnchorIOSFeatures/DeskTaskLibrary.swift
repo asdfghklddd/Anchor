@@ -181,29 +181,30 @@ struct DeskTaskLibrary: View {
             if isFront { onTask(task.id) } else { bringToFront(process, of: task) }
         } label: {
             VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .top, spacing: 4) {
-                    Text(process.title)
-                        .font(.system(size: 14))
-                        .foregroundStyle(.black)
+                // The title gets the whole row, so ten characters always fit.
+                Text(process.title)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.black)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(height: 20)
+                HStack(alignment: .center, spacing: 4) {
+                    Text(worked)
+                        .font(.system(size: 11))
+                        .foregroundStyle(palette.ink)
                         .lineLimit(1)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Spacer(minLength: 0)
                     if isRed {
                         HarborAnchorGlyph(color: palette.ink, lineWidth: 1.8)
-                            .frame(width: 21.75, height: 21.75)
-                            .padding(.top, -1)
+                            .frame(width: 15, height: 15)
                             .accessibilityHidden(true)
                     }
                 }
-                .frame(height: 20)
-                Text(worked)
-                    .font(.system(size: 11))
-                    .foregroundStyle(palette.ink)
-                    .lineLimit(1)
-                    .padding(.top, -2)
+                .padding(.top, -2)
                 if isFront { exchange(process) }
             }
             .padding(.leading, 12)
-            .padding(.trailing, 11)
+            .padding(.trailing, 4)
             .padding(.top, 10)
             .frame(width: Metrics.card.width, height: Metrics.card.height, alignment: .topLeading)
             .background(isRed ? palette.front : .white, in: shape)
