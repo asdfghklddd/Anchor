@@ -22,63 +22,38 @@ struct PortraitDashboard: View {
     /// The task whose anchor last caught, and a count that changes each time.
     var settledTaskID: UUID? = nil
     var anchorSettles = 0
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    /// A fourth anchor was asked for: the note above the anchor button says why not.
+    var showsCapNote = false
+    var onCapNoteDismiss: () -> Void = {}
+    var onCompleteTask: (UUID) async -> Bool = { _ in false }
+    @State private var log = AnchoringLog.shared
     @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
         ZStack {
-            HarborBackground()
+            HomeWater()
             ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    HomeTideCard(tasks: projection.hostedSessions, freshness: projection.freshness, onTask: onTask)
-                    HStack {
-                        Text(AnchorStrings.value("home.task.library", default: "Task library"))
-                            .font(.title2.bold()).foregroundStyle(AnchorIOSStyle.heading)
-                        Spacer()
-                        Button { onSheet(.hostedTasks) } label: {
-                            HStack(spacing: 4) {
-                                // Neutral: green belongs to "done" (D02), and a count is not a state.
-                                Circle().fill(AnchorIOSStyle.border)
-                                .frame(width: 7, height: 7)
-                                Text("\(projection.hostedSessions.count)")
-                                HarborAnchorGlyph(color: AnchorIOSStyle.secondaryText, lineWidth: 1.2)
-                                    .frame(width: 12, height: 12)
-                            }
-                            .font(.caption).foregroundStyle(AnchorIOSStyle.secondaryText)
-                            .frame(minWidth: 44, minHeight: 44)
-                        }
-                        .accessibilityLabel(AnchorStrings.value("home.tasks.manage", default: "Manage hosted tasks"))
+                VStack(spacing: 0) {
+                    HomeGreeting(tasks: projection.hostedSessions, log: log)
+                        .padding(.leading, 24)
+                        .padding(.top, 17)
+                    VStack(spacing: 0) {
+                        HomeAnchoringPanel(log: log)
+                            .padding(.top, 30)
+                        tasks
+                            .padding(.horizontal, 22)
+                            .padding(.top, 30)
                     }
-                    .padding(.top, 20)
-                    if projection.hostedSessions.isEmpty {
-                        Text(AnchorStrings.value("home.empty.tasks", default: "Drop an anchor to host your first task"))
-                            .font(.subheadline).foregroundStyle(AnchorIOSStyle.secondaryText)
-                            .multilineTextAlignment(.center).padding(20)
-                            .frame(maxWidth: .infinity, minHeight: 120)
-                            .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: 16))
-                            .accessibilityIdentifier("workspace.empty.processes")
-                            // Fades as the first anchor drops, so the drop isn't fighting a jump.
-                            .transition(.opacity)
-                    } else {
-                        // The first card's own drop choreography brings it in.
-                        taskGrid.transition(.asymmetric(insertion: .identity, removal: .opacity))
-                    }
-                    let recap = TodayRecap(open: projection.hostedSessions, archived: projection.archivedSessions, now: .now)
-                    if !recap.isEmpty {
-                        TodayRecapCard(recap: recap, onTask: onTask)
-                            .padding(.top, 16)
-                            .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 8)))
-                    }
+                    .frame(maxWidth: .infinity)
+                    .background(alignment: .top) { HomeDome() }
+                    .padding(.top, 21)
                 }
-                .animation(AnchorMotion.micro, value: projection.hostedSessions.isEmpty)
-                .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: showsRecap)
-                .padding(.horizontal, 20).padding(.top, 8).padding(.bottom, 12)
+                .padding(.bottom, 12)
                 .frame(maxWidth: 760).frame(maxWidth: .infinity)
             }
             .scrollIndicators(.hidden)
-            // Cards fade under the anchor button instead of meeting a hard band; the top
-            // keeps the system's firmer edge, which keeps the name and link status readable.
-            .scrollEdgeEffectStyle(.soft, for: .bottom)
+            // The mockup's water runs clean under the bars; nothing frosts it.
+            .scrollEdgeEffectHidden(true, for: .all)
             .accessibilityIdentifier("workspace.screen")
             if let invitation {
                 // Behind the anchor button, which floats on the water.
@@ -95,61 +70,50 @@ struct PortraitDashboard: View {
             HarborTopBar(connection: projection.connection,
                 auxiliaryLabel: auxiliaryToolbarLabel, onProfile: { onRoute(.profile) },
                 onSettings: { onSheet(.account) }, onAuxiliary: auxiliaryToolbarAction,
-                onConnection: { onSheet(.connections) })
+                onConnection: { onSheet(.connections) }, freshness: projection.freshness)
         }
         .safeAreaBar(edge: .bottom, spacing: 0) {
-            HarborAnchorButton(
-                isInviting: invitation == .inviting,
-                drops: anchorDrops,
-                weighs: anchorWeighs,
-                gravity: gravity,
-                action: { onSheet(.setup) }
-            )
-            .padding(.top, 8).padding(.bottom, 4)
+            VStack(spacing: 12) {
+                if showsCapNote {
+                    HomeTaskCapNote(onDismiss: onCapNoteDismiss)
+                        .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 8)))
+                }
+                HarborAnchorButton(
+                    isInviting: invitation == .inviting,
+                    drops: anchorDrops,
+                    weighs: anchorWeighs,
+                    gravity: gravity,
+                    action: { onSheet(.setup) }
+                )
+            }
+            .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: showsCapNote)
+            // The mockup sets the button lower, over the home indicator's band.
+            .padding(.top, 8).padding(.bottom, -15)
         }
         .toolbar(.hidden, for: .navigationBar)
-    }
-
-    /// The day's recap shows once something happened today.
-    private var showsRecap: Bool {
-        !TodayRecap(open: projection.hostedSessions, archived: projection.archivedSessions, now: .now).isEmpty
-    }
-
-    private var taskGrid: some View {
-        let tasks = projection.hostedSessions
-        let columns = dynamicTypeSize.isAccessibilitySize ? 1 : 2
-        return HStack(alignment: .top, spacing: 10) {
-            ForEach(0..<columns, id: \.self) { column in
-                VStack(spacing: 10) {
-                    ForEach(Array(tasks.enumerated()).filter { $0.offset % columns == column }, id: \.element.id) { index, task in
-                        Button { onTask(task.id) } label: {
-                            HostedTaskCard(task: task, height: dynamicTypeSize.isAccessibilitySize ? 190 : (index % 4 == 0 || index % 4 == 3 ? 100 : 212),
-                                           isCurrent: tasks.count > 1 && task.id == projection.session?.id)
-                        }
-                        .buttonStyle(AnchorPressButtonStyle())
-                        .modifier(DropSettle(
-                            floating: task.id == settlingTaskID, settles: anchorSettles,
-                            isSettled: task.id == settledTaskID, tint: HostedTaskAppearance.tint(task),
-                            reduceMotion: reduceMotion))
-                        .accessibilityIdentifier("hosted.task.\(task.id)")
-                        .transition(reduceMotion ? .opacity : .scale(scale: 0.95).combined(with: .opacity))
-                    }
-                }.frame(maxWidth: .infinity)
-            }
+        .task(id: showsCapNote) {
+            guard showsCapNote else { return }
+            try? await Task.sleep(for: .seconds(5))
+            if !Task.isCancelled { onCapNoteDismiss() }
         }
-        // Only membership changes animate; ordinary refreshes keep cards still.
-        .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: tasks.map(\.id))
+    }
+
+    private var tasks: some View {
+        HomeTaskLibrary(tasks: projection.hostedSessions, currentID: projection.session?.id,
+                        settlingTaskID: settlingTaskID, settledTaskID: settledTaskID, anchorSettles: anchorSettles,
+                        onComplete: onCompleteTask)
     }
 }
 
 /// A new task's card in the moment after its anchor drops: lifted and pale while
 /// the anchor falls, then settled with one ring of its color as the anchor catches.
-private struct DropSettle: ViewModifier {
+struct DropSettle: ViewModifier {
     let floating: Bool
     let settles: Int
     let isSettled: Bool
     let tint: Color
     let reduceMotion: Bool
+    var cornerRadius = AnchorIOSStyle.cardRadius
 
     func body(content: Content) -> some View {
         content
@@ -158,7 +122,7 @@ private struct DropSettle: ViewModifier {
             .offset(y: floating && !reduceMotion ? -10 : 0)
             .keyframeAnimator(initialValue: 0.0, trigger: settles) { content, ring in
                 content.overlay {
-                    RoundedRectangle(cornerRadius: AnchorIOSStyle.cardRadius)
+                    RoundedRectangle(cornerRadius: cornerRadius)
                         .strokeBorder(tint, lineWidth: 2.5)
                         .opacity(isSettled ? ring : 0)
                         .allowsHitTesting(false)

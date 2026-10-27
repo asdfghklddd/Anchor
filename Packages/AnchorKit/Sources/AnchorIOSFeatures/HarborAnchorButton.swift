@@ -43,7 +43,7 @@ struct HarborAnchorButton: View {
     @State private var pendulum = Pendulum()
     @State private var haptics = AnchorDropHaptics()
 
-    private static let disc: CGFloat = 76
+    private static let disc: CGFloat = 75
     private static let mark: CGFloat = 36
 
     var body: some View {
@@ -53,7 +53,7 @@ struct HarborAnchorButton: View {
                     ripples(motion.splash)
                     if !reduceMotion { spray(motion.splash) }
                     Circle()
-                        .fill(AnchorIOSStyle.cyan)
+                        .fill(HomeStyle.anchor)
                         .frame(width: Self.disc, height: Self.disc)
                         .shadow(color: AnchorIOSStyle.heading.opacity(0.22 * (1 - grown)), radius: 14, y: 6)
                         // The disc sinks into the water as the anchor grows out of it.
@@ -147,7 +147,7 @@ struct HarborAnchorButton: View {
             ForEach(0..<2, id: \.self) { ring in
                 let progress = min(1, max(0, splash - CGFloat(ring) * 0.18) / 0.82)
                 Circle()
-                    .stroke(AnchorIOSStyle.cyan.opacity(0.75), lineWidth: 2.5)
+                    .stroke(HomeStyle.anchor.opacity(0.75), lineWidth: 2.5)
                     .frame(width: Self.disc, height: Self.disc)
                     .scaleEffect(1 + progress * 1.3)
                     .opacity(splash > 0 && splash < 1 ? Double(1 - progress) : 0)
@@ -165,7 +165,7 @@ struct HarborAnchorButton: View {
                 // The spray is over in the first part of the splash.
                 let t = min(1, splash / 0.62)
                 Circle()
-                    .fill(AnchorIOSStyle.cyan)
+                    .fill(HomeStyle.anchor)
                     .frame(width: droplet.size, height: droplet.size)
                     .offset(x: droplet.dx * t, y: -30 - droplet.rise * 4 * t * (1 - t) + 10 * t * t)
                     .opacity(splash > 0 && t < 1 ? Double(min(1, t / 0.12) * (1 - t * t)) : 0)

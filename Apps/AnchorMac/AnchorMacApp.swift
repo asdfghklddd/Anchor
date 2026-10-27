@@ -210,9 +210,6 @@ struct AnchorMacApp: App {
         }
         server.onEvent = applyInboundEvent
         advertiser.onEvent = applyInboundEvent
-        advertiser.onConnectionState = { state in
-            server.updateFallbackConnection(state)
-        }
         advertiser.onPeerDeviceInfo = { peerID, info in
             server.updateFallbackPeerDeviceInfo(info, for: peerID)
         }
@@ -281,6 +278,17 @@ struct AnchorMacApp: App {
         )
         setupModel.modelKey = MacModelKeyAccess(load: { modelKeyStore.load() }, save: { modelKeyStore.save($0) })
         sourceSetupModel = setupModel
+        // The phone's home shows the day so far: tokens per half hour and the Bluetooth link.
+        let activityReporter = DayActivityReporter(
+            sourceID: deviceID,
+            roots: { await setupModel.agentLogRoots },
+            send: { try await transport.send($0) }
+        )
+        advertiser.onConnectionState = { state in
+            server.updateFallbackConnection(state)
+            let at = Date.now
+            Task { await activityReporter.linkChanged(connected: state == .connected, at: at) }
+        }
         model = AnchorSessionModel(
             repository: repository,
             sourceHealthProvider: sourceCoordinator,
@@ -344,6 +352,8 @@ struct AnchorMacApp: App {
 #endif
             if !isUITesting && validationRootURL == nil {
                 setupModel.presentCodexSetupIfNeeded()
+                // After the log folders are restored, so the first report already has tokens.
+                await activityReporter.start()
             }
             if !isUITesting {
                 await cloudSyncRunner?.start()

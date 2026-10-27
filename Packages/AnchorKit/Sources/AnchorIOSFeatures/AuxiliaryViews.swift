@@ -69,6 +69,55 @@ private struct MetricTile: View {
     }
 }
 
+/// The person's name, edited where it is shown. The home's greeting and top
+/// bar read the same setting, so they change as soon as it is saved.
+private struct ProfileNameField: View {
+    @Binding var name: String
+    @State private var draft = ""
+    @State private var editing = false
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        Group {
+            if editing {
+                TextField(AnchorStrings.value("profile.name", default: "Name"), text: $draft)
+                    .textContentType(.nickname)
+                    .submitLabel(.done)
+                    .focused($focused)
+                    .onSubmit(save)
+                    .onChange(of: focused) { _, isFocused in if !isFocused { save() } }
+                    .accessibilityIdentifier("profile.name.field")
+            } else {
+                Button {
+                    draft = name
+                    editing = true
+                    focused = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Text(name)
+                        Image(systemName: "pencil")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(AnchorPalette.secondaryText)
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(name)
+                .accessibilityHint(AnchorStrings.value("profile.name.edit", default: "Edit name"))
+                .accessibilityIdentifier("profile.name.button")
+            }
+        }
+        .font(.title.bold())
+        .foregroundStyle(AnchorPalette.brandDeep)
+    }
+
+    /// An empty name keeps the old one.
+    private func save() {
+        let trimmed = String(draft.trimmingCharacters(in: .whitespacesAndNewlines).prefix(40))
+        if !trimmed.isEmpty { name = trimmed }
+        editing = false
+    }
+}
+
 struct ProfileView: View {
     @AppStorage("anchor.profile.name", store: ProfilePreferences.store) private var displayName = "Anchor"
     let projection: SessionProjection
@@ -107,14 +156,12 @@ struct ProfileView: View {
                 Text(L10n.personalAnchor)
                     .font(.caption.bold())
                     .foregroundStyle(AnchorPalette.interaction)
-                Text(displayName)
-                    .font(.title.bold())
-                    .foregroundStyle(AnchorPalette.brandDeep)
+                ProfileNameField(name: $displayName)
                 Label(projection.connection == .connected ? L10n.connected : L10n.disconnected, systemImage: projection.connection == .connected ? "wifi" : "wifi.slash")
                     .font(.caption.bold())
                     .foregroundStyle(AnchorPalette.secondaryText)
             }
-            .accessibilityElement(children: .combine)
+            .accessibilityElement(children: .contain)
             Spacer(minLength: 8)
             VStack(spacing: 2) {
                 Text(projection.connection == .connected ? "1" : "0")
@@ -350,9 +397,24 @@ struct ProfileView: View {
 struct HistoryView: View {
     let projection: SessionProjection
     let onOpen: (UUID) -> Void
+    @State private var log = AnchoringLog.shared
 
     var body: some View {
+        let days = log.history(now: .now)
         List {
+            if !days.isEmpty {
+                Section(AnchorStrings.value("home.anchoring.history", default: "Anchoring")) {
+                    ForEach(days, id: \.day) { day in
+                        LabeledContent {
+                            Text(Duration.seconds(day.seconds).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated)))
+                                .monospacedDigit()
+                        } label: {
+                            Text(day.day, format: .dateTime.month().day().weekday())
+                        }
+                        .listRowBackground(AnchorIOSStyle.surface)
+                    }
+                }
+            }
             ForEach(projection.archivedSessions) { session in
                 Button { onOpen(session.id) } label: {
                     HistoryRow(session: session)
@@ -363,7 +425,7 @@ struct HistoryView: View {
             }
         }
         .overlay {
-            if projection.archivedSessions.isEmpty {
+            if projection.archivedSessions.isEmpty, days.isEmpty {
                 ContentUnavailableView(
                     L10n.history,
                     systemImage: "clock",

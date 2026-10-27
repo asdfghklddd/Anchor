@@ -12,6 +12,8 @@ struct HarborTopBar: View {
 
 
     var onConnection: (() -> Void)? = nil
+    /// When set, a quiet note beside the link says how fresh this copy is.
+    var freshness: SyncFreshness? = nil
     @AppStorage("anchor.profile.name", store: ProfilePreferences.store) private var displayName = "Anchor"
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -28,20 +30,20 @@ struct HarborTopBar: View {
             }
         }
         .tint(AnchorPalette.brandDeep)
-        .padding(.horizontal, AnchorSpacing.medium)
-        .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? 8 : 4)
+        .padding(.horizontal, 20)
+        .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? 8 : 0)
 
     }
 
     private var standardContent: some View {
-        HStack(spacing: AnchorSpacing.small) {
+        HStack(spacing: 10) {
             profileButton
             brandBlock
             Spacer()
             auxiliaryButton
             settingsButton
         }
-        .frame(minHeight: 56)
+        .frame(minHeight: 47)
     }
 
     private var accessibilityContent: some View {
@@ -62,7 +64,7 @@ struct HarborTopBar: View {
 
     private var profileButton: some View {
         Button(action: onProfile) {
-            ProfileAvatar(size: 48)
+            ProfileAvatar(size: 47)
         }
         .buttonStyle(AnchorPressButtonStyle())
         .accessibilityLabel(L10n.profile)
@@ -71,17 +73,34 @@ struct HarborTopBar: View {
 
     private var brandBlock: some View {
         Button { onConnection?() } label: {
-            VStack(alignment: .leading, spacing: 0) {
-                Text(displayName).font(.headline.bold()).foregroundStyle(AnchorPalette.brandDeep)
-                // The link changing state morphs in place: icon replaced, words crossfaded.
-                Label {
-                    Text(connectionLabel).contentTransition(.opacity)
-                } icon: {
-                    Image(systemName: connectionSymbol).contentTransition(.symbolEffect(.replace))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(displayName).font(.system(size: 16, weight: .bold)).foregroundStyle(HomeStyle.ink)
+                HStack(spacing: 29) {
+                    // The link changing state crossfades its words in place.
+                    Text(connectionLabel)
+                        .contentTransition(.opacity)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(connectionColor)
+                        .padding(.horizontal, 13.5)
+                        .frame(height: 19)
+                        .background(AnchorIOSStyle.surface, in: .capsule)
+                        .shadow(color: HomeStyle.cardShadow.opacity(0.14), radius: 3, y: 2)
+                        .fixedSize()
+                        .animation(AnchorMotion.micro, value: connectionLabel)
+                    if let freshness {
+                        TimelineView(.periodic(from: .now, by: 30)) { context in
+                            Text(SyncText.short(for: freshness, now: context.date))
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(HomeStyle.synced)
+                                .lineLimit(1)
+                                // A long note truncates rather than pushing settings to a second row.
+                                .frame(maxWidth: 110, alignment: .leading)
+                        }
+                    }
                 }
-                .font(.caption).foregroundStyle(connectionColor)
-                .animation(AnchorMotion.micro, value: connectionLabel)
             }
+            // Sits a little low, as in the mockup.
+            .offset(y: 4)
             .frame(minWidth: 44, minHeight: 44, alignment: .leading)
             .contentShape(Rectangle())
         }
@@ -131,19 +150,9 @@ struct HarborTopBar: View {
         }
     }
 
-    private var connectionSymbol: String {
-        switch connection {
-        case .connected: "link"
-        case .pairing: "arrow.triangle.2.circlepath"
-        case .disconnected, .unavailable: "wifi.slash"
-        case .permissionDenied: "hand.raised.fill"
-        case .failed: "exclamationmark.triangle.fill"
-        }
-    }
-
     private var connectionColor: Color {
         switch connection {
-        case .connected: AnchorIOSStyle.success
+        case .connected: HomeStyle.linked
         case .pairing: AnchorPalette.interaction
         // A sleeping or closed Mac is ordinary; only actionable problems get warm colors (P2).
         case .disconnected, .unavailable: AnchorIOSStyle.secondaryText

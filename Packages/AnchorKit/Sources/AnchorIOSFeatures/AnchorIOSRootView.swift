@@ -34,6 +34,8 @@ public struct AnchorIOSRootView: View {
     @State private var promptedRecoverySessionID: UUID?
     /// The phone came off the desk during work: show the pick-up card (D05).
     @State private var pickedUp = false
+    /// A fourth anchor was asked for; the home explains the three-task limit.
+    @State private var showsCapNote = false
     @State private var reminder = DeskReminder()
     @AppStorage(DeskReminder.enabledKey) private var reminderEnabled = true
     @AppStorage(DeskReminder.minutesKey) private var reminderMinutes = DeskReminder.defaultMinutes
@@ -74,7 +76,9 @@ public struct AnchorIOSRootView: View {
                             auxiliaryToolbarAction: auxiliaryToolbarAction,
                             transitionNamespace: processTransition,
                             onRoute: { path.append($0) },
-                            onSheet: { sheet = $0 },
+                            onSheet: { requested in
+                                if requested == .setup, atTaskLimit { showsCapNote = true } else { sheet = requested }
+                            },
                             onTask: openHostedTask,
                             invitation: harborMode,
                             onInvitationEnd: endHarbor,
@@ -83,7 +87,10 @@ public struct AnchorIOSRootView: View {
                             gravity: gravity,
                             settlingTaskID: settlingTaskID,
                             settledTaskID: settledTaskID,
-                            anchorSettles: anchorSettles
+                            anchorSettles: anchorSettles,
+                            showsCapNote: showsCapNote,
+                            onCapNoteDismiss: { showsCapNote = false },
+                            onCompleteTask: { await model.send(.forSession($0, .completeSession)) }
                         )
                         .overlay {
                             if pickedUp, let hold = deskHold {
@@ -405,7 +412,9 @@ public struct AnchorIOSRootView: View {
                 .presentationDragIndicator(.hidden)
                 .presentationCompactAdaptation(.none)
         case .hostedTasks:
-            HostedTasksView(model: model, onCreate: { sheet = .setup }, onEdit: { sheet = .goal }, onNote: { sheet = .note }, onFinish: { sheet = .finish })
+            HostedTasksView(model: model, onCreate: {
+                if atTaskLimit { sheet = nil; showsCapNote = true } else { sheet = .setup }
+            }, onEdit: { sheet = .goal }, onNote: { sheet = .note }, onFinish: { sheet = .finish })
         case .account:
             ProfileEditorView(projection: model.projection) { destination(for: $0) }
                 .presentationDetents([.large])
@@ -516,6 +525,10 @@ public struct AnchorIOSRootView: View {
             guard await model.send(.forSession(sessionID, .archiveSession)) else { return }
             sheet = .setup
         }
+    }
+
+    private var atTaskLimit: Bool {
+        model.projection.hostedSessions.count >= HomeTaskLimit.count
     }
 
     private var shouldShowLandscapeDashboard: Bool {

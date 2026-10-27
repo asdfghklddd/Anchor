@@ -1316,3 +1316,54 @@ private enum AnchorLinkTestError: Error {
 private func testIdentityStore(service: String) -> PairingIdentityStore {
     PairingIdentityStore(service: service, keychain: .legacy)
 }
+
+extension AnchorLinkCodecTests {
+    @Test("The Mac's day reaches the phone: tokens read from a log arrive over the paired link")
+    func dayActivityRoundTrip() async throws {
+        let suffix = UUID().uuidString
+        let serviceType = isolatedServiceType()
+        let serverService = "com.andywang.anchor.tests.server.\(suffix)"
+        let clientService = "com.andywang.anchor.tests.client.\(suffix)"
+        let folder = FileManager.default.temporaryDirectory.appending(path: "activity-\(suffix)", directoryHint: .isDirectory)
+        defer {
+            deleteKeychainItems(service: serverService)
+            deleteKeychainItems(service: clientService)
+            try? FileManager.default.removeItem(at: folder)
+        }
+
+        // A Codex log written ten minutes ago: 300 fresh input and 200 output.
+        let stamp = Date.ISO8601FormatStyle(includingFractionalSeconds: true).format(Date.now.addingTimeInterval(-600))
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let line = #"{"timestamp":"\#(stamp)","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":500,"cached_input_tokens":200,"output_tokens":200}}}}"#
+        try line.write(to: folder.appending(path: "rollout.jsonl"), atomically: true, encoding: .utf8)
+
+        // Mac side: the real server and the real reporter.
+        let server = AnchorBonjourServer(
+            identityStore: testIdentityStore(service: serverService),
+            automaticPairing: .manualOnly,
+            serviceType: serviceType
+        )
+        try server.start()
+        defer { server.stop() }
+        let reporter = DayActivityReporter(sourceID: UUID(), roots: { [folder] }, send: { try await server.send($0) })
+
+        // Phone side: the real client, decoding as the app does.
+        let client = AnchorBonjourClient(
+            identityStore: testIdentityStore(service: clientService),
+            automaticPairing: .manualOnly,
+            serviceType: serviceType
+        )
+        defer { client.stop() }
+        let recorder = EventRecorder()
+        client.onEvent = { await recorder.record($0) }
+        client.startDiscovery()
+        let code = try #require(await server.currentPairingCode())
+        try await client.pair(using: code)
+
+        await reporter.report()
+        let received = try #require(await recorder.events.first)
+        let activity = try #require(DayActivity(envelope: received))
+        #expect(activity.tokens.map(\.tokens) == [500])
+        #expect(activity.tokens.first?.start == DayActivity.slotStart(of: Date.now.addingTimeInterval(-600)))
+    }
+}

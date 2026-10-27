@@ -20,6 +20,18 @@ public enum SyncText {
         }
     }
 
+    /// A few words for the home's top bar: when the two devices last spoke.
+    public static func short(for freshness: SyncFreshness, now: Date) -> String {
+        switch freshness {
+        case .live:
+            return AnchorStrings.value("home.synced.now", default: "Synced just now")
+        case .sending:
+            return line(for: freshness, now: now)
+        case let .behind(lastContact, _):
+            return lastContact.map { lastSynced($0, now: now) } ?? L10n.glanceSavedRecords
+        }
+    }
+
     public static func symbol(for freshness: SyncFreshness) -> String {
         switch freshness {
         case .live: "checkmark.circle"

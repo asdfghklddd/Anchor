@@ -115,6 +115,8 @@ struct AnchorIOSApp: App {
         )
         let repository = LinkedSessionRepository(base: localRepository, transport: transport)
         let applyEvent: @Sendable (EventEnvelope) async throws -> Void = { [weak repository] event in
+            // The Mac's day so far is a snapshot for the home, not history.
+            if AnchoringLog.receive(event) { return }
             guard let repository else { throw CancellationError() }
             try await repository.applyRemote(event)
         }
@@ -131,6 +133,9 @@ struct AnchorIOSApp: App {
         }
         scanner.setConnectionStateHandler { [weak repository] state in
             client.updateFallbackConnection(state)
+            // Anchoring time runs while the Bluetooth link to the Mac is up.
+            let at = Date.now
+            Task { @MainActor in AnchoringLog.shared.linkChanged(connected: state == .connected, at: at) }
             guard state == .connected else { return }
             Task { await repository?.reconcilePeerHistory() }
         }

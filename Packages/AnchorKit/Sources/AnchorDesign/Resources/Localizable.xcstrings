@@ -175,6 +175,7 @@
 
     },
     "accessibility" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -190,10 +191,8 @@
         }
       }
     },
-    "Accessibility" : {
-
-    },
     "accessibility.display" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -210,6 +209,7 @@
       }
     },
     "accessibility.display.detail" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -226,6 +226,7 @@
       }
     },
     "accessibility.dynamic.type" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -242,6 +243,7 @@
       }
     },
     "accessibility.increase.contrast" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -258,6 +260,7 @@
       }
     },
     "accessibility.reduce.motion" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -274,6 +277,7 @@
       }
     },
     "accessibility.reduce.transparency" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -290,6 +294,7 @@
       }
     },
     "accessibility.voiceover" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -393,9 +398,6 @@
     "Add process" : {
 
     },
-    "After" : {
-
-    },
     "After your choice, Anchor will resume the workflow." : {
 
     },
@@ -412,9 +414,6 @@
 
     },
     "Allow notifications in System Settings to get a ping when a Codex conversation ends." : {
-
-    },
-    "Allow reminders" : {
 
     },
     "ambient" : {
@@ -1465,9 +1464,6 @@
     "Departure detection paused" : {
 
     },
-    "Desk reminder" : {
-
-    },
     "desk.back" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1928,9 +1924,6 @@
         }
       }
     },
-    "Display accommodations" : {
-
-    },
     "Do first" : {
 
     },
@@ -1969,9 +1962,6 @@
 
     },
     "Drop anchor" : {
-
-    },
-    "Dynamic Type" : {
 
     },
     "edge.buoy.attention" : {
@@ -2478,9 +2468,6 @@
         }
       }
     },
-    "Full animations are enabled by default. You can enable Reduce Motion here. Anchor follows system Dynamic Type, VoiceOver, Increase Contrast, and Reduce Transparency settings." : {
-
-    },
     "Generating" : {
 
     },
@@ -2788,6 +2775,142 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "回溯"
+          }
+        }
+      }
+    },
+    "home.anchoring.goal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Goal"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标"
+          }
+        }
+      }
+    },
+    "home.anchoring.goal.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today’s anchoring goal"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天想锚定多久"
+          }
+        }
+      }
+    },
+    "home.anchoring.history" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchoring"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "锚定时长"
+          }
+        }
+      }
+    },
+    "home.anchoring.hours" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "h"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "小时"
+          }
+        }
+      }
+    },
+    "home.anchoring.minutes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分钟"
+          }
+        }
+      }
+    },
+    "home.anchoring.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today’s Anchoring"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today’s Anchoring"
+          }
+        }
+      }
+    },
+    "home.cap.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Human, your attention and context are limited too. Finish a current task before starting another."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "人，你的注意力和上下文也是有限的哦，请你先完成目前的任务再来开启吧。"
+          }
+        }
+      }
+    },
+    "home.cap.ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好"
           }
         }
       }
@@ -3113,6 +3236,57 @@
         }
       }
     },
+    "home.library.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchored tasks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务锚定库"
+          }
+        }
+      }
+    },
+    "home.synced.now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synced just now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刚刚同步"
+          }
+        }
+      }
+    },
+    "home.task.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成"
+          }
+        }
+      }
+    },
     "home.task.library" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3147,6 +3321,23 @@
         }
       }
     },
+    "home.tokens.a11y" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tokens used in the last 12 hours"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近 12 小时的 token 用量"
+          }
+        }
+      }
+    },
     "I’m still at my desk" : {
 
     },
@@ -3156,9 +3347,6 @@
     "Idle" : {
 
     },
-    "If you leave Anchor while an agent works on your task or a result waits for you, a reminder comes after this long. It is made on this iPhone and needs no connection." : {
-
-    },
     "IMPACT WHILE AWAY" : {
 
     },
@@ -3166,9 +3354,6 @@
 
     },
     "In progress" : {
-
-    },
-    "Increase Contrast" : {
 
     },
     "insights" : {
@@ -5724,9 +5909,6 @@
     "Notifications" : {
 
     },
-    "Notifications are off for Anchor. Turn them on in Settings." : {
-
-    },
     "notifications.availability" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5793,6 +5975,7 @@
       }
     },
     "notifications.settings" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5846,9 +6029,6 @@
 
     },
     "Open Safari settings…" : {
-
-    },
-    "Open Settings" : {
 
     },
     "Open source details" : {
@@ -6867,6 +7047,7 @@
 
     },
     "privacy" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6881,9 +7062,6 @@
           }
         }
       }
-    },
-    "Privacy" : {
-
     },
     "privacy.local" : {
       "localizations" : {
@@ -8014,6 +8192,23 @@
         }
       }
     },
+    "profile.name.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit name"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修改名字"
+          }
+        }
+      }
+    },
     "profile.personal" : {
       "localizations" : {
         "en" : {
@@ -8184,12 +8379,6 @@
     "Recommended next" : {
 
     },
-    "Reduce Motion" : {
-
-    },
-    "Reduce Transparency" : {
-
-    },
     "Remember this moment, then keep moving." : {
 
     },
@@ -8197,9 +8386,6 @@
 
     },
     "Remind me if I stay away" : {
-
-    },
-    "Remind me when I leave the desk" : {
 
     },
     "Reminder after %lld min away" : {
@@ -13068,6 +13254,9 @@
     "Synced" : {
 
     },
+    "Synced just now" : {
+
+    },
     "Syncing from Mac" : {
 
     },
@@ -13687,9 +13876,6 @@
 
     },
     "View the full task record" : {
-
-    },
-    "VoiceOver" : {
 
     },
     "Wait: %@ is running" : {

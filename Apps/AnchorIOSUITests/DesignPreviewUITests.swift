@@ -1,6 +1,6 @@
 import XCTest
 
-/// Captures the home glance with the isolated DesignPreviewFixtureTests repository.
+/// Captures the home with the isolated DesignPreviewFixtureTests repository.
 /// A preview runner imports that repository first and removes it afterwards.
 final class DesignPreviewUITests: XCTestCase {
     private let storageID = "DE51A000-7215-40E0-8B0B-000000000099"
@@ -15,9 +15,9 @@ final class DesignPreviewUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         app.launch()
         defer { app.terminate(); XCUIDevice.shared.orientation = .portrait }
-        let glance = app.descendants(matching: .any)["home.glance"]
-        guard glance.waitForExistence(timeout: 8),
-              app.descendants(matching: .any)["home.glance.latest"].waitForExistence(timeout: 4) else {
+        let glance = app.descendants(matching: .any)["home.anchoring.clock"]
+        let card = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'hosted.task.'")).firstMatch
+        guard glance.waitForExistence(timeout: 8), card.waitForExistence(timeout: 4) else {
             throw XCTSkip("Import the isolated DesignPreviewFixtureTests repository first.")
         }
         capture("glance-portrait")
@@ -50,7 +50,7 @@ final class DesignPreviewUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         app.launch()
         defer { app.terminate(); XCUIDevice.shared.orientation = .portrait }
-        guard app.descendants(matching: .any)["home.glance"].waitForExistence(timeout: 8) else {
+        guard app.descendants(matching: .any)["home.anchoring.clock"].waitForExistence(timeout: 8) else {
             throw XCTSkip("Import the isolated live-plan-home repository first.")
         }
         capture("live-plan-home-portrait")
@@ -80,7 +80,7 @@ final class DesignPreviewUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         app.launch()
         defer { app.terminate(); XCUIDevice.shared.orientation = .portrait }
-        guard app.descendants(matching: .any)["home.glance"].waitForExistence(timeout: 8) else {
+        guard app.descendants(matching: .any)["home.anchoring.clock"].waitForExistence(timeout: 8) else {
             throw XCTSkip("Import the isolated desk-wait repository first.")
         }
 
@@ -96,7 +96,7 @@ final class DesignPreviewUITests: XCTestCase {
         capture("desk-pickup")
         app.buttons["desk.pickup.use-anyway"].tap()
         XCTAssertTrue(card.waitForNonExistence(timeout: 3))
-        XCTAssertTrue(app.descendants(matching: .any)["home.glance"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["home.anchoring.clock"].exists)
 
         // Each pick-up interrupts again, and the Meanwhile card switches to that task.
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -127,7 +127,7 @@ final class DesignPreviewUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         app.launch()
         defer { app.terminate(); XCUIDevice.shared.orientation = .portrait }
-        guard app.descendants(matching: .any)["home.glance"].waitForExistence(timeout: 8) else {
+        guard app.descendants(matching: .any)["home.anchoring.clock"].waitForExistence(timeout: 8) else {
             throw XCTSkip("Import the isolated task-library repository first.")
         }
 

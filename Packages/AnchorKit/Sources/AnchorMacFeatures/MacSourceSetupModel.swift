@@ -27,6 +27,8 @@ public final class MacSourceSetupModel {
         codexSessionsFolderName != nil || claudeProjectsFolderName != nil
     }
     public var errorMessage: String?
+    /// The granted log folders, for counting the day's tokens.
+    public var agentLogRoots: [URL] { [codexSessionsRootURL, claudeRootURL].compactMap { $0 } }
 
     public var showsCodexOnboarding = false
     public var onNeedsAttention: (@MainActor () -> Void)?
