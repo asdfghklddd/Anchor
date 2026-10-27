@@ -25,19 +25,6 @@ enum DeskPetKind: String, CaseIterable, Identifiable, Sendable {
         case .off: AnchorStrings.value("settings.deskPet.off", default: "Off")
         }
     }
-
-    /// How much this pet trusts the person, kept across launches.
-    var trustKey: String { "anchor.desk.pet.trust.\(rawValue)" }
-}
-
-/// What the desk is doing, which sets the pet's background behavior.
-enum DeskPetMood: Hashable {
-    /// An agent runs: the pet types.
-    case working
-    /// Nothing runs and it is the person's move: the pet lives its day.
-    case yourMove
-    /// Nothing has happened for a long while: the pet sleeps.
-    case quiet
 }
 
 /// Counts of desk news since the board came up; each rise is one event.
@@ -48,28 +35,26 @@ struct DeskPetSignals: Equatable {
 }
 
 /// A small pixel pet at the foot of the desk clock, in its own millennium-era
-/// nook (`DeskScene`). Its life runs in `DeskPetBrain` (desk events first,
-/// then touch, then daily life) and is drawn by `DeskPetRenderer` at 8 fps. A
-/// tap, a burst of taps and a long press each get an answer that depends on
-/// the pet and on how it feels; a tap on something in the nook works that
-/// thing, and the pet's own thing draws it over to use it. With reduced motion
-/// it holds still and only changes pose with the desk.
+/// nook (`DeskScene`). It is the same pet as on the home screen
+/// (`DeskPetLife`), with room here to walk and things to use. A tap, a burst
+/// of taps and a long press each get an answer that depends on the pet and
+/// on how it feels; a tap on something in the nook works that thing, and the
+/// pet's own thing draws it over to use it. With reduced motion it holds
+/// still and only changes pose with the desk.
 struct DeskPet: View {
     let kind: DeskPetKind
-    let mood: DeskPetMood
+    var context = DeskPetContext()
     var signals = DeskPetSignals()
-    var hour = 12
 
     @AnchorReducedMotion private var reduceMotion
-    @State private var brain: DeskPetBrain?
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var life = DeskPetLife.shared
     @State private var columns = 0
     @State private var touches = 0
-    @State private var scene = DeskScene.State()
 
     /// Points per sprite pixel.
     static let pixel: CGFloat = 3
     static let height = CGFloat(DeskScene.rows) * pixel
-    private static let growthKey = "anchor.desk.plant.growth"
 
     var body: some View {
         Canvas { context, _ in
@@ -80,38 +65,36 @@ struct DeskPet: View {
         .contentShape(.rect)
         .onLongPressGesture(minimumDuration: 0.5) {
             touches += 1
-            brain?.press()
-            keepTrust()
+            life.press()
         }
         .gesture(SpatialTapGesture().onEnded { touch(at: $0.location) })
         .sensoryFeedback(.impact(weight: .light, intensity: 0.5), trigger: touches)
-        .onChange(of: kind, initial: true) {
-            let saved = ProfilePreferences.store.object(forKey: kind.trustKey) as? Double
-            brain = DeskPetBrain(kind: kind, trust: saved ?? 0.3)
-            scene.growth = ProfilePreferences.store.integer(forKey: Self.growthKey)
-        }
+        .onChange(of: kind, initial: true) { life.use(kind) }
+        .onChange(of: context, initial: true) { life.update(desk: context) }
         .onChange(of: signals) { old, new in
             // The weightiest news wins when several land together.
-            if new.failures > old.failures { brain?.hear(.failure) }
-            else if new.questions > old.questions { brain?.hear(.question) }
-            else if new.results > old.results { brain?.hear(.result) }
+            if new.failures > old.failures { life.hear(.failure) }
+            else if new.questions > old.questions { life.hear(.question) }
+            else if new.results > old.results { life.hear(.result) }
         }
-        // Restarts with a new mood or hour, so the loop never runs on stale ones.
-        .task(id: Loop(still: reduceMotion, mood: mood, hour: hour, kind: kind)) {
-            brain?.set(mood: mood, hour: hour)
-            guard !reduceMotion else { return }
+        .task(id: Loop(still: reduceMotion, kind: kind)) {
+            guard !reduceMotion else {
+                life.settle(now: .now)
+                return
+            }
             while !Task.isCancelled {
-                brain?.step(room: room)
+                // Until the nook has a width, the pet keeps its place.
+                if columns > 0 { life.advance(now: .now, stage: .nook(room: room)) }
                 try? await Task.sleep(for: .milliseconds(125))
             }
         }
+        .onDisappear { life.save() }
+        .onChange(of: scenePhase) { if scenePhase != .active { life.save() } }
         .accessibilityHidden(true)
     }
 
     private struct Loop: Hashable {
         let still: Bool
-        let mood: DeskPetMood
-        let hour: Int
         let kind: DeskPetKind
     }
 
@@ -120,72 +103,34 @@ struct DeskPet: View {
     /// Columns the pet can walk across; the right edge keeps room for z's.
     private var room: Int { max(0, columns - look.width - 6) }
 
-    private var petLeft: Int { min(brain?.x ?? 0, room) + 1 }
+    private func petLeft(_ brain: DeskPetBrain) -> Int { min(brain.x, room) + 1 }
 
     /// A touch on the pet reaches the pet; one on a thing in the nook works it.
     private func touch(at location: CGPoint) {
-        guard var brain else { return }
+        guard let brain = life.brain else { return }
         let cell = CGPoint(x: location.x / Self.pixel, y: location.y / Self.pixel)
-        let pet = CGRect(x: petLeft, y: DeskScene.floor - look.height - 3, width: look.width, height: look.height + 3)
-        let tick = brain.tick
-        defer {
-            self.brain = brain
-            touches += 1
-        }
+        let pet = CGRect(x: petLeft(brain), y: DeskScene.floor - look.height - 3, width: look.width, height: look.height + 3)
+        touches += 1
         if pet.contains(cell) {
-            brain.tap()
-            keepTrust(brain.trust)
-            return
-        }
-        switch DeskScene.thing(at: cell, for: kind) {
-        case .blinds: scene.blindsDown.toggle()
-        case .lamp: scene.lampOn = !(scene.lampOn ?? (hour >= 18 || hour < 7))
-        case .computer: scene.screensaver.toggle()
-        case .plant:
-            scene.wateredAt = tick
-            if scene.growth < 3 {
-                scene.growth += 1
-                ProfilePreferences.store.set(scene.growth, forKey: Self.growthKey)
-            }
-        case .own:
-            let own = DeskScene.own(kind)
-            scene.ownAt = tick
-            brain.visit(own.standAt, then: own.act)
-        case nil:
-            break
+            life.tap()
+        } else if let thing = DeskScene.thing(at: cell, for: kind) {
+            life.use(thing)
         }
     }
 
-    private func keepTrust(_ trust: Double? = nil) {
-        guard let trust = trust ?? brain?.trust else { return }
-        ProfilePreferences.store.set(trust, forKey: kind.trustKey)
+    private func screen(_ brain: DeskPetBrain) -> DeskScene.Screen {
+        if brain.sleeping { return .off }
+        if context.running { return .code }
+        return brain.memory.screensaver ? .stars : .desktop
     }
 
-    private var screen: DeskScene.Screen {
-        if brain?.sleeping == true { return .off }
-        if mood == .working { return .code }
-        return scene.screensaver ? .stars : .desktop
-    }
-
-    private func draw(in context: GraphicsContext) {
-        guard kind != .off, let brain else { return }
-        DeskSceneRenderer(kind: kind, context: context, pixel: Self.pixel, tick: brain.tick, hour: hour,
-                          state: scene, screen: screen,
+    private func draw(in graphics: GraphicsContext) {
+        guard kind != .off, let brain = life.brain, brain.kind == kind else { return }
+        DeskSceneRenderer(kind: kind, context: graphics, pixel: Self.pixel, tick: brain.tick, hour: brain.hour,
+                          state: DeskScene.State(brain), screen: screen(brain),
                           music: !reduceMotion && (brain.act == .dance || brain.act == .sway)).draw()
-        let frame: DeskPetFrame
-        if reduceMotion {
-            let pose: DeskPetAct = switch mood {
-            case .working: .type
-            case .yourMove: .idle
-            case .quiet: .sleep
-            }
-            frame = DeskPetFrame(act: pose, still: true)
-        } else {
-            frame = DeskPetFrame(act: brain.act, progress: brain.progress, length: brain.length,
-                                 tick: brain.tick, facing: brain.facing)
-        }
-        DeskPetRenderer(look: look, kind: kind, context: context, left: petLeft,
-                        ground: DeskScene.floor - 1, pixel: Self.pixel).draw(frame)
+        DeskPetRenderer(look: look, kind: kind, context: graphics, left: petLeft(brain),
+                        ground: DeskScene.floor - 1, pixel: Self.pixel).draw(DeskPetFrame(brain, still: reduceMotion))
     }
 }
 

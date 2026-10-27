@@ -53,18 +53,45 @@ enum DeskScene {
         }
     }
 
-    /// What the nook remembers between touches.
+    /// The nook as the pet's memory has it; the person and the pet both change it.
     struct State: Equatable {
         var blindsDown = false
-        /// `nil` follows the hour: on in the evening and at night.
-        var lampOn: Bool?
+        var lampOn = false
         var screensaver = false
-        /// Leaves grown from watering, 0 to 3; kept across launches.
+        /// Leaves grown from watering on different days, 0 to 3.
         var growth = 0
+        /// Left dry for days: the leaves pale and droop.
+        var wilted = false
+        /// Watered on enough days: it flowers.
+        var blooming = false
         /// The tick the plant was last watered.
         var wateredAt = -1_000
         /// The tick the pet's own thing was last touched.
         var ownAt = -1_000
+        /// The tick a shooting star crossed the window.
+        var starAt = -1_000
+        /// Little things the pet found and keeps by its own thing.
+        var collection = 0
+        /// One sheet on the desk per hosted task.
+        var papers = 0
+
+        init() {}
+
+        init(_ brain: DeskPetBrain) {
+            let memory = brain.memory
+            let cactus = brain.kind == .hermit
+            blindsDown = memory.blindsDown
+            lampOn = brain.lampOn
+            screensaver = memory.screensaver
+            growth = memory.growth
+            wilted = memory.wilted(now: brain.now, cactus: cactus)
+            blooming = memory.blooming(now: brain.now, cactus: cactus)
+            wateredAt = brain.marks.water
+            ownAt = brain.marks.own
+            starAt = brain.marks.star
+            collection = memory.collection
+            papers = min(3, brain.context.tasks)
+        }
     }
 
     /// What the computer shows.
@@ -85,13 +112,14 @@ struct DeskSceneRenderer {
     /// The pet is dancing, so the boombox plays.
     let music: Bool
 
-    private var lampOn: Bool { state.lampOn ?? (hour >= 18 || hour < 7) }
+    private var lampOn: Bool { state.lampOn }
 
     func draw() {
         floor()
         window()
         plant()
         own()
+        collection()
         desk()
         computer()
         lamp()
@@ -119,6 +147,14 @@ struct DeskSceneRenderer {
             fill(17, 6, 3, 2, 0xFFF6D6)
             dot(16, 7, 0xFFF6D6)
             dot(18, 8, 0xFFF6D6)
+            let since = tick - state.starAt
+            if since >= 0, since < 14 {
+                // A shooting star, head first, down across the lower panes, clear of the moon.
+                let (hx, hy) = (x0 + 20 - since, y0 + 11 + since / 2)
+                for (i, hex) in [UInt32(0xFFFFFF), 0xFFF2B3, 0x8EA3C8].enumerated() where hx + i < x0 + w - 1 {
+                    if hx + i > x0, hy < y0 + h - 1 { dot(hx + i, hy - i / 2, hex) }
+                }
+            }
         } else if dusk {
             fill(6, 15, 4, 3, 0xFFE9A8)
             fill(7, 14, 2, 1, 0xFFE9A8)
@@ -155,11 +191,20 @@ struct DeskSceneRenderer {
     private func plant() {
         let art = kind == .hermit ? DeskSceneArt.cactus : DeskSceneArt.plant
         let x = 17, y = 25 - art.count
-        grid(art, x, y) { DeskSceneArt.color($0) }
-        // Leaves grown from watering, one more each time, up to three.
-        let leaf: UInt32 = kind == .hermit ? 0x6CC7A8 : 0x7AD3B6
+        // Left dry, the green fades toward straw.
+        let pale: UInt32 = kind == .hermit ? 0xB5CFA0 : 0xC9D9A8
+        grid(art, x, y) { letter in
+            state.wilted && (letter == "L" || letter == "G") ? Color(anchorHex: pale) : DeskSceneArt.color(letter)
+        }
+        // Leaves grown from watering on different days, up to three.
+        let leaf: UInt32 = state.wilted ? pale : (kind == .hermit ? 0x6CC7A8 : 0x7AD3B6)
         let grown = [(3, -1), (5, -1), (1, -2)].prefix(state.growth)
-        for cell in grown { dot(x + cell.0, y + cell.1, leaf) }
+        for cell in grown { dot(x + cell.0, y + cell.1 + (state.wilted ? 1 : 0), leaf) }
+        if state.blooming {
+            let (fx, fy) = kind == .hermit ? (x + 2, y - 1) : (x + 3, y - 2)
+            for (dx, dy) in [(0, -1), (-1, 0), (1, 0), (0, 1)] { dot(fx + dx, fy + dy, 0xF7B3CC) }
+            dot(fx, fy, 0xFFF2B3)
+        }
         let since = tick - state.wateredAt
         if since >= 0, since < 24 {
             // Drops fall onto the leaves.
@@ -178,6 +223,12 @@ struct DeskSceneRenderer {
         fill(62, 54, 14, 1, 0xE9DCC8)
         fill(68, 51, 2, 1, 0xC9B79C)
         grid(DeskSceneArt.keyboard, 51, 44) { $0 == "k" ? Color(anchorHex: 0xFFFFFF) : Color(anchorHex: 0xD8E4EA) }
+        // A sheet per task, stacked at the desk's edge; three make a pile.
+        for i in 0..<state.papers {
+            let shift = [0, 1, -1][i]
+            fill(44 + shift, 45 - i, 5, 1, 0xFFFFFF)
+            dot(48 + shift, 45 - i, 0xD8E4EA)
+        }
     }
 
     private func computer() {
@@ -316,6 +367,47 @@ struct DeskSceneRenderer {
             for i in 0..<3 {
                 let rise = (tick / 4 + i * 3) % 7
                 dot(x0 + 4 + i * 4, y0 + 8 - rise, 0xFFFFFF)
+            }
+        }
+    }
+
+    /// What the pet has found over the days, kept by its own thing.
+    private func collection() {
+        let count = state.collection
+        guard count > 0 else { return }
+        let colors: [UInt32] = [0xF7B3CC, 0xA99CF0, 0x8FD9E6, 0xFFE1A8, 0x91DEC4, 0xFFF1DC, 0xBDB3F4, 0xF4A6C0]
+        switch kind {
+        case .crab, .off:
+            // Little builds hung on the pegboard's free hooks.
+            let hooks = [(5, 1), (7, 3), (11, 1), (13, 3), (5, 5), (7, 7), (11, 5), (13, 7)]
+            for (i, hook) in hooks.prefix(count).enumerated() {
+                fill(29 + hook.0, 8 + hook.1, 2, 2, colors[i % colors.count])
+            }
+        case .squid:
+            // Stickers on the poster's edges.
+            let spots = [(1, 1), (10, 1), (1, 8), (10, 8), (5, 0), (0, 4), (11, 5), (6, 9)]
+            for (i, spot) in spots.prefix(count).enumerated() {
+                dot(30 + spot.0, 7 + spot.1, colors[i % colors.count])
+                dot(30 + spot.0 + 1, 7 + spot.1, 0xFFFFFF)
+            }
+        case .octopus:
+            // A stack of books on the floor, read and kept.
+            for i in 0..<count {
+                let shift = i % 2 == 0 ? 0 : 1
+                fill(29 + shift, DeskScene.floor - 1 - i, 5, 1, colors[i % colors.count])
+                dot(29 + shift, DeskScene.floor - 1 - i, 0xFFFFFF)
+            }
+        case .hermit:
+            // Pebbles lined up under the shell shelf.
+            for i in 0..<count {
+                fill(28 + i * 2, DeskScene.floor - 1, 1, 1, colors[i % colors.count])
+                if i % 3 == 0 { dot(28 + i * 2, DeskScene.floor - 2, colors[(i + 2) % colors.count]) }
+            }
+        case .jelly:
+            // Tiny shells on the sand of its tank.
+            let (x0, y0) = (27, DeskScene.floor - 12)
+            for (i, column) in [5, 7, 12, 14, 4, 8, 11, 13].prefix(count).enumerated() {
+                dot(x0 + column, y0 + 8, colors[i % colors.count])
             }
         }
     }

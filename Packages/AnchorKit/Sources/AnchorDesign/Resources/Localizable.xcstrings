@@ -9441,6 +9441,74 @@
         }
       }
     },
+    "settings.deskPet.reset" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset Pet Memory"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置宠物记忆"
+          }
+        }
+      }
+    },
+    "settings.deskPet.reset.action" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置"
+          }
+        }
+      }
+    },
+    "settings.deskPet.reset.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every pet forgets its time with you: trust, habits, the things it found and the plant all start over. This can't be undone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有宠物都会忘记和你相处的时光：信任、习惯、它找到的小东西和植物都会重新开始，无法恢复。"
+          }
+        }
+      }
+    },
+    "settings.deskPet.reset.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset pet memory?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置宠物记忆？"
+          }
+        }
+      }
+    },
     "settings.deskPet.squid" : {
       "extractionState" : "stale",
       "localizations" : {

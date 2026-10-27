@@ -9,8 +9,23 @@ struct DeskPetFrame {
     var length = 1
     var tick = 0
     var facing = 1
+    /// Eyes shut for this tick: the brain blinks at its own uneven pace.
+    var blink = false
     /// Reduced motion: hold the pose, no blinks or wiggles.
     var still = false
+}
+
+extension DeskPetFrame {
+    /// The brain's moment; with reduced motion, a still pose that follows the desk.
+    init(_ brain: DeskPetBrain, still: Bool) {
+        if still {
+            let pose: DeskPetAct = brain.sleeping ? .sleep : (brain.context.running ? .type : .idle)
+            self.init(act: pose, still: true)
+        } else {
+            self.init(act: brain.act, progress: brain.progress, length: brain.length, tick: brain.tick,
+                      facing: brain.facing, blink: brain.blinking)
+        }
+    }
 }
 
 /// Draws a pet from its look and the act it is in: a pose (offset, eyes,
@@ -68,6 +83,16 @@ struct DeskPetRenderer {
         switch frame.act {
         case .idle, .coffee, .type, .shades, .juggle, .read, .think, .build:
             break
+        case .gaze:
+            pose.eyes = frame.facing < 0 ? .left : .right
+        case .reach, .water:
+            pose.armUp = true
+        case .found:
+            pose.eyes = .happy
+            pose.dy += k < 4 ? -1 : 0
+        case .offer:
+            pose.armUp = true
+            pose.eyes = .happy
         case .move, .pebble:
             pose.stepping = true
         case .flee, .dash:
@@ -82,7 +107,8 @@ struct DeskPetRenderer {
             pose.dy -= k > 3 && k < 12 ? 1 : 0
         case .nap, .sleep:
             pose.eyes = .shut
-            pose.dy = kind == .jelly ? 0 : 1
+            // A slow breath: up a pixel, then down, every three seconds.
+            pose.dy = (kind == .jelly ? 0 : 1) - (frame.still || (t / 12) % 2 == 0 ? 0 : 1)
         case .celebrate:
             pose.dy += hop[k % 8]
             pose.eyes = .happy
@@ -145,7 +171,7 @@ struct DeskPetRenderer {
         if frame.still {
             pose.dx = 0
             pose.stepping = false
-        } else if pose.eyes == .open, (t + kind.rawValue.count * 7) % 36 == 0 {
+        } else if pose.eyes == .open, frame.blink {
             pose.eyes = .shut
         }
         return pose
@@ -308,11 +334,24 @@ struct DeskPetRenderer {
             if let eye = look.eyes.first { paint.grid(Prop.book, at: cx - 4, eye.y1 + 3, Prop.color) }
         case .pebble:
             paint.grid(Prop.pebble, at: look.hand.x, look.hand.y, Prop.color)
+        case .water:
+            // A can tipped toward the plant on its left, drops falling from the spout.
+            // A turned hermit is drawn mirrored, so its left is the far side of the grid.
+            let mirrored = kind == .hermit && frame.facing < 0
+            paint.glyph(Prop.can, at: mirrored ? w : -4, look.hand.y - 4, Prop.color)
+            for i in 0..<2 {
+                let fall = (k / 2 + i * 2) % 4
+                if fall < 3 { paint.dot(mirrored ? w + 4 : -5, look.hand.y - 3 + fall, Prop.color("b")) }
+            }
+        case .found:
+            paint.glyph(Prop.sparkle, at: cx - 1, -4 - min(k / 5, 2), Prop.color)
+        case .offer:
+            paint.grid(Prop.pebble, at: look.raisedAt.x + 1, look.raisedAt.y - 2, Prop.color)
         case .polish:
             if (k / 3) % 2 == 0 { paint.glyph(Prop.sparkle, at: w / 2 + 2, 2 + (k / 6) % 3, Prop.color) }
         case .glow, .meditate:
             if frame.act == .glow, (k / 4) % 2 == 0 { paint.glyph(Prop.sparkle, at: w - 2, 0, Prop.color) }
-        case .idle, .move, .look, .yawn, .stretch, .wave, .happy, .sulk, .hide, .peek, .snap, .dash:
+        case .idle, .move, .look, .yawn, .stretch, .wave, .happy, .sulk, .hide, .peek, .snap, .dash, .gaze, .reach:
             break
         }
     }
@@ -413,6 +452,7 @@ private enum Prop {
     static let book = ["vwwwvwwwv", "vwwwvwwwv", "vvvvvvvvv"]
     static let pebble = [".G.", "GGG"]
     static let sparkle = [".w.", "wcw", ".w."]
+    static let can = ["b...", ".bbb", ".bbb", "..b."]
 
     static func color(_ c: Character) -> Color? {
         switch c {

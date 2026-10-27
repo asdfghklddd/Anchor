@@ -33,8 +33,6 @@ struct LandscapeAmbientDashboard: View {
     @State private var swellsByConversation: [UUID: Int] = [:]
     @State private var swellTone = AnchorStateTone.attention.ink
     @AppStorage(DeskPetKind.defaultsKey, store: ProfilePreferences.store) private var petKind = DeskPetKind.crab
-    /// When the board came up; the pet sleeps only after a long quiet since then.
-    @State private var boardSince = Date()
     /// News that arrived while the board is up, for the pet to react to.
     @State private var petSignals = DeskPetSignals()
 
@@ -88,7 +86,6 @@ struct LandscapeAmbientDashboard: View {
         .toolbar(.hidden, for: .navigationBar)
         .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: contacts)
         .onAppear {
-            boardSince = .now
             keepAwake.start()
             if playsArrival, !tasks.isEmpty { playArrival() }
         }
@@ -149,8 +146,7 @@ struct LandscapeAmbientDashboard: View {
             .frame(width: 242, alignment: .trailing)
             .offset(x: Self.leftShift, y: 103)
             if petKind != .off {
-                DeskPet(kind: petKind, mood: petMood(now: now), signals: petSignals,
-                        hour: Calendar.current.component(.hour, from: now))
+                DeskPet(kind: petKind, context: .of(tasks), signals: petSignals)
                     .frame(width: CGFloat(DeskScene.columns) * DeskPet.pixel)
                     .offset(x: 15 + Self.leftShift, y: 339 - DeskPet.height)
             }
@@ -190,16 +186,6 @@ struct LandscapeAmbientDashboard: View {
     private static func time(_ date: Date) -> String {
         let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
         return String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
-    }
-
-    // MARK: The pet (left, under the clock)
-
-    /// Typing while any agent runs; asleep after 20 minutes with no run and no news.
-    private func petMood(now: Date) -> DeskPetMood {
-        let processes = tasks.flatMap(\.taskProcesses)
-        if processes.contains(where: { $0.status == .running || $0.status == .queued }) { return .working }
-        let lastNews = max(processes.map(\.updatedAt).max() ?? .distantPast, boardSince)
-        return now.timeIntervalSince(lastNews) > 20 * 60 ? .quiet : .yourMove
     }
 
     // MARK: The clock (left)

@@ -14,6 +14,8 @@ struct ProfileEditorView<Destination: View>: View {
     @State private var hasLoaded = false
     /// Applies at once; Save only stores the name.
     @AppStorage(DeskPetKind.defaultsKey, store: ProfilePreferences.store) private var petKind = DeskPetKind.crab
+    @State private var confirmsPetReset = false
+    @State private var petResets = 0
 
     var body: some View {
         NavigationStack {
@@ -60,6 +62,20 @@ struct ProfileEditorView<Destination: View>: View {
         Section {
             DeskPetPicker(selection: $petKind)
                 .padding(.vertical, 6)
+            Button(role: .destructive) { confirmsPetReset = true } label: {
+                Text(DeskPetCopy.reset)
+            }
+            .accessibilityIdentifier("settings.deskPet.reset")
+            .sensoryFeedback(.success, trigger: petResets)
+            .confirmationDialog(DeskPetCopy.resetTitle, isPresented: $confirmsPetReset, titleVisibility: .visible) {
+                Button(DeskPetCopy.resetAction, role: .destructive) {
+                    DeskPetLife.shared.forgetAll()
+                    petResets += 1
+                }
+                Button(L10n.cancel, role: .cancel) {}
+            } message: {
+                Text(DeskPetCopy.resetMessage)
+            }
         } header: {
             Text(AnchorStrings.value("settings.deskPet", default: "Desk pet"))
                 .textCase(.uppercase)
@@ -114,6 +130,15 @@ struct ProfileEditorView<Destination: View>: View {
         .frame(minHeight: 40)
         .accessibilityElement(children: .combine)
     }
+}
+
+enum DeskPetCopy {
+    static let reset = AnchorStrings.value("settings.deskPet.reset", default: "Reset Pet Memory")
+    static let resetTitle = AnchorStrings.value("settings.deskPet.reset.title", default: "Reset pet memory?")
+    static let resetMessage = AnchorStrings.value(
+        "settings.deskPet.reset.message",
+        default: "Every pet forgets its time with you: trust, habits, the things it found and the plant all start over. This can't be undone.")
+    static let resetAction = AnchorStrings.value("settings.deskPet.reset.action", default: "Reset")
 }
 
 private extension DurableSyncState {
