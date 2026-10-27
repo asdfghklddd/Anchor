@@ -22,6 +22,7 @@ final class AnchorEdgePanelController {
     private var menuPanel: AnchorWelcomePanel?
     private var menuMonitors: [Any] = []
     private var menuCloseTask: Task<Void, Never>?
+    private let menuActionTarget = AnchorMenuActionTarget()
     /// Where the boat berths; the person moves it by dragging.
     private var dock = AnchorEdgeDock.load(from: .standard)
     /// The pointer and the boat's origin when a drag began.
@@ -272,24 +273,22 @@ final class AnchorEdgePanelController {
             }
         case .switchTask:
             popUp(menu.rows.map { row in
-                let item = AnchorMenuAction.item(row.task.goal.title) { [weak self] in
+                .action(row.task.goal.title, row.id == menu.current?.id ? .on : .off) { [weak self] in
                     self?.perform(.selectTask(row.id), menu: menu)
                 }
-                item.state = row.id == menu.current?.id ? .on : .off
-                return item
             })
         case .more:
             popUp([
-                AnchorMenuAction.item(EdgeMenuCopy.openWindow) { [weak self] in
+                .action(EdgeMenuCopy.openWindow, nil) { [weak self] in
                     self?.closeMenu(animated: false)
                     self?.onOpenDetails()
                 },
-                AnchorMenuAction.item(EdgeMenuCopy.settings) { [weak self] in
+                .action(EdgeMenuCopy.settings, nil) { [weak self] in
                     self?.closeMenu(animated: false)
                     self?.onOpenSettings()
                 },
-                .separator(),
-                AnchorMenuAction.item(EdgeMenuCopy.quit) { NSApp.terminate(nil) },
+                .separator,
+                .action(EdgeMenuCopy.quit, nil) { NSApp.terminate(nil) },
             ])
         case let .selectTask(id):
             closeMenu(animated: true)
@@ -298,10 +297,29 @@ final class AnchorEdgePanelController {
     }
 
     /// A short native menu at the pointer, for choices longer than a button.
-    private func popUp(_ items: [NSMenuItem]) {
+    private func popUp(_ entries: [AnchorPopupMenuEntry]) {
         let menu = NSMenu()
         menu.autoenablesItems = false
-        items.forEach(menu.addItem)
+        var actions: [Int: () -> Void] = [:]
+        for entry in entries {
+            switch entry {
+            case let .action(title, state, run):
+                let item = NSMenuItem(
+                    title: title,
+                    action: #selector(AnchorMenuActionTarget.handleMenuItem(_:)),
+                    keyEquivalent: ""
+                )
+                item.target = menuActionTarget
+                if let state { item.state = state }
+                item.tag = actions.count
+                actions[item.tag] = run
+                menu.addItem(item)
+            case .separator:
+                menu.addItem(.separator())
+            }
+        }
+        menuActionTarget.actions = actions
+        defer { menuActionTarget.actions.removeAll() }
         menu.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
     }
 
@@ -419,25 +437,20 @@ final class AnchorEdgePanelController {
     }
 }
 
-/// Menu items that run a closure, for menus built in code.
+private enum AnchorPopupMenuEntry {
+    case action(String, NSControl.StateValue?, () -> Void)
+    case separator
+}
+
+/// One stable AppKit target for the floating boat's transient native menus.
 @MainActor
-private final class AnchorMenuAction: NSObject {
-    private let runAction: () -> Void
+private final class AnchorMenuActionTarget: NSObject {
+    var actions: [Int: () -> Void] = [:]
 
-    private init(runAction: @escaping () -> Void) {
-        self.runAction = runAction
-    }
-
-    static func item(_ title: String, run: @escaping () -> Void) -> NSMenuItem {
-        let item = NSMenuItem(title: title, action: #selector(perform(_:)), keyEquivalent: "")
-        let action = AnchorMenuAction(runAction: run)
-        // AppKit keeps targets weakly; retain this target through the item itself.
-        item.target = action
-        item.representedObject = action
-        return item
-    }
-
-    @objc private func perform(_ item: NSMenuItem) {
-        (item.representedObject as? AnchorMenuAction)?.runAction()
+    /// Not `perform`. That name is `NSObject.perform(_:)`, whose selector is
+    /// `performSelector:`. AppKit would message the menu item pointer, catch
+    /// the exception, and the click would do nothing.
+    @objc func handleMenuItem(_ item: NSMenuItem) {
+        actions[item.tag]?()
     }
 }
