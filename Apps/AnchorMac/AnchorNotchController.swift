@@ -8,7 +8,8 @@ import SwiftUI
 /// Anchor on the Mac: the island around the camera housing. It opens when the
 /// pointer rests on it and closes when the pointer leaves; ⌃⌥A opens it from
 /// the keyboard. It never activates Anchor, so a copied step pastes straight
-/// into the person's own app.
+/// into the person's own app. News stretches the closed island for a few
+/// seconds: an agent finished or waits, the phone left, or a pairing code.
 @MainActor
 final class AnchorNotchController {
     private let model: AnchorSessionModel
@@ -25,7 +26,11 @@ final class AnchorNotchController {
     /// While open: a click anywhere else closes the island.
     private var clickMonitors: [Any] = []
     private var pairing = DevicePairingStatus.automatic
+    private var pairingCode: String?
     private var pairingTask: Task<Void, Never>?
+    private var detector = NotchPeekDetector()
+    private var peeks = NotchPeekQueue()
+    private var peekTask: Task<Void, Never>?
     private var hotKey: AnchorHotKey?
     private var isStarted = false
 
@@ -75,7 +80,18 @@ final class AnchorNotchController {
             for await status in updates {
                 guard let self else { return }
                 pairing = status
+                pairingCode = status.phase == .verificationCodeRequired
+                    ? await linkController.currentPairingCode() : nil
                 refreshContent()
+                if let pairingCode {
+                    // Status repeats; only a new code is news.
+                    if !peeks.items.contains(where: { $0.kind == .pairing && $0.detail == pairingCode }) {
+                        peeks.add(.pairing(code: pairingCode))
+                    }
+                } else {
+                    peeks.removePairing()
+                }
+                syncPeek()
             }
         }
         let move: (NSEvent) -> Void = { [weak self] _ in self?.pointerMoved() }
@@ -99,6 +115,7 @@ final class AnchorNotchController {
     func stop() {
         isStarted = false
         timerTask?.cancel()
+        peekTask?.cancel()
         pairingTask?.cancel()
         pairingTask = nil
         pointerMonitors.forEach(NSEvent.removeMonitor)
@@ -113,16 +130,6 @@ final class AnchorNotchController {
         let geometry = Self.currentGeometry()
         state.geometry = geometry
         panel.setFrame(geometry.panelFrame, display: true)
-    }
-
-    /// From a notification about one task: that task, with the island open.
-    func openTask(_ id: UUID) {
-        Task { [weak self] in
-            guard let self else { return }
-            _ = await model.selectHostedTask(id)
-            hover.open(pinned: true)
-            apply()
-        }
     }
 
     private static func currentGeometry() -> NotchIslandGeometry {
@@ -162,6 +169,7 @@ final class AnchorNotchController {
             dismiss()
             return
         }
+        hover.endPeek()
         hover.open(pinned: true)
         apply()
         panel.ignoresMouseEvents = false
@@ -177,10 +185,17 @@ final class AnchorNotchController {
 
     /// Hands the new phase to the view, which animates it.
     private func apply() {
-        guard state.phase != hover.phase else { return }
+        let previous = state.phase
+        guard previous != hover.phase else { return }
         state.phase = hover.phase
         if hover.phase == .expanded {
             installClickMonitors()
+            // Opened from a peek: its task stands out, and the open island
+            // shows the rest of the news at once.
+            if previous == .peek { state.highlightedTaskID = state.peek?.taskID }
+            peekTask?.cancel()
+            peeks.clearNews()
+            state.peek = nil
         } else {
             removeClickMonitors()
             if panel.isKeyWindow {
@@ -189,7 +204,64 @@ final class AnchorNotchController {
                 panel.orderFrontRegardless()
             }
             panel.ignoresMouseEvents = !state.pointerZone.contains(NSEvent.mouseLocation)
+            if hover.phase == .compact {
+                state.highlightedTaskID = nil
+                if previous != .peek { syncPeek() }
+            }
         }
+    }
+
+    // MARK: News
+
+    /// Shows the first queued peek, or closes the peek when none is left.
+    /// Only a closed island the pointer is not on stretches out.
+    private func syncPeek() {
+        guard let next = peeks.current else {
+            peekTask?.cancel()
+            if hover.phase == .peek {
+                hover.endPeek()
+                apply()
+                state.peek = nil
+            }
+            return
+        }
+        guard hover.showPeek(), state.peek?.id != next.id else { return }
+        state.peek = next
+        apply()
+        announce(next)
+        peekTask?.cancel()
+        guard let duration = next.duration else { return }
+        peekTask = Task { [weak self] in
+            try? await Task.sleep(for: duration)
+            guard !Task.isCancelled, let self else { return }
+            peeks.advance()
+            syncPeek()
+        }
+    }
+
+    private func receive(_ news: [NotchPeek]) {
+        guard !news.isEmpty else { return }
+        for peek in news {
+            if let task = peek.taskID { state.flash(task) }
+        }
+        let agentsMayPeek = UserDefaults.standard.object(forKey: NotchPeek.enabledDefaultsKey) as? Bool ?? true
+        let shown = news.filter { agentsMayPeek || $0.taskID == nil }
+        // The open island already shows it; a closed one that won't stretch gives a nudge.
+        guard hover.phase != .expanded, hover.phase != .primed else { return }
+        if shown.isEmpty {
+            if hover.phase == .compact { state.nudges += 1 }
+            return
+        }
+        shown.forEach { peeks.add($0) }
+        syncPeek()
+    }
+
+    /// VoiceOver reads the news the island shows.
+    private func announce(_ peek: NotchPeek) {
+        NSAccessibility.post(element: panel, notification: .announcementRequested, userInfo: [
+            .announcement: [peek.title, peek.detail].filter { !$0.isEmpty }.joined(separator: ", "),
+            .priority: NSAccessibilityPriorityLevel.high.rawValue,
+        ])
     }
 
     private func installClickMonitors() {
@@ -227,17 +299,16 @@ final class AnchorNotchController {
     }
 
     private func refreshContent() {
-        let content = NotchIslandContent(
-            status: AnchorStatusMenu(
-                projection: model.projection,
-                radio: bluetooth.radio,
-                pairing: pairing,
-                codexReady: sourceSetupModel.codexSessionsFolderName != nil,
-                claudeReady: sourceSetupModel.claudeProjectsFolderName != nil
-            ),
-            projection: model.projection
+        let status = AnchorStatusMenu(
+            projection: model.projection,
+            radio: bluetooth.radio,
+            pairing: pairing,
+            codexReady: sourceSetupModel.codexSessionsFolderName != nil,
+            claudeReady: sourceSetupModel.claudeProjectsFolderName != nil
         )
+        let content = NotchIslandContent(status: status, projection: model.projection)
         if content != state.content { state.content = content }
+        receive(detector.peeks(in: model.projection, link: status.link, now: .now))
     }
 
     private func perform(_ action: NotchIslandAction) {

@@ -126,6 +126,82 @@ struct NotchIslandTests {
         #expect(island.tasks.count == 3)
     }
 
+    @Test("Pointing at a peek opens the island at once; only a closed island the pointer is off shows news")
+    func peekPhases() {
+        var hover = NotchHoverMachine()
+        let shown = hover.showPeek()
+        #expect(shown)
+        #expect(hover.phase == .peek)
+        let timer = hover.pointerEntered()
+        #expect(timer == nil)
+        #expect(hover.phase == .expanded)
+        let shownWhileOpen = hover.showPeek()
+        #expect(!shownWhileOpen)
+
+        var resting = NotchHoverMachine()
+        _ = resting.pointerEntered()
+        let shownUnderPointer = resting.showPeek()
+        #expect(!shownUnderPointer)
+        #expect(resting.phase == .primed)
+
+        var ending = NotchHoverMachine()
+        _ = ending.showPeek()
+        ending.endPeek()
+        #expect(ending.phase == .compact)
+    }
+
+    @Test("The first look only takes note; later endings and waits are news, and stale ones are not")
+    func detectorFindsNews() {
+        var detector = NotchPeekDetector()
+        var running = conversation(.running, minutesAgo: 2)
+        let task = task("Notch", color: 1, [running])
+        var projection = SessionProjection(session: task, connection: .connected)
+        let baseline = detector.peeks(in: projection, link: .connected(viaBluetooth: true), now: now)
+        #expect(baseline.isEmpty)
+
+        running.status = .completed
+        running.updatedAt = now
+        projection = SessionProjection(session: self.task("Notch", color: 1, [running]), connection: .connected)
+        let finished = detector.peeks(in: projection, link: .connected(viaBluetooth: true), now: now)
+        #expect(finished.map(\.kind) == [.finished])
+        #expect(finished.first?.title == "Notch")
+        #expect(finished.first?.colorIndex == 1)
+        let again = detector.peeks(in: projection, link: .connected(viaBluetooth: true), now: now)
+        #expect(again.isEmpty)
+
+        var asking = running
+        asking.status = .needsDecision
+        asking.updatedAt = now.addingTimeInterval(30)
+        projection = SessionProjection(session: self.task("Notch", color: 1, [asking]), connection: .connected)
+        let waiting = detector.peeks(in: projection, link: .connected(viaBluetooth: true), now: now)
+        #expect(waiting.map(\.kind) == [.waiting])
+
+        var old = asking
+        old.status = .completed
+        old.updatedAt = now.addingTimeInterval(-20 * 60)
+        projection = SessionProjection(session: self.task("Notch", color: 1, [old]))
+        let later = detector.peeks(in: projection, link: .searching, now: now)
+        #expect(later.map(\.kind) == [.linkLost])
+    }
+
+    @Test("A newer peek about a task replaces the older, and the pairing code goes first")
+    func queueOrder() {
+        let task = UUID()
+        var queue = NotchPeekQueue()
+        queue.add(NotchPeek(kind: .finished, taskID: task, title: "A", detail: "done"))
+        queue.add(NotchPeek(kind: .linkLost, title: "iPhone", detail: "away"))
+        queue.add(NotchPeek(kind: .waiting, taskID: task, title: "A", detail: "waiting"))
+        #expect(queue.items.map(\.kind) == [.waiting, .linkLost])
+
+        queue.add(.pairing(code: "123456"))
+        #expect(queue.current?.kind == .pairing)
+        #expect(queue.current?.duration == nil)
+        queue.clearNews()
+        #expect(queue.items.map(\.kind) == [.pairing])
+        queue.removePairing()
+        #expect(queue.current == nil)
+    }
+
     @Test("Without agent folders the link needs the person, even while connected")
     func sourcesNeedThePerson() {
         let island = content(SessionProjection(connection: .connected), codex: false)

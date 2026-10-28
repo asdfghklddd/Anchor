@@ -7,6 +7,7 @@ import SwiftUI
 /// waits on the person. With no task yet, an empty ring.
 struct NotchTaskDots: View {
     let tasks: [NotchIslandContent.Task]
+    var flashes: [UUID: Int] = [:]
 
     var body: some View {
         HStack(spacing: NotchIslandMetrics.dotSpacing) {
@@ -16,7 +17,7 @@ struct NotchTaskDots: View {
                     .frame(width: NotchIslandMetrics.dot, height: NotchIslandMetrics.dot)
             }
             ForEach(tasks) { task in
-                NotchTaskDot(task: task)
+                NotchTaskDot(task: task, flash: flashes[task.id] ?? 0)
             }
         }
         .accessibilityElement(children: .ignore)
@@ -32,8 +33,10 @@ struct NotchTaskDots: View {
     }
 }
 
-private struct NotchTaskDot: View {
+/// One task's dot. It lights up once when news about the task arrives.
+struct NotchTaskDot: View {
     let task: NotchIslandContent.Task
+    var flash = 0
     @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
@@ -64,6 +67,12 @@ private struct NotchTaskDot: View {
             Circle()
                 .fill(color.opacity(task.signal == .idle ? 0.45 : 1))
                 .frame(width: NotchIslandMetrics.dot, height: NotchIslandMetrics.dot)
+                .keyframeAnimator(initialValue: 1.0, trigger: flash) { dot, scale in
+                    dot.scaleEffect(reduceMotion ? 1 : scale)
+                } keyframes: { _ in
+                    SpringKeyframe(1.9, duration: 0.15, spring: .snappy)
+                    SpringKeyframe(1, duration: 0.45, spring: .bouncy)
+                }
         }
         .frame(width: NotchIslandMetrics.dot, height: NotchIslandMetrics.dot)
     }

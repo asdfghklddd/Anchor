@@ -1,5 +1,6 @@
 #if os(macOS)
 import CoreGraphics
+import Foundation
 import Observation
 
 public enum NotchIslandPhase: Equatable, Sendable {
@@ -7,6 +8,8 @@ public enum NotchIslandPhase: Equatable, Sendable {
     case compact
     /// The pointer arrived; a small swell answers it before the island opens.
     case primed
+    /// Stretched sideways for a few seconds to show one piece of news.
+    case peek
     case expanded
 }
 
@@ -29,13 +32,20 @@ public struct NotchHoverMachine: Equatable, Sendable {
 
     public init() {}
 
-    /// The timer to start, if any.
+    /// The timer to start, if any. Pointing at a peek opens it at once.
     public mutating func pointerEntered() -> Timer? {
         guard !isPointerInside else { return nil }
         isPointerInside = true
-        guard phase == .compact else { return nil }
-        phase = .primed
-        return .dwell
+        switch phase {
+        case .compact:
+            phase = .primed
+            return .dwell
+        case .peek:
+            phase = .expanded
+            return nil
+        case .primed, .expanded:
+            return nil
+        }
     }
 
     public mutating func pointerExited() -> Timer? {
@@ -47,9 +57,20 @@ public struct NotchHoverMachine: Equatable, Sendable {
             return nil
         case .expanded:
             return isPinned ? nil : .grace
-        case .compact:
+        case .compact, .peek:
             return nil
         }
+    }
+
+    /// Only a closed island the pointer is not on shows news.
+    public mutating func showPeek() -> Bool {
+        guard phase == .compact, !isPointerInside else { return phase == .peek }
+        phase = .peek
+        return true
+    }
+
+    public mutating func endPeek() {
+        if phase == .peek { phase = .compact }
     }
 
     public mutating func dwellElapsed() {
@@ -83,10 +104,22 @@ public final class NotchIslandState {
     public var geometry: NotchIslandGeometry
     /// The open island's content below the housing, as last measured.
     public var contentHeight: CGFloat = 180
+    /// The news the island is stretched out to show.
+    public var peek: NotchPeek?
+    /// The task the person opened the island from a peek about.
+    public var highlightedTaskID: UUID?
+    /// Bumped to make the closed island give a small sideways nudge.
+    public var nudges = 0
+    /// Bumped per task to make its dot light up once.
+    public var flashes: [UUID: Int] = [:]
 
     public init(content: NotchIslandContent, geometry: NotchIslandGeometry) {
         self.content = content
         self.geometry = geometry
+    }
+
+    public func flash(_ taskID: UUID) {
+        flashes[taskID, default: 0] += 1
     }
 
     /// One dot per open task, up to the three a person can anchor; with none,
@@ -99,6 +132,7 @@ public final class NotchIslandState {
         switch phase {
         case .compact: geometry.compactSize(dots: dotCount)
         case .primed: geometry.primedSize(dots: dotCount)
+        case .peek: geometry.peekSize
         case .expanded: CGSize(width: geometry.expandedWidth, height: geometry.notch.height + contentHeight)
         }
     }
@@ -109,7 +143,7 @@ public final class NotchIslandState {
     public var pointerZone: CGRect {
         let frame = geometry.islandFrame(size: islandSize)
         switch phase {
-        case .compact, .primed:
+        case .compact, .primed, .peek:
             return CGRect(x: frame.minX - 2, y: frame.minY - 4, width: frame.width + 4, height: frame.height + 4)
         case .expanded: return frame.insetBy(dx: -8, dy: -8)
         }

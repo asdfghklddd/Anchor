@@ -82,6 +82,11 @@ public struct NotchIslandGeometry: Equatable, Sendable {
         max(Self.expandedWidth, notch.width + 260)
     }
 
+    /// As wide as the open island, so opening a peek only grows it downward.
+    public var peekSize: CGSize {
+        CGSize(width: expandedWidth, height: notch.height + 4)
+    }
+
     /// The panel: wide and tall enough for the expanded island and its shadow,
     /// hanging from the top of the screen and centered on the housing.
     public var panelFrame: CGRect {
@@ -110,6 +115,7 @@ public enum NotchIslandMetrics {
     static let expandedFlare: CGFloat = 10
     static let compactRadius: CGFloat = 10
     static let primedRadius: CGFloat = 12
+    static let peekRadius: CGFloat = 16
     static let expandedRadius: CGFloat = 24
     static let inset: CGFloat = 14
 }

@@ -3,7 +3,6 @@ import AnchorCore
 import AnchorDesign
 import AppKit
 import SwiftUI
-import UserNotifications
 
 struct MacTimelineView: View {
     let projection: SessionProjection
@@ -131,8 +130,7 @@ struct MacSettingsView: View {
     let controller: (any LocalLinkControlling)?
     let sourceSetupModel: MacSourceSetupModel?
     @State private var launchAtLogin = MacLaunchAtLogin.isEnabled
-    @AppStorage(MacCodexTurnEndNotifier.enabledDefaultsKey) private var codexTurnEndNotifications = true
-    @State private var notificationAuthorization: UNAuthorizationStatus = .notDetermined
+    @AppStorage(NotchPeek.enabledDefaultsKey) private var notchPeeks = true
     @State private var settingsMessage: String?
     @State private var isLoadingSettings = true
     @State private var isApplyingSettings = false
@@ -219,25 +217,8 @@ struct MacSettingsView: View {
                         guard !isLoadingSettings else { return }
                         applyLaunchAtLogin(enabled)
                     }
-                Toggle(isOn: $codexTurnEndNotifications) {
-                    Text(MacCodexCopy.notifyOnEnd)
-                    Text(MacCodexCopy.notifyOnEndDetail)
-                }
-                .accessibilityIdentifier("settings.codexTurnEndNotifications")
-                if notificationAuthorization == .denied {
-                    VStack(alignment: .leading, spacing: AnchorSpacing.xSmall) {
-                        Label(
-                            L10n.notificationPermissionDetail,
-                            systemImage: "bell.slash"
-                        )
-                        .font(.caption)
-                        .foregroundStyle(AnchorPalette.coral)
-                        Button(L10n.openSystemSettings, systemImage: "gearshape") {
-                            MacNotificationSettings.openSystemSettings()
-                        }
-                        .controlSize(.small)
-                    }
-                }
+                Toggle(NotchIslandCopy.peeksToggle, isOn: $notchPeeks)
+                    .accessibilityIdentifier("settings.notchPeeks")
                 if let settingsMessage {
                     Text(settingsMessage)
                         .font(.caption)
@@ -288,7 +269,6 @@ struct MacSettingsView: View {
             )
         }
         .task {
-            notificationAuthorization = await MacNotificationSettings.authorizationStatus()
             launchAtLogin = MacLaunchAtLogin.isEnabled
             isLoadingSettings = false
         }

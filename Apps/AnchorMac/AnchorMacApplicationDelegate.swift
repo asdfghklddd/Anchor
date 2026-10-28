@@ -1,7 +1,6 @@
 import AnchorCore
 import AnchorMacFeatures
 import AppKit
-import UserNotifications
 
 @MainActor
 final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
@@ -11,7 +10,6 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     private var detailWindowController: AnchorMacDetailWindowController?
     private var notchController: AnchorNotchController?
     private var bluetoothRadio: MacBluetoothRadioState?
-    private var codexTurnEndNotifier: MacCodexTurnEndNotifier?
     private var phoneAnchorState: AnchorPhoneAnchorState?
     private var interfaceDefaults: UserDefaults?
     private var didFinishLaunching = false
@@ -31,11 +29,6 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         self.bluetoothRadio = bluetoothRadio
         interfaceDefaults = defaults
         startInterfaceIfReady()
-    }
-
-    func applicationWillFinishLaunching(_ notification: Notification) {
-        // Set before launch completes, so a click on a ping can open the app.
-        UNUserNotificationCenter.current().delegate = self
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -86,15 +79,6 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         if sourceSetupModel.showsCodexOnboarding {
             detailWindowController.present()
         }
-        let codexTurnEndNotifier = MacCodexTurnEndNotifier(defaults: interfaceDefaults ?? .standard)
-        self.codexTurnEndNotifier = codexTurnEndNotifier
-        // A ping names the task and step its conversation was placed under.
-        sourceSetupModel.onCodexTurnsEnded = { [weak codexTurnEndNotifier, weak sourceSetupModel, weak model] endings in
-            guard let sourceSetupModel else { return }
-            let tasks = model?.projection.hostedSessions ?? []
-            codexTurnEndNotifier?.notify(endings) { CodexTurnEndContext.of($0.id, setup: sourceSetupModel, tasks: tasks) }
-        }
-
         model.start()
         startNotch()
     }
@@ -117,38 +101,5 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     private func openSettings() {
         AnchorMacRootView.showSettings(in: interfaceDefaults ?? .standard)
         detailWindowController?.present()
-    }
-
-    /// Makes a task the one the person is on and opens the island on it.
-    private func openTask(_ id: UUID) {
-        if let notchController {
-            notchController.openTask(id)
-            return
-        }
-        Task {
-            _ = await model?.selectHostedTask(id)
-            detailWindowController?.present()
-        }
-    }
-}
-
-extension AnchorMacApplicationDelegate: UNUserNotificationCenterDelegate {
-    /// A Codex ping opens its task when the conversation was placed under one,
-    /// else the dashboard, where its conversation row has the rest.
-    nonisolated func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse
-    ) async {
-        let thread = response.notification.request.content.threadIdentifier
-        guard response.notification.request.identifier
-            .hasPrefix(MacCodexTurnEndNotifier.identifierPrefix) else { return }
-        await MainActor.run {
-            let conversationID = String(thread.dropFirst(MacCodexTurnEndNotifier.identifierPrefix.count))
-            if let taskID = self.sourceSetupModel?.conversationTasks[conversationID] {
-                self.openTask(taskID)
-            } else {
-                self.detailWindowController?.present()
-            }
-        }
     }
 }

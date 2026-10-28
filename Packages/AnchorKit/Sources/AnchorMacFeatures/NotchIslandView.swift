@@ -38,11 +38,19 @@ public struct NotchIslandView: View {
         let radius = switch state.phase {
         case .compact: NotchIslandMetrics.compactRadius
         case .primed: NotchIslandMetrics.primedRadius
+        case .peek: NotchIslandMetrics.peekRadius
         case .expanded: NotchIslandMetrics.expandedRadius
         }
         ZStack(alignment: .top) {
             NotchIslandSurface(flare: flare, radius: radius, isOpen: isOpen)
                 .frame(width: size.width, height: size.height)
+                // News arriving while a peek can't show: a small sideways give.
+                .keyframeAnimator(initialValue: 1.0, trigger: state.nudges) { surface, stretch in
+                    surface.scaleEffect(x: reduceMotion ? 1 : stretch, y: 1, anchor: .top)
+                } keyframes: { _ in
+                    SpringKeyframe(1.03, duration: 0.14, spring: .snappy)
+                    SpringKeyframe(1, duration: 0.5, spring: .bouncy)
+                }
                 .shadow(color: .black.opacity(isOpen ? 0.38 : 0), radius: 22, y: 10)
 
             VStack(spacing: 0) {
@@ -86,20 +94,36 @@ public struct NotchIslandView: View {
         return switch phase {
         case .expanded: .spring(response: 0.42, dampingFraction: 0.78)
         case .primed: .spring(response: 0.26, dampingFraction: 0.7)
+        case .peek: .spring(response: 0.36, dampingFraction: 0.72)
         case .compact: .spring(response: 0.30, dampingFraction: 1)
         }
     }
 
     // MARK: Beside the housing
 
+    /// The dots and the link, or, while a peek shows, its news. The news
+    /// arrives once the shape has stretched.
+    private var topStrip: some View {
+        ZStack {
+            if state.phase == .peek, let peek = state.peek {
+                NotchPeekStrip(peek: peek, geometry: geometry)
+                    .id(peek.id)
+                    .transition(.opacity.animation(.easeOut(duration: 0.2).delay(reduceMotion ? 0 : 0.1)))
+            } else {
+                housingStrip
+                    .transition(.opacity.animation(.easeOut(duration: 0.16)))
+            }
+        }
+    }
+
     /// Each side keeps its place as the island grows around it; the open
     /// island adds the settings button at the far right.
-    private var topStrip: some View {
+    private var housingStrip: some View {
         let ear = geometry.earWidth(dots: state.dotCount)
         return HStack(spacing: 0) {
             // Nudged inward by half the flare, which the closed shape takes
             // from the ears' outer edges.
-            NotchTaskDots(tasks: Array(content.tasks.prefix(3)))
+            NotchTaskDots(tasks: Array(content.tasks.prefix(3)), flashes: state.flashes)
                 .frame(width: ear)
                 .offset(x: NotchIslandMetrics.compactFlare / 2)
             Color.clear
@@ -217,6 +241,12 @@ public struct NotchIslandView: View {
             }
             .padding(12)
             .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.white.opacity(0.07)))
+            .overlay {
+                if state.highlightedTaskID == current.id {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(NotchIslandInk.task(current.colorIndex).opacity(0.6), lineWidth: 1)
+                }
+            }
             .matchedGeometryEffect(id: current.id, in: taskSpace)
             .accessibilityElement(children: .contain)
         } else {
@@ -286,7 +316,9 @@ public struct NotchIslandView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
         }
-        .buttonStyle(NotchRowStyle(wash: task.signal == .waiting ? NotchIslandInk.task(task.colorIndex) : nil))
+        .buttonStyle(NotchRowStyle(
+            wash: task.signal == .waiting || state.highlightedTaskID == task.id
+                ? NotchIslandInk.task(task.colorIndex) : nil))
         .matchedGeometryEffect(id: task.id, in: taskSpace)
         .accessibilityElement(children: .combine)
         .accessibilityHint(NotchIslandCopy.switchHint)
@@ -329,6 +361,9 @@ enum NotchIslandInk {
 
 enum NotchIslandCopy {
     static let switchHint = AnchorStrings.value("mac.notch.switch.hint", default: "Make this the task you're on")
+    static let pairingCode = AnchorStrings.value("mac.notch.pairing", default: "Pairing code")
+    static let peeksToggle = AnchorStrings.value(
+        "mac.notch.peeks", default: "Show in the notch when an agent finishes or needs you")
 
     static func taskState(_ title: String, _ state: String) -> String {
         String.localizedStringWithFormat(

@@ -4612,6 +4612,40 @@
         }
       }
     },
+    "mac.notch.pairing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing code"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对码"
+          }
+        }
+      }
+    },
+    "mac.notch.peeks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show in the notch when an agent finishes or needs you"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代理完成或等你时，在刘海上提示"
+          }
+        }
+      }
+    },
     "mac.notch.switch.hint" : {
       "extractionState" : "manual",
       "localizations" : {
