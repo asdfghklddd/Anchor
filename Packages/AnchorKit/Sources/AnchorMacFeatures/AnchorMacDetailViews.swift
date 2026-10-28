@@ -131,8 +131,6 @@ struct MacSettingsView: View {
     let controller: (any LocalLinkControlling)?
     let sourceSetupModel: MacSourceSetupModel?
     @State private var launchAtLogin = MacLaunchAtLogin.isEnabled
-    @AppStorage(AnchorEdgeSoundCue.enabledDefaultsKey) private var edgeSoundEffects = true
-    @AppStorage(MacInterfaceStyle.defaultsKey) private var interfaceStyle = MacInterfaceStyle.menuBar
     @AppStorage(MacCodexTurnEndNotifier.enabledDefaultsKey) private var codexTurnEndNotifications = true
     @State private var notificationAuthorization: UNAuthorizationStatus = .notDetermined
     @State private var settingsMessage: String?
@@ -215,24 +213,12 @@ struct MacSettingsView: View {
                 }
             }
             Section(L10n.settings) {
-                Picker(selection: $interfaceStyle) {
-                    Text(StatusMenuCopy.styleMenuBar).tag(MacInterfaceStyle.menuBar)
-                    Text(StatusMenuCopy.styleBoat).tag(MacInterfaceStyle.boat)
-                } label: {
-                    Text(StatusMenuCopy.styleTitle)
-                    Text(StatusMenuCopy.styleDetail)
-                }
-                .pickerStyle(.radioGroup)
-                .accessibilityIdentifier("settings.interfaceStyle")
                 Toggle(L10n.startAtLogin, isOn: $launchAtLogin)
                     .disabled(isLoadingSettings || isApplyingSettings)
                     .onChange(of: launchAtLogin) { _, enabled in
                         guard !isLoadingSettings else { return }
                         applyLaunchAtLogin(enabled)
                     }
-                if interfaceStyle == .boat {
-                    Toggle(L10n.edgeSoundEffects, isOn: $edgeSoundEffects)
-                }
                 Toggle(isOn: $codexTurnEndNotifications) {
                     Text(MacCodexCopy.notifyOnEnd)
                     Text(MacCodexCopy.notifyOnEndDetail)

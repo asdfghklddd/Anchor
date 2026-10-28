@@ -9,11 +9,8 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     private var linkController: (any LocalLinkControlling)?
     private var sourceSetupModel: MacSourceSetupModel?
     private var detailWindowController: AnchorMacDetailWindowController?
-    private var edgePanelController: AnchorEdgePanelController?
-    private var statusItemController: AnchorStatusItemController?
+    private var notchController: AnchorNotchController?
     private var bluetoothRadio: MacBluetoothRadioState?
-    private var styleObserver: NSObjectProtocol?
-    private var interfaceStyle: MacInterfaceStyle?
     private var codexTurnEndNotifier: MacCodexTurnEndNotifier?
     private var phoneAnchorState: AnchorPhoneAnchorState?
     private var interfaceDefaults: UserDefaults?
@@ -47,7 +44,7 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidChangeScreenParameters(_ notification: Notification) {
-        edgePanelController?.reposition()
+        notchController?.reposition()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -64,8 +61,7 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         sourceSetupModel?.stopObserving()
-        edgePanelController?.stop()
-        statusItemController?.stop()
+        notchController?.stop()
         model?.stop()
     }
 
@@ -100,58 +96,22 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         }
 
         model.start()
-        applyInterfaceStyle()
-        // Settings writes the style; switch without a restart.
-        styleObserver = NotificationCenter.default.addObserver(
-            forName: UserDefaults.didChangeNotification, object: nil, queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.applyInterfaceStyle() }
-        }
+        startNotch()
     }
 
-    /// Shows Anchor as the menu bar icon (the default) or the floating boat.
-    private func applyInterfaceStyle() {
-        let style = MacInterfaceStyle.current(in: interfaceDefaults ?? .standard)
-        guard style != interfaceStyle else { return }
-        interfaceStyle = style
-        switch style {
-        case .menuBar:
-            edgePanelController?.stop()
-            edgePanelController = nil
-            startStatusItem()
-        case .boat:
-            statusItemController?.stop()
-            statusItemController = nil
-            startEdgePanel()
-        }
-    }
-
-    private func startStatusItem() {
-        guard statusItemController == nil, let model, let linkController, let sourceSetupModel,
+    /// Anchor lives in the island around the camera housing.
+    private func startNotch() {
+        guard notchController == nil, let model, let linkController, let sourceSetupModel,
               let bluetoothRadio else { return }
-        let controller = AnchorStatusItemController(
+        let controller = AnchorNotchController(
             model: model,
             linkController: linkController,
             sourceSetupModel: sourceSetupModel,
             bluetooth: bluetoothRadio,
             onOpenSettings: { [weak self] in self?.openSettings() }
         )
-        statusItemController = controller
+        notchController = controller
         controller.start()
-    }
-
-    private func startEdgePanel() {
-        guard edgePanelController == nil, let model, let phoneAnchorState else { return }
-        let edgePanelController = AnchorEdgePanelController(
-            model: model,
-            phoneAnchorState: phoneAnchorState,
-            onOpenDetails: { [weak self] in
-                self?.detailWindowController?.present()
-            },
-            onOpenSettings: { [weak self] in self?.openSettings() }
-        )
-        self.edgePanelController = edgePanelController
-        edgePanelController.start()
     }
 
     private func openSettings() {
@@ -159,10 +119,10 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         detailWindowController?.present()
     }
 
-    /// Opens a task in the window and makes it the one the person is on.
+    /// Makes a task the one the person is on and opens the island on it.
     private func openTask(_ id: UUID) {
-        if let edgePanelController {
-            edgePanelController.openTask(id)
+        if let notchController {
+            notchController.openTask(id)
             return
         }
         Task {
