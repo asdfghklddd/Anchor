@@ -82,9 +82,9 @@ struct NotchIslandTests {
 
     @Test("The closed island wraps the housing with an ear per side that fits a dot per task")
     func compactWrapsTheHousing() {
-        #expect(geometry.compactSize(dots: 1) == CGSize(width: 272, height: 32))
-        // Three 8 pt dots, 9 pt apart, with 11 pt either side, on each ear.
-        #expect(geometry.compactSize(dots: 3).width == 328)
+        #expect(geometry.compactSize(dots: 1) == CGSize(width: 260, height: 32))
+        // Three 8 pt dots, 7 pt apart, with 7 pt either side, on each ear.
+        #expect(geometry.compactSize(dots: 3).width == 304)
         #expect(geometry.primedSize(dots: 1).height == 35)
         let frame = geometry.islandFrame(size: geometry.compactSize(dots: 1))
         #expect(frame.midX == 756)
@@ -103,7 +103,7 @@ struct NotchIslandTests {
         #expect(!closed.contains(CGPoint(x: 756, y: 900)))
         state.contentHeight = 160
         state.phase = .expanded
-        #expect(state.islandSize == CGSize(width: 500, height: 192))
+        #expect(state.islandSize == CGSize(width: 420, height: 192))
         #expect(state.pointerZone.contains(CGPoint(x: 756, y: 800)))
     }
 
@@ -200,6 +200,16 @@ struct NotchIslandTests {
         #expect(queue.items.map(\.kind) == [.pairing])
         queue.removePairing()
         #expect(queue.current == nil)
+    }
+
+    @Test("Past three tasks, one waiting on the person keeps its row over a quieter one")
+    func waitingKeepsItsRow() {
+        let current = task("Now", color: 0)
+        let quiet = task("Quiet", color: 1, [conversation(.completed, minutesAgo: 1)])
+        let fresh = task("Fresh", color: 2, [conversation(.running, minutesAgo: 2)])
+        let asking = task("Asking", color: 0, [conversation(.needsDecision, minutesAgo: 30)])
+        let island = content(SessionProjection(session: current, additionalSessions: [quiet, fresh, asking]))
+        #expect(island.others.map(\.title) == ["Quiet", "Asking"])
     }
 
     @Test("The pairing code shows only while the phone asks for it; a folder error only until folders connect")

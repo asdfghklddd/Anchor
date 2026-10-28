@@ -16,7 +16,7 @@ public struct NotchIslandGeometry: Equatable, Sendable {
     /// A screen without a camera housing still gets a dark handle this wide.
     static let standInWidth: CGFloat = 164
     /// The island's widest shape; the expanded panel never grows past it.
-    public static let expandedWidth: CGFloat = 500
+    public static let expandedWidth: CGFloat = 420
     /// Room around the expanded island for its shadow.
     static let shadowRoom: CGFloat = 48
     /// The panel stays this tall; only the island inside it changes size.
@@ -65,7 +65,8 @@ public struct NotchIslandGeometry: Equatable, Sendable {
     public func earWidth(dots: Int) -> CGFloat {
         let content = CGFloat(max(1, dots)) * NotchIslandMetrics.dot
             + CGFloat(max(0, dots - 1)) * NotchIslandMetrics.dotSpacing
-        return max(36, content + 22)
+        // Snug: the dots sit close to the housing, as on a Dynamic Island.
+        return max(30, content + 14)
     }
 
     public func compactSize(dots: Int) -> CGSize {
@@ -79,7 +80,7 @@ public struct NotchIslandGeometry: Equatable, Sendable {
     }
 
     public var expandedWidth: CGFloat {
-        max(Self.expandedWidth, notch.width + 260)
+        max(Self.expandedWidth, notch.width + 220)
     }
 
     /// As wide as the open island, so opening a peek only grows it downward.
@@ -109,7 +110,7 @@ public struct NotchIslandGeometry: Equatable, Sendable {
 /// Fixed measures shared by the island's shape and its contents.
 public enum NotchIslandMetrics {
     static let dot: CGFloat = 8
-    static let dotSpacing: CGFloat = 9
+    static let dotSpacing: CGFloat = 7
     /// The flare where the island meets the screen's top edge.
     static let compactFlare: CGFloat = 6
     static let expandedFlare: CGFloat = 10

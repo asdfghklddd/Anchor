@@ -25,7 +25,7 @@ struct NotchIslandSurface: View {
                 Image(decorative: NotchGrain.image, scale: 2)
                     .resizable(resizingMode: .tile)
                     .blendMode(.plusLighter)
-                    .opacity(isOpen ? 0.045 : 0.02)
+                    .opacity(isOpen ? 0.06 : 0.02)
             }
         }
         .clipShape(shape)
@@ -37,7 +37,7 @@ struct NotchIslandSurface: View {
 
     private var tint: Double {
         if contrast == .increased { return 0.96 }
-        return isOpen ? 0.80 : 0.94
+        return isOpen ? 0.74 : 0.94
     }
 
     private var edgeOpacity: Double {

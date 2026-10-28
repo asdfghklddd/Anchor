@@ -53,6 +53,8 @@ public struct NotchIslandContent: Equatable, Sendable {
     /// Why connecting the agent folders failed, until the person tries again.
     public let sourcesError: String?
 
+    static let otherLimit = 2
+
     public init(status: AnchorStatusMenu, projection: SessionProjection,
                 pairingCode: String? = nil, sourcesError: String? = nil) {
         let menu = AnchorEdgeMenu(projection: projection)
@@ -66,7 +68,12 @@ public struct NotchIslandContent: Equatable, Sendable {
             plan = .none
         }
         prompt = menu.prompt
-        others = menu.rows.filter { $0.id != menu.current?.id }.map { Self.task($0, fallback: $0.task) }
+        // The iPhone anchors three tasks at most; past that, a task waiting on the
+        // person keeps its row before a quieter one, and rows keep their order.
+        let all = menu.rows.filter { $0.id != menu.current?.id }.map { Self.task($0, fallback: $0.task) }
+        let kept = Set((all.filter { $0.signal == .waiting } + all.filter { $0.signal != .waiting })
+            .prefix(Self.otherLimit).map(\.id))
+        others = all.filter { kept.contains($0.id) }
         link = status.link
         fix = status.fix
         needsSources = !status.codexReady && !status.claudeReady

@@ -409,7 +409,7 @@ struct NotchInfoTip: View {
 enum NotchIslandInk {
     static let primary = Color.white
     /// At least 4.5:1 even where a white desktop shows through the glass.
-    static let secondary = Color(white: 0.67)
+    static let secondary = Color(white: 0.7)
     static let faint = Color(white: 0.5)
 
     /// The iPhone's task tab colors, in the same order.
