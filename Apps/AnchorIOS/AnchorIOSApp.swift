@@ -1,6 +1,7 @@
 import AnchorCore
 import AnchorIOSFeatures
 import AnchorTransport
+import CoreBluetooth
 import SwiftUI
 import UIKit
 
@@ -12,6 +13,8 @@ struct AnchorIOSApp: App {
     private let cloudSyncRunner: DurableSyncRunner?
     private let currentProcessProvider: (any CurrentProcessProviding)?
     private let recoveryReviewInterval: TimeInterval
+    private let tourPending: Bool
+    private let linkLauncher: LinkLauncher
 
     init() {
         let environment = ProcessInfo.processInfo.environment
@@ -150,15 +153,20 @@ struct AnchorIOSApp: App {
             durableSyncStatusProvider: cloudSyncRunner,
             usesTaskDashboard: true
         )
-#if DEBUG
-        if !isUITesting {
+        linkLauncher = LinkLauncher {
+            guard !isUITesting else { return }
             scanner.start()
             Task { await cloudSyncRunner?.start() }
         }
-#else
-        scanner.start()
-        Task { await cloudSyncRunner?.start() }
+        // A first run holds Bluetooth back until its tour ends, so the system
+        // prompt arrives over the connection card rather than over the tour.
+        var tourPending = !isUITesting
+            && AnchorTourGate.isPending(bluetoothAsked: CBManager.authorization != .notDetermined)
+#if DEBUG
+        if environment["ANCHOR_TOUR"] == "1" { tourPending = true }
 #endif
+        self.tourPending = tourPending
+        if !tourPending { linkLauncher.start() }
     }
 
     var body: some Scene {
@@ -167,8 +175,27 @@ struct AnchorIOSApp: App {
                 model: model,
                 linkController: client,
                 currentProcessProvider: currentProcessProvider,
-                recoveryReviewInterval: recoveryReviewInterval
+                recoveryReviewInterval: recoveryReviewInterval,
+                tourPending: tourPending,
+                startLink: linkLauncher.start
             )
         }
+    }
+}
+
+/// Bluetooth and sync start once: at launch, or when the first-run tour ends.
+@MainActor
+private final class LinkLauncher {
+    private var started = false
+    private let launch: () -> Void
+
+    init(launch: @escaping () -> Void) {
+        self.launch = launch
+    }
+
+    func start() {
+        guard !started else { return }
+        started = true
+        launch()
     }
 }

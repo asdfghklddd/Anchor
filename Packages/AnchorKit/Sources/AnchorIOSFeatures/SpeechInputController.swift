@@ -33,6 +33,8 @@ final class SpeechInputController {
     private var pendingMeterLevel = 0.0
     private(set) var errorMessage: String?
 
+    /// Words the tour is saying; `finish()` completes them at once.
+    @ObservationIgnored private var scripted: String?
     private var audioEngine: AVAudioEngine?
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
@@ -78,6 +80,32 @@ final class SpeechInputController {
         }
     }
 
+    /// The tour's dictation: the words arrive at a speaking pace, with a level
+    /// that moves like a voice. No microphone, recognizer or permission is
+    /// touched. Returns false when something stopped it part way.
+    func play(_ text: String) async -> Bool {
+        stop()
+        let id = UUID()
+        recognitionID = id
+        errorMessage = nil
+        transcript = ""
+        scripted = text
+        isRecording = true
+        for character in text {
+            guard recognitionID == id, scripted != nil, !Task.isCancelled else { break }
+            transcript.append(character)
+            let pause = character.isPunctuation || character.isWhitespace
+            audioLevel = pause ? 0.1 : .random(in: 0.35...0.95)
+            try? await Task.sleep(for: .milliseconds(pause ? 200 : Int.random(in: 70...130)))
+        }
+        guard recognitionID == id else { return false }
+        scripted = nil
+        transcript = text
+        isRecording = false
+        audioLevel = 0
+        return !Task.isCancelled
+    }
+
     func stop() {
         // Invalidate permission and recognition callbacks before changing segments.
         let stoppedID = recognitionID
@@ -100,6 +128,10 @@ final class SpeechInputController {
     /// Ends a hold: the microphone closes at once, and the recognizer gets a
     /// moment to deliver the last words before everything stops.
     func finish() {
+        if scripted != nil {
+            scripted = nil
+            return
+        }
         guard isRecording, let audioEngine else {
             stop()
             return

@@ -9,6 +9,7 @@
     let model: AnchorSessionModel
     @Bindable var draft: AnchorSetupDraft
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.anchorTour) private var tour
     @FocusState private var focus: AnchorSetupField?
     @State private var speechInput = SpeechInputController()
     @State private var speechField: AnchorSetupField?
@@ -51,7 +52,10 @@
       }
       .toolbar(.hidden, for: .navigationBar)
       // A new anchor starts at its title, as a new reminder does.
-      .task { if !draft.hasContent { focus = .title } }
+      .task {
+        guard !draft.hasContent else { return }
+        if tour != nil { await dictateForTour() } else { focus = .title }
+      }
       .onChange(of: speechInput.transcript) { _, transcript in
         switch speechField {
         case .title: draft.goalTitle = transcript
@@ -123,8 +127,23 @@
       if draft.settleTitle() { titleMoved = true }
     }
 
+    /// The tour says its task aloud, the title and then the plan, as the
+    /// person would; a tap on the microphone finishes the words in progress.
+    private func dictateForTour() async {
+      try? await Task.sleep(for: .seconds(0.8))
+      for (field, words) in [(AnchorSetupField.title, TourCopy.spokenTitle), (.plan, TourCopy.spokenPlan)] {
+        guard !Task.isCancelled else { break }
+        speechField = field
+        guard await speechInput.play(words) else { break }
+        try? await Task.sleep(for: .seconds(0.5))
+      }
+      speechField = nil
+    }
+
     /// Dictation goes to the title while there is none, then to the plan.
+    /// The tour never opens the microphone.
     private func beginSpeech() {
+      guard tour == nil else { return }
       focus = nil
       speechField = draft.isValid ? .plan : .title
       speechInput.start(initialText: speechField == .title ? draft.goalTitle : draft.actionPlan)

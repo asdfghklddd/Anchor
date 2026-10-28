@@ -17,6 +17,8 @@ struct WorkInvitationHarbor: View {
     let onEnd: () -> Void
 
     @AnchorReducedMotion private var reduceMotion
+    /// The tour keeps the invitation up until the phone turns, and words the lock itself.
+    @Environment(\.anchorTour) private var tour
     @State private var startedAt = Date.now
     @State private var didEnd = false
 
@@ -48,8 +50,10 @@ struct WorkInvitationHarbor: View {
     }
 
     private var endTime: TimeInterval {
-        mode == .inviting ? Self.inviteDuration + Self.sinkDuration : Self.weighDuration
+        mode == .inviting ? inviteDuration + Self.sinkDuration : Self.weighDuration
     }
+
+    private var inviteDuration: TimeInterval { tour == nil ? Self.inviteDuration : .infinity }
 
     // MARK: Drawing
 
@@ -89,7 +93,7 @@ struct WorkInvitationHarbor: View {
         let appear = min(1, elapsed / 0.5)
         switch mode {
         case .inviting:
-            let leave = max(0, elapsed - Self.inviteDuration - Self.sinkDuration * 0.4) / (Self.sinkDuration * 0.6)
+            let leave = max(0, elapsed - inviteDuration - Self.sinkDuration * 0.4) / (Self.sinkDuration * 0.6)
             return appear * (1 - min(1, leave))
         case .weighing:
             return appear * (1 - min(1, max(0, elapsed - 1.0) / 0.6))
@@ -101,7 +105,7 @@ struct WorkInvitationHarbor: View {
 
     @ViewBuilder
     private var lockHint: some View {
-        if mode == .inviting, gravity.suggestsOrientationLock {
+        if mode == .inviting, tour == nil, gravity.suggestsOrientationLock {
             Label(L10n.workInvitationLock, systemImage: "lock.rotation")
                 .font(.footnote.weight(.medium))
                 .foregroundStyle(AnchorIOSStyle.text)
@@ -121,6 +125,7 @@ struct WorkInvitationHarbor: View {
     }
 
     private func scheduleStaticEnd() {
+        guard endTime.isFinite else { return }
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(endTime))
             finish()

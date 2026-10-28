@@ -72,7 +72,7 @@ public final class AnchoringLog {
         return true
     }
 
-    private func take(_ activity: DayActivity) {
+    func take(_ activity: DayActivity) {
         guard activity.writtenAt >= (macActivity?.writtenAt ?? .distantPast) else { return }
         macActivity = activity
         if let data = try? JSONEncoder().encode(activity) { defaults.set(data, forKey: Self.macKey) }
@@ -112,6 +112,34 @@ public final class AnchoringLog {
     /// Tokens per half-hour slot start.
     var tokens: [Date: Int] {
         Dictionary((macActivity?.tokens ?? []).map { ($0.start, $0.tokens) }, uniquingKeysWith: +)
+    }
+
+    // MARK: The tour
+
+    private static let tourSuite = "anchor.tour.anchoring"
+
+    /// A day already under way, kept apart from the person's own: linked
+    /// through the morning, a break, linked again since a little while ago,
+    /// and the agents' tokens for the hours so far.
+    static func tour(now: Date) -> AnchoringLog {
+        clearTour()
+        // A fixed, valid suite name always opens.
+        let log = AnchoringLog(defaults: UserDefaults(suiteName: tourSuite)!)
+        log.links = [DateInterval(start: now - 16_800, end: now - 10_200),
+                     DateInterval(start: now - 6_900, end: now - 2_100)]
+        log.linkChanged(connected: true, at: now - 1_500)
+        let current = DayActivity.slotStart(of: now)
+        let shape = [0, 4, 12, 30, 48, 22, 8, 0, 6, 18, 41, 63, 52, 37, 44, 26]
+        let slots = shape.enumerated().map { index, thousands in
+            DayActivity.TokenSlot(start: current - Double(shape.count - 1 - index) * DayActivity.slotLength,
+                                  tokens: thousands * 1_000)
+        }
+        log.take(DayActivity(tokens: slots, links: [], writtenAt: now))
+        return log
+    }
+
+    static func clearTour() {
+        UserDefaults(suiteName: tourSuite)?.removePersistentDomain(forName: tourSuite)
     }
 
     private func save() {

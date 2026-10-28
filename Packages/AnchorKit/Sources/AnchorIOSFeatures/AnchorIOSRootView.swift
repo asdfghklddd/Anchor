@@ -3,6 +3,8 @@ import AnchorCore
 import AnchorDesign
 import SwiftUI
 
+/// The app's root: the person's own workspace, or the first-run tour in its
+/// place until the tour ends.
 public struct AnchorIOSRootView: View {
     private let model: AnchorSessionModel
     private let linkController: (any LocalLinkControlling)?
@@ -10,6 +12,94 @@ public struct AnchorIOSRootView: View {
     private let auxiliaryToolbarLabel: String?
     private let auxiliaryToolbarAction: (() -> Void)?
     private let recoveryReviewInterval: TimeInterval
+    /// Starts Bluetooth and sync, which the first run holds back until the
+    /// tour ends so the system prompt arrives where the connection is shown.
+    private let startLink: () -> Void
+    @State private var tour: AnchorTour?
+    /// The first run starts with the tour; it is made once the scene appears,
+    /// since this view's initializer can run more than once.
+    @State private var awaitsTour: Bool
+    /// The tour just ended: the person's workspace opens on the connection card.
+    @State private var connectsAfterTour = false
+
+    public init(
+        model: AnchorSessionModel,
+        linkController: (any LocalLinkControlling)? = nil,
+        currentProcessProvider: (any CurrentProcessProviding)? = nil,
+        auxiliaryToolbarLabel: String? = nil,
+        auxiliaryToolbarAction: (() -> Void)? = nil,
+        recoveryReviewInterval: TimeInterval = 86_400,
+        tourPending: Bool = false,
+        startLink: @escaping () -> Void = {}
+    ) {
+        self.model = model
+        self.linkController = linkController
+        self.currentProcessProvider = currentProcessProvider
+        self.auxiliaryToolbarLabel = auxiliaryToolbarLabel
+        self.auxiliaryToolbarAction = auxiliaryToolbarAction
+        self.recoveryReviewInterval = recoveryReviewInterval
+        self.startLink = startLink
+        _awaitsTour = State(initialValue: tourPending)
+    }
+
+    public var body: some View {
+        AnchorLaunchGate {
+            ZStack {
+                if let tour {
+                    AnchorWorkspaceView(model: tour.model, recoveryReviewInterval: recoveryReviewInterval,
+                                        tour: tour, log: tour.log)
+                        // Above every sheet the workspace presents.
+                        .environment(\.anchorTour, tour)
+                        .transition(.opacity)
+                } else if awaitsTour {
+                    // Under the launch splash for the moment before the tour is made.
+                    Color.clear
+                } else {
+                    AnchorWorkspaceView(
+                        model: model,
+                        linkController: linkController,
+                        currentProcessProvider: currentProcessProvider,
+                        auxiliaryToolbarLabel: auxiliaryToolbarLabel,
+                        auxiliaryToolbarAction: auxiliaryToolbarAction,
+                        recoveryReviewInterval: recoveryReviewInterval,
+                        opensConnections: connectsAfterTour
+                    )
+                    .transition(.opacity)
+                }
+            }
+            .animation(.easeInOut(duration: 0.45), value: tour == nil)
+        }
+        .background { HarborBackground() }
+        .onAppear {
+            if awaitsTour, tour == nil { tour = AnchorTour() }
+        }
+        .onChange(of: tour?.stage) { _, stage in
+            if stage == .finished { finishTour() }
+        }
+    }
+
+    private func finishTour() {
+        tour?.end()
+        AnchorTourGate.markDone()
+        awaitsTour = false
+        startLink()
+        connectsAfterTour = true
+        tour = nil
+    }
+}
+
+/// One workspace: the portrait home, the landscape desk, and their sheets,
+/// for the person's own tasks or for the tour's.
+struct AnchorWorkspaceView: View {
+    private let model: AnchorSessionModel
+    private let linkController: (any LocalLinkControlling)?
+    private let currentProcessProvider: (any CurrentProcessProviding)?
+    private let auxiliaryToolbarLabel: String?
+    private let auxiliaryToolbarAction: (() -> Void)?
+    private let recoveryReviewInterval: TimeInterval
+    private let tour: AnchorTour?
+    private let log: AnchoringLog
+    private let opensConnections: Bool
 
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -41,14 +131,19 @@ public struct AnchorIOSRootView: View {
     @AppStorage(DeskReminder.minutesKey) private var reminderMinutes = DeskReminder.defaultMinutes
     @Environment(\.scenePhase) private var scenePhase
     @Namespace private var processTransition
+    /// The tour's desk drawn sideways, for a screen held by orientation lock.
+    @State private var showsSidewaysDesk = false
 
-    public init(
+    init(
         model: AnchorSessionModel,
         linkController: (any LocalLinkControlling)? = nil,
         currentProcessProvider: (any CurrentProcessProviding)? = nil,
         auxiliaryToolbarLabel: String? = nil,
         auxiliaryToolbarAction: (() -> Void)? = nil,
-        recoveryReviewInterval: TimeInterval = 86_400
+        recoveryReviewInterval: TimeInterval = 86_400,
+        tour: AnchorTour? = nil,
+        log: AnchoringLog = .shared,
+        opensConnections: Bool = false
     ) {
         self.model = model
         self.linkController = linkController
@@ -56,67 +151,94 @@ public struct AnchorIOSRootView: View {
         self.auxiliaryToolbarLabel = auxiliaryToolbarLabel
         self.auxiliaryToolbarAction = auxiliaryToolbarAction
         self.recoveryReviewInterval = recoveryReviewInterval
+        self.tour = tour
+        self.log = log
+        self.opensConnections = opensConnections
     }
 
-    public var body: some View {
-        AnchorLaunchGate {
-            NavigationStack(path: $path) {
-                Group {
-                    if shouldShowLandscapeDashboard {
-                        LandscapeAmbientDashboard(
-                            projection: model.projection,
-                            playsArrival: arrivalPending,
-                            onTask: openHostedTask,
-                            onManage: { sheet = .hostedTasks }
-                        )
-                    } else {
-                        PortraitDashboard(
-                            projection: model.projection,
-                            auxiliaryToolbarLabel: auxiliaryToolbarLabel,
-                            auxiliaryToolbarAction: auxiliaryToolbarAction,
-                            transitionNamespace: processTransition,
-                            onRoute: { path.append($0) },
-                            onSheet: { requested in
-                                if requested == .setup, atTaskLimit { showsCapNote = true } else { sheet = requested }
-                            },
-                            onTask: openHostedTask,
-                            invitation: harborMode,
-                            onInvitationEnd: endHarbor,
-                            anchorDrops: anchorDrops,
-                            anchorWeighs: anchorWeighs,
-                            gravity: gravity,
-                            settlingTaskID: settlingTaskID,
-                            settledTaskID: settledTaskID,
-                            anchorSettles: anchorSettles,
-                            showsCapNote: showsCapNote,
-                            onCapNoteDismiss: { showsCapNote = false },
-                            onCompleteTask: { await model.send(.forSession($0, .completeSession)) }
-                        )
-                        .overlay {
-                            if pickedUp, let hold = deskHold {
-                                DeskPickUpCard(
-                                    hold: hold,
-                                    current: deskCurrent,
-                                    tasks: model.projection.hostedSessions,
-                                    reminderEnabled: reminderEnabled,
-                                    reminderMinutes: reminderMinutes,
-                                    reminderAuthorization: reminder.authorization,
-                                    onSelect: { id in Task { _ = await model.selectHostedTask(id) } },
-                                    onAllowReminder: { Task { await reminder.requestAuthorization() } },
-                                    onUseAnyway: { pickedUp = false }
-                                )
-                                // It is there the moment the phone turns; it fades when dismissed.
-                                .transition(.asymmetric(insertion: .identity, removal: .opacity))
+    var body: some View {
+        NavigationStack(path: $path) {
+            Group {
+                if shouldShowLandscapeDashboard {
+                    LandscapeAmbientDashboard(
+                        projection: model.projection,
+                        playsArrival: arrivalPending,
+                        onTask: openHostedTask,
+                        onManage: { sheet = .hostedTasks }
+                    )
+                } else {
+                    PortraitDashboard(
+                        projection: model.projection,
+                        auxiliaryToolbarLabel: auxiliaryToolbarLabel,
+                        auxiliaryToolbarAction: auxiliaryToolbarAction,
+                        transitionNamespace: processTransition,
+                        onRoute: { route in
+                            // The tour stays on its home; the person's own pages wait for them.
+                            if tour == nil { path.append(route) }
+                        },
+                        onSheet: { requested in
+                            if requested == .setup, atTaskLimit { showsCapNote = true }
+                            else if tour == nil || requested == .setup { sheet = requested }
+                        },
+                        onTask: openHostedTask,
+                        invitation: harborMode,
+                        onInvitationEnd: endHarbor,
+                        anchorDrops: anchorDrops,
+                        anchorWeighs: anchorWeighs,
+                        gravity: gravity,
+                        settlingTaskID: settlingTaskID,
+                        settledTaskID: settledTaskID,
+                        anchorSettles: anchorSettles,
+                        showsCapNote: showsCapNote,
+                        onCapNoteDismiss: { showsCapNote = false },
+                        onCompleteTask: { await model.send(.forSession($0, .completeSession)) },
+                        log: log
+                    )
+                    .overlayPreferenceValue(TourSpotKey.self) { anchors in
+                        if let tour {
+                            GeometryReader { proxy in
+                                TourCoach(tour: tour, spots: anchors.mapValues { proxy[$0] }, size: proxy.size,
+                                          inviting: harborMode == .inviting, gravity: gravity,
+                                          onSideways: openSidewaysDesk)
                             }
+                            .ignoresSafeArea()
                         }
-                        .animation(AnchorMotion.micro, value: pickedUp)
                     }
-                }
-                .navigationDestination(for: AnchorRoute.self) { route in
-                    destination(for: route)
+                    .overlay { if let tour { TourTapLayer(tour: tour) } }
+                    .overlay {
+                        if pickedUp, let hold = deskHold {
+                            DeskPickUpCard(
+                                hold: hold,
+                                current: deskCurrent,
+                                tasks: model.projection.hostedSessions,
+                                reminderEnabled: reminderEnabled,
+                                reminderMinutes: reminderMinutes,
+                                reminderAuthorization: reminder.authorization,
+                                onSelect: { id in Task { _ = await model.selectHostedTask(id) } },
+                                onAllowReminder: { Task { await reminder.requestAuthorization() } },
+                                onUseAnyway: { pickedUp = false }
+                            )
+                            // It is there the moment the phone turns; it fades when dismissed.
+                            .transition(.asymmetric(insertion: .identity, removal: .opacity))
+                        }
+                    }
+                    .animation(AnchorMotion.micro, value: pickedUp)
                 }
             }
+            .navigationDestination(for: AnchorRoute.self) { route in
+                destination(for: route)
+            }
         }
+        .overlay {
+            if showsSidewaysDesk, let tour {
+                TourSidewaysDesk(projection: model.projection, gravity: gravity) {
+                    showsSidewaysDesk = false
+                    tour.leave()
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(AnchorMotion.panel, value: showsSidewaysDesk)
         .environment(\.openConnectionCard, { sheet = .connections })
         .tint(AnchorIOSStyle.action)
         .background { HarborBackground() }
@@ -147,6 +269,14 @@ public struct AnchorIOSRootView: View {
             guard newPosture != posture else { return }
             let previous = posture
             posture = newPosture
+            if let tour {
+                if newPosture == .landscape {
+                    showsSidewaysDesk = false
+                    tour.reachedDesk()
+                } else if previous == .landscape {
+                    tour.leave()
+                }
+            }
             notePickUp(from: previous, to: newPosture)
             synchronizeInvitation()
             // A rotation pauses setup without discarding its input or task identity.
@@ -182,7 +312,10 @@ public struct AnchorIOSRootView: View {
             evaluateRecoveryReview(for: sessionID)
         }
         .onChange(of: sheet) { previousSheet, presentedSheet in
-            if presentedSheet == .setup { suspendedSetup = false }
+            if presentedSheet == .setup {
+                suspendedSetup = false
+                tour?.setupOpened()
+            }
             guard presentedSheet == nil else {
                 holdInvitationBehindCover()
                 return
@@ -190,6 +323,15 @@ public struct AnchorIOSRootView: View {
             // The success ending plays first; a waiting invitation follows it.
             let dropped = previousSheet == .setup && setupDraft.wasCreated
             if dropped { playDrop(of: setupDraft.hostedTaskID, titled: setupDraft.goalTitle) }
+            if let tour, previousSheet == .setup {
+                if dropped {
+                    // The turn is offered once the anchor has caught, as after any drop.
+                    tour.dropped(setupDraft.hostedTaskID)
+                    synchronizeInvitation(holdingOffer: true)
+                } else {
+                    tour.setupClosed()
+                }
+            }
             presentDeferredInvitation(after: dropped ? 1.9 : 0.4)
             if suspendedSetup, posture == .portrait {
                 suspendedSetup = false
@@ -229,8 +371,13 @@ public struct AnchorIOSRootView: View {
             if released { pickedUp = false }
         }
         .task {
-            model.start()
+            // The tour starts its own model once its sample tasks are in place.
+            if tour == nil { model.start() }
             await reminder.refresh()
+            if opensConnections {
+                try? await Task.sleep(for: .seconds(0.6))
+                sheet = .connections
+            }
         }
     }
 
@@ -251,6 +398,7 @@ public struct AnchorIOSRootView: View {
     /// the person asked to be interrupted; turning it back puts the card away.
     /// Presence is untouched: the work continues either way (D05, D08).
     private func notePickUp(from previous: DevicePosture, to posture: DevicePosture) {
+        guard tour == nil else { return }
         if posture == .landscape {
             pickedUp = false
         } else if previous == .landscape, posture == .portrait, isAtDesk,
@@ -265,7 +413,7 @@ public struct AnchorIOSRootView: View {
     private func noteScenePhase(_ phase: ScenePhase) {
         switch phase {
         case .background:
-            guard posture == .portrait, isAtDesk, isMacConnected, let hold = deskHold else { return }
+            guard tour == nil, posture == .portrait, isAtDesk, isMacConnected, let hold = deskHold else { return }
             let subtitle: String? = if case let .waiting(_, title, _, _) = hold { title } else { nil }
             reminder.schedule(hold, subtitle: subtitle)
         case .active:
@@ -280,7 +428,12 @@ public struct AnchorIOSRootView: View {
 
     /// Everything the invitation depends on besides posture.
     private var invitationInputs: [Bool] {
-        [!model.projection.hostedSessions.isEmpty, isMacConnected, isAtDesk]
+        [hasAnchor, isMacConnected, isAtDesk]
+    }
+
+    /// The tour's sample tasks are already down; its invitation waits for the person's own drop.
+    private var hasAnchor: Bool {
+        !model.projection.hostedSessions.isEmpty && (tour.map { $0.stage >= .turn } ?? true)
     }
 
     private var isMacConnected: Bool {
@@ -295,9 +448,10 @@ public struct AnchorIOSRootView: View {
         }
     }
 
-    private func synchronizeInvitation() {
+    /// `holdingOffer` keeps a new invitation back until `presentDeferredInvitation`.
+    private func synchronizeInvitation(holdingOffer: Bool = false) {
         let event = invitation.update(
-            hasAnchor: !model.projection.hostedSessions.isEmpty,
+            hasAnchor: hasAnchor,
             macConnected: isMacConnected,
             atDesk: isAtDesk,
             posture: posture
@@ -305,7 +459,7 @@ public struct AnchorIOSRootView: View {
         switch event {
         case .offered:
             // Never over a sheet or cover: wait until the home is in view.
-            if sheet != nil || fullScreen != nil { invitationDeferred = true } else { harborMode = .inviting }
+            if holdingOffer || sheet != nil || fullScreen != nil { invitationDeferred = true } else { harborMode = .inviting }
         case .arrived:
             harborMode = nil
             arrivalPending = true
@@ -482,6 +636,11 @@ public struct AnchorIOSRootView: View {
         )
     }
 
+    private func openSidewaysDesk() {
+        showsSidewaysDesk = true
+        tour?.reachedDesk()
+    }
+
     private func openHostedTask(_ id: UUID) {
         Task {
             if await model.selectHostedTask(id) { sheet = .profileDetail(.session) }
@@ -489,7 +648,7 @@ public struct AnchorIOSRootView: View {
     }
 
     private func evaluateRecoveryReview(for sessionID: UUID?) {
-        guard let sessionID,
+        guard tour == nil, let sessionID,
               promptedRecoverySessionID != sessionID,
               sheet == nil,
               !suspendedSetup,

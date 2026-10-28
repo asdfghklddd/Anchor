@@ -26,7 +26,8 @@ struct PortraitDashboard: View {
     var showsCapNote = false
     var onCapNoteDismiss: () -> Void = {}
     var onCompleteTask: (UUID) async -> Bool = { _ in false }
-    @State private var log = AnchoringLog.shared
+    /// Today's anchoring and tokens; the tour brings a day of its own.
+    var log: AnchoringLog = .shared
     @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
@@ -39,8 +40,10 @@ struct PortraitDashboard: View {
                         .padding(.top, 17)
                     VStack(spacing: 0) {
                         HomeAnchoringPanel(log: log)
+                            .tourSpot(.anchoring)
                             .padding(.top, 30)
                         tasks
+                            .tourSpot(.tasks)
                             .padding(.horizontal, 22)
                             .padding(.top, 30)
                     }
@@ -85,6 +88,7 @@ struct PortraitDashboard: View {
                     gravity: gravity,
                     action: { onSheet(.setup) }
                 )
+                .tourSpot(.anchorButton)
             }
             .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: showsCapNote)
             // The mockup sets the button lower, over the home indicator's band.
