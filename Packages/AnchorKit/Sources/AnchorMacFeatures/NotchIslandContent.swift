@@ -48,8 +48,13 @@ public struct NotchIslandContent: Equatable, Sendable {
     /// Neither agent's folder is readable yet, so nothing can reach the phone.
     public let needsSources: Bool
     public let peerDevice: String?
+    /// The code to type on the phone, while it asks for one.
+    public let pairingCode: String?
+    /// Why connecting the agent folders failed, until the person tries again.
+    public let sourcesError: String?
 
-    public init(status: AnchorStatusMenu, projection: SessionProjection) {
+    public init(status: AnchorStatusMenu, projection: SessionProjection,
+                pairingCode: String? = nil, sourcesError: String? = nil) {
         let menu = AnchorEdgeMenu(projection: projection)
         let rows = Dictionary(menu.rows.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         current = menu.current.map { Self.task(rows[$0.id], fallback: $0) }
@@ -66,6 +71,8 @@ public struct NotchIslandContent: Equatable, Sendable {
         fix = status.fix
         needsSources = !status.codexReady && !status.claudeReady
         peerDevice = status.peerDeviceSummary
+        self.pairingCode = status.link == .notPaired ? pairingCode : nil
+        self.sourcesError = needsSources ? sourcesError : nil
     }
 
     /// Every open task, the current one first: the dots beside the housing.

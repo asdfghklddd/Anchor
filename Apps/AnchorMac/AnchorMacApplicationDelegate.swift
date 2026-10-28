@@ -8,6 +8,7 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     private var linkController: (any LocalLinkControlling)?
     private var sourceSetupModel: MacSourceSetupModel?
     private var detailWindowController: AnchorMacDetailWindowController?
+    private var settingsWindowController: AnchorSettingsWindowController?
     private var notchController: AnchorNotchController?
     private var bluetoothRadio: MacBluetoothRadioState?
     private var phoneAnchorState: AnchorPhoneAnchorState?
@@ -48,7 +49,8 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         _ sender: NSApplication,
         hasVisibleWindows flag: Bool
     ) -> Bool {
-        detailWindowController?.present()
+        // Opening Anchor again, from Finder or Spotlight, brings up its settings.
+        openSettings()
         return true
     }
 
@@ -73,14 +75,25 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
             defaults: interfaceDefaults
         )
         self.detailWindowController = detailWindowController
-        sourceSetupModel.onNeedsAttention = { [weak detailWindowController] in
-            detailWindowController?.present()
+        if let bluetoothRadio {
+            settingsWindowController = AnchorSettingsWindowController(
+                model: model,
+                linkController: linkController,
+                sourceSetupModel: sourceSetupModel,
+                bluetooth: bluetoothRadio,
+                defaults: interfaceDefaults
+            )
         }
-        if sourceSetupModel.showsCodexOnboarding {
-            detailWindowController.present()
+        // First run: the island opens on its one button, connecting the agent folders.
+        sourceSetupModel.onNeedsAttention = { [weak self, weak sourceSetupModel] in
+            sourceSetupModel?.finishCodexOnboarding()
+            self?.notchController?.openPinned()
         }
         model.start()
         startNotch()
+        if sourceSetupModel.showsCodexOnboarding {
+            sourceSetupModel.onNeedsAttention?()
+        }
     }
 
     /// Anchor lives in the island around the camera housing.
@@ -92,14 +105,14 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
             linkController: linkController,
             sourceSetupModel: sourceSetupModel,
             bluetooth: bluetoothRadio,
-            onOpenSettings: { [weak self] in self?.openSettings() }
+            onOpenSettings: { [weak self] in self?.openSettings() },
+            onOpenWindow: { [weak self] in self?.detailWindowController?.present() }
         )
         notchController = controller
         controller.start()
     }
 
     private func openSettings() {
-        AnchorMacRootView.showSettings(in: interfaceDefaults ?? .standard)
-        detailWindowController?.present()
+        settingsWindowController?.present()
     }
 }

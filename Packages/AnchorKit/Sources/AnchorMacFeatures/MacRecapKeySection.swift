@@ -41,12 +41,17 @@ struct MacRecapKeySection: View {
                     }
                 }
             }
-            Text(failed ? MacRecapCopy.failed : MacRecapCopy.detail)
-                .font(.caption)
-                .foregroundStyle(failed ? AnchorPalette.coral : .secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            if failed {
+                Text(MacRecapCopy.failed)
+                    .font(.caption)
+                    .foregroundStyle(AnchorPalette.coral)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         } header: {
-            Text(MacRecapCopy.title)
+            HStack(spacing: 4) {
+                Text(MacRecapCopy.title)
+                MacInfoTip(text: MacRecapCopy.detail)
+            }
         }
         .accessibilityIdentifier("settings.recapKey")
         .task { hasKey = access.load() != nil }

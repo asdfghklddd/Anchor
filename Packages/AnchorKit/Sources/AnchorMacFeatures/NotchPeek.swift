@@ -44,7 +44,7 @@ public struct NotchPeek: Identifiable, Equatable, Sendable {
     }
 
     public static func pairing(code: String) -> NotchPeek {
-        NotchPeek(kind: .pairing, title: NotchIslandCopy.pairingCode, detail: code)
+        NotchPeek(kind: .pairing, title: L10n.pairingCode, detail: code)
     }
 }
 

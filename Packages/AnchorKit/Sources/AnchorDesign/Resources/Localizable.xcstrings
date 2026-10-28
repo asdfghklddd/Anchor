@@ -4612,19 +4612,19 @@
         }
       }
     },
-    "mac.notch.pairing" : {
+    "mac.notch.open-window" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pairing code"
+            "value" : "Open Full Window"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "配对码"
+            "value" : "打开完整窗口"
           }
         }
       }
@@ -4642,6 +4642,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "代理完成或等你时，在刘海上提示"
+          }
+        }
+      }
+    },
+    "mac.notch.shortcut" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the notch"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开刘海"
+          }
+        }
+      }
+    },
+    "mac.notch.sources.privacy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor reads only the conversation logs in these two folders. Your iPhone gets titles, latest requests and status, never the whole log."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor 只读取这两个文件夹里的对话记录。发到 iPhone 的是标题、最新请求和状态，不是完整日志。"
           }
         }
       }

@@ -202,6 +202,30 @@ struct NotchIslandTests {
         #expect(queue.current == nil)
     }
 
+    @Test("The pairing code shows only while the phone asks for it; a folder error only until folders connect")
+    func pairingAndSetupCards() {
+        let unpaired = AnchorStatusMenu(projection: SessionProjection(), radio: .on,
+                                        pairing: .verificationCodeRequired, codexReady: false, claudeReady: false)
+        let asking = NotchIslandContent(status: unpaired, projection: SessionProjection(),
+                                        pairingCode: "482915", sourcesError: "Wrong folder")
+        #expect(asking.pairingCode == "482915")
+        #expect(asking.sourcesError == "Wrong folder")
+
+        let paired = AnchorStatusMenu(projection: SessionProjection(connection: .connected), radio: .on,
+                                      pairing: .automatic, codexReady: true, claudeReady: false)
+        let settled = NotchIslandContent(status: paired, projection: SessionProjection(connection: .connected),
+                                         pairingCode: "482915", sourcesError: "Wrong folder")
+        #expect(settled.pairingCode == nil)
+        #expect(settled.sourcesError == nil)
+    }
+
+    @Test("Each Bluetooth fix opens its own System Settings pane; reconnecting opens none")
+    func fixPanes() {
+        #expect(AnchorStatusMenu.Fix.reconnect.settingsURL == nil)
+        #expect(AnchorStatusMenu.Fix.openBluetoothSettings.settingsURL?.absoluteString.contains("BluetoothSettings") == true)
+        #expect(AnchorStatusMenu.Fix.openBluetoothPrivacy.settingsURL?.absoluteString.contains("Privacy_Bluetooth") == true)
+    }
+
     @Test("Without agent folders the link needs the person, even while connected")
     func sourcesNeedThePerson() {
         let island = content(SessionProjection(connection: .connected), codex: false)

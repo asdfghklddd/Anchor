@@ -9,6 +9,7 @@ public enum NotchIslandAction: Sendable {
     case openSettings
     case fixLink(AnchorStatusMenu.Fix)
     case connectSources
+    case openWindow
     case quit
 }
 
@@ -80,6 +81,7 @@ public struct NotchIslandView: View {
         .environment(\.colorScheme, .dark)
         .contextMenu {
             Button(EdgeMenuCopy.settings) { onAction(.openSettings) }
+            Button(NotchIslandCopy.openWindow) { onAction(.openWindow) }
             Divider()
             Button(EdgeMenuCopy.quit) { onAction(.quit) }
         }
@@ -183,6 +185,10 @@ public struct NotchIslandView: View {
     @ViewBuilder
     private func tasks(isShown: Bool) -> some View {
         VStack(spacing: 6) {
+            if let code = content.pairingCode, isShown {
+                pairingCard(code)
+                    .transition(reveal(order: 0))
+            }
             if content.needsSources, isShown {
                 connectSources
                     .transition(reveal(order: 0))
@@ -285,18 +291,57 @@ public struct NotchIslandView: View {
         }
     }
 
+    /// The code the phone asks for, large enough to type from across the desk.
+    private func pairingCard(_ code: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "iphone")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(NotchIslandInk.secondary)
+                .accessibilityHidden(true)
+            Text(L10n.pairingCode)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(NotchIslandInk.primary)
+            NotchInfoTip(text: StatusMenuCopy.pairingCodeHint)
+            Spacer(minLength: 8)
+            Text(code)
+                .font(.system(size: 22, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .tracking(3)
+                .foregroundStyle(NotchIslandInk.primary)
+                .textSelection(.enabled)
+                .accessibilityLabel(L10n.pairingCode)
+                .accessibilityValue(Text(code))
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.white.opacity(0.07)))
+        .accessibilityElement(children: .contain)
+    }
+
     /// Opens Anchor's folder picker for both agents at once; until then no
     /// conversation can reach the island or the phone.
     private var connectSources: some View {
-        Button { onAction(.connectSources) } label: {
-            Label(StatusMenuCopy.agentSourcesConnect, systemImage: "folder.badge.plus")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.black)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 9)
-                .background(Capsule().fill(.white))
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                Button { onAction(.connectSources) } label: {
+                    Label(StatusMenuCopy.agentSourcesConnect, systemImage: "folder.badge.plus")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 9)
+                        .background(Capsule().fill(.white))
+                }
+                .buttonStyle(AnchorPressButtonStyle())
+                NotchInfoTip(text: NotchIslandCopy.sourcesPrivacy)
+            }
+            if let error = content.sourcesError {
+                Text(error)
+                    .font(.system(size: 12))
+                    .foregroundStyle(AnchorTaskIdentity.attentionInk)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 6)
+            }
         }
-        .buttonStyle(AnchorPressButtonStyle())
     }
 
     private func row(_ task: NotchIslandContent.Task) -> some View {
@@ -346,6 +391,20 @@ public struct NotchIslandView: View {
     }
 }
 
+/// More about something, shown when the pointer rests on the icon and read
+/// in full by VoiceOver, instead of a line of text that is always there.
+struct NotchInfoTip: View {
+    let text: String
+
+    var body: some View {
+        Image(systemName: "info.circle")
+            .font(.system(size: 12))
+            .foregroundStyle(NotchIslandInk.faint)
+            .help(text)
+            .accessibilityLabel(text)
+    }
+}
+
 /// Ink on the island, chosen for contrast on its darkest and lightest backdrop.
 enum NotchIslandInk {
     static let primary = Color.white
@@ -361,7 +420,11 @@ enum NotchIslandInk {
 
 enum NotchIslandCopy {
     static let switchHint = AnchorStrings.value("mac.notch.switch.hint", default: "Make this the task you're on")
-    static let pairingCode = AnchorStrings.value("mac.notch.pairing", default: "Pairing code")
+    static let sourcesPrivacy = AnchorStrings.value(
+        "mac.notch.sources.privacy",
+        default: "Anchor reads only the conversation logs in these two folders. Your iPhone gets titles, latest requests and status, never the whole log.")
+    static let openWindow = AnchorStrings.value("mac.notch.open-window", default: "Open Full Window")
+    static let shortcut = AnchorStrings.value("mac.notch.shortcut", default: "Open the notch")
     static let peeksToggle = AnchorStrings.value(
         "mac.notch.peeks", default: "Show in the notch when an agent finishes or needs you")
 

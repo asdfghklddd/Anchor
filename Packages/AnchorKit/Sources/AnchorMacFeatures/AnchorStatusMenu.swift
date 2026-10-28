@@ -51,6 +51,16 @@ public struct AnchorStatusMenu: Sendable, Equatable {
         case reconnect
         case openBluetoothSettings
         case openBluetoothPrivacy
+
+        /// The System Settings pane that fixes it; reconnecting needs none.
+        public var settingsURL: URL? {
+            switch self {
+            case .reconnect: nil
+            case .openBluetoothSettings: URL(string: "x-apple.systempreferences:com.apple.BluetoothSettings")
+            case .openBluetoothPrivacy:
+                URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Bluetooth")
+            }
+        }
     }
 
     public enum Icon: Sendable, Equatable {

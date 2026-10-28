@@ -17,6 +17,7 @@ final class AnchorNotchController {
     private let sourceSetupModel: MacSourceSetupModel
     private let bluetooth: MacBluetoothRadioState
     private let onOpenSettings: () -> Void
+    private let onOpenWindow: () -> Void
 
     private let state: NotchIslandState
     private let panel: AnchorNotchPanel
@@ -39,13 +40,15 @@ final class AnchorNotchController {
         linkController: any LocalLinkControlling,
         sourceSetupModel: MacSourceSetupModel,
         bluetooth: MacBluetoothRadioState,
-        onOpenSettings: @escaping () -> Void
+        onOpenSettings: @escaping () -> Void,
+        onOpenWindow: @escaping () -> Void
     ) {
         self.model = model
         self.linkController = linkController
         self.sourceSetupModel = sourceSetupModel
         self.bluetooth = bluetooth
         self.onOpenSettings = onOpenSettings
+        self.onOpenWindow = onOpenWindow
         let geometry = Self.currentGeometry()
         state = NotchIslandState(
             content: NotchIslandContent(
@@ -130,6 +133,15 @@ final class AnchorNotchController {
         let geometry = Self.currentGeometry()
         state.geometry = geometry
         panel.setFrame(geometry.panelFrame, display: true)
+    }
+
+    /// Opens the island and keeps it open until a click elsewhere, without
+    /// taking the keyboard: for first run, when there is one thing to do.
+    func openPinned() {
+        hover.endPeek()
+        hover.open(pinned: true)
+        apply()
+        panel.ignoresMouseEvents = !state.pointerZone.contains(NSEvent.mouseLocation)
     }
 
     private static func currentGeometry() -> NotchIslandGeometry {
@@ -306,8 +318,12 @@ final class AnchorNotchController {
             codexReady: sourceSetupModel.codexSessionsFolderName != nil,
             claudeReady: sourceSetupModel.claudeProjectsFolderName != nil
         )
-        let content = NotchIslandContent(status: status, projection: model.projection)
+        let content = NotchIslandContent(status: status, projection: model.projection,
+                                         pairingCode: pairingCode, sourcesError: sourceSetupModel.errorMessage)
+        // A failed folder pick shows its reason where the button was.
+        let setupFailed = content.sourcesError != nil && state.content.sourcesError == nil
         if content != state.content { state.content = content }
+        if setupFailed { openPinned() }
         receive(detector.peeks(in: model.projection, link: status.link, now: .now))
     }
 
@@ -323,26 +339,22 @@ final class AnchorNotchController {
             dismiss()
             onOpenSettings()
         case let .fixLink(fix):
-            switch fix {
-            case .reconnect:
+            if let url = fix.settingsURL {
+                NSWorkspace.shared.open(url)
+            } else {
                 Task { await linkController.retryConnection() }
-            case .openBluetoothSettings:
-                Self.openSystemSettings("x-apple.systempreferences:com.apple.BluetoothSettings")
-            case .openBluetoothPrivacy:
-                Self.openSystemSettings("x-apple.systempreferences:com.apple.preference.security?Privacy_Bluetooth")
             }
         case .connectSources:
             dismiss()
             NSApp.activate(ignoringOtherApps: true)
+            sourceSetupModel.clearError()
             Task { await sourceSetupModel.authorizeAgentSessionFolders() }
+        case .openWindow:
+            dismiss()
+            onOpenWindow()
         case .quit:
             NSApp.terminate(nil)
         }
-    }
-
-    private static func openSystemSettings(_ address: String) {
-        guard let url = URL(string: address) else { return }
-        NSWorkspace.shared.open(url)
     }
 
     // MARK: Panel
