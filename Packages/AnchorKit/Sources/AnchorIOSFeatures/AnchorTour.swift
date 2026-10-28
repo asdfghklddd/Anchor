@@ -188,6 +188,8 @@ final class AnchorTour {
 extension EnvironmentValues {
     /// The tour running these screens, if any.
     @Entry var anchorTour: AnchorTour? = nil
+    /// Plays the tour again from Settings.
+    @Entry var replayTour: () -> Void = {}
 }
 
 // MARK: The pretend Mac
@@ -306,6 +308,7 @@ enum TourCopy {
     static let lockQuestion = AnchorStrings.value("tour.lock", default: "Portrait Orientation Lock on?")
     static let openHere = AnchorStrings.value("tour.lock.open", default: "Open the desk here")
     static let backUpright = AnchorStrings.value("tour.lock.back", default: "Back to the home")
+    static let replay = AnchorStrings.value("tour.replay", default: "Replay the tour")
 
     // The task the person dictates.
     static let spokenTitle = AnchorStrings.value("tour.script.title", default: "Add dark mode to the app")

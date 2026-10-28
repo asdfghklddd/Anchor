@@ -4,7 +4,8 @@ import AnchorDesign
 import SwiftUI
 
 /// The app's root: the person's own workspace, or the first-run tour in its
-/// place until the tour ends.
+/// place until the tour ends. Settings can play the tour again at any time,
+/// so the phone can be handed to someone without a Mac to try Anchor.
 public struct AnchorIOSRootView: View {
     private let model: AnchorSessionModel
     private let linkController: (any LocalLinkControlling)?
@@ -70,12 +71,18 @@ public struct AnchorIOSRootView: View {
             .animation(.easeInOut(duration: 0.45), value: tour == nil)
         }
         .background { HarborBackground() }
+        .environment(\.replayTour, replayTour)
         .onAppear {
             if awaitsTour, tour == nil { tour = AnchorTour() }
         }
         .onChange(of: tour?.stage) { _, stage in
             if stage == .finished { finishTour() }
         }
+    }
+
+    private func replayTour() {
+        connectsAfterTour = false
+        tour = AnchorTour()
     }
 
     private func finishTour() {

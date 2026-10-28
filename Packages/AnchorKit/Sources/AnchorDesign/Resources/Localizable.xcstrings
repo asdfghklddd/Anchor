@@ -14378,6 +14378,23 @@
         }
       }
     },
+    "tour.replay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replay the tour"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新体验引导"
+          }
+        }
+      }
+    },
     "tour.script.plan" : {
       "extractionState" : "manual",
       "localizations" : {

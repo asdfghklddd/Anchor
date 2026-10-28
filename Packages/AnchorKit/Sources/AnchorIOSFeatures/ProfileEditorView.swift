@@ -9,6 +9,7 @@ struct ProfileEditorView<Destination: View>: View {
     @ViewBuilder let destination: (AnchorRoute) -> Destination
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.replayTour) private var replayTour
     @AppStorage("anchor.profile.name", store: ProfilePreferences.store) private var savedName = "Anchor"
     @State private var name = ""
     @State private var hasLoaded = false
@@ -33,6 +34,17 @@ struct ProfileEditorView<Destination: View>: View {
                         row(LocalDataCopy.title, symbol: "externaldrive")
                     }
                     .accessibilityIdentifier("settings.data")
+                    Button {
+                        dismiss()
+                        // The tour takes over once this sheet is gone.
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(450))
+                            replayTour()
+                        }
+                    } label: {
+                        row(TourCopy.replay, symbol: "play.circle")
+                    }
+                    .accessibilityIdentifier("settings.tour.replay")
                 }
                 .listRowBackground(AnchorIOSStyle.surface)
             }
