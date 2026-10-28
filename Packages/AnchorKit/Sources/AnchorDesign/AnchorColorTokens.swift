@@ -74,8 +74,6 @@ public enum AnchorColorTokens {
     public static let homeDone = AnchorColorToken("homeDone", light: 0x56A66C, dark: 0x6CC487)
     /// The jellyfish's bubbles.
     public static let homeBubble = AnchorColorToken("homeBubble", light: 0x79C8DF, dark: 0x6FC3DC)
-    /// The pin around the person's avatar on the task they are on.
-    public static let homePin = AnchorColorToken("homePin", light: 0x4597F7, dark: 0x5AA5F8)
     /// The task library: its panel, its title, and the text on its cards.
     public static let homeLibrary = AnchorColorToken("homeLibrary", light: 0xFBFFFE, dark: 0x1A2E38)
     public static let homeLibraryTitle = AnchorColorToken("homeLibraryTitle", light: 0x335898, dark: 0xB5DBFF)
@@ -183,7 +181,7 @@ public enum AnchorColorTokens {
         doneFill, doneInk, onLandscapeTaskTab,
         homeCanvasTop, homeCanvasDeep, homeDome, homeInk, homeCardTitle, homeDisc, homeQuiet, homeSynced,
         homeLinked, homeTokens, homeSlotPast, homeSlotAhead, homeAnchor, homeDone, homeBubble,
-        homeLibrary, homeLibraryTitle, homeCardText, homeCardNote, homePin
+        homeLibrary, homeLibraryTitle, homeCardText, homeCardNote
     ] + homeTasks + homeTaskWashes + identity + landscapeTaskTabs
 }
 

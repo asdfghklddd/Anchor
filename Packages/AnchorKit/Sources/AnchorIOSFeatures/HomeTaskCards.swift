@@ -26,7 +26,6 @@ enum HomeTaskLimit {
 /// card left shows "已完成" behind it.
 struct HomeTaskLibrary: View {
     let tasks: [AnchorSession]
-    let currentID: UUID?
     var settlingTaskID: UUID?
     var settledTaskID: UUID?
     var anchorSettles = 0
@@ -61,11 +60,6 @@ struct HomeTaskLibrary: View {
                                                     set: { openID = $0 ? task.id : (openID == task.id ? nil : openID) }),
                                     reduceMotion: reduceMotion,
                                     onComplete: { await onComplete(task.id) }))
-                                .overlay(alignment: .topTrailing) {
-                                    if tasks.count > 1, task.id == currentID {
-                                        HomeCurrentPin().offset(x: 39, y: -21)
-                                    }
-                                }
                                 .modifier(DropSettle(
                                     floating: task.id == settlingTaskID, settles: anchorSettles,
                                     isSettled: task.id == settledTaskID, tint: HomeStyle.task(task),
@@ -214,18 +208,6 @@ private struct HomeSwipeToComplete: ViewModifier {
                 isOpen = false
             }
         }
-    }
-}
-
-/// The person's avatar in a pin, on the task they are on now.
-private struct HomeCurrentPin: View {
-    var body: some View {
-        ProfileAvatar(size: 39)
-            .padding(6)
-            .background(HomeStyle.pin, in: UnevenRoundedRectangle(
-                topLeadingRadius: 25.5, bottomLeadingRadius: 0, bottomTrailingRadius: 25.5, topTrailingRadius: 25.5))
-            .frame(width: 51, height: 51)
-            .accessibilityHidden(true)
     }
 }
 

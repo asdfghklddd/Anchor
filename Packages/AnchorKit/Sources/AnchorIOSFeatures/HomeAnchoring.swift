@@ -24,8 +24,6 @@ enum HomeStyle {
     static let libraryTitle = Color(AnchorColorTokens.homeLibraryTitle)
     static let cardText = Color(AnchorColorTokens.homeCardText)
     static let cardNote = Color(AnchorColorTokens.homeCardNote)
-    /// The pin around the person's avatar on the task they are on.
-    static let pin = Color(AnchorColorTokens.homePin)
 
     static func task(_ task: AnchorSession) -> Color {
         Color(AnchorColorTokens.homeTasks[(task.taskColorIndex ?? 0) % AnchorColorTokens.homeTasks.count])

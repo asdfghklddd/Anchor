@@ -99,7 +99,7 @@ struct PortraitDashboard: View {
     }
 
     private var tasks: some View {
-        HomeTaskLibrary(tasks: projection.hostedSessions, currentID: projection.session?.id,
+        HomeTaskLibrary(tasks: projection.hostedSessions,
                         settlingTaskID: settlingTaskID, settledTaskID: settledTaskID, anchorSettles: anchorSettles,
                         onComplete: onCompleteTask)
     }
