@@ -4,19 +4,6 @@ import AnchorDesign
 import Foundation
 import Observation
 
-/// How Anchor shows itself on the Mac: a menu bar icon by default, or the
-/// floating boat at the screen edge. Chosen in Settings.
-public enum MacInterfaceStyle: String, CaseIterable, Sendable {
-    case menuBar
-    case boat
-
-    public static let defaultsKey = "anchor.mac.interface-style"
-
-    public static func current(in defaults: UserDefaults) -> MacInterfaceStyle {
-        defaults.string(forKey: defaultsKey).flatMap(Self.init(rawValue:)) ?? .menuBar
-    }
-}
-
 /// The Mac's own Bluetooth, which the link's connection state folds into
 /// "unavailable".
 public enum MacBluetoothRadio: Sendable, Equatable {
@@ -34,9 +21,8 @@ public final class MacBluetoothRadioState {
     public init() {}
 }
 
-/// What the menu bar item shows, read fresh each time the menu opens: is the
-/// phone connected, the one thing that fixes it when not, which agents Anchor
-/// can read, and the next step to copy.
+/// Where the phone link stands, the one thing that moves it forward when
+/// it is down, and whether Anchor can read the agents' folders.
 public struct AnchorStatusMenu: Sendable, Equatable {
     public enum Link: Sendable, Equatable {
         case connected(viaBluetooth: Bool)
@@ -63,23 +49,11 @@ public struct AnchorStatusMenu: Sendable, Equatable {
         }
     }
 
-    public enum Icon: Sendable, Equatable {
-        case connected
-        case away
-        case needsAttention
-    }
-
     public let link: Link
-    /// Saved updates waiting for the phone.
-    public let unsent: Int
     public let codexReady: Bool
     public let claudeReady: Bool
     /// A detail reported by the authenticated phone, when the peer supports it.
     public let peerDeviceSummary: String?
-    /// The next step as a ready-to-paste request, when the task you're on has one.
-    public let prompt: String?
-    /// "Step 2 of 5 · …", shown under the copy item.
-    public let nextStepLine: String?
 
     public init(
         projection: SessionProjection,
@@ -89,7 +63,6 @@ public struct AnchorStatusMenu: Sendable, Equatable {
         claudeReady: Bool
     ) {
         link = Self.link(connection: projection.connection, radio: radio, pairing: pairing)
-        unsent = projection.unsentChanges
         self.codexReady = codexReady
         self.claudeReady = claudeReady
         if case .connected = link {
@@ -97,9 +70,6 @@ public struct AnchorStatusMenu: Sendable, Equatable {
         } else {
             peerDeviceSummary = nil
         }
-        let edgeMenu = AnchorEdgeMenu(projection: projection)
-        prompt = edgeMenu.prompt
-        nextStepLine = edgeMenu.nextStep.map(EdgeMenuCopy.step)
     }
 
     static func link(connection: ConnectionState, radio: MacBluetoothRadio,
@@ -125,17 +95,6 @@ public struct AnchorStatusMenu: Sendable, Equatable {
         case .bluetoothOff: .openBluetoothSettings
         case .bluetoothNotAllowed: .openBluetoothPrivacy
         }
-    }
-
-    public var icon: Icon {
-        switch link {
-        case .bluetoothOff, .bluetoothNotAllowed, .failed: return .needsAttention
-        case .connected, .searching, .notPaired: break
-        }
-        // With no agent folder, nothing reaches the phone.
-        if !codexReady && !claudeReady { return .needsAttention }
-        if case .connected = link { return .connected }
-        return .away
     }
 }
 
@@ -170,58 +129,9 @@ public enum StatusMenuCopy {
         }
     }
 
-    public static let reconnectHint = AnchorStrings.value(
-        "mac.status.fix.reconnect.hint", default: "Open Anchor on your iPhone nearby")
-
-    public static func unsent(_ count: Int) -> String {
-        String.localizedStringWithFormat(
-            AnchorStrings.value("mac.status.unsent", default: "Not sent yet: %lld · syncs when connected"),
-            count)
-    }
-
-    public static func pairingCode(_ code: String) -> String {
-        String.localizedStringWithFormat(
-            AnchorStrings.value("mac.status.pairing-code", default: "Pairing code: %@"), code)
-    }
-
     public static let pairingCodeHint = AnchorStrings.value(
         "mac.status.pairing-code.hint", default: "Enter it in Anchor on your iPhone")
-
-    public static let agentSourcesReady = AnchorStrings.value(
-        "mac.status.agent.sources.ready", default: "Codex and Claude Code connected ✓")
     public static let agentSourcesConnect = AnchorStrings.value(
         "mac.status.agent.sources.connect", default: "Connect Codex and Claude Code once…")
-    public static let agentSourcesConnectHint = AnchorStrings.value(
-        "mac.status.agent.sources.connect.hint",
-        default: "Choose both conversation folders in one step")
-
-    public static let copyNextStep = EdgeMenuCopy.copyNextStep
-    public static let copyUnavailable = EdgeMenuCopy.copyUnavailable
-    public static let nextStepCopied = AnchorStrings.value("mac.edge.copied", default: "Copied")
-    public static let copyFailed = AnchorStrings.value(
-        "mac.status.copy.failed", default: "Couldn't copy the next step")
-    public static let loginEnabled = AnchorStrings.value(
-        "mac.status.login.enabled", default: "Anchor will open at login")
-    public static let loginDisabled = AnchorStrings.value(
-        "mac.status.login.disabled", default: "Anchor won't open at login")
-    public static let openConnectionSettings = AnchorStrings.value(
-        "mac.status.open.connection", default: "Click to view connection settings")
-    public static let openSourcesSettings = AnchorStrings.value(
-        "mac.status.open.sources", default: "Click to manage connected folders")
-    public static func loginFailed(_ reason: String) -> String {
-        String.localizedStringWithFormat(
-            AnchorStrings.value("mac.status.login.failed", default: "Couldn't change login setting: %@"),
-            reason)
-    }
-    public static let openAtLogin = L10n.startAtLogin
-    public static let settings = EdgeMenuCopy.settings
-    public static let quit = EdgeMenuCopy.quit
-
-    public static let styleTitle = AnchorStrings.value("mac.style.title", default: "Show Anchor as")
-    public static let styleMenuBar = AnchorStrings.value("mac.style.menu-bar", default: "Menu bar icon")
-    public static let styleBoat = AnchorStrings.value("mac.style.boat", default: "Floating boat")
-    public static let styleDetail = AnchorStrings.value(
-        "mac.style.detail",
-        default: "The menu bar icon shows the connection and little else. The boat floats at the screen edge with quick actions.")
 }
 #endif

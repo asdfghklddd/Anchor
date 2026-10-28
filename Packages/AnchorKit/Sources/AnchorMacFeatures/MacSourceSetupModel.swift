@@ -32,9 +32,6 @@ public final class MacSourceSetupModel {
 
     public var showsCodexOnboarding = false
     public var onNeedsAttention: (@MainActor () -> Void)?
-    /// Called with conversations whose latest turn just ended (see `CodexTurnEndDetector`).
-    public var onCodexTurnsEnded: (@MainActor ([CodexConversationSummary]) -> Void)?
-    private var turnEnds = CodexTurnEndDetector()
     public private(set) var activeTasks: [AnchorSession] = []
     /// Conversation ID to the task it is attached to.
     public private(set) var conversationTasks: [String: UUID] = [:]
@@ -490,9 +487,6 @@ public final class MacSourceSetupModel {
         }
         let candidates = summaries.map(\.candidate)
         if codexCandidates != candidates { codexCandidates = candidates }
-        // A conversation the person said is not part of a task never pings.
-        let endings = turnEnds.endings(in: summaries, now: .now).filter { !isIgnored($0.id) }
-        if !endings.isEmpty { onCodexTurnsEnded?(endings) }
     }
 
     private func restoreCodexSessionsRoot() async {

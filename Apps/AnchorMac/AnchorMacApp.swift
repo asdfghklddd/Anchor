@@ -202,11 +202,8 @@ struct AnchorMacApp: App {
         }
         server.onCurrentProcessSnapshot = currentProcessSnapshot
         advertiser.onCurrentProcessSnapshot = currentProcessSnapshot
-        let phoneAnchorState = AnchorPhoneAnchorState()
         let applyInboundEvent: @Sendable (EventEnvelope) async throws -> Void = { envelope in
             try await repository.applyRemote(envelope)
-            let appliedProjection = await repository.currentProjection()
-            await phoneAnchorState.receive(envelope, projection: appliedProjection, localSourceID: deviceID)
         }
         server.onEvent = applyInboundEvent
         advertiser.onEvent = applyInboundEvent
@@ -301,7 +298,6 @@ struct AnchorMacApp: App {
             model: model,
             linkController: server,
             sourceSetupModel: sourceSetupModel,
-            phoneAnchorState: phoneAnchorState,
             bluetoothRadio: bluetoothRadio,
             defaults: validationDefaults
         )

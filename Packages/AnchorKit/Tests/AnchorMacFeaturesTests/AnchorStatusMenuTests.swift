@@ -3,7 +3,7 @@ import Foundation
 import Testing
 @testable import AnchorMacFeatures
 
-@Suite("Menu bar item")
+@Suite("Phone link")
 struct AnchorStatusMenuTests {
     private func menu(
         connection: ConnectionState = .disconnected,
@@ -23,7 +23,6 @@ struct AnchorStatusMenuTests {
         let state = menu(connection: .connected, radio: .off)
         #expect(state.link == .connected(viaBluetooth: false))
         #expect(state.fix == nil)
-        #expect(state.icon == .connected)
         let bluetooth = menu(connection: .connected,
                              pairing: DevicePairingStatus(phase: .connected, route: .bluetooth))
         #expect(bluetooth.link == .connected(viaBluetooth: true))
@@ -38,27 +37,5 @@ struct AnchorStatusMenuTests {
         #expect(menu(connection: .failed).fix == .reconnect)
         #expect(menu().link == .searching)
         #expect(menu().fix == .reconnect)
-    }
-
-    @Test("The icon dims while the phone is away and marks what needs the person")
-    func icon() {
-        #expect(menu().icon == .away)
-        #expect(menu(radio: .off).icon == .needsAttention)
-        #expect(menu(connection: .failed).icon == .needsAttention)
-        #expect(menu(connection: .connected, codex: false, claude: false).icon == .needsAttention)
-        #expect(menu(connection: .connected, codex: false, claude: true).icon == .connected)
-    }
-
-    @Test("Saved updates are counted for the line under the status")
-    func unsent() {
-        #expect(menu(unsent: 3).unsent == 3)
-    }
-
-    @Test("Settings starts on the menu bar icon and remembers the boat")
-    func style() throws {
-        let defaults = try #require(UserDefaults(suiteName: "anchor.status.style.\(UUID())"))
-        #expect(MacInterfaceStyle.current(in: defaults) == .menuBar)
-        defaults.set(MacInterfaceStyle.boat.rawValue, forKey: MacInterfaceStyle.defaultsKey)
-        #expect(MacInterfaceStyle.current(in: defaults) == .boat)
     }
 }

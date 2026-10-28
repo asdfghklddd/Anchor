@@ -52,11 +52,13 @@ public struct NotchIslandContent: Equatable, Sendable {
     public let pairingCode: String?
     /// Why connecting the agent folders failed, until the person tries again.
     public let sourcesError: String?
+    /// Where each conversation is filed, to correct it from the island.
+    public let filing: NotchFiling
 
     static let otherLimit = 2
 
     public init(status: AnchorStatusMenu, projection: SessionProjection,
-                pairingCode: String? = nil, sourcesError: String? = nil) {
+                pairingCode: String? = nil, sourcesError: String? = nil, filing: NotchFiling = .empty) {
         let menu = AnchorEdgeMenu(projection: projection)
         let rows = Dictionary(menu.rows.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         current = menu.current.map { Self.task(rows[$0.id], fallback: $0) }
@@ -80,6 +82,7 @@ public struct NotchIslandContent: Equatable, Sendable {
         peerDevice = status.peerDeviceSummary
         self.pairingCode = status.link == .notPaired ? pairingCode : nil
         self.sourcesError = needsSources ? sourcesError : nil
+        self.filing = filing
     }
 
     /// Every open task, the current one first: the dots beside the housing.

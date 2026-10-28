@@ -6,129 +6,55 @@ final class AnchorMacUITests: XCTestCase {
     }
 
     @MainActor
-    func testEmptyWorkspaceKeepsSourceSetupReachable() throws {
+    func testPointingAtTheIslandReachesSettings() throws {
         let app = isolatedApplication()
         defer { app.terminate() }
         app.launch()
 
-        openWorkspace(from: app)
-        XCTAssertTrue(element("mac.empty.screen", in: app).waitForExistence(timeout: 5))
-
-        openNavigation(in: app)
-        app.buttons["mac.section.settings"].click()
-        XCTAssertTrue(element("mac.settings.screen", in: app).waitForExistence(timeout: 5))
+        openSettings(in: app)
         let showCode = app.buttons["mac.pairing.show.code"]
         XCTAssertTrue(showCode.waitForExistence(timeout: 5), app.debugDescription)
         showCode.click()
         XCTAssertTrue(app.buttons["mac.pairing.copy"].waitForExistence(timeout: 5), app.debugDescription)
-        element("mac.settings.screen", in: app).swipeUp()
-        XCTAssertTrue(element("mac.sources.summary", in: app).exists)
-        XCTAssertTrue(element("mac.sources.setup", in: app).exists)
-    }
-
-    @MainActor
-    func testSidebarStartsCollapsedAndShowsOnlyThreeSections() throws {
-        let app = isolatedApplication(seedSession: true)
-        defer { app.terminate() }
-        app.launch()
-
-        openWorkspace(from: app)
-        let toggle = app.buttons["mac.sidebar.toggle"]
-        XCTAssertTrue(toggle.waitForExistence(timeout: 8))
-        XCTAssertFalse(app.buttons["mac.section.current"].exists)
-
-        toggle.click()
-        XCTAssertTrue(app.buttons["mac.section.current"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["mac.section.history"].exists)
-        XCTAssertTrue(app.buttons["mac.section.settings"].exists)
-        XCTAssertFalse(app.buttons["mac.section.timeline"].exists)
-        XCTAssertFalse(app.buttons["mac.section.sources"].exists)
-
-        app.buttons["mac.section.current"].click()
-        XCTAssertFalse(app.buttons["mac.section.current"].exists)
-
-        toggle.click()
-        XCTAssertTrue(app.buttons["mac.section.current"].waitForExistence(timeout: 5))
-        app.typeKey(.escape, modifierFlags: [])
-        XCTAssertFalse(app.buttons["mac.section.current"].exists)
-    }
-
-    @MainActor
-    func testExpandedSidebarDoesNotInterceptContentActions() throws {
-        let app = isolatedApplication()
-        defer { app.terminate() }
-        app.launch()
-
-        openWorkspace(from: app)
-        openNavigation(in: app)
-        let pairButton = app.buttons["mac.empty.pair.button"]
-        XCTAssertTrue(pairButton.waitForExistence(timeout: 5))
-        // One click must navigate, even while the sidebar remains expanded.
-        pairButton.click()
-        XCTAssertTrue(element("mac.settings.screen", in: app).waitForExistence(timeout: 5))
-        XCTAssertFalse(app.buttons["mac.section.settings"].exists)
-    }
-
-    @MainActor
-    func testRestingEdgeEntryStillOpensWorkspace() throws {
-        let app = isolatedApplication()
-        defer { app.terminate() }
-        app.launch()
-
-        let edgeEntry = app.buttons["mac.edge.entry"]
-        XCTAssertTrue(edgeEntry.waitForExistence(timeout: 8))
-
-        let restDelay = expectation(description: "The edge entry reaches its resting state")
-        DispatchQueue.global().asyncAfter(deadline: .now() + 5.5) {
-            restDelay.fulfill()
-        }
-        XCTAssertEqual(XCTWaiter.wait(for: [restDelay], timeout: 6), .completed)
-
-        edgeEntry.click()
-        XCTAssertTrue(element("mac.empty.screen", in: app).waitForExistence(timeout: 8))
+        XCTAssertTrue(element("mac.sources.setup.agents.authorize", in: app).exists)
+        XCTAssertTrue(app.buttons["settings.quit"].exists)
     }
 
     @MainActor
     @available(macOS 14.0, *)
-    func testWorkspacePassesAccessibilityAudit() throws {
-        try auditWorkspace(appearance: "Light")
+    func testSettingsPassAccessibilityAudit() throws {
+        try auditSettings(appearance: "Light")
     }
 
     @MainActor
     @available(macOS 14.0, *)
-    func testDarkWorkspacePassesAccessibilityAudit() throws {
-        try auditWorkspace(appearance: "Dark")
+    func testDarkSettingsPassAccessibilityAudit() throws {
+        try auditSettings(appearance: "Dark")
     }
 
     @MainActor
     @available(macOS 14.0, *)
-    private func auditWorkspace(appearance: String) throws {
+    private func auditSettings(appearance: String) throws {
         let app = isolatedApplication(seedSession: true)
         // Override only the test app's appearance, never the system preference.
         app.launchEnvironment["ANCHOR_UI_TEST_APPEARANCE"] = appearance
         defer { app.terminate() }
         app.launch()
 
-        openWorkspace(from: app)
-        XCTAssertTrue(element("mac.current.screen", in: app).waitForExistence(timeout: 8))
-        try app.performAccessibilityAudit()
-        openNavigation(in: app)
+        openSettings(in: app)
         try app.performAccessibilityAudit()
     }
 
+    /// Rests the pointer on the island so it opens, then takes its gear.
     @MainActor
-    private func openWorkspace(from app: XCUIApplication) {
-        let edgeEntry = app.buttons["mac.edge.entry"]
-        XCTAssertTrue(edgeEntry.waitForExistence(timeout: 8))
-        edgeEntry.click()
-    }
-
-    @MainActor
-    private func openNavigation(in app: XCUIApplication) {
-        let toggle = app.buttons["mac.sidebar.toggle"]
-        XCTAssertTrue(toggle.waitForExistence(timeout: 8))
-        toggle.click()
-        XCTAssertTrue(app.buttons["mac.section.current"].waitForExistence(timeout: 5))
+    private func openSettings(in app: XCUIApplication) {
+        let link = app.buttons["notch.link"]
+        XCTAssertTrue(link.waitForExistence(timeout: 8), app.debugDescription)
+        link.hover()
+        let gear = app.buttons["notch.settings"]
+        XCTAssertTrue(gear.waitForExistence(timeout: 5), app.debugDescription)
+        gear.click()
+        XCTAssertTrue(element("mac.settings.screen", in: app).waitForExistence(timeout: 5))
     }
 
     @MainActor

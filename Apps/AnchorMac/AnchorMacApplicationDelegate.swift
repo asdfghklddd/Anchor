@@ -7,11 +7,9 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     private var model: AnchorSessionModel?
     private var linkController: (any LocalLinkControlling)?
     private var sourceSetupModel: MacSourceSetupModel?
-    private var detailWindowController: AnchorMacDetailWindowController?
     private var settingsWindowController: AnchorSettingsWindowController?
     private var notchController: AnchorNotchController?
     private var bluetoothRadio: MacBluetoothRadioState?
-    private var phoneAnchorState: AnchorPhoneAnchorState?
     private var interfaceDefaults: UserDefaults?
     private var didFinishLaunching = false
 
@@ -19,14 +17,12 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         model: AnchorSessionModel,
         linkController: any LocalLinkControlling,
         sourceSetupModel: MacSourceSetupModel,
-        phoneAnchorState: AnchorPhoneAnchorState,
         bluetoothRadio: MacBluetoothRadioState,
         defaults: UserDefaults?
     ) {
         self.model = model
         self.linkController = linkController
         self.sourceSetupModel = sourceSetupModel
-        self.phoneAnchorState = phoneAnchorState
         self.bluetoothRadio = bluetoothRadio
         interfaceDefaults = defaults
         startInterfaceIfReady()
@@ -62,19 +58,12 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
 
     private func startInterfaceIfReady() {
         guard didFinishLaunching,
-              detailWindowController == nil,
+              notchController == nil,
               let model,
               let sourceSetupModel else {
             return
         }
 
-        let detailWindowController = AnchorMacDetailWindowController(
-            model: model,
-            linkController: linkController,
-            sourceSetupModel: sourceSetupModel,
-            defaults: interfaceDefaults
-        )
-        self.detailWindowController = detailWindowController
         if let bluetoothRadio {
             settingsWindowController = AnchorSettingsWindowController(
                 model: model,
@@ -105,8 +94,7 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
             linkController: linkController,
             sourceSetupModel: sourceSetupModel,
             bluetooth: bluetoothRadio,
-            onOpenSettings: { [weak self] in self?.openSettings() },
-            onOpenWindow: { [weak self] in self?.detailWindowController?.present() }
+            onOpenSettings: { [weak self] in self?.openSettings() }
         )
         notchController = controller
         controller.start()

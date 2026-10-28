@@ -236,6 +236,33 @@ struct NotchIslandTests {
         #expect(AnchorStatusMenu.Fix.openBluetoothPrivacy.settingsURL?.absoluteString.contains("Privacy_Bluetooth") == true)
     }
 
+    private func summary(_ id: String, title: String?, minutesAgo: Double) -> CodexConversationSummary {
+        CodexConversationSummary(
+            candidate: CodexTaskCandidate(id: id, fileURL: URL(filePath: "/tmp/\(id).jsonl"), workspaceName: "Anchor",
+                                          originator: nil, modifiedAt: now, activity: .completed, activityObservedAt: nil),
+            title: title, state: .completed(at: now.addingTimeInterval(-minutesAgo * 60), duration: nil), reply: nil)
+    }
+
+    @Test("Filing lists a task's newest conversations and the tasks each can move to, leaning ones first")
+    func filing() {
+        let notch = task("Notch", color: 0), login = task("Login", color: 1), paper = task("Paper", color: 2)
+        let filing = NotchFiling(
+            conversations: [summary("a", title: "old", minutesAgo: 50), summary("b", title: "new", minutesAgo: 5),
+                            summary("c", title: nil, minutesAgo: 9), summary("d", title: "gone", minutesAgo: 1)],
+            placements: ["a": notch.id, "b": notch.id, "c": login.id, "d": UUID()],
+            unsorted: [summary("u", title: "loose", minutesAgo: 2)],
+            candidates: ["u": [paper.id]],
+            tasks: [notch, login, paper])
+
+        #expect(filing.conversations(of: notch.id).map(\.title) == ["new", "old"])
+        #expect(filing.conversations(of: login.id).map(\.title) == ["Anchor"])
+        #expect(filing.filed.values.flatMap { $0 }.contains { $0.id == "d" } == false)
+        let moving = try! #require(filing.conversations(of: notch.id).first)
+        #expect(filing.targets(for: moving).map(\.title) == ["Login", "Paper"])
+        let loose = try! #require(filing.unsorted.first)
+        #expect(filing.targets(for: loose).map(\.title) == ["Paper", "Notch", "Login"])
+    }
+
     @Test("Without agent folders the link needs the person, even while connected")
     func sourcesNeedThePerson() {
         let island = content(SessionProjection(connection: .connected), codex: false)

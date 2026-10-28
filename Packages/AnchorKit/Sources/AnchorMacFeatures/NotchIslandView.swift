@@ -9,7 +9,10 @@ public enum NotchIslandAction: Sendable {
     case openSettings
     case fixLink(AnchorStatusMenu.Fix)
     case connectSources
-    case openWindow
+    /// Moves a conversation (by its log ID) to a task, or files an unsorted one.
+    case assign(conversation: String, task: UUID)
+    /// Marks a conversation as not part of any task.
+    case ignore(conversation: String)
     case quit
 }
 
@@ -23,6 +26,7 @@ public struct NotchIslandView: View {
 
     @AnchorReducedMotion private var reduceMotion
     @Namespace private var taskSpace
+    @State private var heroHovered = false
 
     public init(state: NotchIslandState, onAction: @escaping (NotchIslandAction) -> Void) {
         self.state = state
@@ -42,12 +46,13 @@ public struct NotchIslandView: View {
         case .peek: NotchIslandMetrics.peekRadius
         case .expanded: NotchIslandMetrics.expandedRadius
         }
+        let still = reduceMotion
         ZStack(alignment: .top) {
             NotchIslandSurface(flare: flare, radius: radius, isOpen: isOpen)
                 .frame(width: size.width, height: size.height)
                 // News arriving while a peek can't show: a small sideways give.
                 .keyframeAnimator(initialValue: 1.0, trigger: state.nudges) { surface, stretch in
-                    surface.scaleEffect(x: reduceMotion ? 1 : stretch, y: 1, anchor: .top)
+                    surface.scaleEffect(x: still ? 1 : stretch, y: 1, anchor: .top)
                 } keyframes: { _ in
                     SpringKeyframe(1.03, duration: 0.14, spring: .snappy)
                     SpringKeyframe(1, duration: 0.5, spring: .bouncy)
@@ -81,7 +86,6 @@ public struct NotchIslandView: View {
         .environment(\.colorScheme, .dark)
         .contextMenu {
             Button(EdgeMenuCopy.settings) { onAction(.openSettings) }
-            Button(NotchIslandCopy.openWindow) { onAction(.openWindow) }
             Divider()
             Button(EdgeMenuCopy.quit) { onAction(.quit) }
         }
@@ -147,6 +151,7 @@ public struct NotchIslandView: View {
                 .buttonStyle(.plain)
                 .help(L10n.settings)
                 .accessibilityLabel(L10n.settings)
+                .accessibilityIdentifier("notch.settings")
                 .padding(.trailing, NotchIslandMetrics.inset - 6)
                 .transition(.opacity.animation(.easeOut(duration: 0.18).delay(reduceMotion ? 0 : 0.12)))
             }
@@ -166,6 +171,7 @@ public struct NotchIslandView: View {
         .buttonStyle(.plain)
         .help(linkDescription)
         .accessibilityLabel(linkDescription)
+        .accessibilityIdentifier("notch.link")
     }
 
     private var linkTint: Color {
@@ -202,6 +208,10 @@ public struct NotchIslandView: View {
                     row(task)
                         .transition(reveal(order: index + 1))
                 }
+            }
+            if !content.filing.unsorted.isEmpty, isShown {
+                unsortedRow
+                    .transition(reveal(order: content.others.count + 1))
             }
         }
         .padding(.horizontal, 10)
@@ -253,6 +263,9 @@ public struct NotchIslandView: View {
                         .strokeBorder(NotchIslandInk.task(current.colorIndex).opacity(0.6), lineWidth: 1)
                 }
             }
+            .contentShape(.rect)
+            .onHover { heroHovered = $0 }
+            .contextMenu { filingItems(for: current.id) }
             .matchedGeometryEffect(id: current.id, in: taskSpace)
             .accessibilityElement(children: .contain)
         } else {
@@ -275,8 +288,9 @@ public struct NotchIslandView: View {
     private var planLine: some View {
         switch content.plan {
         case let .step(number, total, text):
-            (Text("\(number)/\(total)  ").foregroundStyle(NotchIslandInk.secondary).monospacedDigit()
-                + Text(text).foregroundStyle(NotchIslandInk.primary.opacity(0.9)))
+            let count = Text("\(number)/\(total)").foregroundStyle(NotchIslandInk.secondary).monospacedDigit()
+            let step = Text(text).foregroundStyle(NotchIslandInk.primary.opacity(0.9))
+            Text("\(count)  \(step)")
                 .font(.system(size: 13))
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
@@ -345,28 +359,35 @@ public struct NotchIslandView: View {
     }
 
     private func row(_ task: NotchIslandContent.Task) -> some View {
-        Button { onAction(.selectTask(task.id)) } label: {
-            HStack(spacing: 10) {
-                NotchTaskBar(colorIndex: task.colorIndex, height: 30)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(task.title)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(NotchIslandInk.primary)
-                        .lineLimit(1)
-                    requestText(task)
+        NotchHoverRow(wash: task.signal == .waiting || state.highlightedTaskID == task.id
+            ? NotchIslandInk.task(task.colorIndex) : nil) { isHovered in
+            HStack(spacing: 4) {
+                Button { onAction(.selectTask(task.id)) } label: {
+                    HStack(spacing: 10) {
+                        NotchTaskBar(colorIndex: task.colorIndex, height: 30)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(task.title)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(NotchIslandInk.primary)
+                                .lineLimit(1)
+                            requestText(task)
+                        }
+                        Spacer(minLength: 8)
+                        NotchStateLabel(task: task)
+                    }
+                    .contentShape(.rect)
                 }
-                Spacer(minLength: 8)
-                NotchStateLabel(task: task)
+                .buttonStyle(NotchPressStyle())
+                .accessibilityElement(children: .combine)
+                .accessibilityHint(NotchIslandCopy.switchHint)
+                fileButton(for: task.id, isShown: isHovered)
             }
-            .padding(.horizontal, 12)
+            .padding(.leading, 12)
+            .padding(.trailing, 6)
             .padding(.vertical, 8)
         }
-        .buttonStyle(NotchRowStyle(
-            wash: task.signal == .waiting || state.highlightedTaskID == task.id
-                ? NotchIslandInk.task(task.colorIndex) : nil))
+        .contextMenu { filingItems(for: task.id) }
         .matchedGeometryEffect(id: task.id, in: taskSpace)
-        .accessibilityElement(children: .combine)
-        .accessibilityHint(NotchIslandCopy.switchHint)
     }
 
     private func conversationLine(_ task: NotchIslandContent.Task) -> some View {
@@ -374,7 +395,96 @@ public struct NotchIslandView: View {
             requestText(task)
             Spacer(minLength: 8)
             NotchStateLabel(task: task)
+            fileButton(for: task.id, isShown: heroHovered)
         }
+    }
+
+    // MARK: Filing
+
+    /// Appears under the pointer; keeps its place otherwise so nothing shifts.
+    @ViewBuilder
+    private func fileButton(for taskID: UUID, isShown: Bool) -> some View {
+        if !content.filing.conversations(of: taskID).isEmpty {
+            Menu { filingItems(for: taskID) } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(NotchIslandInk.secondary)
+                    .frame(width: 22, height: 22)
+                    .contentShape(.rect)
+            }
+            .menuStyle(.button)
+            .buttonStyle(.plain)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .opacity(isShown ? 1 : 0)
+            .animation(.easeOut(duration: 0.12), value: isShown)
+            .help(NotchIslandCopy.fileMenu)
+            .accessibilityLabel(NotchIslandCopy.fileMenu)
+        }
+    }
+
+    /// A task's conversations, each movable to another task or out of tasks.
+    /// With one conversation its choices come straight up.
+    @ViewBuilder
+    private func filingItems(for taskID: UUID) -> some View {
+        let conversations = content.filing.conversations(of: taskID)
+        if conversations.count == 1, let only = conversations.first {
+            fileChoices(only)
+        } else {
+            ForEach(conversations) { conversation in
+                Menu(conversation.title) { fileChoices(conversation) }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func fileChoices(_ conversation: NotchFiling.Conversation) -> some View {
+        let targets = content.filing.targets(for: conversation)
+        Menu(conversation.taskID == nil ? NotchIslandCopy.fileUnder : NotchIslandCopy.moveTo) {
+            ForEach(targets) { target in
+                Button(target.title) { onAction(.assign(conversation: conversation.id, task: target.id)) }
+            }
+        }
+        .disabled(targets.isEmpty)
+        Button(NotchIslandCopy.notPartOfTask) { onAction(.ignore(conversation: conversation.id)) }
+    }
+
+    /// Conversations Anchor could not place, gathered in one row at the end.
+    private var unsortedRow: some View {
+        Menu {
+            ForEach(content.filing.unsorted) { conversation in
+                Menu(conversation.title) { fileChoices(conversation) }
+            }
+        } label: {
+            NotchHoverRow(wash: nil) { _ in
+                HStack(spacing: 10) {
+                    Image(systemName: "tray")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(NotchIslandInk.secondary)
+                        .frame(width: 14)
+                        .accessibilityHidden(true)
+                    Text(NotchIslandCopy.unsorted)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(NotchIslandInk.primary)
+                    Spacer(minLength: 8)
+                    Text("\(content.filing.unsorted.count)")
+                        .font(.system(size: 12).monospacedDigit())
+                        .foregroundStyle(NotchIslandInk.secondary)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(NotchIslandInk.faint)
+                        .accessibilityHidden(true)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
+                .contentShape(.rect)
+            }
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .accessibilityLabel(NotchIslandCopy.unsorted)
+        .accessibilityValue("\(content.filing.unsorted.count)")
     }
 
     private func requestText(_ task: NotchIslandContent.Task) -> some View {
@@ -423,8 +533,13 @@ enum NotchIslandCopy {
     static let sourcesPrivacy = AnchorStrings.value(
         "mac.notch.sources.privacy",
         default: "Anchor reads only the conversation logs in these two folders. Your iPhone gets titles, latest requests and status, never the whole log.")
-    static let openWindow = AnchorStrings.value("mac.notch.open-window", default: "Open Full Window")
     static let shortcut = AnchorStrings.value("mac.notch.shortcut", default: "Open the notch")
+    static let conversation = AnchorStrings.value("mac.notch.conversation", default: "Conversation")
+    static let fileMenu = AnchorStrings.value("mac.notch.file", default: "File conversations")
+    static let moveTo = AnchorStrings.value("mac.tasks.move", default: "Move to")
+    static let fileUnder = AnchorStrings.value("mac.unsorted.file", default: "File under")
+    static let notPartOfTask = AnchorStrings.value("mac.unsorted.ignore", default: "Not part of a task")
+    static let unsorted = AnchorStrings.value("mac.unsorted.title", default: "Unsorted")
     static let peeksToggle = AnchorStrings.value(
         "mac.notch.peeks", default: "Show in the notch when an agent finishes or needs you")
 
@@ -534,32 +649,23 @@ private struct NotchPressStyle: ButtonStyle {
     }
 }
 
-private struct NotchRowStyle: ButtonStyle {
+/// A row that lights up under the pointer and tells its content, so the
+/// filing button can appear only then.
+private struct NotchHoverRow<Content: View>: View {
     /// A task waiting on the person keeps a wash of its color.
     let wash: Color?
-
-    func makeBody(configuration: Configuration) -> some View {
-        NotchRowBody(configuration: configuration, wash: wash)
-    }
-}
-
-private struct NotchRowBody: View {
-    let configuration: ButtonStyleConfiguration
-    let wash: Color?
+    @ViewBuilder let content: (_ isHovered: Bool) -> Content
     @State private var isHovered = false
-    @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
-        configuration.label
+        content(isHovered)
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(fill)
             )
             .contentShape(.rect)
-            .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.985)
             .onHover { isHovered = $0 }
             .animation(.easeOut(duration: 0.12), value: isHovered)
-            .animation(reduceMotion ? nil : AnchorMotion.press, value: configuration.isPressed)
     }
 
     private var fill: Color {

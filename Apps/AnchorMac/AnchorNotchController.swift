@@ -17,7 +17,6 @@ final class AnchorNotchController {
     private let sourceSetupModel: MacSourceSetupModel
     private let bluetooth: MacBluetoothRadioState
     private let onOpenSettings: () -> Void
-    private let onOpenWindow: () -> Void
 
     private let state: NotchIslandState
     private let panel: AnchorNotchPanel
@@ -33,6 +32,9 @@ final class AnchorNotchController {
     private var peeks = NotchPeekQueue()
     private var peekTask: Task<Void, Never>?
     private var hotKey: AnchorHotKey?
+    /// A filing menu is open; the island stays put until it closes.
+    private var isMenuTracking = false
+    private var menuObservers: [NSObjectProtocol] = []
     private var isStarted = false
 
     init(
@@ -40,15 +42,13 @@ final class AnchorNotchController {
         linkController: any LocalLinkControlling,
         sourceSetupModel: MacSourceSetupModel,
         bluetooth: MacBluetoothRadioState,
-        onOpenSettings: @escaping () -> Void,
-        onOpenWindow: @escaping () -> Void
+        onOpenSettings: @escaping () -> Void
     ) {
         self.model = model
         self.linkController = linkController
         self.sourceSetupModel = sourceSetupModel
         self.bluetooth = bluetooth
         self.onOpenSettings = onOpenSettings
-        self.onOpenWindow = onOpenWindow
         let geometry = Self.currentGeometry()
         state = NotchIslandState(
             content: NotchIslandContent(
@@ -113,6 +113,25 @@ final class AnchorNotchController {
         hotKey = AnchorHotKey(keyCode: UInt32(kVK_ANSI_A), modifiers: UInt32(controlKey | optionKey)) {
             [weak self] in self?.toggleFromKeyboard()
         }
+        // The pointer leaves the island to reach a menu's items; that is not leaving.
+        let center = NotificationCenter.default
+        menuObservers = [
+            center.addObserver(forName: NSMenu.didBeginTrackingNotification, object: nil, queue: .main) {
+                [weak self] _ in MainActor.assumeIsolated { self?.menuTracking(true) }
+            },
+            center.addObserver(forName: NSMenu.didEndTrackingNotification, object: nil, queue: .main) {
+                [weak self] _ in MainActor.assumeIsolated { self?.menuTracking(false) }
+            },
+        ]
+    }
+
+    private func menuTracking(_ tracking: Bool) {
+        guard hover.phase == .expanded || !tracking else { return }
+        isMenuTracking = tracking
+        guard !tracking else { return }
+        pointerMoved()
+        // A close that came due while the menu was open still happens.
+        if hover.phase == .expanded, !hover.isPointerInside { schedule(.grace) }
     }
 
     func stop() {
@@ -125,6 +144,8 @@ final class AnchorNotchController {
         pointerMonitors = []
         removeClickMonitors()
         hotKey = nil
+        menuObservers.forEach(NotificationCenter.default.removeObserver)
+        menuObservers = []
         panel.orderOut(nil)
     }
 
@@ -155,6 +176,7 @@ final class AnchorNotchController {
 
     /// The panel lets clicks through everywhere but the island itself.
     private func pointerMoved() {
+        guard !isMenuTracking else { return }
         let inside = state.pointerZone.contains(NSEvent.mouseLocation)
         if panel.ignoresMouseEvents == inside { panel.ignoresMouseEvents = !inside }
         guard inside != hover.isPointerInside else { return }
@@ -167,7 +189,7 @@ final class AnchorNotchController {
     private func schedule(_ timer: NotchHoverMachine.Timer) {
         timerTask = Task { [weak self] in
             try? await Task.sleep(for: timer == .dwell ? NotchHoverMachine.dwell : NotchHoverMachine.grace)
-            guard !Task.isCancelled, let self else { return }
+            guard !Task.isCancelled, let self, !isMenuTracking else { return }
             switch timer {
             case .dwell: hover.dwellElapsed()
             case .grace: hover.graceElapsed()
@@ -279,14 +301,16 @@ final class AnchorNotchController {
     private func installClickMonitors() {
         guard clickMonitors.isEmpty else { return }
         if let global = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown], handler: {
-            [weak self] _ in MainActor.assumeIsolated { self?.dismiss() }
+            [weak self] _ in MainActor.assumeIsolated {
+                if self?.isMenuTracking == false { self?.dismiss() }
+            }
         }) {
             clickMonitors.append(global)
         }
         if let local = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown], handler: {
             [weak self] event in
             MainActor.assumeIsolated {
-                if let self, event.window !== self.panel { self.dismiss() }
+                if let self, !self.isMenuTracking, event.window !== self.panel { self.dismiss() }
             }
             return event
         }) {
@@ -318,8 +342,16 @@ final class AnchorNotchController {
             codexReady: sourceSetupModel.codexSessionsFolderName != nil,
             claudeReady: sourceSetupModel.claudeProjectsFolderName != nil
         )
+        let filing = NotchFiling(
+            conversations: sourceSetupModel.codexConversations,
+            placements: sourceSetupModel.conversationTasks,
+            unsorted: sourceSetupModel.unsortedConversations,
+            candidates: sourceSetupModel.unsortedCandidates,
+            tasks: model.projection.hostedSessions.filter { $0.status == .active || $0.status == .draft }
+        )
         let content = NotchIslandContent(status: status, projection: model.projection,
-                                         pairingCode: pairingCode, sourcesError: sourceSetupModel.errorMessage)
+                                         pairingCode: pairingCode, sourcesError: sourceSetupModel.errorMessage,
+                                         filing: filing)
         // A failed folder pick shows its reason where the button was.
         let setupFailed = content.sourcesError != nil && state.content.sourcesError == nil
         if content != state.content { state.content = content }
@@ -349,12 +381,20 @@ final class AnchorNotchController {
             NSApp.activate(ignoringOtherApps: true)
             sourceSetupModel.clearError()
             Task { await sourceSetupModel.authorizeAgentSessionFolders() }
-        case .openWindow:
-            dismiss()
-            onOpenWindow()
+        case let .assign(conversationID, task):
+            guard let conversation = conversation(conversationID) else { return }
+            Task { await sourceSetupModel.assign(conversation, to: task) }
+        case let .ignore(conversationID):
+            guard let conversation = conversation(conversationID) else { return }
+            Task { await sourceSetupModel.ignore(conversation) }
         case .quit:
             NSApp.terminate(nil)
         }
+    }
+
+    private func conversation(_ id: String) -> CodexConversationSummary? {
+        sourceSetupModel.codexConversations.first { $0.id == id }
+            ?? sourceSetupModel.unsortedConversations.first { $0.id == id }
     }
 
     // MARK: Panel

@@ -4612,19 +4612,36 @@
         }
       }
     },
-    "mac.notch.open-window" : {
+    "mac.notch.conversation" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Full Window"
+            "value" : "Conversation"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打开完整窗口"
+            "value" : "对话"
+          }
+        }
+      }
+    },
+    "mac.notch.file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File conversations"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "整理对话"
           }
         }
       }

@@ -41,7 +41,8 @@ struct NotchTaskDot: View {
 
     var body: some View {
         let color = NotchIslandInk.task(task.colorIndex)
-        ZStack {
+        let still = reduceMotion
+        return ZStack {
             switch task.signal {
             case .running:
                 NotchSpinner(color: color, diameter: 14)
@@ -68,7 +69,7 @@ struct NotchTaskDot: View {
                 .fill(color.opacity(task.signal == .idle ? 0.45 : 1))
                 .frame(width: NotchIslandMetrics.dot, height: NotchIslandMetrics.dot)
                 .keyframeAnimator(initialValue: 1.0, trigger: flash) { dot, scale in
-                    dot.scaleEffect(reduceMotion ? 1 : scale)
+                    dot.scaleEffect(still ? 1 : scale)
                 } keyframes: { _ in
                     SpringKeyframe(1.9, duration: 0.15, spring: .snappy)
                     SpringKeyframe(1, duration: 0.45, spring: .bouncy)

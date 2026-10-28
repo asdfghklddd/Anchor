@@ -152,31 +152,3 @@ private struct CodexPlacementFixture {
     }
 }
 #endif
-
-#if os(macOS)
-import AppKit
-import SwiftUI
-
-@MainActor
-@Test func codexConnectionSheetPreviews() async throws {
-    guard let destination = ProcessInfo.processInfo.environment["ANCHOR_DESIGN_PREVIEW_EXPORT"] else { return }
-    let fixture = try CodexPlacementFixture(request: "继续")
-    defer { fixture.cleanup() }
-    let model = fixture.model { _, _, _, _ in }
-    defer { model.stopObserving() }
-    model.presentCodexSetupIfNeeded()
-    for scheme in [ColorScheme.light, .dark] {
-        let view = NSHostingView(rootView: MacCodexConnectionSheet(model: model)
-            .environment(\.colorScheme, scheme)
-            .environment(\.locale, Locale(identifier: "zh-Hans")))
-        view.setFrameSize(view.fittingSize)
-        view.layoutSubtreeIfNeeded()
-        let bitmap = try #require(view.bitmapImageRepForCachingDisplay(in: view.bounds))
-        view.cacheDisplay(in: view.bounds, to: bitmap)
-        let png = try #require(bitmap.representation(using: .png, properties: [:]))
-        let directory = URL(filePath: destination)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        try png.write(to: directory.appending(path: "codex-onboarding-\(scheme == .dark ? "dark" : "light").png"))
-    }
-}
-#endif
