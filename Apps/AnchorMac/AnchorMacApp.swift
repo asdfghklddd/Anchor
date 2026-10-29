@@ -90,6 +90,10 @@ struct AnchorMacApp: App {
             )
         }
 #endif
+        // One Anchor at a time; tests and validation runs keep their own storage.
+        if validationRootURL == nil {
+            MacSingleInstance.claim()
+        }
         // A reset asked for by the previous copy runs before any store loads.
         let resetDefaults = validationDefaults ?? .standard
         let startsOver = MacLocalReset.takePending(defaults: resetDefaults)
@@ -98,7 +102,6 @@ struct AnchorMacApp: App {
         let checkpointsURL = validationRootURL?.appending(path: "codex-checkpoints.json")
             ?? CodexLifecycleCheckpointStore().storageURL
         if startsOver {
-            MacLocalReset.waitForPreviousInstance()
             MacLocalReset.wipe(files: [taskRunsURL, checkpointsURL], defaults: resetDefaults)
         }
         let pairingKeychain: PairingIdentityStore.Keychain
@@ -361,12 +364,13 @@ struct AnchorMacApp: App {
     }
 
     var body: some Scene {
-        Settings {
-            AnchorMacSettingsScene(
-                model: model,
-                controller: server,
-                sourceSetupModel: sourceSetupModel
-            )
-        }
+        // Settings live in the delegate's own window; ⌘, opens that one too.
+        Settings { EmptyView() }
+            .commands {
+                CommandGroup(replacing: .appSettings) {
+                    Button(L10n.settings) { applicationDelegate.openSettings() }
+                        .keyboardShortcut(",")
+                }
+            }
     }
 }

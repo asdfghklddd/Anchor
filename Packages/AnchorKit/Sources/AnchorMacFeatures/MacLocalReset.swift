@@ -9,15 +9,17 @@ import Foundation
 public enum MacLocalReset {
     static let pendingKey = "anchor.mac.reset.pending"
 
-    /// Marks the reset and relaunches Anchor to carry it out.
+    /// Marks the reset and opens a fresh copy, which quits this one
+    /// (`MacSingleInstance`) before it wipes anything.
     @MainActor
     public static func requestAndRelaunch(defaults: UserDefaults) {
         defaults.set(true, forKey: pendingKey)
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.createsNewApplicationInstance = true
-        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { _, _ in
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { _, error in
             // If the new copy failed to open, the reset still runs at the next launch.
-            DispatchQueue.main.async { NSApp.terminate(nil) }
+            guard error != nil else { return }
+            DispatchQueue.main.async { MacSingleInstance.quit() }
         }
     }
 
@@ -26,18 +28,6 @@ public enum MacLocalReset {
         guard defaults.bool(forKey: pendingKey) else { return false }
         defaults.removeObject(forKey: pendingKey)
         return true
-    }
-
-    /// Waits for the copy that asked for the relaunch to finish quitting.
-    public static func waitForPreviousInstance(timeout: TimeInterval = 10) {
-        guard let bundleID = Bundle.main.bundleIdentifier else { return }
-        let me = ProcessInfo.processInfo.processIdentifier
-        let deadline = Date.now.addingTimeInterval(timeout)
-        while Date.now < deadline,
-              NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
-                .contains(where: { $0.processIdentifier != me && !$0.isTerminated }) {
-            Thread.sleep(forTimeInterval: 0.1)
-        }
     }
 
     /// Removes read positions and the task-run mirror, and forgets placements.

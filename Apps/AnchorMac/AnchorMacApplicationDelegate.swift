@@ -100,7 +100,7 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         controller.start()
     }
 
-    private func openSettings() {
+    func openSettings() {
         settingsWindowController?.present()
     }
 }

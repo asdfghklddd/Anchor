@@ -1,3 +1,4 @@
+#if os(iOS)
 import Foundation
 import Testing
 import AnchorCore
@@ -167,3 +168,4 @@ struct AnchorTourTests {
         #expect(chinese.contains { $0.hasSuffix("，") })
     }
 }
+#endif
