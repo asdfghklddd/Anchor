@@ -25,11 +25,13 @@ public enum AnchorTourGate {
     }
 }
 
-/// The first-run tour. The real home, setup sheet and desk run on a pretend
-/// Mac, so someone without their computer can try the whole loop: two tasks
-/// already anchored, one they drop themselves, and agents that report while
-/// the phone lies sideways. Nothing here touches the person's own tasks: the
-/// store lives in a temporary file that goes when the tour ends.
+/// The first-run tour. The real home, setup sheet, desk, away screen and
+/// return page run on a pretend Mac, so someone without their computer can
+/// try the whole loop: two tasks already anchored, one they drop themselves,
+/// agents that report while the phone lies sideways and keep working while
+/// the person is away, and the recaps waiting when they come back. Nothing
+/// here touches the person's own tasks: the store lives in a temporary file
+/// that goes when the tour ends.
 @MainActor
 @Observable
 final class AnchorTour {
@@ -44,9 +46,21 @@ final class AnchorTour {
         case setup
         /// The anchor is down; the phone is asked to turn.
         case turn
-        /// The landscape desk, with agents reporting.
+        /// The landscape desk, its folders lit one by one.
         case desk
-        /// Back upright: the sample tasks leave.
+        /// The question waiting on the homework is lit as it comes to the front.
+        case waiting
+        /// A friend asks the person down for coffee; the desk waits for the phone to come up.
+        case called
+        /// The phone is up: the link to the Mac stretches and breaks, and five minutes pass.
+        case walkingAway
+        /// The real away screen, with the agents still working.
+        case away
+        /// The phone comes back in range and the link joins again.
+        case comingBack
+        /// The real return page, with the Mac's recaps.
+        case returned
+        /// Back to Home: the sample tasks leave.
         case leaving
         /// The real workspace takes over.
         case finished
@@ -66,6 +80,11 @@ final class AnchorTour {
     @ObservationIgnored private var listener: Task<Void, Never>?
     /// The task the person dropped during the tour.
     @ObservationIgnored private var ownTask: UUID?
+    /// Desk news not yet sent; leaving early sends the rest at once.
+    @ObservationIgnored private var deskNews: [TourMac.Beat] = []
+
+    /// The task whose question the desk lights.
+    var waitingTaskID: UUID { mac.homeworkID }
 
     init() {
         let folder = FileManager.default.temporaryDirectory
@@ -99,11 +118,16 @@ final class AnchorTour {
 
     // MARK: Stages
 
-    /// A tap on the lit home moves to the next part.
+    /// A tap on the lit home or desk moves to the next part.
     func next() {
         switch stage {
         case .tasks: stage = .anchoring
         case .anchoring: stage = .anchorButton
+        case .desk:
+            stage = .waiting
+            // The light settles on the folder first, then the question arrives under it.
+            later(0.7) { [mac, model] in _ = await model.send(mac.question(now: .now)) }
+        case .waiting: stage = .called
         default: break
         }
     }
@@ -132,20 +156,62 @@ final class AnchorTour {
     func reachedDesk() {
         guard stage == .turn else { return }
         stage = .desk
-        for beat in mac.beats(ownTask: ownTask) {
-            later(beat.after) { [model] in _ = await model.send(beat.command(.now)) }
+        deskNews = mac.deskNews()
+        for beat in deskNews {
+            later(beat.after) { [weak self] in await self?.send(beat) }
         }
     }
 
-    /// Upright again after the desk: the sample tasks leave, then the
+    /// The phone came up off the desk. Bluetooth to the Mac drops, five
+    /// minutes pass, and the real away screen shows the agents still at it;
+    /// then the phone is back in range and the real return page opens.
+    func leftDesk() {
+        guard stage >= .desk, stage <= .called else { return }
+        stage = .walkingAway
+        cancelWork()
+        work.append(Task { [mac, model, ownTask] in
+            for beat in self.deskNews { await self.send(beat) }
+            // The anchor is weighed, then the link stretches and breaks.
+            guard await Self.pause(TourLinkScene.breaksAt) else { return }
+            _ = await model.send(.updateSignals(connection: .disconnected, proximity: .unknown, at: .now))
+            guard await Self.pause(TourLinkScene.apartLength - TourLinkScene.breaksAt) else { return }
+            let now = Date.now
+            _ = await model.send(.updatePresence(.away, at: now, awaySince: now - 300))
+            self.stage = .away
+
+            var waited: TimeInterval = 0
+            for beat in mac.awayNews(ownTask: ownTask) {
+                guard await Self.pause(beat.after - waited) else { return }
+                waited = beat.after
+                _ = await model.send(beat.command(.now))
+            }
+            guard await Self.pause(Self.awayLength - waited) else { return }
+            self.stage = .comingBack
+            guard await Self.pause(TourLinkScene.togetherLength) else { return }
+            let back = Date.now
+            _ = await model.send(.updateSignals(connection: .connected, proximity: .near, at: back))
+            _ = await model.send(.updatePresence(.returning, at: back))
+            self.stage = .returned
+
+            // The Mac takes a moment to write the recaps; the pet types meanwhile.
+            guard await Self.pause(1.8) else { return }
+            for (task, recap) in mac.recaps(returnedAt: back, ownTask: ownTask) {
+                _ = await model.send(.forSession(task, .recordReturnRecap(recap)))
+            }
+        })
+    }
+
+    /// How long the away screen stays before the person comes back.
+    private static let awayLength: TimeInterval = 6.5
+
+    /// Back to Home on the return page: the sample tasks leave, then the
     /// person's own workspace takes over.
     func leave() {
-        guard stage == .desk else { return }
+        guard stage == .returned else { return }
         stage = .leaving
         cancelWork()
         work.append(Task { [model] in
-            // The anchor is weighed first.
-            try? await Task.sleep(for: .seconds(1.4))
+            try? await Task.sleep(for: .seconds(0.6))
             for task in model.projection.hostedSessions.reversed() {
                 guard !Task.isCancelled else { return }
                 _ = await model.send(.forSession(task.id, .archiveSession))
@@ -173,6 +239,18 @@ final class AnchorTour {
         })
     }
 
+    private func send(_ beat: TourMac.Beat) async {
+        guard let index = deskNews.firstIndex(where: { $0.id == beat.id }) else { return }
+        deskNews.remove(at: index)
+        _ = await model.send(beat.command(.now))
+    }
+
+    /// False once the tour was stopped part way.
+    private static func pause(_ seconds: TimeInterval) async -> Bool {
+        try? await Task.sleep(for: .seconds(max(0, seconds)))
+        return !Task.isCancelled
+    }
+
     private func cancelWork() {
         work.forEach { $0.cancel() }
         work.removeAll()
@@ -195,9 +273,11 @@ extension EnvironmentValues {
 // MARK: The pretend Mac
 
 /// What a Mac with Codex and Claude Code open would report: two tasks with
-/// their conversations, and the news that arrives while the desk is up.
-private struct TourMac {
+/// their conversations, the news that arrives while the desk is up and while
+/// the person is away, and the recaps it writes when they come back.
+struct TourMac {
     struct Beat {
+        let id = UUID()
         let after: TimeInterval
         let command: (Date) -> SessionCommand
     }
@@ -208,8 +288,9 @@ private struct TourMac {
     private let charts = UUID()
     private let seo = UUID()
     private let palette = UUID()
+    private let replace = UUID()
     private let portfolioID = UUID()
-    private let homeworkID = UUID()
+    let homeworkID = UUID()
 
     func seed(now: Date) -> [AnchorSession] {
         let portfolio = AnchorSession(
@@ -231,12 +312,12 @@ private struct TourMac {
                              userPlan: AnchorUserPlan(steps: TourCopy.homeworkSteps, reviewedAt: now - 3_000)),
             startedAt: now - 6_000,
             processes: [
+                // The survey is still cleaning; its question arrives on the desk.
                 conversation(survey, in: homeworkID, agent: .codex, title: TourCopy.survey,
-                             request: TourCopy.surveyRequest, reply: TourCopy.surveyReply,
-                             status: .needsDecision, worked: 380, at: now - 420),
+                             request: TourCopy.surveyRequest, status: .running, worked: 380, at: now - 2_400),
                 conversation(charts, in: homeworkID, agent: .claude, title: TourCopy.charts,
                              request: TourCopy.chartsRequest, reply: TourCopy.chartsReply,
-                             status: .completed, worked: 720, at: now - 2_400),
+                             status: .completed, worked: 720, at: now - 420),
             ],
             taskColorIndex: 1)
         return [portfolio, homework]
@@ -248,38 +329,80 @@ private struct TourMac {
                      request: TourCopy.paletteRequest, status: .running, worked: 0, at: now)
     }
 
-    /// News for the desk: a reply lands, the person's own agent finishes, and
-    /// another conversation starts. The question on the homework stays, red.
-    /// Each beat is written when it arrives, so it is newer than what it updates.
-    func beats(ownTask: UUID?) -> [Beat] {
-        var beats = [
+    /// News while the desk is up: the home layout's reply lands, and the
+    /// page titles start.
+    func deskNews() -> [Beat] {
+        [
             Beat(after: 4) { now in
                 .forSession(portfolioID, .updateProcess(conversation(
                     homepage, in: portfolioID, agent: .claude, title: TourCopy.homepage,
                     request: TourCopy.homepageRequest, reply: TourCopy.homepageReply,
                     status: .completed, worked: 1_470, at: now)))
             },
-            Beat(after: 10) { now in
+            Beat(after: 8) { now in
                 .forSession(portfolioID, .addProcess(conversation(
                     seo, in: portfolioID, agent: .codex, title: TourCopy.seo,
                     request: TourCopy.seoRequest, status: .running, worked: 0, at: now)))
             },
-            Beat(after: 26) { now in
-                .forSession(portfolioID, .updateProcess(conversation(
-                    seo, in: portfolioID, agent: .codex, title: TourCopy.seo,
-                    request: TourCopy.seoRequest, reply: TourCopy.seoReply,
-                    status: .completed, worked: 310, at: now)))
-            },
         ]
+    }
+
+    /// The survey stops to ask the person something: on the desk it takes
+    /// its task's color and an anchor, and comes to the front.
+    func question(now: Date) -> SessionCommand {
+        .forSession(homeworkID, .updateProcess(conversation(
+            survey, in: homeworkID, agent: .codex, title: TourCopy.survey,
+            request: TourCopy.surveyRequest, reply: TourCopy.surveyReply,
+            status: .needsDecision, worked: 410, at: now)))
+    }
+
+    /// News while the person is away, timed from the away screen: their own
+    /// colors are done and the next step starts, and the page titles finish.
+    /// The survey's question stays unanswered.
+    func awayNews(ownTask: UUID?) -> [Beat] {
+        var beats: [Beat] = []
         if let ownTask {
-            beats.append(Beat(after: 16) { now in
+            beats.append(Beat(after: 1.4) { now in
                 .forSession(ownTask, .updateProcess(conversation(
                     palette, in: ownTask, agent: .claude, title: TourCopy.palette,
                     request: TourCopy.paletteRequest, reply: TourCopy.paletteReply,
                     status: .completed, worked: 640, at: now)))
             })
+            beats.append(Beat(after: 2.6) { now in
+                .forSession(ownTask, .addProcess(conversation(
+                    replace, in: ownTask, agent: .claude, title: TourCopy.replace,
+                    request: TourCopy.replaceRequest, status: .running, worked: 0, at: now)))
+            })
         }
+        beats.append(Beat(after: 4) { now in
+            .forSession(portfolioID, .updateProcess(conversation(
+                seo, in: portfolioID, agent: .codex, title: TourCopy.seo,
+                request: TourCopy.seoRequest, reply: TourCopy.seoReply,
+                status: .completed, worked: 310, at: now)))
+        })
         return beats
+    }
+
+    /// What the Mac writes for each task when the person is back, newest
+    /// conversation first.
+    func recaps(returnedAt: Date, ownTask: UUID?) -> [(UUID, ReturnRecap)] {
+        func recap(_ conversations: [(UUID, String, String)]) -> ReturnRecap {
+            ReturnRecap(returnedAt: returnedAt, conversations: conversations.map {
+                ConversationRecap(id: $0.0, name: $0.1, text: $0.2)
+            })
+        }
+        var recaps = [
+            (portfolioID, recap([(seo, TourCopy.seo, TourCopy.seoRecap),
+                                 (homepage, TourCopy.homepage, TourCopy.homepageRecap),
+                                 (deploy, TourCopy.deploy, TourCopy.deployRecap)])),
+            (homeworkID, recap([(survey, TourCopy.survey, TourCopy.surveyRecap),
+                                (charts, TourCopy.charts, TourCopy.chartsRecap)])),
+        ]
+        if let ownTask {
+            recaps.insert((ownTask, recap([(replace, TourCopy.replace, TourCopy.replaceRecap),
+                                           (palette, TourCopy.palette, TourCopy.paletteRecap)])), at: 0)
+        }
+        return recaps
     }
 
     private enum Agent {
@@ -309,6 +432,11 @@ enum TourCopy {
     static let openHere = AnchorStrings.value("tour.lock.open", default: "Open the desk here")
     static let backUpright = AnchorStrings.value("tour.lock.back", default: "Back to the home")
     static let replay = AnchorStrings.value("tour.replay", default: "Replay the tour")
+    static let folders = AnchorStrings.value("tour.folders", default: "Each folder is one of today's tasks, with the AI conversations working on it.")
+    static let waiting = AnchorStrings.value("tour.waiting", default: "Red means a conversation is waiting for you.")
+    static let called = AnchorStrings.value("tour.called", default: "A friend asks you down for coffee. Pick up your phone and go.")
+    static let apart = AnchorStrings.value("tour.apart", default: "Away from your Mac for 5 minutes. Your agents keep working.")
+    static let together = AnchorStrings.value("tour.together", default: "Back at your desk.")
 
     // The task the person dictates.
     static let spokenTitle = AnchorStrings.value("tour.script.title", default: "Add dark mode to the app")
@@ -345,5 +473,16 @@ enum TourCopy {
     static let palette = AnchorStrings.value("tour.palette", default: "Color variables")
     static let paletteRequest = AnchorStrings.value("tour.palette.request", default: "List every hard-coded color in the project as a table of color variables")
     static let paletteReply = AnchorStrings.value("tour.palette.reply", default: "Found 42 hard-coded colors and folded them into 18 variables in Colors.swift.")
+    static let replace = AnchorStrings.value("tour.replace", default: "Replace colors")
+    static let replaceRequest = AnchorStrings.value("tour.replace.request", default: "Replace every hard-coded color with the new variables")
+
+    // What the Mac writes for the return page.
+    static let paletteRecap = AnchorStrings.value("tour.palette.recap", default: "Done: 42 hard-coded colors are now 18 color variables.")
+    static let replaceRecap = AnchorStrings.value("tour.replace.recap", default: "Swapping hard-coded colors for the new variables; 9 of 18 files so far.")
+    static let seoRecap = AnchorStrings.value("tour.seo.recap", default: "Finished while you were away: five pages now have titles and descriptions.")
+    static let homepageRecap = AnchorStrings.value("tour.homepage.recap", default: "The two-column home layout is in and stacks on narrow screens.")
+    static let deployRecap = AnchorStrings.value("tour.deploy.recap", default: "The deploy workflow is added; it needs VERCEL_TOKEN in the repository settings.")
+    static let surveyRecap = AnchorStrings.value("tour.survey.recap", default: "Still waiting for you: drop the 37 rows with no age, or fill in the median?")
+    static let chartsRecap = AnchorStrings.value("tour.charts.recap", default: "The satisfaction chart is saved to figures/satisfaction.png.")
 }
 #endif

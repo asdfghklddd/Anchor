@@ -13970,6 +13970,40 @@
         }
       }
     },
+    "tour.apart" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Away from your Mac for 5 minutes. Your agents keep working."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开电脑 5 分钟，你的 AI 仍在继续工作。"
+          }
+        }
+      }
+    },
+    "tour.called" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A friend asks you down for coffee. Pick up your phone and go."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "朋友约你下楼喝杯咖啡。拿起手机出发吧。"
+          }
+        }
+      }
+    },
     "tour.charts" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13983,6 +14017,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "绘图脚本"
+          }
+        }
+      }
+    },
+    "tour.charts.recap" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The satisfaction chart is saved to figures/satisfaction.png."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "满意度图表已保存到 figures/satisfaction.png。"
           }
         }
       }
@@ -14055,6 +14106,23 @@
         }
       }
     },
+    "tour.deploy.recap" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The deploy workflow is added; it needs VERCEL_TOKEN in the repository settings."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部署流程已加好，还需在仓库设置里添加 VERCEL_TOKEN。"
+          }
+        }
+      }
+    },
     "tour.deploy.reply" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14089,6 +14157,23 @@
         }
       }
     },
+    "tour.folders" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each folder is one of today's tasks, with the AI conversations working on it."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每个文件夹是今天的一项任务，里面是为它工作的 AI 对话。"
+          }
+        }
+      }
+    },
     "tour.homepage" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14102,6 +14187,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "首页布局"
+          }
+        }
+      }
+    },
+    "tour.homepage.recap" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The two-column home layout is in and stacks on narrow screens."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "首页双栏布局已完成，窄屏时会自动堆叠。"
           }
         }
       }
@@ -14276,6 +14378,23 @@
         }
       }
     },
+    "tour.palette.recap" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done: 42 hard-coded colors are now 18 color variables."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成：42 处写死的颜色整理成了 18 个颜色变量。"
+          }
+        }
+      }
+    },
     "tour.palette.reply" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14378,6 +14497,57 @@
         }
       }
     },
+    "tour.replace" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace colors"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "替换颜色"
+          }
+        }
+      }
+    },
+    "tour.replace.recap" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swapping hard-coded colors for the new variables; 9 of 18 files so far."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在用新变量替换写死的颜色，已改完 9/18 个文件。"
+          }
+        }
+      }
+    },
+    "tour.replace.request" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace every hard-coded color with the new variables"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把所有写死的颜色换成新的颜色变量"
+          }
+        }
+      }
+    },
     "tour.replay" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14446,6 +14616,23 @@
         }
       }
     },
+    "tour.seo.recap" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finished while you were away: five pages now have titles and descriptions."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你离开时已完成：5 个页面都有了标题和描述。"
+          }
+        }
+      }
+    },
     "tour.seo.reply" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14493,6 +14680,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "清洗问卷"
+          }
+        }
+      }
+    },
+    "tour.survey.recap" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still waiting for you: drop the 37 rows with no age, or fill in the median?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仍在等你回复：37 行缺少年龄，删除还是用中位数填充？"
           }
         }
       }
@@ -14548,6 +14752,23 @@
         }
       }
     },
+    "tour.together" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back at your desk."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回到桌前。"
+          }
+        }
+      }
+    },
     "tour.turn" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14561,6 +14782,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "将手机旋转至横屏，进入工作台，查看各个任务及其关联的 AI 对话。"
+          }
+        }
+      }
+    },
+    "tour.waiting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Red means a conversation is waiting for you."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "变红的对话正在等你回复。"
           }
         }
       }

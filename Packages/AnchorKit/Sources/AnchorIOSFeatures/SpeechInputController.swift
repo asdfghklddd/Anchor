@@ -80,9 +80,11 @@ final class SpeechInputController {
         }
     }
 
-    /// The tour's dictation: the words arrive at a speaking pace, with a level
-    /// that moves like a voice. No microphone, recognizer or permission is
-    /// touched. Returns false when something stopped it part way.
+    /// The tour's dictation: the words arrive whole, as a recognizer hears
+    /// them, at an ordinary speaking pace (about 160 words a minute; Chinese
+    /// two or three characters at a time), with a level that moves like a
+    /// voice. No microphone, recognizer or permission is touched. Returns
+    /// false when something stopped it part way.
     func play(_ text: String) async -> Bool {
         stop()
         let id = UUID()
@@ -91,12 +93,21 @@ final class SpeechInputController {
         transcript = ""
         scripted = text
         isRecording = true
-        for character in text {
-            guard recognitionID == id, scripted != nil, !Task.isCancelled else { break }
-            transcript.append(character)
-            let pause = character.isPunctuation || character.isWhitespace
-            audioLevel = pause ? 0.1 : .random(in: 0.35...0.95)
-            try? await Task.sleep(for: .milliseconds(pause ? 200 : Int.random(in: 70...130)))
+        speaking: for chunk in Self.spokenChunks(of: text) {
+            let ideographs = chunk.filter(\.isIdeograph).count
+            var left = ideographs > 0 ? ideographs * 210 : Int.random(in: 330...410)
+            transcript += chunk
+            while left > 0 {
+                guard recognitionID == id, scripted != nil, !Task.isCancelled else { break speaking }
+                audioLevel = .random(in: 0.35...0.95)
+                try? await Task.sleep(for: .milliseconds(min(left, 95)))
+                left -= 95
+            }
+            // A breath at a comma or a full stop.
+            if chunk.contains(where: \.isPunctuation) {
+                audioLevel = 0.1
+                try? await Task.sleep(for: .milliseconds(260))
+            }
         }
         guard recognitionID == id else { return false }
         scripted = nil
@@ -104,6 +115,29 @@ final class SpeechInputController {
         isRecording = false
         audioLevel = 0
         return !Task.isCancelled
+    }
+
+    /// The pieces dictation adds at a time: a word with the space and
+    /// punctuation after it, or two or three Chinese characters.
+    static func spokenChunks(of text: String) -> [String] {
+        var chunks: [String] = []
+        var chunk = ""
+        var ideographs = 0
+        for (index, character) in text.enumerated() {
+            chunk.append(character)
+            if character.isIdeograph { ideographs += 1 }
+            let next = text.dropFirst(index + 1).first
+            let ends = character.isWhitespace
+                || (character.isPunctuation && next?.isWhitespace != true)
+                || (ideographs >= 2 + chunks.count % 2 && next?.isPunctuation != true)
+            if ends {
+                chunks.append(chunk)
+                chunk = ""
+                ideographs = 0
+            }
+        }
+        if !chunk.isEmpty { chunks.append(chunk) }
+        return chunks
     }
 
     func stop() {
@@ -321,5 +355,10 @@ private final class SpeechAudioRequestSink: @unchecked Sendable {
     func append(_ buffer: AVAudioPCMBuffer) {
         request.append(buffer)
     }
+}
+
+private extension Character {
+    /// A Chinese or Japanese character, which dictation hears without spaces.
+    var isIdeograph: Bool { unicodeScalars.first?.properties.isIdeographic ?? false }
 }
 #endif

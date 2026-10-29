@@ -75,6 +75,7 @@ struct DeskTaskLibrary: View {
                     HStack(alignment: .top, spacing: Metrics.folderSpacing) {
                         ForEach(Array(tasks.enumerated()), id: \.element.id) { index, task in
                             folder(task)
+                                .tourSpot(.folder(index))
                                 .opacity(settled ? 1 : 0.4)
                                 .offset(y: settled ? 0 : 8)
                                 .animation(reduceMotion ? .easeOut(duration: 0.16)
@@ -160,6 +161,8 @@ struct DeskTaskLibrary: View {
             ForEach(Array(stack.cards.enumerated()), id: \.element.conversationKey) { index, process in
                 let isFront = process.conversationKey == stack.front?.conversationKey
                 card(process, of: task, palette: palette, isFront: isFront)
+                    // Marked before it moves into place, so the mark moves with it.
+                    .tourSpot(isFront ? TourSpot.frontCard(task.id) : nil)
                     .offset(y: (CGFloat(index) * Metrics.peek).rounded() + (pulls[process.conversationKey] ?? 0))
                     .highPriorityGesture(pull(process, of: task), including: isFront ? .none : .all)
                     .zIndex(Double(index))

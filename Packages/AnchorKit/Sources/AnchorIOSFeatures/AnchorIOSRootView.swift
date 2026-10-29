@@ -173,6 +173,7 @@ struct AnchorWorkspaceView: View {
                         onTask: openHostedTask,
                         onManage: { sheet = .hostedTasks }
                     )
+                    .tourDeskCoach(tour)
                 } else {
                     PortraitDashboard(
                         projection: model.projection,
@@ -238,14 +239,21 @@ struct AnchorWorkspaceView: View {
         }
         .overlay {
             if showsSidewaysDesk, let tour {
-                TourSidewaysDesk(projection: model.projection, gravity: gravity) {
+                TourSidewaysDesk(tour: tour, projection: model.projection, gravity: gravity) {
                     showsSidewaysDesk = false
-                    tour.leave()
+                    tour.leftDesk()
                 }
                 .transition(.opacity)
             }
         }
         .animation(AnchorMotion.panel, value: showsSidewaysDesk)
+        .overlay {
+            if tour?.stage == .walkingAway {
+                TourLinkScene(mode: .apart)
+                    .transition(.opacity)
+            }
+        }
+        .animation(AnchorMotion.panel, value: tour?.stage == .walkingAway)
         .environment(\.openConnectionCard, { sheet = .connections })
         .tint(AnchorIOSStyle.action)
         .background { HarborBackground() }
@@ -281,7 +289,7 @@ struct AnchorWorkspaceView: View {
                     showsSidewaysDesk = false
                     tour.reachedDesk()
                 } else if previous == .landscape {
-                    tour.leave()
+                    tour.leftDesk()
                 }
             }
             notePickUp(from: previous, to: newPosture)
@@ -300,8 +308,11 @@ struct AnchorWorkspaceView: View {
             Task { await model.updatePosture(newPosture) }
         }
         .onChange(of: model.projection.session?.presence, initial: true) { previous, presence in
-            // Coming back to the desk after being away invites again (D08).
-            if previous == .returning, presence == .atDesk { invitation.beginDeskSession() }
+            // Coming back to the desk after being away invites again (D08);
+            // in the tour, Back to Home ends it.
+            if previous == .returning, presence == .atDesk {
+                if let tour { tour.leave() } else { invitation.beginDeskSession() }
+            }
             synchronizeCover(with: presence)
             synchronizeInvitation()
         }
@@ -440,7 +451,7 @@ struct AnchorWorkspaceView: View {
 
     /// The tour's sample tasks are already down; its invitation waits for the person's own drop.
     private var hasAnchor: Bool {
-        !model.projection.hostedSessions.isEmpty && (tour.map { $0.stage >= .turn } ?? true)
+        !model.projection.hostedSessions.isEmpty && (tour.map { $0.stage >= .turn && $0.stage < .leaving } ?? true)
     }
 
     private var isMacConnected: Bool {
@@ -628,6 +639,7 @@ struct AnchorWorkspaceView: View {
         AnchorFullScreenHost(
             item: item,
             model: model,
+            tour: tour,
             onProfile: {
                 fullScreen = nil
                 path.append(.profile)
@@ -720,6 +732,7 @@ struct AnchorWorkspaceView: View {
 private struct AnchorFullScreenHost: View {
     let item: AnchorFullScreen
     let model: AnchorSessionModel
+    let tour: AnchorTour?
     let onProfile: () -> Void
     let onSettings: () -> Void
     let onLayout: () -> Void
@@ -734,6 +747,14 @@ private struct AnchorFullScreenHost: View {
                     ? .opacity : .move(edge: .bottom).combined(with: .opacity))
         }
         .animation(reduceMotion ? nil : AnchorMotion.panel, value: item)
+        // The tour's phone comes back in range over the away screen.
+        .overlay {
+            if tour?.stage == .comingBack {
+                TourLinkScene(mode: .together)
+                    .transition(.opacity)
+            }
+        }
+        .animation(AnchorMotion.panel, value: tour?.stage == .comingBack)
     }
 
     @ViewBuilder
