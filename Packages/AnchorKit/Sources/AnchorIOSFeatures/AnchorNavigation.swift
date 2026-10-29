@@ -38,8 +38,6 @@ enum AnchorSheet: Hashable, Identifiable {
 }
 
 enum AnchorFullScreen: Hashable, Identifiable {
-    case handingOff
-    case away
     case returning
 
     var id: Self { self }

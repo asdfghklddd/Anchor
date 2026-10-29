@@ -40,7 +40,6 @@ struct PortraitDashboard: View {
                         .padding(.top, 17)
                     VStack(spacing: 0) {
                         HomeAnchoringPanel(log: log)
-                            .tourSpot(.anchoring)
                             .padding(.top, 30)
                         tasks
                             .tourSpot(.tasks)

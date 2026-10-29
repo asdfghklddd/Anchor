@@ -25,39 +25,41 @@ public enum AnchorTourGate {
     }
 }
 
-/// The first-run tour. The real home, setup sheet, desk, away screen and
-/// return page run on a pretend Mac, so someone without their computer can
-/// try the whole loop: two tasks already anchored, one they drop themselves,
+/// The first-run tour. The real home, setup sheet, desk and return page run
+/// on a pretend Mac, so someone without their computer can try the whole
+/// loop: two tasks already anchored, one they read aloud and drop themselves,
 /// agents that report while the phone lies sideways and keep working while
-/// the person is away, and the recaps waiting when they come back. Nothing
+/// the person is away, and the recaps waiting when they come back. Every step
+/// moves on by something the person does; the pet says what to do. Nothing
 /// here touches the person's own tasks: the store lives in a temporary file
 /// that goes when the tour ends.
 @MainActor
 @Observable
 final class AnchorTour {
     enum Stage: Int, Comparable {
-        /// The home's task library is lit.
-        case tasks
-        /// Today's anchoring clock and the agents' token bars are lit.
-        case anchoring
+        /// The pet says hello over the lit task list.
+        case hello
         /// The anchor button is lit and waits for its tap.
         case anchorButton
-        /// The setup sheet is up and dictates the third task.
+        /// The setup sheet is up; the person reads the task aloud.
         case setup
-        /// The anchor is down; the phone is asked to turn.
+        /// The anchor is down, and the tour cheers.
+        case anchored
+        /// The phone is asked to turn.
         case turn
         /// The landscape desk, its folders lit one by one.
         case desk
         /// The question waiting on the homework is lit as it comes to the front.
         case waiting
+        /// The question's task is open.
+        case reading
         /// A friend asks the person down for coffee; the desk waits for the phone to come up.
         case called
-        /// The phone is up: the link to the Mac stretches and breaks, and five minutes pass.
-        case walkingAway
-        /// The real away screen, with the agents still working.
+        /// The phone is up and the link to the Mac breaks; the person turns
+        /// the dial through the time away while the agents keep working.
         case away
-        /// The phone comes back in range and the link joins again.
-        case comingBack
+        /// The dial went round: the phone is back in range and the link joins.
+        case back
         /// The real return page, with the Mac's recaps.
         case returned
         /// Back to Home: the sample tasks leave.
@@ -68,7 +70,11 @@ final class AnchorTour {
         static func < (lhs: Stage, rhs: Stage) -> Bool { lhs.rawValue < rhs.rawValue }
     }
 
-    private(set) var stage = Stage.tasks
+    private(set) var stage = Stage.hello
+    /// Minutes the dial has turned through while away.
+    private(set) var awayMinutes = 0
+    /// What the agents did on the dial so far.
+    private(set) var landed: [TourMac.Note] = []
     let model: AnchorSessionModel
     let log: AnchoringLog
 
@@ -82,9 +88,19 @@ final class AnchorTour {
     @ObservationIgnored private var ownTask: UUID?
     /// Desk news not yet sent; leaving early sends the rest at once.
     @ObservationIgnored private var deskNews: [TourMac.Beat] = []
+    /// News while away, by the minute it lands on the dial.
+    @ObservationIgnored private var awayNews: [TourMac.Beat] = []
+    @ObservationIgnored private var asked = false
 
     /// The task whose question the desk lights.
     var waitingTaskID: UUID { mac.homeworkID }
+
+    /// How long the dial runs, and the minutes on it that matter.
+    static let dialMinutes = 30
+    static let linkBreaksAt = 1
+    static let awayAt = 5
+    /// The cheer after the drop, before the phone is asked to turn.
+    static let cheerLength: TimeInterval = 2.9
 
     init() {
         let folder = FileManager.default.temporaryDirectory
@@ -118,18 +134,9 @@ final class AnchorTour {
 
     // MARK: Stages
 
-    /// A tap on the lit home or desk moves to the next part.
-    func next() {
-        switch stage {
-        case .tasks: stage = .anchoring
-        case .anchoring: stage = .anchorButton
-        case .desk:
-            stage = .waiting
-            // The light settles on the folder first, then the question arrives under it.
-            later(0.7) { [mac, model] in _ = await model.send(mac.question(now: .now)) }
-        case .waiting: stage = .called
-        default: break
-        }
+    /// The pet has said hello; the light moves to the anchor button.
+    func greeted() {
+        if stage == .hello { stage = .anchorButton }
     }
 
     func setupOpened() {
@@ -141,55 +148,107 @@ final class AnchorTour {
         if stage == .setup { stage = .anchorButton }
     }
 
-    /// The third anchor is down. Its agent starts a moment later, as if the
-    /// person had opened Claude Code on the Mac.
+    /// The third anchor is down. The tour cheers, then asks the phone to
+    /// turn; its agent starts a moment later, as if the person had opened
+    /// Claude Code on the Mac.
     func dropped(_ taskID: UUID) {
-        guard stage < .turn else { return }
-        stage = .turn
+        guard stage < .anchored else { return }
+        stage = .anchored
         ownTask = taskID
+        later(Self.cheerLength) { [weak self] in
+            if self?.stage == .anchored { self?.stage = .turn }
+        }
         later(2.6) { [mac, model] in
             _ = await model.send(.forSession(taskID, .addProcess(mac.firstConversation(of: taskID, now: .now))))
         }
     }
 
     /// The desk is up, on a turned phone or drawn sideways under the lock.
+    /// The light walks the folders, then a question arrives on its own.
     func reachedDesk() {
-        guard stage == .turn else { return }
+        guard stage == .turn || stage == .anchored else { return }
         stage = .desk
         deskNews = mac.deskNews()
         for beat in deskNews {
             later(beat.after) { [weak self] in await self?.send(beat) }
         }
+        later(Self.deskLook) { [weak self] in self?.ask() }
     }
 
-    /// The phone came up off the desk. Bluetooth to the Mac drops, five
-    /// minutes pass, and the real away screen shows the agents still at it;
-    /// then the phone is back in range and the real return page opens.
+    /// How long the folders are shown before the question arrives.
+    private static let deskLook: TimeInterval = 6.2
+
+    /// The light settles on the homework first, then its question arrives under it.
+    private func ask() {
+        guard stage == .desk else { return }
+        stage = .waiting
+        later(0.7) { [weak self] in await self?.sendQuestion() }
+    }
+
+    private func sendQuestion() async {
+        guard !asked else { return }
+        asked = true
+        TourSound.shared.play(.question)
+        _ = await model.send(mac.question(now: .now))
+    }
+
+    /// The person opened a task on the desk; the question's task moves the tour on.
+    func opened(_ taskID: UUID) {
+        if stage == .waiting, taskID == waitingTaskID { stage = .reading }
+    }
+
+    /// The question's task closed: a friend calls the person away.
+    func closedTask() {
+        if stage == .reading { stage = .called }
+    }
+
+    /// The phone came up off the desk. Bluetooth to the Mac drops once the
+    /// dial passes its first minute, and the agents' news lands as it turns.
     func leftDesk() {
         guard stage >= .desk, stage <= .called else { return }
-        stage = .walkingAway
+        stage = .away
+        awayMinutes = 0
+        landed = []
         cancelWork()
-        work.append(Task { [mac, model, ownTask] in
+        awayNews = mac.awayNews(ownTask: ownTask)
+        work.append(Task {
             for beat in self.deskNews { await self.send(beat) }
-            // The anchor is weighed, then the link stretches and breaks.
-            guard await Self.pause(TourLinkScene.breaksAt) else { return }
-            _ = await model.send(.updateSignals(connection: .disconnected, proximity: .unknown, at: .now))
-            guard await Self.pause(TourLinkScene.apartLength - TourLinkScene.breaksAt) else { return }
-            let now = Date.now
-            _ = await model.send(.updatePresence(.away, at: now, awaySince: now - 300))
-            self.stage = .away
+            await self.sendQuestion()
+        })
+    }
 
-            var waited: TimeInterval = 0
-            for beat in mac.awayNews(ownTask: ownTask) {
-                guard await Self.pause(beat.after - waited) else { return }
-                waited = beat.after
-                _ = await model.send(beat.command(.now))
-            }
-            guard await Self.pause(Self.awayLength - waited) else { return }
-            self.stage = .comingBack
-            guard await Self.pause(TourLinkScene.togetherLength) else { return }
+    /// The dial reached `minutes`. Each minute is passed once, in order;
+    /// at the end of the dial the person is back.
+    func turnedDial(to minutes: Int) {
+        guard stage == .away, minutes > awayMinutes else { return }
+        let passed = awayMinutes
+        awayMinutes = min(minutes, Self.dialMinutes)
+        if passed < Self.linkBreaksAt, awayMinutes >= Self.linkBreaksAt {
+            work.append(Task { [model] in
+                _ = await model.send(.updateSignals(connection: .disconnected, proximity: .unknown, at: .now))
+            })
+        }
+        let landed = awayNews.filter { $0.after <= Double(awayMinutes) }
+        awayNews.removeAll { $0.after <= Double(awayMinutes) }
+        self.landed += landed.compactMap(\.note)
+        if !landed.isEmpty {
+            work.append(Task { [model] in
+                for beat in landed { _ = await model.send(beat.command(.now)) }
+            })
+        }
+        if awayMinutes >= Self.dialMinutes { comeBack() }
+    }
+
+    /// The link joins on the dial, then the real return page opens over
+    /// everything the agents did while the person was gone.
+    private func comeBack() {
+        stage = .back
+        work.append(Task { [mac, model, ownTask] in
+            guard await Self.pause(Self.joinLength) else { return }
             let back = Date.now
             _ = await model.send(.updateSignals(connection: .connected, proximity: .near, at: back))
+            _ = await model.send(.updatePresence(.away, at: back,
+                                                 awaySince: back - TimeInterval(Self.dialMinutes * 60)))
             _ = await model.send(.updatePresence(.returning, at: back))
             self.stage = .returned
 
@@ -201,8 +260,8 @@ final class AnchorTour {
         })
     }
 
-    /// How long the away screen stays before the person comes back.
-    private static let awayLength: TimeInterval = 6.5
+    /// How long the dial shows the link joining before the return page.
+    static let joinLength: TimeInterval = 1.6
 
     /// Back to Home on the return page: the sample tasks leave, then the
     /// person's own workspace takes over.
@@ -227,6 +286,7 @@ final class AnchorTour {
     func end() {
         cancelWork()
         listener?.cancel()
+        TourSound.shared.stop()
         try? FileManager.default.removeItem(at: storageURL.deletingLastPathComponent())
         AnchoringLog.clearTour()
     }
@@ -278,8 +338,17 @@ extension EnvironmentValues {
 struct TourMac {
     struct Beat {
         let id = UUID()
+        /// Seconds on the desk; minutes on the dial while away.
         let after: TimeInterval
+        /// What the dial shows when it lands while away.
+        var note: Note?
         let command: (Date) -> SessionCommand
+    }
+
+    /// A conversation that finished or started while the person was away.
+    struct Note: Hashable {
+        let title: String
+        let done: Bool
     }
 
     private let homepage = UUID()
@@ -356,25 +425,25 @@ struct TourMac {
             status: .needsDecision, worked: 410, at: now)))
     }
 
-    /// News while the person is away, timed from the away screen: their own
+    /// News while the person is away, by the minute on the dial: their own
     /// colors are done and the next step starts, and the page titles finish.
     /// The survey's question stays unanswered.
     func awayNews(ownTask: UUID?) -> [Beat] {
         var beats: [Beat] = []
         if let ownTask {
-            beats.append(Beat(after: 1.4) { now in
+            beats.append(Beat(after: 8, note: Note(title: TourCopy.palette, done: true)) { now in
                 .forSession(ownTask, .updateProcess(conversation(
                     palette, in: ownTask, agent: .claude, title: TourCopy.palette,
                     request: TourCopy.paletteRequest, reply: TourCopy.paletteReply,
                     status: .completed, worked: 640, at: now)))
             })
-            beats.append(Beat(after: 2.6) { now in
+            beats.append(Beat(after: 12, note: Note(title: TourCopy.replace, done: false)) { now in
                 .forSession(ownTask, .addProcess(conversation(
                     replace, in: ownTask, agent: .claude, title: TourCopy.replace,
                     request: TourCopy.replaceRequest, status: .running, worked: 0, at: now)))
             })
         }
-        beats.append(Beat(after: 4) { now in
+        beats.append(Beat(after: 19, note: Note(title: TourCopy.seo, done: true)) { now in
             .forSession(portfolioID, .updateProcess(conversation(
                 seo, in: portfolioID, agent: .codex, title: TourCopy.seo,
                 request: TourCopy.seoRequest, reply: TourCopy.seoReply,
@@ -423,22 +492,34 @@ struct TourMac {
 // MARK: Copy
 
 enum TourCopy {
-    static let tasks = AnchorStrings.value("tour.tasks", default: "Today's goals and the conversations working on them.")
-    static let anchoring = AnchorStrings.value("tour.anchoring", default: "Time anchored at your desk today, and how hard the AI worked.")
-    static let anchorButton = AnchorStrings.value("tour.anchor", default: "Tap to drop anchor and start today's work.")
-    static let tapToContinue = AnchorStrings.value("tour.continue", default: "Tap to continue")
-    static let turn = AnchorStrings.value("tour.turn", default: "Turn your phone sideways to open the desk, with every task and the AI conversations behind it.")
+    static let hello = AnchorStrings.value("tour.hello", default: "Hi! These are today's tasks, and the AI moving them along.")
+    static let anchorButton = AnchorStrings.value("tour.anchor", default: "Tap the anchor to add a task of your own.")
+    static let readTitle = AnchorStrings.value("tour.read.title", default: "Tap the mic and read this out loud.")
+    static let readPlan = AnchorStrings.value("tour.read.plan", default: "Now read the plan.")
+    static let readAgain = AnchorStrings.value("tour.read.again", default: "Didn't catch that. Once more?")
+    static let readForMe = AnchorStrings.value("tour.read.skip", default: "Can't talk right now")
+    static let readingForYou = AnchorStrings.value("tour.read.forYou", default: "I'll read it for you.")
+    static let slide = AnchorStrings.value("tour.slide", default: "Slide to drop the anchor!")
+    static let anchored = AnchorStrings.value("tour.anchored", default: "Anchored!")
+    static func anchoredCount(_ count: Int) -> String {
+        String.localizedStringWithFormat(AnchorStrings.value("tour.anchored.count", default: "Task %lld, off you go!"), count)
+    }
+    static let turn = AnchorStrings.value("tour.turn", default: "Turn your phone sideways to see what the AI is up to.")
     static let lockQuestion = AnchorStrings.value("tour.lock", default: "Portrait Orientation Lock on?")
     static let openHere = AnchorStrings.value("tour.lock.open", default: "Open the desk here")
     static let backUpright = AnchorStrings.value("tour.lock.back", default: "Back to the home")
     static let replay = AnchorStrings.value("tour.replay", default: "Replay the tour")
-    static let folders = AnchorStrings.value("tour.folders", default: "Each folder is one of today's tasks, with the AI conversations working on it.")
-    static let waiting = AnchorStrings.value("tour.waiting", default: "Red means a conversation is waiting for you.")
+    static let folders = AnchorStrings.value("tour.folders", default: "Each folder is a task; its cards are the AI conversations on it.")
+    static let waiting = AnchorStrings.value("tour.waiting", default: "An AI is waiting on you. Tap to see.")
+    static let reading = AnchorStrings.value("tour.reading", default: "It's asking what to do with missing data. Answer it at your Mac; close this when you're done.")
     static let called = AnchorStrings.value("tour.called", default: "A friend asks you down for coffee. Pick up your phone and go.")
+    static let dial = AnchorStrings.value("tour.dial", default: "Turn the dial to see what happens while you're away.")
     static let apart = AnchorStrings.value("tour.apart", default: "Away from your Mac for 5 minutes. Your agents keep working.")
     static let together = AnchorStrings.value("tour.together", default: "Back at your desk.")
+    static let mute = AnchorStrings.value("tour.mute", default: "Sound off")
+    static let unmute = AnchorStrings.value("tour.unmute", default: "Sound on")
 
-    // The task the person dictates.
+    // The task the person reads aloud.
     static let spokenTitle = AnchorStrings.value("tour.script.title", default: "Add dark mode to the app")
     static let spokenPlan = AnchorStrings.value("tour.script.plan", default: "First list the color variables, then replace the hard-coded colors, finally check contrast on a real phone")
 

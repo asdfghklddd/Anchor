@@ -755,86 +755,6 @@
     "Away for less than a minute" : {
 
     },
-    "away.current.anchor" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CURRENT ANCHOR · CURRENT GOAL"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CURRENT ANCHOR · 当前目标"
-          }
-        }
-      }
-    },
-    "away.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anchor is holding the goal and watching for meaningful changes."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anchor 只把需要判断的节点带到你面前。"
-          }
-        }
-      }
-    },
-    "away.duration" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Away for %lld minutes"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "离开 %lld 分钟"
-          }
-        }
-      }
-    },
-    "away.processes" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "REMOTE PROCESSES"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "远程进程"
-          }
-        }
-      }
-    },
-    "away.synchronized.work" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Work that keeps syncing"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "持续同步的工作"
-          }
-        }
-      }
-    },
     "Back" : {
 
     },
@@ -2634,54 +2554,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "早上好"
-          }
-        }
-      }
-    },
-    "handoff" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Securing your context…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在保护你的上下文…"
-          }
-        }
-      }
-    },
-    "handoff.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anchor is gathering every process around the same goal."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anchor 正在把每个进程收回同一个锚点。"
-          }
-        }
-      }
-    },
-    "handoff.secured" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Secured. You can step away."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已接管，放心离开。"
           }
         }
       }
@@ -7146,22 +7018,6 @@
     "Presence is unknown" : {
 
     },
-    "presence.at.desk" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I’m still at my desk"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "我回来了"
-          }
-        }
-      }
-    },
     "Prior failure" : {
 
     },
@@ -7306,22 +7162,6 @@
         }
       }
     },
-    "process.attention.summary" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld processes · %2$lld waiting"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld 个 · %2$lld 待判断"
-          }
-        }
-      }
-    },
     "process.choose.direction" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7447,22 +7287,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "准备同步的任务"
-          }
-        }
-      }
-    },
-    "process.routes.running" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld routes running"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld 条航线运行中"
           }
         }
       }
@@ -13942,30 +13766,47 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap to drop anchor and start today's work."
+            "value" : "Tap the anchor to add a task of your own."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "点击投锚，开始今天的工作。"
+            "value" : "点锚，加一个你自己的任务。"
           }
         }
       }
     },
-    "tour.anchoring" : {
+    "tour.anchored" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Time anchored at your desk today, and how hard the AI worked."
+            "value" : "Anchored!"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "今天在桌前锚定的时长，和 AI 的工作量。"
+            "value" : "落锚！"
+          }
+        }
+      }
+    },
+    "tour.anchored.count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task %lld, off you go!"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第 %lld 个任务，出发！"
           }
         }
       }
@@ -14072,23 +13913,6 @@
         }
       }
     },
-    "tour.continue" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap to continue"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "轻触继续"
-          }
-        }
-      }
-    },
     "tour.deploy" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14157,19 +13981,53 @@
         }
       }
     },
+    "tour.dial" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn the dial to see what happens while you're away."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "转动表盘，看看你不在时发生了什么。"
+          }
+        }
+      }
+    },
     "tour.folders" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Each folder is one of today's tasks, with the AI conversations working on it."
+            "value" : "Each folder is a task; its cards are the AI conversations on it."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "每个文件夹是今天的一项任务，里面是为它工作的 AI 对话。"
+            "value" : "每个文件夹是一项任务，卡片是在做它的 AI 对话。"
+          }
+        }
+      }
+    },
+    "tour.hello" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hi! These are today's tasks, and the AI moving them along."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "嗨！这些是你今天的任务，AI 正在帮你推进。"
           }
         }
       }
@@ -14361,6 +14219,23 @@
         }
       }
     },
+    "tour.mute" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound off"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭声音"
+          }
+        }
+      }
+    },
     "tour.palette" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14493,6 +14368,108 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "部署到 Vercel"
+          }
+        }
+      }
+    },
+    "tour.read.again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Didn't catch that. Once more?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没听清，再读一次？"
+          }
+        }
+      }
+    },
+    "tour.read.forYou" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I'll read it for you."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我来帮你读。"
+          }
+        }
+      }
+    },
+    "tour.read.plan" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now read the plan."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再读一下计划。"
+          }
+        }
+      }
+    },
+    "tour.read.skip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can't talk right now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "现在不方便说话"
+          }
+        }
+      }
+    },
+    "tour.read.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the mic and read this out loud."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点麦克风，把这句读出来。"
+          }
+        }
+      }
+    },
+    "tour.reading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It's asking what to do with missing data. Answer it at your Mac; close this when you're done."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "它在问缺失的数据怎么处理。回电脑上答它就行，看完关掉吧。"
           }
         }
       }
@@ -14667,6 +14644,23 @@
         }
       }
     },
+    "tour.slide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slide to drop the anchor!"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑动，把锚放下去！"
+          }
+        }
+      }
+    },
     "tour.survey" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14735,23 +14729,6 @@
         }
       }
     },
-    "tour.tasks" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Today's goals and the conversations working on them."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "查看今日目标与工作对话。"
-          }
-        }
-      }
-    },
     "tour.together" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14775,13 +14752,30 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Turn your phone sideways to open the desk, with every task and the AI conversations behind it."
+            "value" : "Turn your phone sideways to see what the AI is up to."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "将手机旋转至横屏，进入工作台，查看各个任务及其关联的 AI 对话。"
+            "value" : "把手机横过来，看看 AI 们在忙什么。"
+          }
+        }
+      }
+    },
+    "tour.unmute" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound on"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开声音"
           }
         }
       }
@@ -14792,13 +14786,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Red means a conversation is waiting for you."
+            "value" : "An AI is waiting on you. Tap to see."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "变红的对话正在等你回复。"
+            "value" : "有个 AI 在等你拿主意，点开看看。"
           }
         }
       }

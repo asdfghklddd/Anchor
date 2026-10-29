@@ -168,15 +168,7 @@ public enum L10n {
         )
     }
     public static let selectedProcess = AnchorStrings.value("process.selected", default: "Selected process")
-    public static let handoff = AnchorStrings.value("handoff", default: "Securing your context…")
-    public static let handoffSecured = AnchorStrings.value("handoff.secured", default: "Secured. You can step away.")
-    public static let handoffDetail = AnchorStrings.value("handoff.detail", default: "Anchor is gathering every process around the same goal.")
     public static let away = AnchorStrings.value("away", default: "Your work is still moving")
-    public static let awayDetail = AnchorStrings.value("away.detail", default: "Anchor is holding the goal and watching for meaningful changes.")
-    public static let remoteProcesses = AnchorStrings.value("away.processes", default: "REMOTE PROCESSES")
-    public static let synchronizedWork = AnchorStrings.value("away.synchronized.work", default: "Work that keeps syncing")
-    public static let currentAnchor = AnchorStrings.value("away.current.anchor", default: "CURRENT ANCHOR · CURRENT GOAL")
-    public static let atDeskCorrection = AnchorStrings.value("presence.at.desk", default: "I’m still at my desk")
     public static let returning = AnchorStrings.value("return.title", default: "Welcome back")
     public static let returnNoReceivedChanges = AnchorStrings.value("return.no.received.changes", default: "No changes received yet. This summary updates as records arrive.")
     public static let returnNoTaskRecords = AnchorStrings.value("return.no.task.records", default: "No task status has been received from Mac yet.")
@@ -630,13 +622,6 @@ public enum L10n {
         }
     }
 
-    public static func routesRunning(_ count: Int) -> String {
-        String.localizedStringWithFormat(
-            AnchorStrings.value("process.routes.running", default: "%lld routes running"),
-            count
-        )
-    }
-
     public static func anchoredCount(_ count: Int) -> String {
         String.localizedStringWithFormat(
             AnchorStrings.value("note.anchored.count", default: "%lld anchors dropped"),
@@ -651,25 +636,10 @@ public enum L10n {
         )
     }
 
-    public static func awayDuration(_ minutes: Int) -> String {
-        String.localizedStringWithFormat(
-            AnchorStrings.value("away.duration", default: "Away for %lld minutes"),
-            minutes
-        )
-    }
-
     public static func runningAndWaiting(running: Int, attention: Int) -> String {
         String.localizedStringWithFormat(
             AnchorStrings.value("snapshot.running.waiting", default: "%1$lld running · %2$lld waiting"),
             running,
-            attention
-        )
-    }
-
-    public static func processAttentionSummary(processes: Int, attention: Int) -> String {
-        String.localizedStringWithFormat(
-            AnchorStrings.value("process.attention.summary", default: "%1$lld processes · %2$lld waiting"),
-            processes,
             attention
         )
     }

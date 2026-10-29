@@ -17,15 +17,25 @@
     @State private var saving = false
     @State private var saveError: String?
     @State private var titleMoved = false
+    /// The tour's line being read aloud: the title, then the plan.
+    @State private var reading: AnchorSetupField?
+    @State private var heard = TourReadAlong(heard: "", line: "")
+    /// The last try was not heard; the pet asks again.
+    @State private var missed = false
+    /// The tour reads the rest itself, for someone who cannot talk now.
+    @State private var readsForPerson = false
 
     var body: some View {
       VStack(spacing: 0) {
         AnchorSetupHeader(close: dismiss.callAsFunction)
         ScrollView {
           VStack(alignment: .leading, spacing: 14) {
+            if tour != nil { tourLine }
             AnchorSetupInput(
               draft: draft, speech: speechInput, focus: $focus,
-              titleMoved: titleMoved, beginSpeech: beginSpeech, endSpeech: speechInput.finish)
+              titleMoved: titleMoved,
+              readAlong: reading.map { ($0, Self.line(for: $0), heard.lit) },
+              beginSpeech: beginSpeech, endSpeech: speechInput.finish)
             AnchorDropSlider(
               enabled: draft.isValid && !draft.isImportingImages, saving: saving,
               stepCount: draft.steps.count, onDrop: saveTask)
@@ -54,9 +64,13 @@
       // A new anchor starts at its title, as a new reminder does.
       .task {
         guard !draft.hasContent else { return }
-        if tour != nil { await dictateForTour() } else { focus = .title }
+        if tour != nil { reading = .title } else { focus = .title }
       }
       .onChange(of: speechInput.transcript) { _, transcript in
+        if let reading, !readsForPerson {
+          hear(transcript, reading: reading)
+          return
+        }
         switch speechField {
         case .title: draft.goalTitle = transcript
         case .plan: draft.actionPlan = transcript
@@ -64,7 +78,21 @@
         }
       }
       .onChange(of: speechInput.isRecording) { _, isRecording in
+        if !isRecording, let reading, speechField == reading, !readsForPerson {
+          // The person stopped: most of the line is enough; otherwise once more.
+          speechField = nil
+          if TourReadAlong(heard: speechInput.transcript, line: Self.line(for: reading)).isEnough {
+            accept(reading)
+          } else {
+            missed = true
+          }
+          return
+        }
         if !isRecording, speechField == .title { settleTitle() }
+      }
+      // Without a microphone or the permission for it, the tour reads for them.
+      .onChange(of: speechInput.errorMessage) { _, error in
+        if error != nil, reading != nil { readForPerson() }
       }
       .onChange(of: draft.goalTitle) { _, title in
         // Return in the title moves on to the plan; pasted lines go with it.
@@ -127,24 +155,89 @@
       if draft.settleTitle() { titleMoved = true }
     }
 
-    /// The tour says its task aloud, the title and then the plan, as the
-    /// person would; a tap on the microphone finishes the words in progress.
-    private func dictateForTour() async {
-      try? await Task.sleep(for: .seconds(0.8))
-      for (field, words) in [(AnchorSetupField.title, TourCopy.spokenTitle), (.plan, TourCopy.spokenPlan)] {
-        guard !Task.isCancelled else { break }
-        speechField = field
-        guard await speechInput.play(words) else { break }
-        try? await Task.sleep(for: .seconds(0.5))
+    // MARK: Reading aloud in the tour
+
+    /// The pet says what to do: read the title, then the plan, then slide.
+    /// Under it, a way out for someone who cannot talk right now.
+    private var tourLine: some View {
+      VStack(alignment: .trailing, spacing: 4) {
+        TourPetLine(text: tourText, act: reading == nil ? .happy : .idle)
+          .frame(maxWidth: .infinity, alignment: .leading)
+        if reading != nil, !readsForPerson {
+          Button(TourCopy.readForMe, action: readForPerson)
+            .font(.footnote.weight(.medium))
+            .foregroundStyle(AnchorIOSStyle.action)
+            .frame(minHeight: 44)
+            .accessibilityIdentifier("tour.read.skip")
+        }
       }
-      speechField = nil
     }
 
-    /// Dictation goes to the title while there is none, then to the plan.
-    /// The tour never opens the microphone.
+    private var tourText: String {
+      if readsForPerson, reading != nil { return TourCopy.readingForYou }
+      return switch reading {
+      case .title: missed ? TourCopy.readAgain : TourCopy.readTitle
+      case .plan: missed ? TourCopy.readAgain : TourCopy.readPlan
+      case nil: TourCopy.slide
+      }
+    }
+
+    private static func line(for field: AnchorSetupField) -> String {
+      field == .title ? TourCopy.spokenTitle : TourCopy.spokenPlan
+    }
+
+    /// The line lights as far as the voice has reached; most of it heard is enough.
+    private func hear(_ transcript: String, reading: AnchorSetupField) {
+      let heard = TourReadAlong(heard: transcript, line: Self.line(for: reading))
+      withAnimation(AnchorMotion.micro) { self.heard = heard }
+      if heard.isRead { accept(reading) }
+    }
+
+    /// The line goes in whole, a bell rings, and the next line is up.
+    private func accept(_ field: AnchorSetupField) {
+      guard reading == field else { return }
+      speechField = nil
+      speechInput.stop()
+      missed = false
+      withAnimation(AnchorMotion.micro) {
+        if field == .title { draft.goalTitle = Self.line(for: .title) } else { draft.actionPlan = Self.line(for: .plan) }
+        heard = TourReadAlong(heard: "", line: "")
+        reading = field == .title ? .plan : nil
+      }
+      // After the microphone has let go of the audio session.
+      Task {
+        try? await Task.sleep(for: .seconds(0.3))
+        TourSound.shared.play(.ding)
+      }
+    }
+
+    /// The tour says the rest itself, as dictation would hear it.
+    private func readForPerson() {
+      guard let first = reading, !readsForPerson else { return }
+      readsForPerson = true
+      missed = false
+      speechInput.stop()
+      Task {
+        for field in first == .title ? [AnchorSetupField.title, .plan] : [.plan] {
+          speechField = field
+          guard await speechInput.play(Self.line(for: field)) else { break }
+          try? await Task.sleep(for: .seconds(0.4))
+        }
+        speechField = nil
+        withAnimation(AnchorMotion.micro) { reading = nil }
+      }
+    }
+
+    /// Dictation goes to the title while there is none, then to the plan;
+    /// in the tour, to the line being read.
     private func beginSpeech() {
-      guard tour == nil else { return }
       focus = nil
+      if tour != nil {
+        guard let reading, !readsForPerson else { return }
+        speechField = reading
+        speechInput.start(initialText: "")
+        return
+      }
       speechField = draft.isValid ? .plan : .title
       speechInput.start(initialText: speechField == .title ? draft.goalTitle : draft.actionPlan)
     }

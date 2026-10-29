@@ -15,6 +15,8 @@
     @FocusState.Binding var focus: AnchorSetupField?
     /// Words past the title limit just moved to the top of the plan.
     let titleMoved: Bool
+    /// The tour's line to read aloud into a field, lit as far as it was heard.
+    var readAlong: (field: AnchorSetupField, line: String, lit: Int)?
     let beginSpeech: () -> Void
     let endSpeech: () -> Void
     @State private var showsSteps = false
@@ -46,18 +48,12 @@
 
     private var titleCard: some View {
       VStack(alignment: .leading, spacing: 8) {
-        TextField(
-          SetupCopy.titleLabel, text: $draft.goalTitle,
-          prompt: Text(SetupCopy.titlePlaceholder).foregroundStyle(AnchorSetupStyle.secondary.opacity(0.6)),
-          axis: .vertical
-        )
-        .font(.system(size: titleSize, weight: .semibold))
-        .foregroundStyle(AnchorSetupStyle.ink)
-        .tint(AnchorIOSStyle.action)
-        .lineLimit(1...3)
-        .submitLabel(.next)
-        .focused($focus, equals: .title)
-        .accessibilityIdentifier("setup.goal.field")
+        ZStack(alignment: .topLeading) {
+          if let readAlong, readAlong.field == .title, draft.goalTitle.isEmpty {
+            ghost(readAlong).font(.system(size: titleSize, weight: .semibold))
+          }
+          titleField
+        }
         // The room left shows only once it starts to matter.
         if draft.titleUnits * 4 >= AnchorTitleLength.limit * 3 {
           TitleMeter(units: draft.titleUnits)
@@ -77,6 +73,33 @@
       .background(card)
     }
 
+    private var titleField: some View {
+      TextField(
+        SetupCopy.titleLabel, text: $draft.goalTitle,
+        prompt: readAlong?.field == .title ? Text(verbatim: "")
+          : Text(SetupCopy.titlePlaceholder).foregroundStyle(AnchorSetupStyle.secondary.opacity(0.6)),
+        axis: .vertical
+      )
+      .font(.system(size: titleSize, weight: .semibold))
+      .foregroundStyle(AnchorSetupStyle.ink)
+      .tint(AnchorIOSStyle.action)
+      .lineLimit(1...3)
+      .submitLabel(.next)
+      .focused($focus, equals: .title)
+      .accessibilityIdentifier("setup.goal.field")
+    }
+
+    /// The line to read, in grey, lighting up from its start as it is heard.
+    private func ghost(_ readAlong: (field: AnchorSetupField, line: String, lit: Int)) -> some View {
+      var line = AttributedString(readAlong.line)
+      let split = line.index(line.startIndex, offsetByCharacters: min(readAlong.lit, readAlong.line.count))
+      line[line.startIndex..<split].foregroundColor = AnchorIOSStyle.action
+      line[split..<line.endIndex].foregroundColor = AnchorSetupStyle.secondary.opacity(0.5)
+      return Text(line)
+        .fixedSize(horizontal: false, vertical: true)
+        .allowsHitTesting(false)
+    }
+
     // MARK: Plan
 
     private var planCard: some View {
@@ -91,7 +114,9 @@
             .accessibilityIdentifier("setup.title.moved")
         }
         ZStack(alignment: .topLeading) {
-          if draft.actionPlan.isEmpty, focus != .plan {
+          if let readAlong, readAlong.field == .plan, draft.actionPlan.isEmpty {
+            ghost(readAlong).font(.system(size: planSize))
+          } else if draft.actionPlan.isEmpty, focus != .plan {
             Text(SetupCopy.planExample)
               .font(.system(size: planSize))
               .foregroundStyle(AnchorSetupStyle.secondary.opacity(0.6))

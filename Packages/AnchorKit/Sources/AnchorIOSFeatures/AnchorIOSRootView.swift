@@ -212,7 +212,6 @@ struct AnchorWorkspaceView: View {
                             .ignoresSafeArea()
                         }
                     }
-                    .overlay { if let tour { TourTapLayer(tour: tour) } }
                     .overlay {
                         if pickedUp, let hold = deskHold {
                             DeskPickUpCard(
@@ -237,23 +236,11 @@ struct AnchorWorkspaceView: View {
                 destination(for: route)
             }
         }
-        .overlay {
-            if showsSidewaysDesk, let tour {
-                TourSidewaysDesk(tour: tour, projection: model.projection, gravity: gravity) {
-                    showsSidewaysDesk = false
-                    tour.leftDesk()
-                }
-                .transition(.opacity)
-            }
-        }
+        .overlay { tourLayers }
         .animation(AnchorMotion.panel, value: showsSidewaysDesk)
-        .overlay {
-            if tour?.stage == .walkingAway {
-                TourLinkScene(mode: .apart)
-                    .transition(.opacity)
-            }
-        }
-        .animation(AnchorMotion.panel, value: tour?.stage == .walkingAway)
+        .animation(AnchorMotion.panel, value: isTourAway)
+        // Picking the phone up puts away whatever the desk had open.
+        .onChange(of: isTourAway) { _, away in if away { sheet = nil } }
         .environment(\.openConnectionCard, { sheet = .connections })
         .tint(AnchorIOSStyle.action)
         .background { HarborBackground() }
@@ -271,7 +258,7 @@ struct AnchorWorkspaceView: View {
                 }
             )
         ) {
-            fullScreenDestination(for: fullScreen ?? .away)
+            fullScreenDestination(for: fullScreen ?? .returning)
         }
         .onGeometryChange(for: DevicePosture.self) { geometry in
             // Keyboard insets are part of the screen, not a change in device posture.
@@ -350,6 +337,7 @@ struct AnchorWorkspaceView: View {
                     tour.setupClosed()
                 }
             }
+            if previousSheet == .profileDetail(.session) { tour?.closedTask() }
             presentDeferredInvitation(after: dropped ? 1.9 : 0.4)
             if suspendedSetup, posture == .portrait {
                 suspendedSetup = false
@@ -395,6 +383,32 @@ struct AnchorWorkspaceView: View {
             if opensConnections {
                 try? await Task.sleep(for: .seconds(0.6))
                 sheet = .connections
+            }
+        }
+    }
+
+    // MARK: The tour
+
+    /// The phone is up in the tour, and the dial turns the time away.
+    private var isTourAway: Bool {
+        tour.map { $0.stage == .away || $0.stage == .back } ?? false
+    }
+
+    /// Over everything: the desk drawn sideways under the lock, and the dial.
+    @ViewBuilder private var tourLayers: some View {
+        if let tour {
+            ZStack {
+                if showsSidewaysDesk {
+                    TourSidewaysDesk(tour: tour, projection: model.projection, gravity: gravity, onTask: openHostedTask) {
+                        showsSidewaysDesk = false
+                        tour.leftDesk()
+                    }
+                    .transition(.opacity)
+                }
+                if isTourAway {
+                    TourAwayDial(tour: tour)
+                        .transition(.opacity)
+                }
             }
         }
     }
@@ -451,7 +465,7 @@ struct AnchorWorkspaceView: View {
 
     /// The tour's sample tasks are already down; its invitation waits for the person's own drop.
     private var hasAnchor: Bool {
-        !model.projection.hostedSessions.isEmpty && (tour.map { $0.stage >= .turn && $0.stage < .leaving } ?? true)
+        !model.projection.hostedSessions.isEmpty && (tour.map { $0.stage >= .anchored && $0.stage < .leaving } ?? true)
     }
 
     private var isMacConnected: Bool {
@@ -603,6 +617,15 @@ struct AnchorWorkspaceView: View {
                     Task { _ = await model.send(.updatePlanSteps(steps)) }
                 }
             )
+            // Under the task, never over it: its question stays readable.
+            .safeAreaInset(edge: .bottom) {
+                if tour?.stage == .reading {
+                    TourPetLine(text: TourCopy.reading, act: .think)
+                        .frame(maxWidth: 460)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 8)
+                }
+            }
             .presentationDetents([.large])
         case .setup:
             NavigationStack {
@@ -636,23 +659,7 @@ struct AnchorWorkspaceView: View {
 
     @ViewBuilder
     private func fullScreenDestination(for item: AnchorFullScreen) -> some View {
-        AnchorFullScreenHost(
-            item: item,
-            model: model,
-            tour: tour,
-            onProfile: {
-                fullScreen = nil
-                path.append(.profile)
-            },
-            onSettings: {
-                fullScreen = nil
-                sheet = .account
-            },
-            onLayout: {
-                fullScreen = nil
-                sheet = .layout
-            }
-        )
+        AnchorFullScreenHost(item: item, model: model)
     }
 
     private func openSidewaysDesk() {
@@ -661,6 +668,7 @@ struct AnchorWorkspaceView: View {
     }
 
     private func openHostedTask(_ id: UUID) {
+        tour?.opened(id)
         Task {
             if await model.selectHostedTask(id) { sheet = .profileDetail(.session) }
         }
@@ -711,65 +719,23 @@ struct AnchorWorkspaceView: View {
 
     private var shouldShowLandscapeDashboard: Bool {
         guard posture == .landscape else { return false }
-        switch model.projection.session?.presence {
-        case .away, .returning:
-            return false
-        case .atDesk, .handingOff, .unknown, nil:
-            return true
-        }
+        // The return page covers the desk; away, the desk stays as it was.
+        return model.projection.session?.presence != .returning
     }
 
     private func synchronizeCover(with presence: PresenceStatus?) {
-        switch presence {
-        case .handingOff: fullScreen = .handingOff
-        case .away: fullScreen = .away
-        case .returning: fullScreen = .returning
-        case .atDesk, .unknown, nil: fullScreen = nil
-        }
+        // Leaving shows nothing of its own: the phone stays on the home.
+        fullScreen = presence == .returning ? .returning : nil
     }
 }
 
+/// The return page, the one screen that covers the workspace.
 private struct AnchorFullScreenHost: View {
     let item: AnchorFullScreen
     let model: AnchorSessionModel
-    let tour: AnchorTour?
-    let onProfile: () -> Void
-    let onSettings: () -> Void
-    let onLayout: () -> Void
-
-    @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
-        ZStack {
-            content
-                .id(item)
-                .transition(reduceMotion || item == .returning
-                    ? .opacity : .move(edge: .bottom).combined(with: .opacity))
-        }
-        .animation(reduceMotion ? nil : AnchorMotion.panel, value: item)
-        // The tour's phone comes back in range over the away screen.
-        .overlay {
-            if tour?.stage == .comingBack {
-                TourLinkScene(mode: .together)
-                    .transition(.opacity)
-            }
-        }
-        .animation(AnchorMotion.panel, value: tour?.stage == .comingBack)
-    }
-
-    @ViewBuilder
-    private var content: some View {
         switch item {
-        case .handingOff:
-            HandoffView(model: model)
-        case .away:
-            AwayView(
-                projection: model.projection,
-                model: model,
-                onProfile: onProfile,
-                onSettings: onSettings,
-                onLayout: onLayout
-            )
         case .returning:
             ReturnView(projection: model.projection, model: model)
                 .id(model.projection.session?.returnSummary?.generatedAt)
