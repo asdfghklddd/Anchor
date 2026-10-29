@@ -28,6 +28,14 @@ struct AnchorStatusMenuTests {
         #expect(bluetooth.link == .connected(viaBluetooth: true))
     }
 
+    @Test("The island names the connected phone by its own name only")
+    func phoneName() {
+        let phone = PeerDeviceInfo(name: "An's iPhone", model: "iPhone", systemName: "iOS", systemVersion: "26.1")
+        let paired = DevicePairingStatus(phase: .connected, route: .bluetooth, peerDeviceInfo: phone)
+        #expect(menu(connection: .connected, pairing: paired).peerDeviceName == "An's iPhone")
+        #expect(menu(pairing: paired).peerDeviceName == nil)
+    }
+
     @Test("Each way of being apart offers the one fix that moves it forward")
     func oneFixPerState() {
         #expect(menu(radio: .notAllowed).fix == .openBluetoothPrivacy)

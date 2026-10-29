@@ -79,7 +79,7 @@ public struct NotchIslandContent: Equatable, Sendable {
         link = status.link
         fix = status.fix
         needsSources = !status.codexReady && !status.claudeReady
-        peerDevice = status.peerDeviceSummary
+        peerDevice = status.peerDeviceName
         self.pairingCode = status.link == .notPaired ? pairingCode : nil
         self.sourcesError = needsSources ? sourcesError : nil
         self.filing = filing

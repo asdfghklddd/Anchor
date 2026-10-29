@@ -52,8 +52,8 @@ public struct AnchorStatusMenu: Sendable, Equatable {
     public let link: Link
     public let codexReady: Bool
     public let claudeReady: Bool
-    /// A detail reported by the authenticated phone, when the peer supports it.
-    public let peerDeviceSummary: String?
+    /// The connected phone's own name, when the peer reports it.
+    public let peerDeviceName: String?
 
     public init(
         projection: SessionProjection,
@@ -66,9 +66,9 @@ public struct AnchorStatusMenu: Sendable, Equatable {
         self.codexReady = codexReady
         self.claudeReady = claudeReady
         if case .connected = link {
-            peerDeviceSummary = pairing.peerDeviceInfo?.shortDescription
+            peerDeviceName = pairing.peerDeviceInfo?.displayName
         } else {
-            peerDeviceSummary = nil
+            peerDeviceName = nil
         }
     }
 

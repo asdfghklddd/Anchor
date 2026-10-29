@@ -27,6 +27,9 @@ public struct NotchIslandView: View {
     @AnchorReducedMotion private var reduceMotion
     @Namespace private var taskSpace
     @State private var heroHovered = false
+    /// The phone's name waits behind the link icon until the pointer rests on it.
+    @State private var showsLinkCaption = false
+    @State private var linkCaptionDwell: Task<Void, Never>?
 
     public init(state: NotchIslandState, onAction: @escaping (NotchIslandAction) -> Void) {
         self.state = state
@@ -65,6 +68,19 @@ public struct NotchIslandView: View {
                 tasks(isShown: isOpen)
             }
             .frame(width: size.width, height: size.height, alignment: .top)
+            .overlay(alignment: .topTrailing) {
+                if isOpen, showsLinkCaption {
+                    linkCaption
+                        .padding(.top, geometry.notch.height + 2)
+                        // The open shape's side sits a flare inside its frame; line up with the gear.
+                        .padding(.trailing, NotchIslandMetrics.expandedFlare + 6)
+                        .transition(reduceMotion
+                            ? AnyTransition.opacity
+                            : AnyTransition.opacity.combined(with: .offset(y: -4))
+                                .combined(with: .scale(scale: 0.96, anchor: .topTrailing)))
+                }
+            }
+            .animation(.easeOut(duration: 0.16), value: showsLinkCaption)
             .clipShape(NotchIslandShape(flare: flare, radius: radius))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -169,7 +185,15 @@ public struct NotchIslandView: View {
                 .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .help(linkDescription)
+        .onHover { inside in
+            linkCaptionDwell?.cancel()
+            guard inside else { showsLinkCaption = false; return }
+            // A short rest, so passing over the icon doesn't flash the caption.
+            linkCaptionDwell = Task {
+                try? await Task.sleep(for: .milliseconds(300))
+                if !Task.isCancelled { showsLinkCaption = true }
+            }
+        }
         .accessibilityLabel(linkDescription)
         .accessibilityIdentifier("notch.link")
     }
@@ -184,6 +208,40 @@ public struct NotchIslandView: View {
         let parts = [link, content.peerDevice, content.fix.map(StatusMenuCopy.fix)]
             + (content.needsSources ? [StatusMenuCopy.agentSourcesConnect] : [])
         return parts.compactMap { $0 }.joined(separator: " · ")
+    }
+
+    /// The phone's name and how it's reached; while the link needs the
+    /// person, what a click on the icon will do.
+    private var linkCaption: some View {
+        let status = StatusMenuCopy.link(content.link)
+        // Beside the phone's own name, only the route: "蓝牙" rather than "已连接 iPhone · 蓝牙".
+        let beside: String? = switch content.link {
+        case _ where content.peerDevice == nil: nil
+        case .connected(viaBluetooth: true): AnchorStrings.value("pair.device.route.bluetooth", default: "Bluetooth")
+        case .connected(viaBluetooth: false): AnchorStrings.value("pair.device.route.network", default: "Local Network")
+        default: status
+        }
+        let detail = [beside, content.fix.map(StatusMenuCopy.fix)]
+            .compactMap { $0 }.joined(separator: " · ")
+        return HStack(spacing: 6) {
+            Text(content.peerDevice ?? status)
+                .foregroundStyle(NotchIslandInk.primary)
+            if !detail.isEmpty {
+                Text(detail)
+                    .foregroundStyle(content.linkNeedsAttention ? AnchorPalette.attention : NotchIslandInk.secondary)
+            }
+        }
+        .font(.system(size: 12, weight: .medium))
+        .lineLimit(1)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(Color(white: 0.15), in: .capsule)
+        .overlay(Capsule().strokeBorder(.white.opacity(0.1), lineWidth: 0.5))
+        .shadow(color: .black.opacity(0.35), radius: 8, y: 3)
+        .fixedSize()
+        .allowsHitTesting(false)
+        // VoiceOver already reads all of this on the icon itself.
+        .accessibilityHidden(true)
     }
 
     // MARK: The open island
