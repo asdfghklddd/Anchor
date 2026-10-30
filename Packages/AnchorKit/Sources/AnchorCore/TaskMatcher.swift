@@ -1,5 +1,6 @@
 import Foundation
 import NaturalLanguage
+import Synchronization
 
 /// Places one piece of agent work (a conversation) on the task, and when it is
 /// clear the step, that it serves. Evidence, strongest first:
@@ -118,6 +119,31 @@ public enum TaskMatcher {
     /// single characters it could not join (红|黑|树) become one term, because the
     /// same rule applies to the task and the request.
     public static func words(_ text: String) -> Set<String> {
+        if let known = wordCache.withLock({ $0[text] }) { return known }
+        let result = segment(text)
+        wordCache.withLock { cache in
+            // Titles, steps and recent requests repeat on every scan; a long day's worth is plenty.
+            if cache.count >= 4_096 { cache.removeAll(keepingCapacity: true) }
+            cache[text] = result
+        }
+        return result
+    }
+
+    /// Segments every text a scan will match ahead of time, so the scan itself
+    /// only compares sets. Call it off the main actor.
+    public static func prepare(_ works: [Work], tasks: [AnchorSession]) {
+        for task in tasks {
+            _ = words(task.goal.title)
+            _ = words(task.goal.completionCriteria)
+            for step in task.goal.userPlan?.items ?? [] { _ = words(step.text) }
+        }
+        for work in works { _ = words(work.request) }
+    }
+
+    /// Segmenting is the expensive part, and the same texts come back every scan.
+    private static let wordCache = Mutex<[String: Set<String>]>([:])
+
+    private static func segment(_ text: String) -> Set<String> {
         let tokenizer = NLTokenizer(unit: .word)
         tokenizer.string = text
         if let language = NLLanguageRecognizer.dominantLanguage(for: text) { tokenizer.setLanguage(language) }

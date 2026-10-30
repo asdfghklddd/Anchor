@@ -49,6 +49,9 @@ private actor CodexLifecycleDeliveryState {
 /// turn's final reply (or its error) and of the latest request, bounded for a glance.
 public struct CodexLifecycleFileSource: ProcessSource, Sendable {
     public static let defaultSourceID = BuiltInProcessSourceID.codex
+    /// How long a log must stay the same size before it is polled at the resting pace.
+    static let restingAfter: TimeInterval = 15
+    static let restingPollInterval: TimeInterval = 2
 
     public let fileURL: URL
     public let pollInterval: TimeInterval
@@ -111,9 +114,15 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                             scanner.backfill(measured)
                         }
                     }
+                    var lastSize: UInt64?
+                    var grewAt = Date.now
                     while !Task.isCancelled {
                         let attributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path)
                         let size = (attributes?[.size] as? NSNumber)?.uint64Value ?? 0
+                        if size != lastSize {
+                            lastSize = size
+                            grewAt = .now
+                        }
                         let currentIdentity = attributes.flatMap(Self.fileIdentity)
                         if currentIdentity != identity {
                             scanner.reset()
@@ -207,7 +216,9 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                                 )
                             }
                         }
-                        try await Task.sleep(for: .seconds(pollInterval))
+                        // A log at rest is checked less often; the next write is caught within a couple of seconds.
+                        let resting = Date.now.timeIntervalSince(grewAt) > Self.restingAfter
+                        try await Task.sleep(for: .seconds(resting ? max(pollInterval, Self.restingPollInterval) : pollInterval))
                     }
                     continuation.finish()
                 } catch is CancellationError { continuation.finish() }

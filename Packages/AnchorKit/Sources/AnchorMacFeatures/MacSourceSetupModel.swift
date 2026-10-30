@@ -46,6 +46,7 @@ public final class MacSourceSetupModel {
     /// Request text read for matching, kept in memory only and keyed by the log's change time.
     private var requestCache: [String: (stamp: Date, text: String)] = [:]
     private var lastPlacementOperation: Task<Void, Never>?
+    private var lastPlacementInputs: PlacementInputs?
 
     public func presentCodexSetupIfNeeded() {
         guard !hasConversationSource else { return }
@@ -231,7 +232,8 @@ public final class MacSourceSetupModel {
             codexSessionFileName = nil
             await restoreTrackedCodexSessions()
         }
-        taskState = await taskStateProvider?()
+        let state = await taskStateProvider?()
+        if taskState != state { taskState = state }
     }
 
     public func connectCodexSession(
@@ -611,9 +613,14 @@ public final class MacSourceSetupModel {
         guard hasConversationSource, let autoAssociationSessions else { return }
         await refreshTaskState()
         let tasks = await autoAssociationSessions().filter { $0.status == .active }
-        activeTasks = tasks
+        if activeTasks != tasks { activeTasks = tasks }
         let activeIDs = Set(tasks.map(\.id))
         var bindings = loadTrackedCodexSessions()
+        // A quiet scan finds what the last one found: nothing to match again.
+        let inputs = PlacementInputs(conversations: conversations, tasks: tasks, current: currentTask?.id,
+                                     since: currentTask?.since, memory: matchMemory, bindings: bindings)
+        guard inputs != lastPlacementInputs else { return }
+        var failed = false
         var attached: [String: UUID] = [:]
         var steps: [String: UUID] = [:]
         for binding in bindings where activeIDs.contains(binding.anchorSessionID) {
@@ -623,12 +630,21 @@ public final class MacSourceSetupModel {
         var unsorted: [CodexConversationSummary] = []
         var candidates: [String: [UUID]] = [:]
         let earliestStart = tasks.map(\.startedAt).min()
+        var pending: [(conversation: CodexConversationSummary, location: (source: ConversationDialect?, path: String),
+                       work: TaskMatcher.Work)] = []
         for conversation in conversations {
             guard !Task.isCancelled else { return }
             guard attached[conversation.id] == nil, !matchMemory.ignored.contains(conversation.id),
                   let earliestStart, conversation.candidate.modifiedAt >= earliestStart,
                   let location = location(of: conversation.candidate.fileURL) else { continue }
-            let work = await work(for: conversation)
+            pending.append((conversation, location, await work(for: conversation)))
+        }
+        // Word segmentation is the slow part; it runs off the main actor, and the
+        // matching below only compares the sets it leaves behind.
+        let works = pending.map(\.work)
+        await Task.detached(priority: .utility) { TaskMatcher.prepare(works, tasks: tasks) }.value
+        for (conversation, location, work) in pending {
+            guard !Task.isCancelled else { return }
             switch TaskMatcher.place(work, tasks: tasks, current: currentTask, memory: matchMemory) {
             case let .task(taskID, step, reason):
                 bindings = loadTrackedCodexSessions()
@@ -649,7 +665,10 @@ public final class MacSourceSetupModel {
                     attached[conversation.id] = taskID
                     if let step { steps[conversation.id] = step }
                     if taskID == observedAnchorSessionID { trackedCodexSessionIDs.insert(conversation.id) }
-                } catch { errorMessage = error.localizedDescription }
+                } catch {
+                    errorMessage = error.localizedDescription
+                    failed = true
+                }
             case let .unsorted(leaning):
                 unsorted.append(conversation)
                 candidates[conversation.id] = leaning
@@ -665,6 +684,22 @@ public final class MacSourceSetupModel {
         let stillUnsorted = unsorted.filter { conversationTasks[$0.id] == nil && !matchMemory.ignored.contains($0.id) }
         if unsortedConversations != stillUnsorted { unsortedConversations = stillUnsorted }
         if unsortedCandidates != candidates { unsortedCandidates = candidates }
+        // A failed attach is tried again on the next scan.
+        if !failed {
+            lastPlacementInputs = PlacementInputs(conversations: conversations, tasks: tasks, current: currentTask?.id,
+                                                  since: currentTask?.since, memory: matchMemory,
+                                                  bindings: loadTrackedCodexSessions())
+        }
+    }
+
+    /// Everything a placement pass reads; the same inputs place the same way.
+    private struct PlacementInputs: Equatable {
+        let conversations: [CodexConversationSummary]
+        let tasks: [AnchorSession]
+        let current: UUID?
+        let since: Date?
+        let memory: TaskMatcher.Memory
+        let bindings: [TrackedCodexSession]
     }
 
     private func work(for conversation: CodexConversationSummary) async -> TaskMatcher.Work {
