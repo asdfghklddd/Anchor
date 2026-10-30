@@ -14,6 +14,8 @@ struct AnchorDropSlider: View {
     let onDrop: () -> Void
     /// The tour's ring glides along the channel until the anchor is taken.
     var guides = false
+    /// The anchor has left the knob for the water (the tour's first drop).
+    var releases = false
 
     @AnchorReducedMotion private var reduceMotion
     @State private var offset: CGFloat = 0
@@ -187,10 +189,11 @@ struct AnchorDropSlider: View {
                 .shadow(color: AnchorPalette.deepSea.opacity(enabled ? 0.2 : 0.06), radius: dragging ? 11 : 5, y: dragging ? 7 : 3)
             AnchorFigure(color: enabled ? AnchorSetupStyle.accent : AnchorSetupStyle.secondary.opacity(0.5), depth: enabled)
                 .frame(width: 28, height: 28)
+                .opacity(releases ? 0 : 1)
                 // Trails back as it is pulled, then sinks a little when it lets go.
                 .rotationEffect(.degrees(dropped ? 0 : -16 * Double(progress)))
                 .offset(y: dropped ? 4 : 0)
-            if saving {
+            if saving, !releases {
                 Circle()
                     .trim(from: 0, to: 0.3)
                     .stroke(AnchorSetupStyle.accent, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))

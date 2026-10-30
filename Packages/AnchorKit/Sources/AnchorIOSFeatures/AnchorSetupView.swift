@@ -24,6 +24,10 @@
     @State private var missed = false
     /// The tour reads the rest itself, for someone who cannot talk now.
     @State private var readsForPerson = false
+    /// The tour's first drop: the water rises and takes the anchor before the page goes.
+    @State private var sinking = false
+    @State private var sliderFrame: CGRect?
+    @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
       VStack(spacing: 0) {
@@ -40,7 +44,8 @@
             AnchorDropSlider(
               enabled: draft.isValid && !draft.isImportingImages, saving: saving,
               stepCount: draft.steps.count, onDrop: saveTask,
-              guides: tour != nil && reading == nil)
+              guides: tour != nil && reading == nil, releases: sinking)
+              .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { sliderFrame = $0 }
               .padding(.top, 10)
             if let saveError {
               Text(saveError).font(.caption).foregroundStyle(AnchorIOSStyle.secondaryText)
@@ -59,9 +64,20 @@
       }
       .background {
         AnchorSetupStyle.background
-          .overlay(alignment: .bottom) { AnchorSetupWave().frame(height: 100) }
+          .overlay(alignment: .bottom) {
+            AnchorSetupWave()
+              .frame(height: sinking ? 250 : 100)
+              .animation(.easeIn(duration: 0.5), value: sinking)
+          }
           .ignoresSafeArea()
       }
+      .overlay(alignment: .topLeading) {
+        if sinking, let sliderFrame {
+          SetupSink(from: CGPoint(x: sliderFrame.maxX - 32, y: sliderFrame.midY))
+        }
+      }
+      .coordinateSpace(.named(Self.space))
+      .sensoryFeedback(.impact(weight: .medium), trigger: sinking) { _, now in now }
       .toolbar(.hidden, for: .navigationBar)
       // A new anchor starts at its title, as a new reminder does.
       .task {
@@ -151,6 +167,8 @@
       }
     }
 
+    private static let space = "setup"
+
     private var canDrop: Bool { draft.isValid && !draft.isImportingImages && !saving }
 
     private func settleTitle() {
@@ -223,7 +241,7 @@
         for field in first == .title ? [AnchorSetupField.title, .plan] : [.plan] {
           speechField = field
           guard await speechInput.play(Self.line(for: field)) else { break }
-          try? await Task.sleep(for: .seconds(0.4))
+          try? await Task.sleep(for: .seconds(0.3))
         }
         speechField = nil
         withAnimation(AnchorMotion.micro) { reading = nil }
@@ -274,12 +292,55 @@
           if await model.hostTask(id: draft.hostedTaskID, goal: goal, processes: []) {
             draft.wasCreated = true
             draft.isConsumed = true
+            if tour != nil, !reduceMotion {
+              sinking = true
+              try? await Task.sleep(for: .seconds(0.85))
+            }
             dismiss()
           } else {
             saveError = SetupCopy.saveFailed
           }
         } catch { saveError = SetupCopy.saveFailed }
       }
+    }
+  }
+
+  /// The tour's first drop on the setup page: the anchor leaves the end of
+  /// the slider, falls into the risen water and sinks out of sight, a few
+  /// bubbles coming up behind it.
+  private struct SetupSink: View {
+    let from: CGPoint
+    @State private var start = Date.now
+
+    var body: some View {
+      GeometryReader { geometry in
+        let water = geometry.size.height - 150
+        TimelineView(.animation) { context in
+          let t = context.date.timeIntervalSince(start)
+          let fall = min(1, t / 0.6)
+          let y = from.y + (geometry.size.height + 80 - from.y) * fall * fall
+          ZStack(alignment: .topLeading) {
+            AnchorFigure(color: AnchorSetupStyle.accent, depth: true)
+              .frame(width: 34, height: 34)
+              .rotationEffect(.degrees(14 * fall))
+              .position(x: from.x, y: y)
+              .opacity(y > water ? max(0, 1 - (y - water) / 140) : 1)
+            ForEach(0..<6, id: \.self) { index in
+              let rise = t - 0.32 - Double(index) * 0.08
+              if rise > 0 {
+                let size = 5 + CGFloat(index % 3) * 3
+                Circle()
+                  .stroke(Color.white.opacity(0.85 * max(0, 1 - rise / 0.8)), lineWidth: 1.3)
+                  .frame(width: size, height: size)
+                  .position(x: from.x + sin(Double(index) * 1.7 + rise * 7) * 9,
+                            y: water + 50 - CGFloat(rise) * 110)
+              }
+            }
+          }
+        }
+      }
+      .allowsHitTesting(false)
+      .accessibilityHidden(true)
     }
   }
 #endif

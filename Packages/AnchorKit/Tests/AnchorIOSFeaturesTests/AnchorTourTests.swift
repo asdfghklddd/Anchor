@@ -123,6 +123,27 @@ struct AnchorTourTests {
         #expect(tour.model.projection.session?.presence == .returning)
     }
 
+    @Test func backHomeEndsOnTheEmptySeaUntilStart() async throws {
+        let tour = AnchorTour()
+        defer { tour.end() }
+        tour.greeted()
+        tour.setupOpened()
+        tour.dropped(UUID())
+        tour.reachedDesk()
+        tour.leftDesk()
+        tour.turnedDial(to: AnchorTour.dialMinutes)
+        try await waitFor(.returned, in: tour, seconds: 4)
+        // Start does nothing before the ending.
+        tour.start()
+        #expect(tour.stage == .returned)
+        tour.leave()
+        #expect(tour.conversationsMoved > 0)
+        try await waitFor(.ending, in: tour, seconds: 4)
+        #expect(tour.model.projection.hostedSessions.isEmpty)
+        tour.start()
+        #expect(tour.stage == .finished)
+    }
+
     @Test func pickingThePhoneUpEarlyStillLeavesTheDesk() {
         let tour = AnchorTour()
         defer { tour.end() }
@@ -184,6 +205,11 @@ struct AnchorTourTests {
         let deadline = Date.now + seconds
         while tour.stage != stage, Date.now < deadline { try await Task.sleep(for: .milliseconds(100)) }
         #expect(tour.stage == stage)
+    }
+
+    /// English splitting leans on the system's language tagger, which the simulator lacks.
+    @Test func theReadPlanBecomesFourSteps() {
+        #expect(PlanStepSplitter.steps(from: "先梳理项目里的颜色变量，接着把写死的颜色换成变量，然后补上每个颜色的深色值，最后在真机上检查对比度").count == 4)
     }
 
     @Test func dictationArrivesAWordAtATime() {

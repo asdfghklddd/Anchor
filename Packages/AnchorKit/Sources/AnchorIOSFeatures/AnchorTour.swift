@@ -62,8 +62,10 @@ final class AnchorTour {
         case back
         /// The real return page, with the Mac's recaps.
         case returned
-        /// Back to Home: the sample tasks leave.
+        /// Back to Home: the sample tasks weigh anchor and leave.
         case leaving
+        /// The empty sea, one line on what Anchor is for, and Start.
+        case ending
         /// The real workspace takes over.
         case finished
 
@@ -77,6 +79,8 @@ final class AnchorTour {
     private(set) var awayMinutes = 0
     /// What the agents did on the dial so far.
     private(set) var landed: [TourMac.Note] = []
+    /// The conversations the agents moved along during the tour, for the ending.
+    private(set) var conversationsMoved = 0
     let model: AnchorSessionModel
     let log: AnchoringLog
 
@@ -101,8 +105,8 @@ final class AnchorTour {
     static let dialMinutes = 30
     static let linkBreaksAt = 1
     static let awayAt = 5
-    /// The real drop on the home, before the phone is asked to turn.
-    static let dropLength: TimeInterval = 1.4
+    /// The first drop's moment on the home, before the phone is asked to turn.
+    static let dropLength: TimeInterval = 3.0
 
     init() {
         let folder = FileManager.default.temporaryDirectory
@@ -271,18 +275,24 @@ final class AnchorTour {
     func leave() {
         guard stage == .returned else { return }
         stage = .leaving
+        conversationsMoved = model.projection.hostedSessions.reduce(0) { $0 + $1.processes.count }
         cancelWork()
         work.append(Task { [model] in
             try? await Task.sleep(for: .seconds(0.6))
             for task in model.projection.hostedSessions.reversed() {
                 guard !Task.isCancelled else { return }
                 _ = await model.send(.forSession(task.id, .archiveSession))
-                try? await Task.sleep(for: .milliseconds(180))
+                try? await Task.sleep(for: .milliseconds(340))
             }
-            try? await Task.sleep(for: .seconds(0.8))
+            try? await Task.sleep(for: .seconds(0.6))
             guard !Task.isCancelled else { return }
-            self.stage = .finished
+            self.stage = .ending
         })
+    }
+
+    /// Start on the ending: the person's own Anchor takes over.
+    func start() {
+        if stage == .ending { stage = .finished }
     }
 
     /// Skip: straight to the person's own Anchor, from any step.
@@ -510,7 +520,7 @@ enum TourCopy {
     static let readForMe = AnchorStrings.value("tour.read.skip", default: "Can't talk right now")
     static let readingForYou = AnchorStrings.value("tour.read.forYou", default: "Reading it for you.")
     static let slide = AnchorStrings.value("tour.slide", default: "Slide the anchor to the end and let it sink.")
-    static let turn = AnchorStrings.value("tour.turn", default: "Turn your phone sideways to see what the AI is up to.")
+    static let turn = AnchorStrings.value("tour.turn", default: "Turn sideways into the workbench: every AI task on your computer, at a glance.")
     static let lockQuestion = AnchorStrings.value("tour.lock", default: "Portrait Orientation Lock on?")
     static let openHere = AnchorStrings.value("tour.lock.open", default: "Open the desk here")
     static let backUpright = AnchorStrings.value("tour.lock.back", default: "Back to the home")
@@ -519,16 +529,25 @@ enum TourCopy {
     static let waiting = AnchorStrings.value("tour.waiting", default: "An AI is waiting on you. Tap to see.")
     static let ownTask = AnchorStrings.value("tour.own", default: "The task you just dropped: an AI is already on it.")
     static let reading = AnchorStrings.value("tour.reading", default: "Answer it at your Mac, then close this.")
-    static let called = AnchorStrings.value("tour.called", default: "A friend asks you down for coffee. Pick up your phone and go.")
+    static let called = AnchorStrings.value("tour.called", default: "Oops! A friend just asked you out for coffee mid-work. Grab your phone and go.")
     static let dial = AnchorStrings.value("tour.dial", default: "Turn the dial to see what happens while you're away.")
     static let apart = AnchorStrings.value("tour.apart", default: "Away from your Mac for 5 minutes. Your agents keep working.")
     static let together = AnchorStrings.value("tour.together", default: "Back at your desk.")
     static let connect = AnchorStrings.value("tour.connect", default: "Connect your Mac to start anchoring for real.")
+    static let firstAnchor = AnchorStrings.value("tour.first", default: "Your first anchor is down.")
+    static let reminder = AnchorStrings.value("tour.reminder", default: "Away too long, and Anchor will remind you to come back.")
+    static let ending = AnchorStrings.value("tour.ending", default: "Anchor one thing. The AI moves it along on your computer; step away and miss nothing.")
+    static func endingStats(conversations: Int, minutes: Int) -> String {
+        String.localizedStringWithFormat(
+            AnchorStrings.value("tour.ending.stats", default: "You dropped an anchor · the AI moved %1$lld conversations · you were away %2$lld minutes"),
+            conversations, minutes)
+    }
+    static let start = AnchorStrings.value("tour.start", default: "Start using Anchor")
     static let skip = AnchorStrings.value("tour.skip", default: "Skip")
 
     // The task the person reads aloud.
     static let spokenTitle = AnchorStrings.value("tour.script.title", default: "Add dark mode to the app")
-    static let spokenPlan = AnchorStrings.value("tour.script.plan", default: "First list the color variables, then replace the hard-coded colors, finally check contrast on a real phone")
+    static let spokenPlan = AnchorStrings.value("tour.script.plan", default: "First list the color variables, then replace the hard-coded colors, then add a dark value for each color, and finally check contrast on a real phone")
 
     // The two tasks already anchored, and their conversations.
     static let portfolio = AnchorStrings.value("tour.portfolio", default: "Launch the portfolio site")
@@ -565,12 +584,12 @@ enum TourCopy {
     static let replaceRequest = AnchorStrings.value("tour.replace.request", default: "Replace every hard-coded color with the new variables")
 
     // What the Mac writes for the return page.
-    static let paletteRecap = AnchorStrings.value("tour.palette.recap", default: "Done: 42 hard-coded colors are now 18 color variables.")
-    static let replaceRecap = AnchorStrings.value("tour.replace.recap", default: "Swapping hard-coded colors for the new variables; 9 of 18 files so far.")
-    static let seoRecap = AnchorStrings.value("tour.seo.recap", default: "Finished while you were away: five pages now have titles and descriptions.")
-    static let homepageRecap = AnchorStrings.value("tour.homepage.recap", default: "The two-column home layout is in and stacks on narrow screens.")
-    static let deployRecap = AnchorStrings.value("tour.deploy.recap", default: "The deploy workflow is added; it needs VERCEL_TOKEN in the repository settings.")
-    static let surveyRecap = AnchorStrings.value("tour.survey.recap", default: "Still waiting for you: drop the 37 rows with no age, or fill in the median?")
-    static let chartsRecap = AnchorStrings.value("tour.charts.recap", default: "The satisfaction chart is saved to figures/satisfaction.png.")
+    static let paletteRecap = AnchorStrings.value("tour.palette.recap", default: "Done: scanned 26 files and folded 42 hard-coded colors into 18 color variables in Colors.swift, each named for what it's for.")
+    static let replaceRecap = AnchorStrings.value("tour.replace.recap", default: "In progress: swapping hard-coded colors for the new variables. 9 of 18 files are done, mostly home and settings; the lists should follow within 10 minutes.")
+    static let seoRecap = AnchorStrings.value("tour.seo.recap", default: "Finished while you were away: all five pages now have titles and descriptions. Project pages use each project's summary; the home title keeps your name and focus.")
+    static let homepageRecap = AnchorStrings.value("tour.homepage.recap", default: "The two-column home layout is in: an intro on the left, three featured project cards on the right. Narrow screens stack them; preview at localhost:5173.")
+    static let deployRecap = AnchorStrings.value("tour.deploy.recap", default: "The deploy workflow is ready: pushing to main deploys to Vercel. One step is left for you: add VERCEL_TOKEN in the repository settings.")
+    static let surveyRecap = AnchorStrings.value("tour.survey.recap", default: "Still waiting for you: 37 rows, about 8% of the survey, have no age. Drop them, or fill in the median of 24?")
+    static let chartsRecap = AnchorStrings.value("tour.charts.recap", default: "The satisfaction chart is saved to figures/satisfaction.png: scores 1–5 across, people up the side. 4 is the most common, about 40%, so it leans satisfied.")
 }
 #endif

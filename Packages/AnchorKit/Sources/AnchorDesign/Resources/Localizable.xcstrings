@@ -13770,13 +13770,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A friend asks you down for coffee. Pick up your phone and go."
+            "value" : "Oops! A friend just asked you out for coffee mid-work. Grab your phone and go."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "朋友约你下楼喝杯咖啡。拿起手机出发吧。"
+            "value" : "糟糕！工作途中临时有朋友约你喝咖啡，拿起手机出发吧。"
           }
         }
       }
@@ -13804,13 +13804,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The satisfaction chart is saved to figures/satisfaction.png."
+            "value" : "The satisfaction chart is saved to figures/satisfaction.png: scores 1–5 across, people up the side. 4 is the most common, about 40%, so it leans satisfied."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "满意度图表已保存到 figures/satisfaction.png。"
+            "value" : "满意度图表已存到 figures/satisfaction.png：横轴是 1–5 分，纵轴是人数，4 分最多，整体偏满意。"
           }
         }
       }
@@ -13889,13 +13889,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The deploy workflow is added; it needs VERCEL_TOKEN in the repository settings."
+            "value" : "The deploy workflow is ready: pushing to main deploys to Vercel. One step is left for you: add VERCEL_TOKEN in the repository settings."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "部署流程已加好，还需在仓库设置里添加 VERCEL_TOKEN。"
+            "value" : "部署流程写好了：推送到 main 就会自动部署到 Vercel。还差一步，需要你在仓库设置里添加 VERCEL_TOKEN。"
           }
         }
       }
@@ -13947,6 +13947,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "转动表盘，看看你不在时发生了什么。"
+          }
+        }
+      }
+    },
+    "tour.ending" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor one thing. The AI moves it along on your computer; step away and miss nothing."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "锚定一件事，\nAI 在电脑上推进；\n你走开，也不会错过。"
+          }
+        }
+      }
+    },
+    "tour.ending.stats" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You dropped an anchor · the AI moved %1$lld conversations · you were away %2$lld minutes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "投下 1 个锚 · AI 推进了 %1$lld 段对话 · 离开 %2$lld 分钟"
+          }
+        }
+      }
+    },
+    "tour.first" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your first anchor is down."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第一枚锚，落下了。"
           }
         }
       }
@@ -14008,13 +14059,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The two-column home layout is in and stacks on narrow screens."
+            "value" : "The two-column home layout is in: an intro on the left, three featured project cards on the right. Narrow screens stack them; preview at localhost:5173."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "首页双栏布局已完成，窄屏时会自动堆叠。"
+            "value" : "首页双栏布局已完成：左边是自我介绍，右边是三张精选项目卡片；窄屏时自动改为上下排列，可在 localhost:5173 预览。"
           }
         }
       }
@@ -14212,13 +14263,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Done: 42 hard-coded colors are now 18 color variables."
+            "value" : "Done: scanned 26 files and folded 42 hard-coded colors into 18 color variables in Colors.swift, each named for what it's for."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已完成：42 处写死的颜色整理成了 18 个颜色变量。"
+            "value" : "已完成：扫描了 26 个文件，把 42 处写死的颜色归并成 18 个颜色变量，统一放进 Colors.swift，按用途命名。"
           }
         }
       }
@@ -14427,6 +14478,23 @@
         }
       }
     },
+    "tour.reminder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Away too long, and Anchor will remind you to come back."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开太久，Anchor 会提醒你回来。"
+          }
+        }
+      }
+    },
     "tour.replace" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14450,13 +14518,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Swapping hard-coded colors for the new variables; 9 of 18 files so far."
+            "value" : "In progress: swapping hard-coded colors for the new variables. 9 of 18 files are done, mostly home and settings; the lists should follow within 10 minutes."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在用新变量替换写死的颜色，已改完 9/18 个文件。"
+            "value" : "进行中：正在用新变量替换写死的颜色，已改完 9/18 个文件，主要是首页和设置页；剩下的列表页预计 10 分钟内完成。"
           }
         }
       }
@@ -14501,13 +14569,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "First list the color variables, then replace the hard-coded colors, finally check contrast on a real phone"
+            "value" : "First list the color variables, then replace the hard-coded colors, then add a dark value for each color, and finally check contrast on a real phone"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "先梳理颜色变量，然后替换写死的颜色，最后在真机上检查对比度"
+            "value" : "先梳理项目里的颜色变量，接着把写死的颜色换成变量，然后补上每个颜色的深色值，最后在真机上检查对比度"
           }
         }
       }
@@ -14552,13 +14620,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Finished while you were away: five pages now have titles and descriptions."
+            "value" : "Finished while you were away: all five pages now have titles and descriptions. Project pages use each project's summary; the home title keeps your name and focus."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你离开时已完成：5 个页面都有了标题和描述。"
+            "value" : "你离开时已完成：5 个页面都加上了标题和描述，项目页直接用了各自的项目简介，首页标题保留了你的名字和方向。"
           }
         }
       }
@@ -14631,6 +14699,23 @@
         }
       }
     },
+    "tour.start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start using Anchor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始使用"
+          }
+        }
+      }
+    },
     "tour.survey" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14654,13 +14739,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Still waiting for you: drop the 37 rows with no age, or fill in the median?"
+            "value" : "Still waiting for you: 37 rows, about 8% of the survey, have no age. Drop them, or fill in the median of 24?"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "仍在等你回复：37 行缺少年龄，删除还是用中位数填充？"
+            "value" : "仍在等你回复：问卷里有 37 行没有填年龄，约占总数的 8%。可以直接删掉这些行，也可以用中位数 24 岁填充，选哪种？"
           }
         }
       }
@@ -14722,13 +14807,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Turn your phone sideways to see what the AI is up to."
+            "value" : "Turn sideways into the workbench: every AI task on your computer, at a glance."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "把手机横过来，看看 AI 们在忙什么。"
+            "value" : "横屏进入工作台，\n电脑上的所有 AI 任务尽收眼底。"
           }
         }
       }

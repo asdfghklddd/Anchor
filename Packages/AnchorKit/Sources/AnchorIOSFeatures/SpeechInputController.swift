@@ -81,7 +81,7 @@ final class SpeechInputController {
     }
 
     /// The tour's dictation: the words arrive whole, as a recognizer hears
-    /// them, at an ordinary speaking pace (about 160 words a minute; Chinese
+    /// them, at a brisk speaking pace (about 210 words a minute; Chinese
     /// two or three characters at a time), with a level that moves like a
     /// voice. No microphone, recognizer or permission is touched. Returns
     /// false when something stopped it part way.
@@ -95,7 +95,7 @@ final class SpeechInputController {
         isRecording = true
         speaking: for chunk in Self.spokenChunks(of: text) {
             let ideographs = chunk.filter(\.isIdeograph).count
-            var left = ideographs > 0 ? ideographs * 210 : Int.random(in: 330...410)
+            var left = ideographs > 0 ? ideographs * 160 : Int.random(in: 255...315)
             transcript += chunk
             while left > 0 {
                 guard recognitionID == id, scripted != nil, !Task.isCancelled else { break speaking }
@@ -106,7 +106,7 @@ final class SpeechInputController {
             // A breath at a comma or a full stop.
             if chunk.contains(where: \.isPunctuation) {
                 audioLevel = 0.1
-                try? await Task.sleep(for: .milliseconds(260))
+                try? await Task.sleep(for: .milliseconds(200))
             }
         }
         guard recognitionID == id else { return false }
