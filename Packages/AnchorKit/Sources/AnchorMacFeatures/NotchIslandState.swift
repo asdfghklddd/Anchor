@@ -122,16 +122,10 @@ public final class NotchIslandState {
         flashes[taskID, default: 0] += 1
     }
 
-    /// One dot per open task, up to the three a person can anchor; with none,
-    /// a single empty ring.
-    var dotCount: Int {
-        max(1, min(content.tasks.count, 3))
-    }
-
     public var islandSize: CGSize {
         switch phase {
-        case .compact: geometry.compactSize(dots: dotCount)
-        case .primed: geometry.primedSize(dots: dotCount)
+        case .compact: geometry.compactSize
+        case .primed: geometry.primedSize
         case .peek: geometry.peekSize
         case .expanded: CGSize(width: geometry.expandedWidth, height: geometry.notch.height + contentHeight)
         }

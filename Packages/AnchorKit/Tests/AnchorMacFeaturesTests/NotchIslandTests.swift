@@ -80,13 +80,12 @@ struct NotchIslandTests {
         #expect(hover.pointerEntered() == .dwell)
     }
 
-    @Test("The closed island wraps the housing with an ear per side that fits a dot per task")
+    @Test("The closed island wraps the housing with two matching narrow ears")
     func compactWrapsTheHousing() {
-        #expect(geometry.compactSize(dots: 1) == CGSize(width: 260, height: 32))
-        // Three 8 pt dots, 7 pt apart, with 7 pt either side, on each ear.
-        #expect(geometry.compactSize(dots: 3).width == 304)
-        #expect(geometry.primedSize(dots: 1).height == 35)
-        let frame = geometry.islandFrame(size: geometry.compactSize(dots: 1))
+        // A 12 pt pill with 7 pt either side, whatever the number of tasks.
+        #expect(geometry.compactSize == CGSize(width: 252, height: 32))
+        #expect(geometry.primedSize.height == 35)
+        let frame = geometry.islandFrame(size: geometry.compactSize)
         #expect(frame.midX == 756)
         #expect(frame.maxY == 982)
         #expect(geometry.panelFrame.midX == 756)
@@ -124,6 +123,9 @@ struct NotchIslandTests {
         #expect(island.others.map(\.colorIndex) == [1, 2])
         #expect(island.others.map(\.signal) == [.waiting, .done])
         #expect(island.tasks.count == 3)
+        #expect(island.progress == NotchIslandContent.Progress(done: 1, total: 2))
+        #expect(island.progress?.isFinished == false)
+        #expect(content(SessionProjection(session: older)).progress == nil)
     }
 
     @Test("Pointing at a peek opens the island at once; only a closed island the pointer is off shows news")
@@ -227,6 +229,21 @@ struct NotchIslandTests {
                                          pairingCode: "482915", sourcesError: "Wrong folder")
         #expect(settled.pairingCode == nil)
         #expect(settled.sourcesError == nil)
+    }
+
+    @Test("Only a broken link turns the closed island red, never a phone that is just away")
+    func linkTrouble() {
+        func island(_ connection: ConnectionState, radio: MacBluetoothRadio) -> NotchIslandContent {
+            NotchIslandContent(
+                status: AnchorStatusMenu(projection: SessionProjection(connection: connection), radio: radio,
+                                         pairing: .automatic, codexReady: true, claudeReady: false),
+                projection: SessionProjection(connection: connection))
+        }
+        #expect(island(.disconnected, radio: .off).linkTrouble)
+        #expect(island(.disconnected, radio: .notAllowed).linkTrouble)
+        #expect(island(.failed, radio: .on).linkTrouble)
+        #expect(!island(.disconnected, radio: .on).linkTrouble)
+        #expect(!island(.connected, radio: .off).linkTrouble)
     }
 
     @Test("Each Bluetooth fix opens its own System Settings pane; reconnecting opens none")

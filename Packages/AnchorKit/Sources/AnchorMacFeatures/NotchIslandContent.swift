@@ -31,6 +31,13 @@ public struct NotchIslandContent: Equatable, Sendable {
         public let signal: Signal
     }
 
+    public struct Progress: Equatable, Sendable {
+        public let done: Int
+        public let total: Int
+        public var fraction: Double { total > 0 ? Double(done) / Double(total) : 0 }
+        public var isFinished: Bool { total > 0 && done >= total }
+    }
+
     public enum Plan: Equatable, Sendable {
         case none
         case step(number: Int, total: Int, text: String)
@@ -39,6 +46,9 @@ public struct NotchIslandContent: Equatable, Sendable {
 
     public let current: Task?
     public let plan: Plan
+    /// How many of the current task's steps the person has marked done, for
+    /// the ring beside the closed island; nil without a plan.
+    public let progress: Progress?
     /// The next step as a ready-to-paste request.
     public let prompt: String?
     /// The other open tasks, most recently active first.
@@ -69,6 +79,11 @@ public struct NotchIslandContent: Equatable, Sendable {
         } else {
             plan = .none
         }
+        if let steps = menu.current?.goal.userPlan, !steps.items.isEmpty {
+            progress = Progress(done: steps.completedSteps.count, total: steps.items.count)
+        } else {
+            progress = nil
+        }
         prompt = menu.prompt
         // The iPhone anchors three tasks at most; past that, a task waiting on the
         // person keeps its row before a quieter one, and rows keep their order.
@@ -92,6 +107,15 @@ public struct NotchIslandContent: Equatable, Sendable {
 
     public var isLinked: Bool {
         if case .connected = link { true } else { false }
+    }
+
+    /// Bluetooth is off or refused, or the link broke: worth showing even
+    /// while the island is closed. A phone that is merely away is not this.
+    public var linkTrouble: Bool {
+        switch link {
+        case .bluetoothOff, .bluetoothNotAllowed, .failed: true
+        case .connected, .searching, .notPaired: false
+        }
     }
 
     /// The link or the agent folders need the person.

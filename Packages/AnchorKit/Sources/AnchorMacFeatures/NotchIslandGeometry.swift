@@ -61,22 +61,20 @@ public struct NotchIslandGeometry: Equatable, Sendable {
         NSScreen.screens.first { $0.safeAreaInsets.top > 0 } ?? NSScreen.screens.first
     }
 
-    /// One ear beside the housing, wide enough for a dot per task.
-    public func earWidth(dots: Int) -> CGFloat {
-        let content = CGFloat(max(1, dots)) * NotchIslandMetrics.dot
-            + CGFloat(max(0, dots - 1)) * NotchIslandMetrics.dotSpacing
-        // Snug: the dots sit close to the housing, as on a Dynamic Island.
-        return max(30, content + 14)
+    /// One ear beside the housing: the stacked task pills on the left, the
+    /// plan ring or a link warning on the right. Both sides match, so the
+    /// island stays centred on the camera.
+    public var earWidth: CGFloat {
+        NotchIslandMetrics.pillWidth + 14
     }
 
-    public func compactSize(dots: Int) -> CGSize {
-        CGSize(width: notch.width + earWidth(dots: dots) * 2, height: notch.height)
+    public var compactSize: CGSize {
+        CGSize(width: notch.width + earWidth * 2, height: notch.height)
     }
 
     /// The small swell that answers the pointer before the island opens.
-    public func primedSize(dots: Int) -> CGSize {
-        let compact = compactSize(dots: dots)
-        return CGSize(width: compact.width + 10, height: compact.height + 3)
+    public var primedSize: CGSize {
+        CGSize(width: compactSize.width + 10, height: compactSize.height + 3)
     }
 
     public var expandedWidth: CGFloat {
@@ -109,8 +107,14 @@ public struct NotchIslandGeometry: Equatable, Sendable {
 
 /// Fixed measures shared by the island's shape and its contents.
 public enum NotchIslandMetrics {
+    /// A task's dot, where a peek names the task.
     static let dot: CGFloat = 8
-    static let dotSpacing: CGFloat = 7
+    /// A task's pill, one per row like the open island's task list.
+    static let pillWidth: CGFloat = 12
+    static let pillHeight: CGFloat = 4
+    static let pillSpacing: CGFloat = 4
+    /// The current task's plan ring in the right ear.
+    static let ring: CGFloat = 13
     /// The flare where the island meets the screen's top edge.
     static let compactFlare: CGFloat = 6
     static let expandedFlare: CGFloat = 10

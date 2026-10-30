@@ -48,9 +48,11 @@ final class AnchorMacUITests: XCTestCase {
     /// Rests the pointer on the island so it opens, then takes its gear.
     @MainActor
     private func openSettings(in app: XCUIApplication) {
-        let link = app.buttons["notch.link"]
-        XCTAssertTrue(link.waitForExistence(timeout: 8), app.debugDescription)
-        link.hover()
+        // The phone icon only appears once the pointer reaches the island,
+        // so rest on the task pills beside the housing.
+        let tasks = element("notch.tasks", in: app)
+        XCTAssertTrue(tasks.waitForExistence(timeout: 8), app.debugDescription)
+        tasks.hover()
         let gear = app.buttons["notch.settings"]
         XCTAssertTrue(gear.waitForExistence(timeout: 5), app.debugDescription)
         gear.click()

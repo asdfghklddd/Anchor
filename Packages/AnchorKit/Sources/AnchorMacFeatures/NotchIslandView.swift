@@ -141,18 +141,19 @@ public struct NotchIslandView: View {
     /// Each side keeps its place as the island grows around it; the open
     /// island adds the settings button at the far right.
     private var housingStrip: some View {
-        let ear = geometry.earWidth(dots: state.dotCount)
+        let ear = geometry.earWidth
         return HStack(spacing: 0) {
             // Nudged inward by half the flare, which the closed shape takes
             // from the ears' outer edges.
-            NotchTaskDots(tasks: Array(content.tasks.prefix(3)), flashes: state.flashes)
+            NotchTaskPills(tasks: Array(content.tasks.prefix(3)), flashes: state.flashes)
                 .frame(width: ear)
                 .offset(x: NotchIslandMetrics.compactFlare / 2)
             Color.clear
                 .frame(width: geometry.notch.width)
-            linkButton
+            rightEar
                 .frame(width: ear)
                 .offset(x: -NotchIslandMetrics.compactFlare / 2)
+                .animation(.easeOut(duration: 0.18), value: isTouched)
         }
         .frame(maxWidth: .infinity)
         .overlay(alignment: .trailing) {
@@ -171,6 +172,30 @@ public struct NotchIslandView: View {
                 .padding(.trailing, NotchIslandMetrics.inset - 6)
                 .transition(.opacity.animation(.easeOut(duration: 0.18).delay(reduceMotion ? 0 : 0.12)))
             }
+        }
+    }
+
+    /// The pointer has reached the island: it is swelling or open.
+    private var isTouched: Bool { state.phase == .primed || isOpen }
+
+    /// Closed, the right ear shows a broken link in red, else the current
+    /// task's plan ring, else nothing. The phone icon itself waits until the
+    /// pointer reaches the island.
+    @ViewBuilder
+    private var rightEar: some View {
+        if isTouched {
+            linkButton
+                .transition(.opacity)
+        } else if content.linkTrouble {
+            Image(systemName: "iphone.slash")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(NotchIslandInk.trouble)
+                .accessibilityLabel(StatusMenuCopy.link(content.link))
+                .accessibilityIdentifier("notch.link.trouble")
+                .transition(.opacity)
+        } else if let progress = content.progress, let current = content.current {
+            NotchPlanRing(progress: progress, color: NotchIslandInk.task(current.colorIndex))
+                .transition(.opacity)
         }
     }
 
@@ -199,6 +224,7 @@ public struct NotchIslandView: View {
     }
 
     private var linkTint: Color {
+        if content.linkTrouble { return NotchIslandInk.trouble }
         if content.linkNeedsAttention { return AnchorPalette.attention }
         return content.isLinked ? Color(AnchorColorTokens.homeLinked) : NotchIslandInk.faint
     }
@@ -228,7 +254,8 @@ public struct NotchIslandView: View {
                 .foregroundStyle(NotchIslandInk.primary)
             if !detail.isEmpty {
                 Text(detail)
-                    .foregroundStyle(content.linkNeedsAttention ? AnchorPalette.attention : NotchIslandInk.secondary)
+                    .foregroundStyle(content.linkTrouble ? NotchIslandInk.trouble
+                        : content.linkNeedsAttention ? AnchorPalette.attention : NotchIslandInk.secondary)
             }
         }
         .font(.system(size: 12, weight: .medium))
@@ -579,6 +606,8 @@ enum NotchIslandInk {
     /// At least 4.5:1 even where a white desktop shows through the glass.
     static let secondary = Color(white: 0.7)
     static let faint = Color(white: 0.5)
+    /// The iPhone's failure red, for a link that's broken rather than away.
+    static let trouble = Color(AnchorColorTokens.failedFill)
 
     /// The iPhone's task tab colors, in the same order.
     static func task(_ index: Int) -> Color {
