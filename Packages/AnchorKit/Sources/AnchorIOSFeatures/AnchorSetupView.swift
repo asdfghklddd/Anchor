@@ -20,7 +20,7 @@
     /// The tour's line being read aloud: the title, then the plan.
     @State private var reading: AnchorSetupField?
     @State private var heard = TourReadAlong(heard: "", line: "")
-    /// The last try was not heard; the pet asks again.
+    /// The last try was not heard; the line asks again.
     @State private var missed = false
     /// The tour reads the rest itself, for someone who cannot talk now.
     @State private var readsForPerson = false
@@ -35,10 +35,12 @@
               draft: draft, speech: speechInput, focus: $focus,
               titleMoved: titleMoved,
               readAlong: reading.map { ($0, Self.line(for: $0), heard.lit) },
+              guidesVoice: reading != nil && !readsForPerson,
               beginSpeech: beginSpeech, endSpeech: speechInput.finish)
             AnchorDropSlider(
               enabled: draft.isValid && !draft.isImportingImages, saving: saving,
-              stepCount: draft.steps.count, onDrop: saveTask)
+              stepCount: draft.steps.count, onDrop: saveTask,
+              guides: tour != nil && reading == nil)
               .padding(.top, 10)
             if let saveError {
               Text(saveError).font(.caption).foregroundStyle(AnchorIOSStyle.secondaryText)
@@ -157,12 +159,12 @@
 
     // MARK: Reading aloud in the tour
 
-    /// The pet says what to do: read the title, then the plan, then slide.
+    /// The line says what to do: read the title, then the plan, then slide.
     /// Under it, a way out for someone who cannot talk right now.
     private var tourLine: some View {
       VStack(alignment: .trailing, spacing: 4) {
-        TourPetLine(text: tourText, act: reading == nil ? .happy : .idle)
-          .frame(maxWidth: .infinity, alignment: .leading)
+        TourCaption(text: tourText)
+          .padding(.top, 6)
         if reading != nil, !readsForPerson {
           Button(TourCopy.readForMe, action: readForPerson)
             .font(.footnote.weight(.medium))

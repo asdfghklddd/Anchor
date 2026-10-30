@@ -88,6 +88,7 @@ struct PortraitDashboard: View {
                     gravity: gravity,
                     action: { onSheet(.setup) }
                 )
+                .matchedTransitionSource(id: AnchorSheet.setup, in: transitionNamespace)
                 .tourSpot(.anchorButton)
             }
             .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: showsCapNote)

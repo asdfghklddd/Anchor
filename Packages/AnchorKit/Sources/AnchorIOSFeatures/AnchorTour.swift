@@ -30,24 +30,24 @@ public enum AnchorTourGate {
 /// loop: two tasks already anchored, one they read aloud and drop themselves,
 /// agents that report while the phone lies sideways and keep working while
 /// the person is away, and the recaps waiting when they come back. Every step
-/// moves on by something the person does; the pet says what to do. Nothing
+/// moves on by something the person does; a short line says what to do. Nothing
 /// here touches the person's own tasks: the store lives in a temporary file
 /// that goes when the tour ends.
 @MainActor
 @Observable
 final class AnchorTour {
     enum Stage: Int, Comparable {
-        /// The pet says hello over the lit task list.
+        /// The sample cards float up under a ring; the ring moves on by itself.
         case hello
         /// The anchor button is lit and waits for its tap.
         case anchorButton
         /// The setup sheet is up; the person reads the task aloud.
         case setup
-        /// The anchor is down, and the tour cheers.
+        /// The anchor is down, and the real drop plays out on the home.
         case anchored
         /// The phone is asked to turn.
         case turn
-        /// The landscape desk, its folders lit one by one.
+        /// The landscape desk: the ring walks the folders and rests on the person's own.
         case desk
         /// The question waiting on the homework is lit as it comes to the front.
         case waiting
@@ -87,7 +87,7 @@ final class AnchorTour {
     /// Answers the store like a paired Mac, so nothing on screen waits to be sent.
     @ObservationIgnored private var listener: Task<Void, Never>?
     /// The task the person dropped during the tour.
-    @ObservationIgnored private var ownTask: UUID?
+    private(set) var ownTask: UUID?
     /// Desk news not yet sent; leaving early sends the rest at once.
     @ObservationIgnored private var deskNews: [TourMac.Beat] = []
     /// News while away, by the minute it lands on the dial.
@@ -101,8 +101,8 @@ final class AnchorTour {
     static let dialMinutes = 30
     static let linkBreaksAt = 1
     static let awayAt = 5
-    /// The cheer after the drop, before the phone is asked to turn.
-    static let cheerLength: TimeInterval = 2.9
+    /// The real drop on the home, before the phone is asked to turn.
+    static let dropLength: TimeInterval = 1.4
 
     init() {
         let folder = FileManager.default.temporaryDirectory
@@ -136,7 +136,7 @@ final class AnchorTour {
 
     // MARK: Stages
 
-    /// The pet has said hello; the light moves to the anchor button.
+    /// The cards have landed: the ring moves to the anchor button.
     func greeted() {
         if stage == .hello { stage = .anchorButton }
     }
@@ -150,14 +150,14 @@ final class AnchorTour {
         if stage == .setup { stage = .anchorButton }
     }
 
-    /// The third anchor is down. The tour cheers, then asks the phone to
-    /// turn; its agent starts a moment later, as if the person had opened
-    /// Claude Code on the Mac.
+    /// The third anchor is down. The drop plays out as it always does, then
+    /// the tour asks the phone to turn; its agent starts a moment later, as
+    /// if the person had opened Claude Code on the Mac.
     func dropped(_ taskID: UUID) {
         guard stage < .anchored else { return }
         stage = .anchored
         ownTask = taskID
-        later(Self.cheerLength) { [weak self] in
+        later(Self.dropLength) { [weak self] in
             if self?.stage == .anchored { self?.stage = .turn }
         }
         later(2.6) { [mac, model] in
@@ -166,7 +166,8 @@ final class AnchorTour {
     }
 
     /// The desk is up, on a turned phone or drawn sideways under the lock.
-    /// The light walks the folders, then a question arrives on its own.
+    /// The ring walks the folders and rests on the person's own, then a
+    /// question arrives on its own.
     func reachedDesk() {
         guard stage == .turn || stage == .anchored else { return }
         stage = .desk
@@ -177,10 +178,10 @@ final class AnchorTour {
         later(Self.deskLook) { [weak self] in self?.ask() }
     }
 
-    /// How long the folders are shown before the question arrives.
-    private static let deskLook: TimeInterval = 6.2
+    /// The ring's walk over the folders, and a moment on the person's own.
+    static let deskLook: TimeInterval = 6.4
 
-    /// The light settles on the homework first, then its question arrives under it.
+    /// The ring settles on the homework first, then its question arrives under it.
     private func ask() {
         guard stage == .desk else { return }
         stage = .waiting
@@ -254,7 +255,7 @@ final class AnchorTour {
             _ = await model.send(.updatePresence(.returning, at: back))
             self.stage = .returned
 
-            // The Mac takes a moment to write the recaps; the pet types meanwhile.
+            // The Mac takes a moment to write the recaps.
             guard await Self.pause(1.8) else { return }
             for (task, recap) in mac.recaps(returnedAt: back, ownTask: ownTask) {
                 _ = await model.send(.forSession(task, .recordReturnRecap(recap)))
@@ -282,6 +283,13 @@ final class AnchorTour {
             guard !Task.isCancelled else { return }
             self.stage = .finished
         })
+    }
+
+    /// Skip: straight to the person's own Anchor, from any step.
+    func skip() {
+        guard stage < .leaving else { return }
+        cancelWork()
+        stage = .finished
     }
 
     /// Stops the pretend Mac and removes its files.
@@ -494,18 +502,14 @@ struct TourMac {
 // MARK: Copy
 
 enum TourCopy {
-    static let hello = AnchorStrings.value("tour.hello", default: "Hi! These are today's tasks, and the AI moving them along.")
-    static let anchorButton = AnchorStrings.value("tour.anchor", default: "Tap the anchor to add a task of your own.")
-    static let readTitle = AnchorStrings.value("tour.read.title", default: "Tap the mic and read this out loud.")
+    static let hello = AnchorStrings.value("tour.hello", default: "These are today's tasks, and the AI moving them along.")
+    static let anchorButton = AnchorStrings.value("tour.anchor", default: "Tap the anchor to drop one of your own.")
+    static let readTitle = AnchorStrings.value("tour.read.title", default: "Tap the mic and read this line aloud.")
     static let readPlan = AnchorStrings.value("tour.read.plan", default: "Now read the plan.")
     static let readAgain = AnchorStrings.value("tour.read.again", default: "Didn't catch that. Once more?")
     static let readForMe = AnchorStrings.value("tour.read.skip", default: "Can't talk right now")
-    static let readingForYou = AnchorStrings.value("tour.read.forYou", default: "I'll read it for you.")
-    static let slide = AnchorStrings.value("tour.slide", default: "Slide to drop the anchor!")
-    static let anchored = AnchorStrings.value("tour.anchored", default: "Anchored!")
-    static func anchoredCount(_ count: Int) -> String {
-        String.localizedStringWithFormat(AnchorStrings.value("tour.anchored.count", default: "Task %lld, off you go!"), count)
-    }
+    static let readingForYou = AnchorStrings.value("tour.read.forYou", default: "Reading it for you.")
+    static let slide = AnchorStrings.value("tour.slide", default: "Slide the anchor to the end and let it sink.")
     static let turn = AnchorStrings.value("tour.turn", default: "Turn your phone sideways to see what the AI is up to.")
     static let lockQuestion = AnchorStrings.value("tour.lock", default: "Portrait Orientation Lock on?")
     static let openHere = AnchorStrings.value("tour.lock.open", default: "Open the desk here")
@@ -513,13 +517,14 @@ enum TourCopy {
     static let replay = AnchorStrings.value("tour.replay", default: "Replay the tour")
     static let folders = AnchorStrings.value("tour.folders", default: "Each folder is a task; its cards are the AI conversations on it.")
     static let waiting = AnchorStrings.value("tour.waiting", default: "An AI is waiting on you. Tap to see.")
-    static let reading = AnchorStrings.value("tour.reading", default: "It's asking what to do with missing data. Answer it at your Mac; close this when you're done.")
+    static let ownTask = AnchorStrings.value("tour.own", default: "The task you just dropped: an AI is already on it.")
+    static let reading = AnchorStrings.value("tour.reading", default: "Answer it at your Mac, then close this.")
     static let called = AnchorStrings.value("tour.called", default: "A friend asks you down for coffee. Pick up your phone and go.")
     static let dial = AnchorStrings.value("tour.dial", default: "Turn the dial to see what happens while you're away.")
     static let apart = AnchorStrings.value("tour.apart", default: "Away from your Mac for 5 minutes. Your agents keep working.")
     static let together = AnchorStrings.value("tour.together", default: "Back at your desk.")
-    static let mute = AnchorStrings.value("tour.mute", default: "Sound off")
-    static let unmute = AnchorStrings.value("tour.unmute", default: "Sound on")
+    static let connect = AnchorStrings.value("tour.connect", default: "Connect your Mac to start anchoring for real.")
+    static let skip = AnchorStrings.value("tour.skip", default: "Skip")
 
     // The task the person reads aloud.
     static let spokenTitle = AnchorStrings.value("tour.script.title", default: "Add dark mode to the app")

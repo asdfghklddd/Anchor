@@ -33,6 +33,11 @@ struct HomeTaskLibrary: View {
     /// Only one card stands open at a time.
     @State private var openID: UUID?
     @AnchorReducedMotion private var reduceMotion
+    @Environment(\.anchorTour) private var tour
+    /// The tour opens on its cards floating up one by one.
+    @State private var arrived = false
+
+    private var floatsIn: Bool { tour?.stage == .hello && !reduceMotion && !arrived }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -53,8 +58,11 @@ struct HomeTaskLibrary: View {
                         .transition(.opacity)
                 } else {
                     VStack(spacing: 12) {
-                        ForEach(HomeTaskLimit.shown(tasks)) { task in
+                        ForEach(Array(HomeTaskLimit.shown(tasks).enumerated()), id: \.element.id) { index, task in
                             HomeTaskCard(task: task)
+                                .opacity(floatsIn ? 0 : 1)
+                                .offset(y: floatsIn ? 28 : 0)
+                                .animation(.spring(duration: 0.6, bounce: 0.2).delay(0.35 + Double(index) * 0.22), value: arrived)
                                 .modifier(HomeSwipeToComplete(
                                     isOpen: Binding(get: { openID == task.id },
                                                     set: { openID = $0 ? task.id : (openID == task.id ? nil : openID) }),
@@ -81,6 +89,7 @@ struct HomeTaskLibrary: View {
         .shadow(color: HomeStyle.cardShadow.opacity(0.13), radius: 10, y: 3)
         .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: tasks.map(\.id))
         .animation(AnchorMotion.micro, value: tasks.isEmpty)
+        .task { arrived = true }
     }
 }
 

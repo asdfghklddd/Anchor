@@ -7,7 +7,8 @@ import UIKit
 /// a chirping babble that follows the shape of the words it says (Chinese
 /// tones, English syllables, a question's rise), and a few effects for the
 /// moments that matter. They follow the Ring/Silent switch and mix with
-/// whatever else is playing; a tap on the pet's line silences them.
+/// whatever else is playing. The tour plays only the effects for now; the
+/// voice waits here until the tour has a character to give it.
 @MainActor
 final class TourSound {
     static let shared = TourSound()
@@ -26,15 +27,13 @@ final class TourSound {
         case away
         /// The link joins again.
         case rejoin
-        /// One minute on the dial.
-        case tick
     }
 
     private let output = TourAudioOutput()
     /// Which line is the latest; a slower render of an older one is dropped.
     private var line = 0
 
-    /// Set from the speaker on the pet's line.
+    /// Set from the speaker on the pet's line, when the pet speaks.
     var isMuted: Bool { UserDefaults.standard.bool(forKey: Self.mutedKey) }
 
     private init() {}
@@ -65,7 +64,6 @@ final class TourSound {
     }
 
     func play(_ effect: Effect) {
-        guard !isMuted else { return }
         output.play(effect)
     }
 
@@ -126,7 +124,7 @@ private final class TourAudioOutput: @unchecked Sendable {
 
     private func schedule(_ buffer: AVAudioPCMBuffer, on node: AVAudioPlayerNode) {
         guard ready() else { return }
-        // A new sound cuts the one before: ticks never queue up behind a fast dial.
+        // A new sound cuts the one before: effects never queue up behind each other.
         node.scheduleBuffer(buffer, at: nil, options: .interrupts)
         if !node.isPlaying { node.play() }
     }
@@ -427,7 +425,6 @@ enum TourSynth {
         case .away: normalized(mix(bell([784], length: 0.6, decay: 0.25), bell([988], length: 0.8, decay: 0.3), at: 0.12), peak: 0.4)
         case .rejoin: normalized(mix(mix(bell([880], length: 0.3, decay: 0.12), bell([1_175], length: 0.35, decay: 0.12), at: 0.09),
                                      bell([1_760], length: 0.7, decay: 0.25), at: 0.18), peak: 0.5)
-        case .tick: normalized(mix(click(length: 0.006, loudness: 1), bell([2_400], length: 0.025, decay: 0.008)), peak: 0.22)
         }
     }
 

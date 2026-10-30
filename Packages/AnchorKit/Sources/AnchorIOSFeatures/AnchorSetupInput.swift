@@ -17,6 +17,8 @@
     let titleMoved: Bool
     /// The tour's line to read aloud into a field, lit as far as it was heard.
     var readAlong: (field: AnchorSetupField, line: String, lit: Int)?
+    /// The tour's line is read only from the microphone, by someone who can talk now.
+    var guidesVoice = false
     let beginSpeech: () -> Void
     let endSpeech: () -> Void
     @State private var showsSteps = false
@@ -187,6 +189,13 @@
           recording: recording, requesting: speech.isRequestingPermission,
           level: speech.audioLevel, holding: $holdingVoice,
           begin: beginSpeech, end: endSpeech)
+          // The tour's ring, while a line waits to be read.
+          .overlay {
+            if guidesVoice, !recording {
+              TourHalo(radius: 40).padding(-8).transition(.opacity)
+            }
+          }
+          .animation(AnchorMotion.micro, value: guidesVoice && !recording)
         if recording { AnchorSetupWaveform(level: speech.audioLevel) } else { Spacer(minLength: 0) }
       }
       .padding(.top, 4)

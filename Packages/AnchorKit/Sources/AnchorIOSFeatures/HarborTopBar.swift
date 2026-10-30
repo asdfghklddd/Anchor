@@ -17,6 +17,7 @@ struct HarborTopBar: View {
     @AppStorage("anchor.profile.name", store: ProfilePreferences.store) private var displayName = "Anchor"
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.anchorTour) private var tour
 
     var body: some View {
         Group {
@@ -41,7 +42,7 @@ struct HarborTopBar: View {
             brandBlock
             Spacer()
             auxiliaryButton
-            settingsButton
+            trailingButton
         }
         .frame(minHeight: 47)
     }
@@ -57,7 +58,7 @@ struct HarborTopBar: View {
             HStack(spacing: AnchorSpacing.small) {
                 Spacer(minLength: 0)
                 auxiliaryButton
-                settingsButton
+                trailingButton
             }
         }
     }
@@ -121,6 +122,16 @@ struct HarborTopBar: View {
             .tint(AnchorPalette.interaction)
             .frame(width: 44, height: 44)
             .accessibilityLabel(auxiliaryLabel)
+        }
+    }
+
+    /// In the tour, Settings waits; Skip takes its place.
+    @ViewBuilder
+    private var trailingButton: some View {
+        if let tour, tour.stage < .returned {
+            TourSkip(tour: tour)
+        } else {
+            settingsButton
         }
     }
 

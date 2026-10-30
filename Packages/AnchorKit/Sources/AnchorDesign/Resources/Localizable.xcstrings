@@ -1,91 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "connection.far" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Far"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "较远"
-          }
-        }
-      }
-    },
-    "connection.history" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "History"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "记录"
-          }
-        }
-      }
-    },
-    "connection.history.disconnected" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disconnected"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已断开"
-          }
-        }
-      }
-    },
-    "connection.reconnect" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reconnect"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重新连接"
-          }
-        }
-      }
-    },
-    "settings.sources.empty" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No sources yet"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "还没有来源"
-          }
-        }
-      }
-    },
     "%1$@ · %2$@ %3$@ awaiting judgment" : {
 
     },
@@ -96,9 +11,6 @@
 
     },
     "%1$lld automatic · %2$lld queued" : {
-
-    },
-    "%1$lld processes · %2$lld waiting" : {
 
     },
     "%1$lld processes moving, %2$lld waiting for you" : {
@@ -154,9 +66,6 @@
 
     },
     "%lld processes moving" : {
-
-    },
-    "%lld routes running" : {
 
     },
     "%lld waiting to start" : {
@@ -637,12 +546,6 @@
     "Anchor includes its Safari extension. Enable it once in Safari to share privacy-minimal web app state." : {
 
     },
-    "Anchor is gathering every process around the same goal." : {
-
-    },
-    "Anchor is holding the goal and watching for meaningful changes." : {
-
-    },
     "ANCHOR MAP · CURRENT GOAL" : {
 
     },
@@ -747,9 +650,6 @@
       }
     },
     "Away for %lld min" : {
-
-    },
-    "Away for %lld minutes" : {
 
     },
     "Away for less than a minute" : {
@@ -1022,6 +922,57 @@
         }
       }
     },
+    "connection.far" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Far"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "较远"
+          }
+        }
+      }
+    },
+    "connection.history" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录"
+          }
+        }
+      }
+    },
+    "connection.history.disconnected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已断开"
+          }
+        }
+      }
+    },
     "connection.mac" : {
       "localizations" : {
         "en" : {
@@ -1082,6 +1033,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "不在附近"
+          }
+        }
+      }
+    },
+    "connection.reconnect" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnect"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新连接"
           }
         }
       }
@@ -1197,9 +1165,6 @@
 
     },
     "Current" : {
-
-    },
-    "CURRENT ANCHOR · CURRENT GOAL" : {
 
     },
     "CURRENT GOAL" : {
@@ -3210,9 +3175,6 @@
         }
       }
     },
-    "I’m still at my desk" : {
-
-    },
     "iCloud" : {
 
     },
@@ -3962,6 +3924,125 @@
         }
       }
     },
+    "mac.notch.conversation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conversation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "对话"
+          }
+        }
+      }
+    },
+    "mac.notch.file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File conversations"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "整理对话"
+          }
+        }
+      }
+    },
+    "mac.notch.peeks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show in the notch when an agent finishes or needs you"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代理完成或等你时，在刘海上提示"
+          }
+        }
+      }
+    },
+    "mac.notch.shortcut" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the notch"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开刘海"
+          }
+        }
+      }
+    },
+    "mac.notch.sources.privacy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor reads only the conversation logs in these two folders. Your iPhone gets titles, latest requests and status, never the whole log."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anchor 只读取这两个文件夹里的对话记录。发到 iPhone 的是标题、最新请求和状态，不是完整日志。"
+          }
+        }
+      }
+    },
+    "mac.notch.switch.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make this the task you're on"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设为当前任务"
+          }
+        }
+      }
+    },
+    "mac.notch.task-state" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@：%2$@"
+          }
+        }
+      }
+    },
     "mac.open.current" : {
       "localizations" : {
         "en" : {
@@ -4480,125 +4561,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ 文件夹已授权 ✓"
-          }
-        }
-      }
-    },
-    "mac.notch.conversation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Conversation"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "对话"
-          }
-        }
-      }
-    },
-    "mac.notch.file" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "File conversations"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "整理对话"
-          }
-        }
-      }
-    },
-    "mac.notch.peeks" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show in the notch when an agent finishes or needs you"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "代理完成或等你时，在刘海上提示"
-          }
-        }
-      }
-    },
-    "mac.notch.shortcut" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open the notch"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开刘海"
-          }
-        }
-      }
-    },
-    "mac.notch.sources.privacy" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anchor reads only the conversation logs in these two folders. Your iPhone gets titles, latest requests and status, never the whole log."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anchor 只读取这两个文件夹里的对话记录。发到 iPhone 的是标题、最新请求和状态，不是完整日志。"
-          }
-        }
-      }
-    },
-    "mac.notch.switch.hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Make this the task you're on"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "设为当前任务"
-          }
-        }
-      }
-    },
-    "mac.notch.task-state" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@: %2$@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@：%2$@"
           }
         }
       }
@@ -8334,9 +8296,6 @@
     "Reminder after %lld min away" : {
 
     },
-    "REMOTE PROCESSES" : {
-
-    },
     "Remote syncing" : {
 
     },
@@ -9145,12 +9104,6 @@
     "Search history" : {
 
     },
-    "Secured. You can step away." : {
-
-    },
-    "Securing your context…" : {
-
-    },
     "Select the Codex sessions folder and Claude Code projects folder together, when both are installed. Anchor remembers access and discovers new conversations automatically." : {
 
     },
@@ -9668,6 +9621,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "iCloud 同步"
+          }
+        }
+      }
+    },
+    "settings.sources.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No sources yet"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有来源"
           }
         }
       }
@@ -13766,47 +13736,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap the anchor to add a task of your own."
+            "value" : "Tap the anchor to drop one of your own."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "点锚，加一个你自己的任务。"
-          }
-        }
-      }
-    },
-    "tour.anchored" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anchored!"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "落锚！"
-          }
-        }
-      }
-    },
-    "tour.anchored.count" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Task %lld, off you go!"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "第 %lld 个任务，出发！"
+            "value" : "轻点锚，投下你自己的。"
           }
         }
       }
@@ -13913,6 +13849,23 @@
         }
       }
     },
+    "tour.connect" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect your Mac to start anchoring for real."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连上你的 Mac，开始真正地投锚吧。"
+          }
+        }
+      }
+    },
     "tour.deploy" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14010,7 +13963,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "每个文件夹是一项任务，卡片是在做它的 AI 对话。"
+            "value" : "每个文件夹是一项任务，里面的卡片是在做它的 AI 对话。"
           }
         }
       }
@@ -14021,13 +13974,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hi! These are today's tasks, and the AI moving them along."
+            "value" : "These are today's tasks, and the AI moving them along."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "嗨！这些是你今天的任务，AI 正在帮你推进。"
+            "value" : "这是你今天投锚的任务，AI 正在推进。"
           }
         }
       }
@@ -14219,19 +14172,19 @@
         }
       }
     },
-    "tour.mute" : {
+    "tour.own" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sound off"
+            "value" : "The task you just dropped: an AI is already on it."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "关闭声音"
+            "value" : "你刚投下的任务，AI 已经开工了。"
           }
         }
       }
@@ -14395,13 +14348,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "I'll read it for you."
+            "value" : "Reading it for you."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "我来帮你读。"
+            "value" : "替你读一遍。"
           }
         }
       }
@@ -14446,13 +14399,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap the mic and read this out loud."
+            "value" : "Tap the mic and read this line aloud."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "点麦克风，把这句读出来。"
+            "value" : "轻点麦克风，把这句读出来。"
           }
         }
       }
@@ -14463,13 +14416,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "It's asking what to do with missing data. Answer it at your Mac; close this when you're done."
+            "value" : "Answer it at your Mac, then close this."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "它在问缺失的数据怎么处理。回电脑上答它就行，看完关掉吧。"
+            "value" : "去 Mac 上回答它，看完关掉。"
           }
         }
       }
@@ -14644,19 +14597,36 @@
         }
       }
     },
+    "tour.skip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跳过"
+          }
+        }
+      }
+    },
     "tour.slide" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Slide to drop the anchor!"
+            "value" : "Slide the anchor to the end and let it sink."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "滑动，把锚放下去！"
+            "value" : "把锚滑到底，让它沉下去。"
           }
         }
       }
@@ -14759,23 +14729,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "把手机横过来，看看 AI 们在忙什么。"
-          }
-        }
-      }
-    },
-    "tour.unmute" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sound on"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开声音"
           }
         }
       }
@@ -14922,9 +14875,6 @@
 
     },
     "WORK STYLE" : {
-
-    },
-    "Work that keeps syncing" : {
 
     },
     "work.completed" : {

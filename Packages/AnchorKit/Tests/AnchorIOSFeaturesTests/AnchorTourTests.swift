@@ -32,7 +32,7 @@ struct AnchorTourTests {
         #expect(projection.hostedSessions.contains { $0.id == tour.waitingTaskID })
     }
 
-    @Test func everyStepMovesOnByWhatThePersonDoes() {
+    @Test func everyStepMovesOnByWhatThePersonDoesOrWhatHappens() async throws {
         let tour = AnchorTour()
         defer { tour.end() }
         #expect(tour.stage == .hello)
@@ -44,13 +44,39 @@ struct AnchorTourTests {
         tour.setupOpened()
         tour.leave()
         #expect(tour.stage == .setup)
-        tour.dropped(UUID())
+        let own = UUID()
+        tour.dropped(own)
         #expect(tour.stage == .anchored)
+        // The desk's ring rests on this task's folder.
+        #expect(tour.ownTask == own)
         tour.reachedDesk()
         #expect(tour.stage == .desk)
         // Only the question's own task moves the desk on, once it is lit.
         tour.opened(tour.waitingTaskID)
         #expect(tour.stage == .desk)
+        // The question arrives on its own once the ring has walked the folders.
+        try await waitFor(.waiting, in: tour, seconds: AnchorTour.deskLook + 2)
+    }
+
+    @Test func skipLeavesFromAnyStepButNotOnceLeaving() async throws {
+        let tour = AnchorTour()
+        defer { tour.end() }
+        tour.greeted()
+        tour.skip()
+        #expect(tour.stage == .finished)
+        // The return page's Back to Home is already leaving; Skip changes nothing then.
+        let late = AnchorTour()
+        defer { late.end() }
+        late.greeted()
+        late.setupOpened()
+        late.dropped(UUID())
+        late.reachedDesk()
+        late.leftDesk()
+        late.turnedDial(to: AnchorTour.dialMinutes)
+        try await waitFor(.returned, in: late, seconds: 4)
+        late.leave()
+        late.skip()
+        #expect(late.stage == .leaving)
     }
 
     @Test func theRedCardOpensThenAFriendCalls() async throws {
@@ -60,7 +86,7 @@ struct AnchorTourTests {
         tour.setupOpened()
         tour.dropped(UUID())
         tour.reachedDesk()
-        try await waitFor(.waiting, in: tour, seconds: 8)
+        try await waitFor(.waiting, in: tour, seconds: AnchorTour.deskLook + 2)
         tour.opened(UUID())
         #expect(tour.stage == .waiting)
         tour.opened(tour.waitingTaskID)
@@ -139,6 +165,7 @@ struct AnchorTourTests {
         #expect(!TourReadAlong(heard: "hello there", line: "Add dark mode to the app").isEnough)
     }
 
+    /// The voice is off in the tour for now; the engine stays ready for a character.
     @Test func thePetSpeaksInTheShapeOfTheWords() {
         let chinese = TourBabble.syllables(of: "妈麻马骂")
         #expect(chinese.map(\.contour) == [.high, .rise, .dip, .drop])

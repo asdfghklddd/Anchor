@@ -76,6 +76,7 @@ struct DeskTaskLibrary: View {
                         ForEach(Array(tasks.enumerated()), id: \.element.id) { index, task in
                             folder(task)
                                 .tourSpot(.folder(index))
+                                .tourSpot(.taskFolder(task.id))
                                 .opacity(settled ? 1 : 0.4)
                                 .offset(y: settled ? 0 : 8)
                                 .animation(reduceMotion ? .easeOut(duration: 0.16)

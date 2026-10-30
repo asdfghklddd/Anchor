@@ -140,6 +140,8 @@ struct AnchorWorkspaceView: View {
     @Namespace private var processTransition
     /// The tour's desk drawn sideways, for a screen held by orientation lock.
     @State private var showsSidewaysDesk = false
+    /// The connection card opened as the tour ended.
+    @State private var welcomesConnection = false
 
     init(
         model: AnchorSessionModel,
@@ -330,6 +332,7 @@ struct AnchorWorkspaceView: View {
                 holdInvitationBehindCover()
                 return
             }
+            welcomesConnection = false
             // The success ending plays first; a waiting invitation follows it.
             let dropped = previousSheet == .setup && setupDraft.wasCreated
             if dropped { playDrop(of: setupDraft.hostedTaskID, titled: setupDraft.goalTitle) }
@@ -388,6 +391,7 @@ struct AnchorWorkspaceView: View {
             await reminder.refresh()
             if opensConnections {
                 try? await Task.sleep(for: .seconds(0.6))
+                welcomesConnection = true
                 sheet = .connections
             }
         }
@@ -601,7 +605,16 @@ struct AnchorWorkspaceView: View {
         switch item {
         case .connections:
             ConnectionSettingsView(projection: model.projection, controller: linkController)
-                .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.height(verticalSizeClass == .compact ? 260 : 400)])
+                // Straight after the tour, one line says what this card is for.
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if welcomesConnection {
+                        TourCaption(text: TourCopy.connect)
+                            .padding(.horizontal, 26)
+                            .padding(.top, 26)
+                    }
+                }
+                .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large]
+                                     : [.height(verticalSizeClass == .compact ? (welcomesConnection ? 340 : 260) : (welcomesConnection ? 490 : 400))])
                 .presentationDragIndicator(.hidden)
                 .presentationCompactAdaptation(.none)
         case .hostedTasks:
@@ -627,10 +640,13 @@ struct AnchorWorkspaceView: View {
             // Under the task, never over it: its question stays readable.
             .safeAreaInset(edge: .bottom) {
                 if tour?.stage == .reading {
-                    TourPetLine(text: TourCopy.reading, act: .think)
+                    TourCaption(text: TourCopy.reading)
                         .frame(maxWidth: 460)
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 8)
+                        .padding(.horizontal, 26)
+                        .padding(.top, 48)
+                        .padding(.bottom, 10)
+                        .frame(maxWidth: .infinity)
+                        .background { TourScrim().ignoresSafeArea() }
                 }
             }
             .presentationDetents([.large])
@@ -638,6 +654,8 @@ struct AnchorWorkspaceView: View {
             NavigationStack {
                 AnchorSetupView(model: model, draft: setupDraft)
             }
+            // The anchor button opens into the page.
+            .navigationTransition(.zoom(sourceID: AnchorSheet.setup, in: processTransition))
             .presentationDetents([.large])
         case .note:
             AnchorNoteView(model: model)

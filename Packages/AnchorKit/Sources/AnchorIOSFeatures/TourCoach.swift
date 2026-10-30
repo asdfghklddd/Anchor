@@ -10,6 +10,8 @@ enum TourSpot: Hashable {
     case tasks, anchorButton
     /// A folder on the desk, by its place from the left.
     case folder(Int)
+    /// A task's folder on the desk.
+    case taskFolder(UUID)
     /// The card in front of a task's folder.
     case frontCard(UUID)
 }
@@ -37,140 +39,172 @@ extension View {
     }
 }
 
-// MARK: The pet's line
+// MARK: Hints
 
-/// The tour's voice: the person's pet (the crab unless they chose another)
-/// beside one short line, saying it aloud in its own chirping voice and
-/// hopping while it talks. The speaker in the bubble turns the sound off.
-struct TourPetLine: View {
+/// The tour's line: large, plain and left-aligned, in the same place on
+/// each screen, saying what to do and what it makes happen. When the screen
+/// moves on by itself, the new line arrives under the one before, which
+/// shrinks and stays, so nothing read halfway is lost.
+struct TourCaption: View {
     let text: String
-    var act: DeskPetAct = .idle
-    var pixel: CGFloat = 2.6
-    /// The pet sits on top of the bubble instead of beside it, where room is narrow.
-    var stacked = false
-
-    @AppStorage(DeskPetKind.defaultsKey, store: ProfilePreferences.store) private var petKind = DeskPetKind.crab
-    @AppStorage(TourSound.mutedKey) private var muted = false
-    @State private var talkingUntil = Date.distantPast
-
-    private var kind: DeskPetKind { petKind == .off ? .crab : petKind }
-
-    var body: some View {
-        Group {
-            if stacked {
-                VStack(alignment: .leading, spacing: 4) {
-                    TourPet(kind: kind, act: act, talkingUntil: talkingUntil, pixel: pixel)
-                        .padding(.leading, 6)
-                    bubble
-                }
-            } else {
-                HStack(alignment: .bottom, spacing: 2) {
-                    TourPet(kind: kind, act: act, talkingUntil: talkingUntil, pixel: pixel)
-                    bubble
-                }
-            }
-        }
-        .task(id: text) {
-            // The line lands with its screen; the voice waits for it to settle.
-            try? await Task.sleep(for: .seconds(0.3))
-            guard !Task.isCancelled else { return }
-            talkingUntil = .now + TourSound.shared.say(text, as: kind)
-        }
-    }
-
-    private var bubble: some View {
-        HStack(alignment: .top, spacing: 4) {
-            Text(text)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(AnchorIOSStyle.heading)
-                .lineSpacing(2)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentTransition(.opacity)
-            Button {
-                muted.toggle()
-                if muted { TourSound.shared.hush() }
-            } label: {
-                Image(systemName: muted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(AnchorIOSStyle.secondaryText.opacity(0.7))
-                    .frame(width: 30, height: 30)
-                    .contentShape(.rect)
-            }
-            .buttonStyle(.plain)
-            .padding(.top, -5)
-            .accessibilityLabel(muted ? TourCopy.unmute : TourCopy.mute)
-        }
-        .padding(.leading, 15)
-        .padding(.trailing, 6)
-        .padding(.vertical, 12)
-        .background(TourBubble(tailOnTop: stacked).fill(AnchorIOSStyle.surface))
-        .shadow(color: AnchorPalette.deepSea.opacity(0.2), radius: 16, y: 7)
-        .padding(.bottom, stacked ? 0 : 6)
-        .animation(AnchorMotion.micro, value: text)
-    }
-}
-
-/// A rounded bubble with a small rounded tail toward the pet: at its lower
-/// left, or at its top left when the pet sits on top.
-private struct TourBubble: Shape {
-    var tailOnTop = false
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path(roundedRect: rect, cornerRadius: 18, style: .continuous)
-        if tailOnTop {
-            path.move(to: CGPoint(x: rect.minX + 22, y: rect.minY + 2))
-            path.addQuadCurve(to: CGPoint(x: rect.minX + 30, y: rect.minY - 7),
-                              control: CGPoint(x: rect.minX + 27, y: rect.minY - 1))
-            path.addQuadCurve(to: CGPoint(x: rect.minX + 42, y: rect.minY + 2),
-                              control: CGPoint(x: rect.minX + 33, y: rect.minY + 1))
-        } else {
-            path.move(to: CGPoint(x: rect.minX + 2, y: rect.maxY - 22))
-            path.addQuadCurve(to: CGPoint(x: rect.minX - 6, y: rect.maxY - 6),
-                              control: CGPoint(x: rect.minX + 1, y: rect.maxY - 10))
-            path.addQuadCurve(to: CGPoint(x: rect.minX + 12, y: rect.maxY - 2),
-                              control: CGPoint(x: rect.minX + 3, y: rect.maxY - 3))
-        }
-        path.closeSubpath()
-        return path
-    }
-}
-
-/// The pet drawn alone, eight steps a second: blinking now and then, and
-/// hopping a pixel with each beat while it talks.
-struct TourPet: View {
-    let kind: DeskPetKind
-    var act: DeskPetAct = .idle
-    var talkingUntil = Date.distantPast
-    var pixel: CGFloat = 2.6
+    /// The line said just before on this screen.
+    var earlier: String? = nil
 
     @AnchorReducedMotion private var reduceMotion
 
     var body: some View {
-        let look = DeskPetLook.of(kind)
-        TimelineView(.periodic(from: .now, by: 0.125)) { context in
-            let tick = reduceMotion ? 0 : Int(context.date.timeIntervalSinceReferenceDate * 8)
-            let talking = !reduceMotion && context.date < talkingUntil
-            Canvas { canvas, size in
-                let columns = Int(size.width / pixel)
-                let rows = Int(size.height / pixel)
-                DeskPetRenderer(look: look, kind: kind, context: canvas,
-                                left: max(0, (columns - look.width) / 2),
-                                ground: rows - 1 - (talking && tick % 2 == 0 ? 1 : 0), pixel: pixel)
-                    .draw(DeskPetFrame(act: act, progress: tick % 16, length: 16, tick: tick,
-                                       blink: !talking && tick % 29 == 0, still: reduceMotion))
+        VStack(alignment: .leading, spacing: 8) {
+            if let earlier {
+                Text(earlier)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(AnchorIOSStyle.secondaryText)
+                    .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .id(earlier)
+                    .transition(.opacity)
+            }
+            Text(text)
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(AnchorIOSStyle.heading)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .id(text)
+                .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 10)))
+        }
+        .animation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.5, bounce: 0.1), value: text)
+    }
+}
+
+/// A light wash under a caption, so the line reads over the real screen
+/// without darkening it: a short fade, then solid behind the words, and a
+/// fade out at the bottom when something the person needs sits just below.
+/// Keep the caption at least `fade` below the wash's top.
+struct TourScrim: View {
+    var fadesOut = false
+
+    static let fade: CGFloat = 40
+
+    var body: some View {
+        let wash = AnchorIOSStyle.canvasTop
+        VStack(spacing: 0) {
+            LinearGradient(colors: [wash.opacity(0), wash], startPoint: .top, endPoint: .bottom)
+                .frame(height: Self.fade)
+            wash
+            if fadesOut {
+                LinearGradient(colors: [wash, wash.opacity(0)], startPoint: .top, endPoint: .bottom)
+                    .frame(height: 18)
             }
         }
-        .frame(width: CGFloat(look.width + 2) * pixel, height: CGFloat(look.height + 5) * pixel)
+        .allowsHitTesting(false)
+    }
+}
+
+/// The hint on something to tap: a ring around it, and rings spreading from
+/// it like water around a dropped anchor. A tap anywhere else sends the ring
+/// out once more at once.
+struct TourHalo: View {
+    let radius: CGFloat
+    var nudges = 0
+
+    @AnchorReducedMotion private var reduceMotion
+
+    var body: some View {
+        ZStack {
+            if !reduceMotion {
+                ring(delay: 0)
+                ring(delay: 1.2)
+            }
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .stroke(AnchorIOSStyle.action, lineWidth: 2)
+                .shadow(color: AnchorIOSStyle.action.opacity(0.35), radius: 8)
+        }
+        .keyframeAnimator(initialValue: 1.0, trigger: nudges) { content, scale in
+            content.scaleEffect(scale)
+        } keyframes: { _ in
+            SpringKeyframe(1.06, duration: 0.18)
+            SpringKeyframe(1.0, duration: 0.4)
+        }
+        .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    private func ring(delay: Double) -> some View {
+        TimelineView(.animation) { context in
+            let phase = (context.date.timeIntervalSinceReferenceDate + delay).truncatingRemainder(dividingBy: 2.4) / 2.4
+            RoundedRectangle(cornerRadius: radius + 16 * phase, style: .continuous)
+                .stroke(AnchorIOSStyle.action.opacity(0.5 * (1 - phase)), lineWidth: 2)
+                .padding(-16 * phase)
+        }
+    }
+}
+
+/// The hint on something to drag: a hollow ring on the part to hold, which
+/// rests, glides the way it goes, fades, and starts again.
+struct TourGrip: View {
+    var size: CGFloat = 46
+    /// Where the ring is, from its rest, as it glides from 0 to 1.
+    let glide: (Double) -> CGSize
+
+    @AnchorReducedMotion private var reduceMotion
+
+    var body: some View {
+        TimelineView(.animation(paused: reduceMotion)) { context in
+            let t = reduceMotion ? 0.3 : context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 2.8)
+            let p = min(1, max(0, (t - 0.7) / 1.3))
+            let eased = p * p * (3 - 2 * p)
+            let fade = t < 0.3 ? t / 0.3 : max(0, 1 - max(0, t - 2.2) / 0.4)
+            Circle()
+                .fill(Color.white.opacity(0.35))
+                .overlay { Circle().strokeBorder(AnchorIOSStyle.action, lineWidth: 2.5) }
+                .frame(width: size, height: size)
+                .shadow(color: AnchorIOSStyle.action.opacity(0.3), radius: 6)
+                .offset(glide(eased))
+                .opacity(fade)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Keeps taps for the part the tour is on, or for nothing; a tap anywhere
+/// else only nudges the hint.
+struct TourBlocker: View {
+    var hole: CGRect?
+    var radius: CGFloat = 0
+    let onMiss: () -> Void
+
+    var body: some View {
+        let veil = SpotlightVeil(hole: hole ?? .zero, radius: radius)
+        veil.fill(Color.clear)
+            .contentShape(veil, eoFill: true)
+            .onTapGesture(perform: onMiss)
+            .accessibilityHidden(true)
+    }
+}
+
+/// Leaves the tour for the person's own Anchor, from wherever they are.
+struct TourSkip: View {
+    let tour: AnchorTour
+
+    var body: some View {
+        Button(TourCopy.skip) { tour.skip() }
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(AnchorIOSStyle.secondaryText.opacity(0.8))
+            .frame(minWidth: 44, minHeight: 44)
+            .contentShape(.rect)
+            .accessibilityIdentifier("tour.skip")
     }
 }
 
 // MARK: The home
 
-/// The tour's layer over the real portrait home: a dim with one part left
-/// bright and the pet's line beside it, the cheer when the anchor is down,
-/// then the turn prompt. The home under it stays real and visible throughout.
+/// The tour's layer over the real portrait home, which stays bright and
+/// real throughout. The sample cards float up under a ring and the first
+/// line; once they land, the ring moves to the anchor button by itself and
+/// the line asking for a tap arrives. The button answers all along. After
+/// the drop, the turn prompt.
 struct TourCoach: View {
     let tour: AnchorTour
     let spots: [TourSpot: CGRect]
@@ -184,16 +218,14 @@ struct TourCoach: View {
     @AnchorReducedMotion private var reduceMotion
     @State private var nudges = 0
 
+    /// The cards float in, and the first line is read, before the ring moves on.
+    static let helloLength: TimeInterval = 4.2
+
     var body: some View {
-        ZStack {
+        ZStack(alignment: .topLeading) {
             switch tour.stage {
             case .hello, .anchorButton:
-                if let hole {
-                    spotlight(hole: hole, in: size)
-                        .transition(.opacity)
-                }
-            case .anchored:
-                TourCheer(count: tour.model.projection.hostedSessions.count)
+                home
                     .transition(.opacity)
             case .turn:
                 if inviting {
@@ -205,83 +237,62 @@ struct TourCoach: View {
             }
         }
         .frame(width: size.width, height: size.height)
-        .animation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.5, bounce: 0.08), value: tour.stage)
+        .animation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.55, bounce: 0.08), value: tour.stage)
         .animation(AnchorMotion.panel, value: inviting)
         .task(id: tour.stage) {
-            // Hello is said once; then the light moves on to the anchor.
             guard tour.stage == .hello else { return }
-            let length = TourBabble.length(of: TourBabble.syllables(of: TourCopy.hello))
-            try? await Task.sleep(for: .seconds(max(2.6, length + 1.1)))
+            try? await Task.sleep(for: .seconds(Self.helloLength))
             guard !Task.isCancelled else { return }
             tour.greeted()
         }
     }
 
-    private var spot: TourSpot? {
-        switch tour.stage {
-        case .hello: .tasks
-        case .anchorButton: .anchorButton
-        default: nil
-        }
+    private var isButton: Bool { tour.stage == .anchorButton }
+
+    private var button: (rect: CGRect, radius: CGFloat)? {
+        spots[.anchorButton].map { ($0.insetBy(dx: -8, dy: -8), ($0.width + 16) / 2) }
     }
 
-    private var hole: Hole? {
-        guard let spot, let frame = spots[spot] else { return nil }
-        return spot == .anchorButton
-            ? Hole(rect: frame.insetBy(dx: -9, dy: -9), radius: (frame.width + 18) / 2)
-            : Hole(rect: frame.insetBy(dx: -6, dy: -6), radius: 22)
+    private var ring: (rect: CGRect, radius: CGFloat)? {
+        if isButton { return button }
+        return spots[.tasks].map { ($0.insetBy(dx: -6, dy: -6), 26) }
     }
 
-    private struct Hole: Equatable {
-        let rect: CGRect
-        let radius: CGFloat
-    }
-
-    // MARK: Spotlight
-
-    private func spotlight(hole: Hole, in size: CGSize) -> some View {
-        let veil = SpotlightVeil(hole: hole.rect, radius: hole.radius)
-        let isButton = tour.stage == .anchorButton
-        return ZStack(alignment: .topLeading) {
-            veil
-                .fill(Self.dim, style: FillStyle(eoFill: true))
-                // Hello takes a tap anywhere as "go on"; at the button, a tap
-                // beside it sends a ripple toward it.
-                .contentShape(isButton ? AnyShape(veil) : AnyShape(Rectangle()), eoFill: isButton)
-                .onTapGesture { if isButton { nudges += 1 } else { tour.greeted() } }
-            RoundedRectangle(cornerRadius: hole.radius, style: .continuous)
-                .stroke(Color.white.opacity(0.85), lineWidth: 1.5)
-                .shadow(color: AnchorIOSStyle.action.opacity(0.45), radius: 10)
-                .frame(width: hole.rect.width, height: hole.rect.height)
-                .offset(x: hole.rect.minX, y: hole.rect.minY)
-                .allowsHitTesting(false)
-            if isButton {
-                TourRipple(trigger: nudges)
-                    .frame(width: hole.rect.width, height: hole.rect.height)
-                    .offset(x: hole.rect.minX, y: hole.rect.minY)
-                    .allowsHitTesting(false)
+    /// Only the anchor button answers; a tap anywhere else nudges the ring.
+    private var home: some View {
+        ZStack(alignment: .topLeading) {
+            TourBlocker(hole: button?.rect, radius: button?.radius ?? 0) { nudges += 1 }
+            if let ring {
+                TourHalo(radius: ring.radius, nudges: nudges)
+                    .frame(width: ring.rect.width, height: ring.rect.height)
+                    .offset(x: ring.rect.minX, y: ring.rect.minY)
             }
-            line(below: hole.rect.midY < size.height * 0.5, hole: hole.rect, in: size)
+            caption
         }
     }
 
-    private func line(below: Bool, hole: CGRect, in size: CGSize) -> some View {
-        TourPetLine(text: tour.stage == .hello ? TourCopy.hello : TourCopy.anchorButton,
-                    act: tour.stage == .hello ? .wave : .idle)
-            .frame(maxWidth: min(340, size.width - 36), alignment: .leading)
-            .id(tour.stage)
-            .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: below ? -8 : 8)))
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: below ? .top : .bottom)
-            .padding(below ? .top : .bottom, below ? hole.maxY + 10 : size.height - hole.minY + 10)
+    /// Just above the anchor button, on a wash that fades out before it.
+    private var caption: some View {
+        let below = spots[.anchorButton].map { size.height - $0.minY + 14 } ?? 140
+        return VStack(spacing: 0) {
+            Spacer(minLength: 0)
+            TourCaption(text: isButton ? TourCopy.anchorButton : TourCopy.hello,
+                        earlier: isButton ? TourCopy.hello : nil)
+                .frame(maxWidth: 440)
+                .padding(.horizontal, 26)
+                .padding(.top, TourScrim.fade + 8)
+                .padding(.bottom, 16)
+                .frame(maxWidth: .infinity)
+                .background { TourScrim(fadesOut: true) }
+                .padding(.bottom, below)
+        }
+        .frame(width: size.width, height: size.height)
     }
-
-    /// The home darkens a little, never so much that it stops reading as itself.
-    static let dim = AnchorPalette.deepSea.opacity(0.36)
 }
 
 /// The whole screen with a rounded hole, filled even-odd. The hole moves
-/// smoothly from one part of the home to the next.
-private struct SpotlightVeil: Shape {
+/// smoothly from one part of the screen to the next.
+struct SpotlightVeil: Shape {
     var hole: CGRect
     var radius: CGFloat
 
@@ -296,183 +307,18 @@ private struct SpotlightVeil: Shape {
 
     func path(in rect: CGRect) -> Path {
         var path = Path(rect.insetBy(dx: -200, dy: -200))
+        guard !hole.isEmpty else { return path }
         path.addRoundedRect(in: hole, cornerSize: CGSize(width: radius, height: radius), style: .continuous)
         return path
     }
 }
 
-/// Rings spreading from the anchor button, like water around a dropped
-/// anchor; a tap outside the button sends one more right away.
-private struct TourRipple: View {
-    let trigger: Int
-    @AnchorReducedMotion private var reduceMotion
-
-    var body: some View {
-        if reduceMotion {
-            Circle().stroke(Color.white.opacity(0.6), lineWidth: 2)
-        } else {
-            ZStack {
-                ring(delay: 0)
-                ring(delay: 1.2)
-            }
-            .keyframeAnimator(initialValue: 1.0, trigger: trigger) { content, scale in
-                content.scaleEffect(scale)
-            } keyframes: { _ in
-                SpringKeyframe(1.12, duration: 0.18)
-                SpringKeyframe(1.0, duration: 0.4)
-            }
-        }
-    }
-
-    private func ring(delay: Double) -> some View {
-        TimelineView(.animation) { context in
-            let phase = (context.date.timeIntervalSinceReferenceDate + delay).truncatingRemainder(dividingBy: 2.4) / 2.4
-            Circle()
-                .stroke(Color.white.opacity(0.75 * (1 - phase)), lineWidth: 2)
-                .scaleEffect(1 + 0.55 * phase)
-        }
-    }
-}
-
-// MARK: The cheer
-
-/// The anchor is down, and the tour makes a moment of it, as a game does at
-/// the end of a lesson: a big anchor plunges into the middle of the screen,
-/// the water splashes up and rings out to the edges, the screen jolts, the
-/// word lands, and the pet cheers how many tasks are anchored now.
-struct TourCheer: View {
-    let count: Int
-
-    @AnchorReducedMotion private var reduceMotion
-    @State private var start = Date.now
-    @State private var hits = 0
-    @State private var cheers = 0
-
-    /// The anchor meets the water.
-    private static let impact: TimeInterval = 0.42
-    private static let drops: [(angle: Double, speed: Double, size: CGFloat)] = (0..<18).map { index in
-        let spread = Double(index) / 17
-        let wobble = Double((index * 7) % 5) / 5
-        return (angle: -.pi * (0.1 + 0.8 * spread), speed: 330 + 300 * wobble, size: 6 + CGFloat((index * 3) % 5))
-    }
-
-    var body: some View {
-        GeometryReader { geometry in
-            let size = geometry.size
-            let water = CGPoint(x: size.width / 2, y: size.height * 0.44)
-            TimelineView(.animation(paused: reduceMotion)) { context in
-                let t = reduceMotion ? 1.6 : context.date.timeIntervalSince(start)
-                ZStack {
-                    AnchorIOSStyle.canvasTop.opacity(0.97 * min(1, t / 0.2))
-                    rings(at: t, around: water, in: size)
-                    splash(at: t, from: water)
-                    anchor(at: t, water: water, in: size)
-                    words(at: t)
-                        .position(x: size.width / 2, y: water.y + 150)
-                }
-                .offset(x: shake(at: t))
-            }
-        }
-        .ignoresSafeArea()
-        .contentShape(.rect)
-        .sensoryFeedback(.impact(weight: .heavy, intensity: 1), trigger: hits)
-        .sensoryFeedback(.success, trigger: cheers)
-        .task {
-            start = .now
-            try? await Task.sleep(for: .seconds(reduceMotion ? 0 : Self.impact))
-            guard !Task.isCancelled else { return }
-            TourSound.shared.play(.anchored)
-            hits += 1
-            try? await Task.sleep(for: .seconds(0.45))
-            cheers += 1
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(TourCopy.anchored) \(TourCopy.anchoredCount(count))")
-    }
-
-    private func since(_ t: TimeInterval) -> TimeInterval { max(0, t - Self.impact) }
-
-    /// Falling under gravity, squashing on the water, then bobbing as it settles.
-    private func anchor(at t: TimeInterval, water: CGPoint, in size: CGSize) -> some View {
-        let fall = min(1, t / Self.impact)
-        let after = since(t)
-        let y = t < Self.impact
-            ? -size.height * 0.15 + (water.y - 40 + size.height * 0.15) * fall * fall
-            : water.y - 40 + 14 * sin(after * 9) * exp(-after * 4)
-        let squash = t < Self.impact ? 0 : 0.22 * exp(-after * 9) * cos(after * 26)
-        return HarborAnchorGlyph(color: AnchorIOSStyle.action, lineWidth: 9)
-            .frame(width: 128, height: 128)
-            .scaleEffect(x: 1 + squash, y: 1 - squash, anchor: .bottom)
-            .shadow(color: AnchorIOSStyle.action.opacity(0.35), radius: 18, y: 8)
-            .position(x: water.x, y: y)
-    }
-
-    /// Rings across the water, flattened as seen from above, reaching the edges.
-    private func rings(at t: TimeInterval, around water: CGPoint, in size: CGSize) -> some View {
-        let after = since(t)
-        return ZStack {
-            ForEach(0..<3, id: \.self) { index in
-                let p = min(1, max(0, (after - Double(index) * 0.13) / 1.15))
-                let eased = 1 - pow(1 - p, 3)
-                Ellipse()
-                    .stroke(AnchorIOSStyle.action.opacity(t < Self.impact ? 0 : 0.5 * (1 - p)), lineWidth: 4 - 2 * p)
-                    .frame(width: 60 + size.width * 1.5 * eased, height: 18 + size.width * 0.45 * eased)
-                    .position(x: water.x, y: water.y + 26)
-            }
-            Circle()
-                .fill(AnchorIOSStyle.cyan.opacity(t < Self.impact ? 0 : 0.22 * max(0, 1 - after / 0.7)))
-                .frame(width: 120 + 500 * min(1, after / 0.7), height: 120 + 500 * min(1, after / 0.7))
-                .position(water)
-        }
-    }
-
-    /// Drops thrown up from where the anchor went in, falling back as they fade.
-    private func splash(at t: TimeInterval, from water: CGPoint) -> some View {
-        let after = since(t)
-        return Canvas { context, _ in
-            guard t >= Self.impact, after < 1.1 else { return }
-            for drop in Self.drops {
-                let x = water.x + cos(drop.angle) * drop.speed * after
-                let y = water.y + 20 + sin(drop.angle) * drop.speed * after + 900 * after * after
-                let fade = max(0, 1 - after / 1.1)
-                let rect = CGRect(x: x - drop.size / 2, y: y - drop.size / 2, width: drop.size, height: drop.size * 1.25)
-                context.fill(Path(ellipseIn: rect), with: .color(AnchorIOSStyle.cyan.opacity(fade)))
-            }
-        }
-        .allowsHitTesting(false)
-    }
-
-    /// The word lands with a bounce, then the pet cheers under it.
-    private func words(at t: TimeInterval) -> some View {
-        // A spring from a third of its size, overshooting once.
-        let p = min(1, max(0, (t - 0.55) / 0.6))
-        let pop = 1 - 0.7 * exp(-6 * p) * cos(9 * p)
-        let pet = min(1, max(0, (t - 0.9) / 0.3))
-        return VStack(spacing: 18) {
-            Text(TourCopy.anchored)
-                .font(.system(size: 50, weight: .heavy, design: .rounded))
-                .foregroundStyle(AnchorIOSStyle.heading)
-                .scaleEffect(pop)
-                .opacity(min(1, p * 4))
-            TourPetLine(text: TourCopy.anchoredCount(count), act: .celebrate, pixel: 3.2)
-                .fixedSize()
-                .opacity(pet)
-                .offset(y: 16 * (1 - pet))
-        }
-    }
-
-    private func shake(at t: TimeInterval) -> CGFloat {
-        let after = since(t)
-        guard t >= Self.impact, after < 0.35 else { return 0 }
-        return CGFloat(sin(after * 70) * 7 * (1 - after / 0.35))
-    }
-}
-
 // MARK: Turning
 
-/// After the drop: the home softens, and a phone outline turns on its side
-/// above the pet's line saying what waits there. If the screen cannot turn,
-/// a quiet line says why and offers the desk here instead.
+/// After the drop: a phone outline turns on its side over the line saying
+/// what waits there, in the same place above the harbor as the lines
+/// before. If the screen cannot turn, a quiet line says why and offers the
+/// desk here instead.
 struct TourTurnPrompt: View {
     let gravity: DeviceGravityMonitor
     let onSideways: () -> Void
@@ -480,26 +326,24 @@ struct TourTurnPrompt: View {
     @State private var waited = false
 
     var body: some View {
-        VStack(spacing: 22) {
+        VStack(spacing: 0) {
             Spacer(minLength: 0)
-            TourPhoneTurn()
-                .frame(width: 150, height: 150)
-            TourPetLine(text: TourCopy.turn)
-                .frame(maxWidth: 320)
-            lock
-                .frame(height: 96, alignment: .top)
-            Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: 12) {
+                TourPhoneTurn()
+                    .frame(width: 140, height: 140)
+                    .scaleEffect(0.7)
+                    .frame(width: 98, height: 98)
+                TourCaption(text: TourCopy.turn)
+                if showsLock { lock }
+            }
+            .frame(maxWidth: 440, alignment: .leading)
+            .padding(.horizontal, 26)
+            .padding(.top, TourScrim.fade)
+            .padding(.bottom, 16)
+            .frame(maxWidth: .infinity)
+            .background { TourScrim(fadesOut: true) }
             // The harbor and its hanging anchor stay clear below.
             Color.clear.frame(height: WorkInvitationHarbor.height)
-        }
-        .padding(.horizontal, 24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background {
-            LinearGradient(stops: [.init(color: AnchorIOSStyle.canvasTop.opacity(0.8), location: 0),
-                                   .init(color: AnchorIOSStyle.canvasTop.opacity(0.72), location: 0.62),
-                                   .init(color: AnchorIOSStyle.canvasTop.opacity(0), location: 0.8)],
-                           startPoint: .top, endPoint: .bottom)
-                .allowsHitTesting(false)
         }
         .animation(AnchorMotion.panel, value: showsLock)
         .task {
@@ -510,23 +354,21 @@ struct TourTurnPrompt: View {
 
     private var showsLock: Bool { waited || gravity.suggestsOrientationLock }
 
-    @ViewBuilder private var lock: some View {
-        if showsLock {
-            VStack(spacing: 12) {
-                Label(gravity.suggestsOrientationLock ? L10n.workInvitationLock : TourCopy.lockQuestion,
-                      systemImage: "lock.rotation")
-                    .font(.footnote.weight(.medium))
-                    .foregroundStyle(AnchorIOSStyle.secondaryText)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                Button(TourCopy.openHere, action: onSideways)
-                    .font(.subheadline.weight(.semibold))
-                    .buttonStyle(.glass)
-                    .tint(AnchorIOSStyle.action)
-                    .accessibilityIdentifier("tour.sideways")
-            }
-            .transition(.opacity.combined(with: .offset(y: 6)))
+    private var lock: some View {
+        HStack(spacing: 12) {
+            Label(gravity.suggestsOrientationLock ? L10n.workInvitationLock : TourCopy.lockQuestion,
+                  systemImage: "lock.rotation")
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(AnchorIOSStyle.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            Button(TourCopy.openHere, action: onSideways)
+                .font(.subheadline.weight(.semibold))
+                .buttonStyle(.glass)
+                .tint(AnchorIOSStyle.action)
+                .accessibilityIdentifier("tour.sideways")
         }
+        .transition(.opacity.combined(with: .offset(y: 6)))
     }
 }
 
@@ -666,18 +508,21 @@ extension View {
     }
 }
 
-/// The tour on the real desk. The light passes over each folder, then holds
-/// them all; then it settles on the homework's front card as its question
-/// arrives, and only that card answers a tap. Last, a friend calls the
-/// person away.
+/// The tour on the real desk, which stays bright. The ring passes over each
+/// folder while the line says what they are, then rests on the folder of
+/// the task the person just dropped, where an agent has started. Then the
+/// homework's question arrives on its own and the ring settles on its front
+/// card, the one part that answers a tap. Last, a friend calls the person
+/// away. The line sits in the column left of the folders, at its foot.
 private struct TourDeskCoach: View {
     let tour: AnchorTour
     let spots: [TourSpot: CGRect]
     let size: CGSize
 
     @AnchorReducedMotion private var reduceMotion
-    /// The folder the light is on; past the last it holds them all.
+    /// The folder the ring is on; past the last it rests on the person's own.
     @State private var lit = 0
+    @State private var nudges = 0
 
     private struct Hole: Equatable {
         let rect: CGRect
@@ -688,13 +533,25 @@ private struct TourDeskCoach: View {
         ZStack(alignment: .topLeading) {
             switch tour.stage {
             case .desk, .waiting:
+                TourBlocker(hole: tour.stage == .waiting ? hole?.rect : nil, radius: hole?.radius ?? 0) { nudges += 1 }
                 if let hole {
-                    spotlight(hole)
+                    TourHalo(radius: hole.radius, nudges: nudges)
+                        .frame(width: hole.rect.width, height: hole.rect.height)
+                        .offset(x: hole.rect.minX, y: hole.rect.minY)
                         .transition(.opacity)
                 }
+                column {
+                    TourCaption(text: line, earlier: earlierLine)
+                }
             case .called:
-                TourCalledAway()
-                    .transition(.opacity)
+                TourBlocker {}
+                column {
+                    TourPhoneTurn(upright: true)
+                        .frame(width: 110, height: 110)
+                        .frame(maxWidth: .infinity)
+                    TourCaption(text: TourCopy.called)
+                }
+                .transition(.opacity)
             default:
                 EmptyView()
             }
@@ -721,13 +578,14 @@ private struct TourDeskCoach: View {
         (0..<DeskTaskLibrary.Metrics.slots).compactMap { spots[.folder($0)] }
     }
 
-    private var holdsAll: Bool { lit >= folders.count }
-
     private var hole: Hole? {
         switch tour.stage {
         case .desk:
             guard let first = folders.first else { return nil }
-            if !holdsAll { return Hole(rect: folders[lit].insetBy(dx: -6, dy: -6), radius: 21) }
+            if lit < folders.count { return Hole(rect: folders[lit].insetBy(dx: -6, dy: -6), radius: 21) }
+            if let own = tour.ownTask.flatMap({ spots[.taskFolder($0)] }) {
+                return Hole(rect: own.insetBy(dx: -6, dy: -6), radius: 21)
+            }
             let all = folders.dropFirst().reduce(first) { $0.union($1) }
             return Hole(rect: all.insetBy(dx: -8, dy: -8), radius: 23)
         case .waiting:
@@ -738,69 +596,42 @@ private struct TourDeskCoach: View {
         }
     }
 
-    /// While the folders are shown the desk takes no taps; once the question
-    /// is lit, a tap reaches only the card under the light.
-    private func spotlight(_ hole: Hole) -> some View {
-        let veil = SpotlightVeil(hole: hole.rect, radius: hole.radius)
-        let waiting = tour.stage == .waiting
-        return ZStack(alignment: .topLeading) {
-            veil
-                .fill(TourCoach.dim, style: FillStyle(eoFill: true))
-                .contentShape(waiting ? AnyShape(veil) : AnyShape(Rectangle()), eoFill: waiting)
-                .onTapGesture {}
-            RoundedRectangle(cornerRadius: hole.radius, style: .continuous)
-                .stroke(Color.white.opacity(0.85), lineWidth: 1.5)
-                .shadow(color: AnchorIOSStyle.action.opacity(0.45), radius: 10)
-                .frame(width: hole.rect.width, height: hole.rect.height)
-                .offset(x: hole.rect.minX, y: hole.rect.minY)
-                .allowsHitTesting(false)
-            if waiting || holdsAll {
-                line(beside: hole.rect)
-            }
-        }
+    /// What the folders are while the ring walks them; the person's own task
+    /// once it rests; the question once it arrives.
+    private var line: String {
+        if tour.stage == .waiting { return TourCopy.waiting }
+        return lit < DeskTaskLibrary.Metrics.slots ? TourCopy.folders : TourCopy.ownTask
     }
 
-    /// The pet's line beside the light, on whichever side has more room.
-    private func line(beside hole: CGRect) -> some View {
-        let gap: CGFloat = 12
-        // The Dynamic Island takes one edge when the phone lies sideways.
+    private var earlierLine: String? {
+        if tour.stage == .waiting { return TourCopy.ownTask }
+        return lit < DeskTaskLibrary.Metrics.slots ? nil : TourCopy.folders
+    }
+
+    /// The column left of the folders, clear of the Dynamic Island's edge:
+    /// the line at its foot on a light wash, Skip under it.
+    private func column(@ViewBuilder _ content: () -> some View) -> some View {
         let edge: CGFloat = 58
-        let leftRoom = hole.minX - gap - edge
-        let rightRoom = size.width - hole.maxX - gap - edge
-        let onLeft = leftRoom >= rightRoom
-        let width = min(300, max(onLeft ? leftRoom : rightRoom, 200))
-        let x = onLeft ? hole.minX - gap - width / 2 : hole.maxX + gap + width / 2
-        let waiting = tour.stage == .waiting
-        return TourPetLine(text: waiting ? TourCopy.waiting : TourCopy.folders, act: waiting ? .think : .idle,
-                           pixel: 2.2, stacked: true)
-            .frame(width: width)
-            .id(tour.stage)
-            .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(x: onLeft ? 8 : -8)))
-            .position(x: x, y: min(max(hole.midY, 90), size.height - 90))
-    }
-}
-
-/// A friend asks the person down for coffee: the desk softens, and a phone
-/// outline comes up off its side beside the pet's line. Picking the phone
-/// up is how they go; the desk under it waits.
-private struct TourCalledAway: View {
-    var body: some View {
-        HStack(spacing: 24) {
-            TourPhoneTurn(upright: true)
-                .frame(width: 130, height: 130)
-            TourPetLine(text: TourCopy.called, act: .coffee)
-                .frame(maxWidth: 340)
+        let right = (folders.first?.minX ?? size.width * 0.36) - 16
+        return VStack(alignment: .leading, spacing: 10) {
+            Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: 14) { content() }
+                .padding(.top, TourScrim.fade + 24)
+                .padding(.leading, edge)
+                .padding(.trailing, 4)
+                .background { TourScrim() }
+            TourSkip(tour: tour)
+                .padding(.leading, edge - 12)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(AnchorIOSStyle.canvasTop.opacity(0.84))
-        .contentShape(.rect)
+        .padding(.bottom, 6)
+        .frame(width: max(200, right), height: size.height, alignment: .leading)
     }
 }
 
 // MARK: Away and back
 
 /// The time away, in the person's hands: a dial they turn clockwise, a
-/// minute a tick. Past the first minute the Bluetooth link to the Mac
+/// minute a click under the finger. Past the first minute the Bluetooth link to the Mac
 /// breaks; at five the phone counts as away; the agents' news lands on the
 /// laptop as the minutes go by; at the end of the dial the phone is back in
 /// range and the link joins again.
@@ -819,7 +650,7 @@ struct TourAwayDial: View {
 
     var body: some View {
         VStack(spacing: 22) {
-            TourPetLine(text: line, act: isBack ? .happy : (tour.awayMinutes >= AnchorTour.awayAt ? .coffee : .idle))
+            TourCaption(text: line)
                 .frame(maxWidth: 340, alignment: .leading)
                 .frame(maxWidth: .infinity)
             link
@@ -830,6 +661,11 @@ struct TourAwayDial: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AnchorIOSStyle.canvasTop.ignoresSafeArea())
         .contentShape(.rect)
+        .overlay(alignment: .topTrailing) {
+            if !isBack {
+                TourSkip(tour: tour).padding(.trailing, 12)
+            }
+        }
         .sensoryFeedback(.selection, trigger: tour.awayMinutes)
         .sensoryFeedback(.impact(weight: .heavy), trigger: tour.awayMinutes >= AnchorTour.linkBreaksAt)
         .sensoryFeedback(.success, trigger: isBack)
@@ -838,8 +674,6 @@ struct TourAwayDial: View {
                 TourSound.shared.play(.snap)
             } else if passed < AnchorTour.awayAt, now >= AnchorTour.awayAt {
                 TourSound.shared.play(.away)
-            } else if now < AnchorTour.dialMinutes {
-                TourSound.shared.play(.tick)
             }
         }
         .onChange(of: isBack) { _, back in
@@ -1002,7 +836,17 @@ struct TourAwayDial: View {
             knob
                 .offset(y: -radius)
                 .rotationEffect(.degrees(fraction * 360))
+            if minutes == 0 {
+                // A ring on the knob glides a stretch clockwise round the dial.
+                TourGrip { p in
+                    let angle = p * .pi / 3
+                    return CGSize(width: radius * sin(angle), height: radius * (1 - cos(angle)))
+                }
+                .offset(y: -radius)
+                .transition(.opacity)
+            }
         }
+        .animation(AnchorMotion.micro, value: minutes == 0)
         .frame(width: Self.diameter, height: Self.diameter)
         .contentShape(.circle)
         .gesture(turn)
@@ -1021,17 +865,12 @@ struct TourAwayDial: View {
         return String(format: "%d:%02d", seconds / 60, seconds % 60)
     }
 
-    /// The knob breathes until the dial is first turned.
     private var knob: some View {
-        TimelineView(.animation(paused: reduceMotion || minutes > 0)) { context in
-            let pulse = minutes > 0 || reduceMotion ? 0 : (1 + sin(context.date.timeIntervalSinceReferenceDate * 4)) / 2
-            Circle()
-                .fill(AnchorIOSStyle.surface)
-                .overlay { Circle().strokeBorder(AnchorIOSStyle.action, lineWidth: 3) }
-                .frame(width: 34, height: 34)
-                .shadow(color: AnchorIOSStyle.action.opacity(0.3 + 0.3 * pulse), radius: 6 + 8 * pulse)
-                .scaleEffect(1 + 0.12 * pulse)
-        }
+        Circle()
+            .fill(AnchorIOSStyle.surface)
+            .overlay { Circle().strokeBorder(AnchorIOSStyle.action, lineWidth: 3) }
+            .frame(width: 34, height: 34)
+            .shadow(color: AnchorIOSStyle.action.opacity(0.3), radius: 6)
     }
 
     /// Clockwise only: time away does not run back.

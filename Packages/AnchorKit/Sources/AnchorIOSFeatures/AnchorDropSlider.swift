@@ -12,6 +12,8 @@ struct AnchorDropSlider: View {
     let saving: Bool
     let stepCount: Int
     let onDrop: () -> Void
+    /// The tour's ring glides along the channel until the anchor is taken.
+    var guides = false
 
     @AnchorReducedMotion private var reduceMotion
     @State private var offset: CGFloat = 0
@@ -47,6 +49,11 @@ struct AnchorDropSlider: View {
                     anchorKnob(progress: progress)
                         .offset(x: inset + offset)
                         .gesture(slide(travel: travel), isEnabled: live)
+                    if guides, live, !dragging, offset == 0 {
+                        TourGrip(size: knob - 6) { CGSize(width: travel * $0, height: 0) }
+                            .offset(x: inset + 3)
+                            .transition(.opacity)
+                    }
                 }
             }
         }

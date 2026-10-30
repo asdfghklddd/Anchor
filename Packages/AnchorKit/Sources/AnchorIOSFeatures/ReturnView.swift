@@ -12,6 +12,9 @@ struct ReturnView: View {
     let model: AnchorSessionModel
 
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.anchorTour) private var tour
+    /// The tour's ring glides across the first page until the person swipes.
+    @State private var swiped = false
     @AnchorReducedMotion private var reduceMotion
     @State private var page: UUID?
     @State private var presented = false
@@ -39,6 +42,15 @@ struct ReturnView: View {
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
+                .overlay {
+                    if tour != nil, !swiped, tasks.count > 1 {
+                        TourGrip { CGSize(width: -150 * $0, height: 0) }
+                            .offset(x: 75)
+                            .transition(.opacity)
+                    }
+                }
+                .onChange(of: page) { previous, _ in if previous != nil { swiped = true } }
+                .animation(AnchorMotion.micro, value: swiped)
                 .opacity(presented ? 1 : 0)
                 .offset(y: presented || reduceMotion ? 0 : 18)
 
@@ -113,6 +125,11 @@ struct ReturnView: View {
         .contentShape(.rect)
         .onLongPressGesture(minimumDuration: 0, maximumDistance: 30, perform: goHome) { homePressed = $0 }
         .animation(.easeOut(duration: 0.12), value: homePressed)
+        .overlay {
+            if tour != nil, isLastPage {
+                TourHalo(radius: 26).frame(width: 180, height: 52)
+            }
+        }
         .opacity(isLastPage ? 1 : 0)
         .allowsHitTesting(isLastPage)
         .accessibilityElement(children: .combine)
