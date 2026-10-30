@@ -18,7 +18,7 @@ final class DeskReminder {
     static let defaultMinutes = 2
     static let minuteChoices = [1, 2, 5]
 
-    private static let identifier = "anchor.desk.reminder"
+    private nonisolated static let identifier = "anchor.desk.reminder"
 
     private(set) var authorization: UNAuthorizationStatus = .notDetermined
 
@@ -45,23 +45,37 @@ final class DeskReminder {
     /// Replaces any pending reminder with one for this hold.
     func schedule(_ hold: DeskHold, subtitle: String?) {
         guard Self.isEnabled else { return }
-        let content = UNMutableNotificationContent()
-        content.title = DeskText.backToDesk
-        if let subtitle { content.subtitle = subtitle }
-        content.body = DeskText.reminderBody(hold)
-        content.sound = .default
-        content.threadIdentifier = Self.identifier
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(Self.minutes * 60), repeats: false)
-        let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: [Self.identifier])
-        center.add(UNNotificationRequest(identifier: Self.identifier, content: content, trigger: trigger), withCompletionHandler: nil)
+        let title = DeskText.backToDesk
+        let body = DeskText.reminderBody(hold)
+        let delay = TimeInterval(Self.minutes * 60)
+        Self.onCenter { center in
+            let content = UNMutableNotificationContent()
+            content.title = title
+            if let subtitle { content.subtitle = subtitle }
+            content.body = body
+            content.sound = .default
+            content.threadIdentifier = Self.identifier
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false)
+            center.removePendingNotificationRequests(withIdentifiers: [Self.identifier])
+            center.add(UNNotificationRequest(identifier: Self.identifier, content: content, trigger: trigger),
+                       withCompletionHandler: nil)
+        }
     }
 
     /// Back in Anchor: the reminder has nothing left to say.
     func cancel() {
-        let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: [Self.identifier])
-        center.removeDeliveredNotifications(withIdentifiers: [Self.identifier])
+        Self.onCenter { center in
+            center.removePendingNotificationRequests(withIdentifiers: [Self.identifier])
+            center.removeDeliveredNotifications(withIdentifiers: [Self.identifier])
+        }
+    }
+
+    /// Removing a reminder waits on the notification service's reply, which
+    /// can take a while; it runs in order, off the main thread.
+    private nonisolated static let queue = DispatchQueue(label: "anchor.desk.reminder", qos: .utility)
+
+    private nonisolated static func onCenter(_ work: @escaping @Sendable (UNUserNotificationCenter) -> Void) {
+        queue.async { work(UNUserNotificationCenter.current()) }
     }
 }
 #endif

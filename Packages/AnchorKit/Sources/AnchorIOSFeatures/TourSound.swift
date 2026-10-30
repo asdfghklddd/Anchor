@@ -13,7 +13,7 @@ final class TourSound {
     static let shared = TourSound()
     static let mutedKey = "anchor.tour.muted"
 
-    enum Effect: CaseIterable {
+    enum Effect: CaseIterable, Sendable {
         /// The anchor hits the water, and a little fanfare follows.
         case anchored
         /// A line read aloud was heard.
@@ -30,24 +30,14 @@ final class TourSound {
         case tick
     }
 
-    private let engine = AVAudioEngine()
-    private let voice = AVAudioPlayerNode()
-    private let effects = AVAudioPlayerNode()
-    private let format = AVAudioFormat(standardFormatWithSampleRate: TourSynth.rate, channels: 1)!
-    private var rendered: [Effect: AVAudioPCMBuffer] = [:]
+    private let output = TourAudioOutput()
     /// Which line is the latest; a slower render of an older one is dropped.
     private var line = 0
 
     /// Set from the speaker on the pet's line.
     var isMuted: Bool { UserDefaults.standard.bool(forKey: Self.mutedKey) }
 
-    private init() {
-        engine.attach(voice)
-        engine.attach(effects)
-        engine.connect(voice, to: engine.mainMixerNode, format: format)
-        engine.connect(effects, to: engine.mainMixerNode, format: format)
-        engine.mainMixerNode.outputVolume = 0.8
-    }
+    private init() {}
 
     /// Says a line in the pet's voice and returns how long it takes, which
     /// the pet hops along to even when the sound is off. VoiceOver reads the
@@ -64,33 +54,74 @@ final class TourSound {
                 TourBabble.render(syllables, pitch: pitch)
             }.value
             guard id == line, !isMuted else { return }
-            play(samples, on: voice)
+            output.say(samples)
         }
         return TourBabble.length(of: syllables)
     }
 
     func hush() {
         line += 1
-        voice.stop()
+        output.hush()
     }
 
     func play(_ effect: Effect) {
         guard !isMuted else { return }
-        if rendered[effect] == nil { rendered[effect] = buffer(TourSynth.render(effect)) }
-        if let buffer = rendered[effect] { schedule(buffer, on: effects) }
+        output.play(effect)
     }
 
     /// The tour is over: the engine stops and other audio gets its volume back.
     func stop() {
-        hush()
-        effects.stop()
-        engine.stop()
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        line += 1
+        output.stop()
+    }
+}
+
+/// The engine behind the tour's sounds. Switching the audio session and
+/// starting the engine can hold a phone for a moment, and an effect is made
+/// the first time it plays, so all of it runs on its own queue, in the order
+/// the tour asks, and never on the main thread.
+private final class TourAudioOutput: @unchecked Sendable {
+    private let queue = DispatchQueue(label: "anchor.tour.sound", qos: .userInitiated)
+    private let engine = AVAudioEngine()
+    private let voice = AVAudioPlayerNode()
+    private let effects = AVAudioPlayerNode()
+    private let format = AVAudioFormat(standardFormatWithSampleRate: TourSynth.rate, channels: 1)!
+    private var rendered: [TourSound.Effect: AVAudioPCMBuffer] = [:]
+
+    init() {
+        queue.async { [self] in
+            engine.attach(voice)
+            engine.attach(effects)
+            engine.connect(voice, to: engine.mainMixerNode, format: format)
+            engine.connect(effects, to: engine.mainMixerNode, format: format)
+            engine.mainMixerNode.outputVolume = 0.8
+        }
     }
 
-    private func play(_ samples: [Float], on node: AVAudioPlayerNode) {
-        guard let buffer = buffer(samples) else { return }
-        schedule(buffer, on: node)
+    func say(_ samples: [Float]) {
+        queue.async { [self] in
+            if let buffer = buffer(samples) { schedule(buffer, on: voice) }
+        }
+    }
+
+    func hush() {
+        queue.async { [self] in voice.stop() }
+    }
+
+    func play(_ effect: TourSound.Effect) {
+        queue.async { [self] in
+            if rendered[effect] == nil { rendered[effect] = buffer(TourSynth.render(effect)) }
+            if let buffer = rendered[effect] { schedule(buffer, on: effects) }
+        }
+    }
+
+    func stop() {
+        queue.async { [self] in
+            voice.stop()
+            effects.stop()
+            engine.stop()
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        }
     }
 
     private func schedule(_ buffer: AVAudioPCMBuffer, on node: AVAudioPlayerNode) {
