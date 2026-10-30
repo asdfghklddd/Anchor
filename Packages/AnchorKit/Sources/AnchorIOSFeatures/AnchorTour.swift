@@ -70,7 +70,9 @@ final class AnchorTour {
         static func < (lhs: Stage, rhs: Stage) -> Bool { lhs.rawValue < rhs.rawValue }
     }
 
-    private(set) var stage = Stage.hello
+    private(set) var stage = Stage.hello {
+        didSet { if stage != oldValue { RotationTrace.note("tour stage \(oldValue) → \(stage)") } }
+    }
     /// Minutes the dial has turned through while away.
     private(set) var awayMinutes = 0
     /// What the agents did on the dial so far.

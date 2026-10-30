@@ -270,6 +270,7 @@ struct AnchorWorkspaceView: View {
         } action: { newPosture in
             guard newPosture != posture else { return }
             let previous = posture
+            RotationTrace.note("posture \(previous) → \(newPosture), stage \(tour.map { "\($0.stage)" } ?? "none")")
             posture = newPosture
             if let tour {
                 if newPosture == .landscape {
@@ -291,8 +292,12 @@ struct AnchorWorkspaceView: View {
             }
             // The empty workspace has no session to reduce a presence update into.
             // Remember the posture now and apply it once an anchor exists.
+            RotationTrace.note("posture handled")
             guard model.projection.session != nil else { return }
-            Task { await model.updatePosture(newPosture) }
+            Task {
+                await model.updatePosture(newPosture)
+                RotationTrace.note("posture reached the model")
+            }
         }
         .onChange(of: model.projection.session?.presence, initial: true) { previous, presence in
             // Coming back to the desk after being away invites again (D08);
@@ -377,6 +382,7 @@ struct AnchorWorkspaceView: View {
             if released { pickedUp = false }
         }
         .task {
+            RotationTrace.watchMainThread()
             // The tour starts its own model once its sample tasks are in place.
             if tour == nil { model.start() }
             await reminder.refresh()
@@ -509,6 +515,7 @@ struct AnchorWorkspaceView: View {
                 if harborMode == .inviting { harborMode = nil }
             }
         }
+        RotationTrace.note("invitation \(event.map { "\($0)" } ?? "unchanged"), harbor \(harborMode.map { "\($0)" } ?? "none")")
         // One motion sensor, read only while the invitation is on screen.
         if harborMode == .inviting { gravity.start() } else { gravity.stop() }
     }

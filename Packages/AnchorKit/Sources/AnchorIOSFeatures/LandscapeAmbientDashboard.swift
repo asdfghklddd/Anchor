@@ -86,6 +86,7 @@ struct LandscapeAmbientDashboard: View {
         .toolbar(.hidden, for: .navigationBar)
         .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: contacts)
         .onAppear {
+            RotationTrace.note("landscape desk appeared")
             keepAwake.start()
             if playsArrival, !tasks.isEmpty { playArrival() }
         }

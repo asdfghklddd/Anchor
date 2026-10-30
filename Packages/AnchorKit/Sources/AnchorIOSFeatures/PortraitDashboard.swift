@@ -68,6 +68,7 @@ struct PortraitDashboard: View {
                 .transition(.opacity)
             }
         }
+        .onAppear { RotationTrace.note("portrait home appeared") }
         .safeAreaBar(edge: .top, spacing: 0) {
             HarborTopBar(connection: projection.connection,
                 auxiliaryLabel: auxiliaryToolbarLabel, onProfile: { onRoute(.profile) },

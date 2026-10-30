@@ -18,23 +18,28 @@ final class DeviceGravityMonitor {
     /// on iPhone means Portrait Orientation Lock is on.
     private(set) var suggestsOrientationLock = false
 
-    @ObservationIgnored private let manager = CMMotionManager()
     @ObservationIgnored private var sidewaysSince: Date?
+    @ObservationIgnored private var listening = false
 
     func start() {
-        guard manager.isDeviceMotionAvailable, !manager.isDeviceMotionActive else { return }
+        guard !listening, GravitySensor.shared.isAvailable else { return }
+        listening = true
         isAvailable = true
-        manager.deviceMotionUpdateInterval = 1.0 / 30
-        manager.startDeviceMotionUpdates(to: .main) { [weak self] motion, _ in
-            guard let self, let gravity = motion?.gravity else { return }
-            MainActor.assumeIsolated { self.receive(x: gravity.x, y: gravity.y) }
+        RotationTrace.note("gravity start requested")
+        GravitySensor.shared.add(ObjectIdentifier(self)) { [weak self] x, y in
+            Task { @MainActor in
+                guard let self, self.listening else { return }
+                self.receive(x: x, y: y)
+            }
         }
     }
 
     func stop() {
-        manager.stopDeviceMotionUpdates()
+        if listening { RotationTrace.note("gravity stop requested") }
+        listening = false
+        GravitySensor.shared.remove(ObjectIdentifier(self))
         sidewaysSince = nil
-        suggestsOrientationLock = false
+        if suggestsOrientationLock { suggestsOrientationLock = false }
     }
 
     private func receive(x: Double, y: Double) {
@@ -43,12 +48,71 @@ final class DeviceGravityMonitor {
         let raw = atan2(x, -y)
         // A light low-pass keeps the rope from trembling with the hand.
         angle += (raw - angle) * 0.18
+        let lock: Bool
         if abs(raw) > 1.2 {
             sidewaysSince = sidewaysSince ?? .now
-            suggestsOrientationLock = Date.now.timeIntervalSince(sidewaysSince ?? .now) > 1.5
+            lock = Date.now.timeIntervalSince(sidewaysSince ?? .now) > 1.5
         } else {
             sidewaysSince = nil
-            suggestsOrientationLock = false
+            lock = false
+        }
+        if lock != suggestsOrientationLock { suggestsOrientationLock = lock }
+    }
+}
+
+/// The app's one motion manager, as Apple asks. Starting and stopping the
+/// sensor can hold the calling thread, and turning the phone is exactly when
+/// the invitation starts or stops it, so all of it happens on the sensor's own
+/// queue, never on the main thread. Each monitor listens while it is started.
+private final class GravitySensor: @unchecked Sendable {
+    static let shared = GravitySensor()
+
+    let isAvailable: Bool
+    private let manager = CMMotionManager()
+    private let queue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.name = "anchor.gravity"
+        queue.maxConcurrentOperationCount = 1
+        queue.qualityOfService = .userInitiated
+        return queue
+    }()
+    private let lock = NSLock()
+    private var listeners: [ObjectIdentifier: @Sendable (Double, Double) -> Void] = [:]
+
+    private init() {
+        isAvailable = manager.isDeviceMotionAvailable
+        manager.deviceMotionUpdateInterval = 1.0 / 30
+    }
+
+    func add(_ id: ObjectIdentifier, _ listener: @escaping @Sendable (Double, Double) -> Void) {
+        let first = lock.withLock {
+            listeners[id] = listener
+            return listeners.count == 1
+        }
+        guard first else { return }
+        queue.addOperation { [self] in
+            guard !manager.isDeviceMotionActive else { return }
+            let began = Date.now
+            manager.startDeviceMotionUpdates(to: queue) { [weak self] motion, _ in
+                guard let self, let gravity = motion?.gravity else { return }
+                for listener in lock.withLock({ Array(listeners.values) }) { listener(gravity.x, gravity.y) }
+            }
+            RotationTrace.note("gravity sensor started", took: Date.now.timeIntervalSince(began))
+        }
+    }
+
+    func remove(_ id: ObjectIdentifier) {
+        let last = lock.withLock { () -> Bool in
+            guard listeners.removeValue(forKey: id) != nil else { return false }
+            return listeners.isEmpty
+        }
+        guard last else { return }
+        queue.addOperation { [self] in
+            // A monitor may have started again while this waited its turn.
+            guard lock.withLock({ listeners.isEmpty }), manager.isDeviceMotionActive else { return }
+            let began = Date.now
+            manager.stopDeviceMotionUpdates()
+            RotationTrace.note("gravity sensor stopped", took: Date.now.timeIntervalSince(began))
         }
     }
 }

@@ -591,11 +591,14 @@ private struct TourPhoneTurn: View {
 
     private var wake: some View {
         TimelineView(.animation(paused: reduceMotion)) { context in
+            // The phase stays within one dash (3 + 7): the renderer walks the
+            // pattern from zero, so the raw clock (billions) stalled every frame.
+            let phase = -(context.date.timeIntervalSinceReferenceDate * 14).truncatingRemainder(dividingBy: 10)
             Circle()
                 .trim(from: 0.55, to: 0.8)
                 .stroke(AnchorIOSStyle.action.opacity(0.45),
                         style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [3, 7],
-                                           dashPhase: reduceMotion ? 0 : -context.date.timeIntervalSinceReferenceDate * 14))
+                                           dashPhase: reduceMotion ? 0 : phase))
                 .frame(width: 140, height: 140)
         }
     }
@@ -887,7 +890,9 @@ struct TourAwayDial: View {
                 path.addLine(to: b)
             }
             .stroke(tint.opacity(0.75), style: StrokeStyle(lineWidth: isBack ? 3 : 2, lineCap: .round,
-                                                           dash: [5, 6], dashPhase: reduceMotion ? 0 : -t * 22))
+                                                           dash: [5, 6],
+                                                           // Within one dash (5 + 6), as the turn prompt's wake.
+                                                           dashPhase: reduceMotion ? 0 : -(t * 22).truncatingRemainder(dividingBy: 11)))
         } else {
             // Each half pulled back toward its own end.
             let middle = CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
