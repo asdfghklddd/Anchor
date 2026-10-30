@@ -1154,6 +1154,7 @@ struct TourAwayDial: View {
         .accessibilityElement()
         .accessibilityLabel(TourCopy.dial)
         .accessibilityValue(clock)
+        .accessibilityIdentifier("tour.dial")
         .accessibilityAdjustableAction { direction in
             if direction == .increment { advance(to: minutes + 5) }
         }
