@@ -6,12 +6,14 @@ import Foundation
 /// A moment of news the closed island stretches out to show for a few
 /// seconds: a task's agent finished or waits on the person, the phone left,
 /// or the phone needs the pairing code, which stays until pairing is done.
+/// Replaying the tour opens with the key that moves it on.
 public struct NotchPeek: Identifiable, Equatable, Sendable {
     public enum Kind: Equatable, Sendable {
         case finished
         case waiting
         case linkLost
         case pairing
+        case demoKey
     }
 
     public static let enabledDefaultsKey = "anchor.mac.notch.peeks.enabled"
@@ -39,9 +41,13 @@ public struct NotchPeek: Identifiable, Equatable, Sendable {
         switch kind {
         case .finished, .linkLost: .seconds(4)
         case .waiting: .seconds(8)
+        case .demoKey: .seconds(2.5)
         case .pairing: nil
         }
     }
+
+    /// The key on the left, what it does on the right.
+    public static let demoKey = NotchPeek(kind: .demoKey, title: "⌃⌥→", detail: MacDemoCopy.next)
 
     public static func pairing(code: String) -> NotchPeek {
         NotchPeek(kind: .pairing, title: L10n.pairingCode, detail: code)

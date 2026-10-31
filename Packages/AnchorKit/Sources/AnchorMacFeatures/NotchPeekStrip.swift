@@ -51,6 +51,8 @@ struct NotchPeekStrip: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(NotchIslandInk.secondary)
                 .accessibilityHidden(true)
+        case .demoKey:
+            EmptyView()
         }
     }
 
@@ -71,7 +73,7 @@ struct NotchPeekStrip: View {
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(NotchIslandInk.task(peek.colorIndex))
                 .lineLimit(1)
-        case .linkLost:
+        case .linkLost, .demoKey:
             Text(peek.detail)
                 .font(.system(size: 12))
                 .foregroundStyle(NotchIslandInk.secondary)

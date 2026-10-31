@@ -153,6 +153,8 @@ struct MacSettingsView: View {
                     .foregroundStyle(.secondary)
                     .accessibilityLabel("Control Option A")
             }
+            Button(MacDemoCopy.replay) { MacDemoLaunch.requestAndRelaunch() }
+                .accessibilityIdentifier("settings.replayTour")
             if let settingsMessage {
                 Text(settingsMessage)
                     .font(.caption)

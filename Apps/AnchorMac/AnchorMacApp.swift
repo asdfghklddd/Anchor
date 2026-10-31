@@ -27,8 +27,15 @@ struct AnchorMacApp: App {
         let validationShouldSeedSession: Bool
         let validationDefaults: UserDefaults?
         let isUITesting: Bool
+        let isDemo: Bool
         let pairingIdentityService: String
         let usesAutomaticICloudPairing: Bool
+        // Replaying the tour from Settings: the island plays the iPhone tour's
+        // story on storage of its own, until the last scene restarts Anchor.
+        isDemo = environment["ANCHOR_UI_TESTING"] != "1" && MacDemoLaunch.takePending()
+        // The person's own Anchor quits before the last demo's storage is cleared.
+        if isDemo { MacSingleInstance.claim() }
+        let demoRootURL = isDemo ? MacDemoLaunch.freshStorage() : nil
 #if DEBUG
         isUITesting = environment["ANCHOR_UI_TESTING"] == "1"
         // Apply appearance only to the isolated test app, without changing macOS settings.
@@ -46,7 +53,7 @@ struct AnchorMacApp: App {
                 .appending(path: "AnchorUITests", directoryHint: .isDirectory)
                 .appending(path: uiTestStorageID.uuidString, directoryHint: .isDirectory)
             : nil
-        validationRootURL = uiTestRootURL ?? environment["ANCHOR_LOCAL_VALIDATION_ROOT"].map {
+        validationRootURL = uiTestRootURL ?? demoRootURL ?? environment["ANCHOR_LOCAL_VALIDATION_ROOT"].map {
             URL(filePath: $0, directoryHint: .isDirectory)
         }
         validationCodexURL = environment["ANCHOR_LOCAL_VALIDATION_CODEX_FILE"].map {
@@ -58,6 +65,7 @@ struct AnchorMacApp: App {
             ?? (isUITesting
                 ? UserDefaults(suiteName: "com.andywang.anchor.ui-tests.\(uiTestStorageID.uuidString)")
                 : nil)
+            ?? (isDemo ? MacDemoLaunch.freshDefaults() : nil)
             ?? validationRootURL.flatMap {
                 UserDefaults(suiteName: "com.andywang.anchor.validation.\($0.lastPathComponent)")
             }
@@ -71,10 +79,10 @@ struct AnchorMacApp: App {
             && environment["ANCHOR_ENABLE_ICLOUD_PAIRING"] == "1"
 #else
         isUITesting = false
-        validationRootURL = nil
+        validationRootURL = demoRootURL
         validationCodexURL = nil
         validationShouldSeedSession = false
-        validationDefaults = nil
+        validationDefaults = isDemo ? MacDemoLaunch.freshDefaults() : nil
         pairingIdentityService = "com.andywang.anchor.local-link"
         usesAutomaticICloudPairing = false
 #endif
@@ -158,7 +166,7 @@ struct AnchorMacApp: App {
             ? nil
             : AnchorCloudSyncFactory.makeRunner(local: localRepository)
 #else
-        cloudSyncRunner = AnchorCloudSyncFactory.makeRunner(local: localRepository)
+        cloudSyncRunner = isDemo ? nil : AnchorCloudSyncFactory.makeRunner(local: localRepository)
 #endif
         let transport = AnchorAdaptiveEventTransport(
             network: server,
@@ -233,7 +241,8 @@ struct AnchorMacApp: App {
                 }
             }
         }
-        if !isUITesting {
+        // The demo's phone is pretend; nothing listens for a real one.
+        if !isUITesting && !isDemo {
             do {
                 try server.start()
             } catch {
@@ -297,14 +306,18 @@ struct AnchorMacApp: App {
         )
         self.sourceCoordinator = sourceCoordinator
         self.taskLifecycleBridge = taskLifecycleBridge
+        let demo = isDemo ? MacDemoDirector(repository: repository, onFinished: MacDemoLaunch.endAndRelaunch) : nil
         applicationDelegate.configure(
             model: model,
-            linkController: server,
+            linkController: demo == nil ? server : MacDemoLink(),
             sourceSetupModel: sourceSetupModel,
             bluetoothRadio: bluetoothRadio,
-            defaults: validationDefaults
+            defaults: validationDefaults,
+            demo: demo
         )
         let startup: @MainActor @Sendable () async -> Void = {
+            // The demo reads no agents, writes no recaps and syncs nothing.
+            if isDemo { return }
             if !isUITesting { await recapper.start() }
 #if DEBUG
             if let validationRootURL {

@@ -3540,6 +3540,23 @@
         }
       }
     },
+    "mac.demo.next" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续"
+          }
+        }
+      }
+    },
     "mac.edge.all-done" : {
       "extractionState" : "manual",
       "localizations" : {

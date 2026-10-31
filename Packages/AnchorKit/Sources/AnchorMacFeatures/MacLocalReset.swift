@@ -14,13 +14,8 @@ public enum MacLocalReset {
     @MainActor
     public static func requestAndRelaunch(defaults: UserDefaults) {
         defaults.set(true, forKey: pendingKey)
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.createsNewApplicationInstance = true
-        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { _, error in
-            // If the new copy failed to open, the reset still runs at the next launch.
-            guard error != nil else { return }
-            DispatchQueue.main.async { MacSingleInstance.quit() }
-        }
+        // If the new copy fails to open, the reset still runs at the next launch.
+        MacSingleInstance.relaunch()
     }
 
     /// Whether this launch should start over; clears the request.

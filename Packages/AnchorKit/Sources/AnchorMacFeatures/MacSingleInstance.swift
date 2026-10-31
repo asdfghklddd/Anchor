@@ -24,6 +24,17 @@ public enum MacSingleInstance {
         }
     }
 
+    /// Opens a fresh copy, which quits this one; if it can't open, this one quits anyway.
+    @MainActor
+    public static func relaunch() {
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.createsNewApplicationInstance = true
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { _, error in
+            guard error != nil else { return }
+            DispatchQueue.main.async { quit() }
+        }
+    }
+
     /// Quits even with a sheet or modal alert up, which would otherwise stop
     /// AppKit from terminating and leave this copy running beside the new one.
     @MainActor

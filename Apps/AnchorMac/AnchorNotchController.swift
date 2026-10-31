@@ -17,6 +17,8 @@ final class AnchorNotchController {
     private let sourceSetupModel: MacSourceSetupModel
     private let bluetooth: MacBluetoothRadioState
     private let onOpenSettings: () -> Void
+    /// Set while filming: the pretend phone and agents, a scene per ⌃⌥→.
+    private let demo: MacDemoDirector?
 
     private let state: NotchIslandState
     private let panel: AnchorNotchPanel
@@ -32,6 +34,7 @@ final class AnchorNotchController {
     private var peeks = NotchPeekQueue()
     private var peekTask: Task<Void, Never>?
     private var hotKey: AnchorHotKey?
+    private var demoKeys: [AnchorHotKey] = []
     /// A filing menu is open; the island stays put until it closes.
     private var isMenuTracking = false
     private var menuObservers: [NSObjectProtocol] = []
@@ -42,6 +45,7 @@ final class AnchorNotchController {
         linkController: any LocalLinkControlling,
         sourceSetupModel: MacSourceSetupModel,
         bluetooth: MacBluetoothRadioState,
+        demo: MacDemoDirector? = nil,
         onOpenSettings: @escaping () -> Void
     ) {
         self.model = model
@@ -49,13 +53,14 @@ final class AnchorNotchController {
         self.sourceSetupModel = sourceSetupModel
         self.bluetooth = bluetooth
         self.onOpenSettings = onOpenSettings
+        self.demo = demo
         let geometry = Self.currentGeometry()
         state = NotchIslandState(
             content: NotchIslandContent(
                 status: AnchorStatusMenu(
                     projection: model.projection, radio: bluetooth.radio, pairing: .automatic,
-                    codexReady: sourceSetupModel.codexSessionsFolderName != nil,
-                    claudeReady: sourceSetupModel.claudeProjectsFolderName != nil
+                    codexReady: demo != nil || sourceSetupModel.codexSessionsFolderName != nil,
+                    claudeReady: demo != nil || sourceSetupModel.claudeProjectsFolderName != nil
                 ),
                 projection: model.projection
             ),
@@ -110,8 +115,22 @@ final class AnchorNotchController {
         }) {
             pointerMonitors.append(local)
         }
-        hotKey = AnchorHotKey(keyCode: UInt32(kVK_ANSI_A), modifiers: UInt32(controlKey | optionKey)) {
+        hotKey = AnchorHotKey(keyCode: UInt32(kVK_ANSI_A), modifiers: UInt32(controlKey | optionKey), id: 1) {
             [weak self] in self?.toggleFromKeyboard()
+        }
+        if let demo {
+            demoKeys = [
+                AnchorHotKey(keyCode: UInt32(kVK_RightArrow), modifiers: UInt32(controlKey | optionKey), id: 2) {
+                    demo.advance()
+                },
+                AnchorHotKey(keyCode: UInt32(kVK_LeftArrow), modifiers: UInt32(controlKey | optionKey), id: 3) {
+                    [weak self] in self?.restartDemo()
+                },
+            ].compactMap { $0 }
+            demo.start()
+            // Whoever replays it learns the one key that moves it on.
+            peeks.add(.demoKey)
+            syncPeek()
         }
         // The pointer leaves the island to reach a menu's items; that is not leaving.
         let center = NotificationCenter.default
@@ -144,6 +163,7 @@ final class AnchorNotchController {
         pointerMonitors = []
         removeClickMonitors()
         hotKey = nil
+        demoKeys = []
         menuObservers.forEach(NotificationCenter.default.removeObserver)
         menuObservers = []
         panel.orderOut(nil)
@@ -211,6 +231,17 @@ final class AnchorNotchController {
         panel.makeKey()
     }
 
+    /// From the top: the island forgets what it has seen, then the opening plays again.
+    private func restartDemo() {
+        demo?.restart { [weak self] in
+            guard let self else { return }
+            detector = NotchPeekDetector()
+            peeks = NotchPeekQueue()
+            dismiss()
+            syncPeek()
+        }
+    }
+
     private func dismiss() {
         timerTask?.cancel()
         hover.dismiss()
@@ -264,7 +295,8 @@ final class AnchorNotchController {
         apply()
         announce(next)
         peekTask?.cancel()
-        guard let duration = next.duration else { return }
+        guard let duration = demo != nil && next.kind == .waiting ? MacDemoDirector.waitingPeek : next.duration
+        else { return }
         peekTask = Task { [weak self] in
             try? await Task.sleep(for: duration)
             guard !Task.isCancelled, let self else { return }
@@ -339,8 +371,9 @@ final class AnchorNotchController {
             projection: model.projection,
             radio: bluetooth.radio,
             pairing: pairing,
-            codexReady: sourceSetupModel.codexSessionsFolderName != nil,
-            claudeReady: sourceSetupModel.claudeProjectsFolderName != nil
+            // The demo's agents need no folders.
+            codexReady: demo != nil || sourceSetupModel.codexSessionsFolderName != nil,
+            claudeReady: demo != nil || sourceSetupModel.claudeProjectsFolderName != nil
         )
         let filing = NotchFiling(
             conversations: sourceSetupModel.codexConversations,
@@ -450,18 +483,21 @@ final class AnchorNotchPanel: NSPanel {
 final class AnchorHotKey {
     private var hotKeyRef: EventHotKeyRef?
     private var handlerRef: EventHandlerRef?
+    private let id: UInt32
     private let action: () -> Void
 
-    init?(keyCode: UInt32, modifiers: UInt32, action: @escaping () -> Void) {
+    /// Each shortcut needs its own `id`; a press of another one passes it by.
+    init?(keyCode: UInt32, modifiers: UInt32, id: UInt32, action: @escaping () -> Void) {
+        self.id = id
         self.action = action
         var pressed = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
         let context = Unmanaged.passUnretained(self).toOpaque()
         let installed = InstallEventHandler(GetApplicationEventTarget(), AnchorHotKey.handle, 1, &pressed,
                                             context, &handlerRef)
         // 'ANCH'
-        let id = EventHotKeyID(signature: OSType(0x414E_4348), id: 1)
+        let hotKeyID = EventHotKeyID(signature: Self.signature, id: id)
         guard installed == noErr,
-              RegisterEventHotKey(keyCode, modifiers, id, GetApplicationEventTarget(), 0, &hotKeyRef) == noErr
+              RegisterEventHotKey(keyCode, modifiers, hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef) == noErr
         else {
             if let handlerRef { RemoveEventHandler(handlerRef) }
             return nil
@@ -473,14 +509,22 @@ final class AnchorHotKey {
         if let handlerRef { RemoveEventHandler(handlerRef) }
     }
 
-    /// Carbon calls this on the main thread.
-    private static let handle: EventHandlerUPP = { _, _, context in
-        guard let context else { return OSStatus(eventNotHandledErr) }
+    private static let signature = OSType(0x414E_4348)
+
+    /// Carbon calls this on the main thread, for every shortcut Anchor registered.
+    private static let handle: EventHandlerUPP = { _, event, context in
+        guard let context, let event else { return OSStatus(eventNotHandledErr) }
+        var pressed = EventHotKeyID()
+        guard GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
+                                nil, MemoryLayout<EventHotKeyID>.size, nil, &pressed) == noErr
+        else { return OSStatus(eventNotHandledErr) }
         let address = UInt(bitPattern: context)
-        MainActor.assumeIsolated {
-            guard let pointer = UnsafeRawPointer(bitPattern: address) else { return }
-            Unmanaged<AnchorHotKey>.fromOpaque(pointer).takeUnretainedValue().action()
+        return MainActor.assumeIsolated {
+            guard let pointer = UnsafeRawPointer(bitPattern: address) else { return OSStatus(eventNotHandledErr) }
+            let hotKey = Unmanaged<AnchorHotKey>.fromOpaque(pointer).takeUnretainedValue()
+            guard pressed.signature == signature, pressed.id == hotKey.id else { return OSStatus(eventNotHandledErr) }
+            hotKey.action()
+            return noErr
         }
-        return noErr
     }
 }

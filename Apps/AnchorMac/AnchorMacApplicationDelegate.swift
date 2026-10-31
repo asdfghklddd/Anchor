@@ -11,6 +11,7 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     private var notchController: AnchorNotchController?
     private var bluetoothRadio: MacBluetoothRadioState?
     private var interfaceDefaults: UserDefaults?
+    private var demo: MacDemoDirector?
     private var didFinishLaunching = false
 
     func configure(
@@ -18,13 +19,15 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         linkController: any LocalLinkControlling,
         sourceSetupModel: MacSourceSetupModel,
         bluetoothRadio: MacBluetoothRadioState,
-        defaults: UserDefaults?
+        defaults: UserDefaults?,
+        demo: MacDemoDirector? = nil
     ) {
         self.model = model
         self.linkController = linkController
         self.sourceSetupModel = sourceSetupModel
         self.bluetoothRadio = bluetoothRadio
         interfaceDefaults = defaults
+        self.demo = demo
         startInterfaceIfReady()
     }
 
@@ -80,7 +83,8 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
         }
         model.start()
         startNotch()
-        if sourceSetupModel.showsCodexOnboarding {
+        // The demo's agents need no folders.
+        if demo == nil, sourceSetupModel.showsCodexOnboarding {
             sourceSetupModel.onNeedsAttention?()
         }
     }
@@ -94,6 +98,7 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
             linkController: linkController,
             sourceSetupModel: sourceSetupModel,
             bluetooth: bluetoothRadio,
+            demo: demo,
             onOpenSettings: { [weak self] in self?.openSettings() }
         )
         notchController = controller
