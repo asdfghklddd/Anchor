@@ -9757,6 +9757,23 @@
         }
       }
     },
+    "setup.draft.keep" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep editing"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续编辑"
+          }
+        }
+      }
+    },
     "setup.draft.kept" : {
       "extractionState" : "manual",
       "localizations" : {

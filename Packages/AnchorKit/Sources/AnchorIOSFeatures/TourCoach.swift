@@ -212,7 +212,7 @@ struct TourCoach: View {
     let spots: [TourSpot: CGRect]
     /// The whole screen, safe areas included, which `spots` are measured in.
     let size: CGSize
-    /// The harbor invitation is up: the turn prompt arrives with it, after the anchor catches.
+    /// The turn is offered: the prompt arrives once the anchor catches.
     let inviting: Bool
     let gravity: DeviceGravityMonitor
     let onSideways: () -> Void
@@ -511,8 +511,8 @@ struct TourTurnPrompt: View {
             .padding(.bottom, 16)
             .frame(maxWidth: .infinity)
             .background { TourScrim(fadesOut: true) }
-            // The harbor and its hanging anchor stay clear below.
-            Color.clear.frame(height: WorkInvitationHarbor.height)
+            // The anchor button stays clear below.
+            Color.clear.frame(height: 130)
         }
         .animation(AnchorMotion.panel, value: showsLock)
         .task {

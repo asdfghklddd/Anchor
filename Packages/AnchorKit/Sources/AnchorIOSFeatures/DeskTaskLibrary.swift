@@ -2,6 +2,7 @@
 import AnchorCore
 import AnchorDesign
 import SwiftUI
+import UIKit
 
 /// The desk's task library (任务进程库), laid out as the Figma desk: a folder
 /// per task in its tab color, the task's name on the folder's tab, and up to
@@ -188,7 +189,7 @@ struct DeskTaskLibrary: View {
                 // The title gets the whole row, so ten characters always fit.
                 Text(process.title)
                     .font(.system(size: 14))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(DeskStyle.text)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .frame(height: 20)
@@ -211,13 +212,13 @@ struct DeskTaskLibrary: View {
             .padding(.trailing, 4)
             .padding(.top, 10)
             .frame(width: Metrics.card.width, height: Metrics.card.height, alignment: .topLeading)
-            .background(isRed ? palette.front : .white, in: shape)
+            .background(isRed ? palette.front : DeskStyle.card, in: shape)
             .contentShape(shape)
         }
         .buttonStyle(AnchorPressButtonStyle())
         // Each card glows in its task's color and casts up onto the card behind.
         .background {
-            shape.fill(.white)
+            shape.fill(DeskStyle.card)
                 .shadow(color: palette.glow.opacity(0.2), radius: 20, y: 2)
                 .shadow(color: .black.opacity(0.25), radius: 11, y: -2)
         }
@@ -241,7 +242,7 @@ struct DeskTaskLibrary: View {
             Text(process.request ?? "")
                 .font(.system(size: 11))
                 .lineSpacing(2.3)
-                .foregroundStyle(.black)
+                .foregroundStyle(DeskStyle.text)
                 .lineLimit(4)
                 .frame(width: 130, height: 61, alignment: .topLeading)
             Text(reply(for: process))
@@ -263,7 +264,7 @@ struct DeskTaskLibrary: View {
             .frame(width: Metrics.card.width, height: Metrics.card.height, alignment: .topLeading)
             .background {
                 RoundedRectangle(cornerRadius: Metrics.radius, style: .continuous)
-                    .fill(.white)
+                    .fill(DeskStyle.card)
                     .shadow(color: .black.opacity(0.12), radius: 11, y: -2)
             }
     }
@@ -427,18 +428,37 @@ struct DeskFolderPalette {
     /// The card in front.
     let front: Color
 
-    static let replyInk = Color(anchorHex: 0xA3A3A3)
+    static let replyInk = DeskStyle.adaptive(0xA3A3A3, dark: 0x8597A1)
 
     private static let glows: [UInt32] = [0xFFB400, 0x49C8FF, 0xFF64DB]
-    private static let inks: [UInt32] = [0xFF7F00, 0x0095FF, 0xFF3ED2]
-    private static let fronts: [UInt32] = [0xFFF6E1, 0xD4F6FF, 0xFFEFFB]
+    private static let inks: [(UInt32, UInt32)] = [(0xFF7F00, 0xFFA040), (0x0095FF, 0x5CBBFF), (0xFF3ED2, 0xFF7AE0)]
+    private static let fronts: [(UInt32, UInt32)] = [(0xFFF6E1, 0x3B3122), (0xD4F6FF, 0x173E4C), (0xFFEFFB, 0x3E2439)]
 
     init(_ task: AnchorSession) {
         let index = max(0, task.taskColorIndex ?? 0) % Self.inks.count
         folder = HostedTaskAppearance.landscapeTabTint(task)
         glow = Color(anchorHex: Self.glows[index])
-        ink = Color(anchorHex: Self.inks[index])
-        front = Color(anchorHex: Self.fronts[index])
+        ink = DeskStyle.adaptive(Self.inks[index].0, dark: Self.inks[index].1)
+        front = DeskStyle.adaptive(Self.fronts[index].0, dark: Self.fronts[index].1)
+    }
+}
+
+/// The desk's own colors: the Figma's light board, and a night harbor for dark mode.
+enum DeskStyle {
+    static let waterLeft = adaptive(0xF9FCFE, dark: 0x0F1C25)
+    static let waterRight = adaptive(0xD4F7FF, dark: 0x123641)
+    static let ink = adaptive(0x26599D, dark: 0xB5E2F6)
+    static let quietInk = adaptive(0x8F8F8F, dark: 0x8FA3AD)
+    static let card = adaptive(0xFFFFFF, dark: 0x20343E)
+    static let text = adaptive(0x000000, dark: 0xDFEFF5)
+
+    static func adaptive(_ light: UInt32, dark: UInt32) -> Color {
+        Color(uiColor: UIColor { traits in
+            let value = traits.userInterfaceStyle == .dark ? dark : light
+            return UIColor(red: CGFloat((value >> 16) & 255) / 255,
+                green: CGFloat((value >> 8) & 255) / 255,
+                blue: CGFloat(value & 255) / 255, alpha: 1)
+        })
     }
 }
 

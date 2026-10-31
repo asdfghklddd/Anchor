@@ -10,7 +10,7 @@ import Foundation
 /// flickering link never re-invites.
 public struct WorkInvitation: Equatable, Sendable {
     public enum Event: Equatable, Sendable {
-        /// Show the hanging anchor and its gentle current.
+        /// Offer the turn (the tour prompts it).
         case offered
         /// Portrait to landscape with work anchored: the anchor sets (haptic).
         case arrived

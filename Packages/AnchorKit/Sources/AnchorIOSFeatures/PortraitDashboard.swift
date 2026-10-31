@@ -11,12 +11,7 @@ struct PortraitDashboard: View {
     let onRoute: (AnchorRoute) -> Void
     let onSheet: (AnchorSheet) -> Void
     let onTask: (UUID) -> Void
-    /// The wordless invitation to turn into the landscape work desk, if any.
-    var invitation: WorkInvitationHarbor.Mode? = nil
-    var onInvitationEnd: () -> Void = {}
     var anchorDrops = 0
-    var anchorWeighs = 0
-    var gravity = DeviceGravityMonitor()
     /// The task just anchored, floating until its anchor catches.
     var settlingTaskID: UUID? = nil
     /// The task whose anchor last caught, and a count that changes each time.
@@ -57,16 +52,6 @@ struct PortraitDashboard: View {
             // The mockup's water runs clean under the bars; nothing frosts it.
             .scrollEdgeEffectHidden(true, for: .all)
             .accessibilityIdentifier("workspace.screen")
-            if let invitation {
-                // Behind the anchor button, which floats on the water.
-                VStack {
-                    Spacer()
-                    WorkInvitationHarbor(mode: invitation, gravity: gravity, onEnd: onInvitationEnd)
-                        .id(invitation)
-                }
-                .ignoresSafeArea(edges: .bottom)
-                .transition(.opacity)
-            }
         }
         .onAppear { RotationTrace.note("portrait home appeared") }
         .safeAreaBar(edge: .top, spacing: 0) {
@@ -81,14 +66,12 @@ struct PortraitDashboard: View {
                     HomeTaskCapNote(onDismiss: onCapNoteDismiss)
                         .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 8)))
                 }
-                HarborAnchorButton(
-                    isInviting: invitation == .inviting,
-                    drops: anchorDrops,
-                    weighs: anchorWeighs,
-                    gravity: gravity,
-                    action: { onSheet(.setup) }
-                )
-                .matchedTransitionSource(id: AnchorSheet.setup, in: transitionNamespace)
+                HarborAnchorButton(drops: anchorDrops, action: { onSheet(.setup) })
+                // The zoom's stand-in is the round button itself; left alone it is a
+                // grey square that lingers while the sheet settles back into it.
+                .matchedTransitionSource(id: AnchorSheet.setup, in: transitionNamespace) { source in
+                    source.background(.clear).clipShape(RoundedRectangle(cornerRadius: 37.5))
+                }
                 .tourSpot(.anchorButton)
             }
             .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: showsCapNote)

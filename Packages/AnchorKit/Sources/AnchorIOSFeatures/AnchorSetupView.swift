@@ -31,7 +31,7 @@
 
     var body: some View {
       VStack(spacing: 0) {
-        AnchorSetupHeader(close: dismiss.callAsFunction)
+        AnchorSetupHeader(close: close, confirmsDiscard: $showsDiscardConfirmation, discard: discard)
         ScrollView {
           VStack(alignment: .leading, spacing: 14) {
             if tour != nil { tourLine }
@@ -124,18 +124,14 @@
         if previous == .title, current != .title { settleTitle() }
       }
       .onDisappear { speechInput.stop() }
-      .interactiveDismissDisabled(focus != nil || saving || draft.isImportingImages)
-      .disabled(saving)
-      .confirmationDialog(SetupCopy.discardDraftQuestion, isPresented: $showsDiscardConfirmation, titleVisibility: .visible) {
-        Button(SetupCopy.discardDraft, role: .destructive) {
-          speechInput.stop()
-          speechField = nil
-          draft.isConsumed = true
-          dismiss()
+      // With something written, a swipe down asks first, from the close button.
+      .interactiveDismissDisabled(draft.hasContent || focus != nil || saving || draft.isImportingImages)
+      .background {
+        SheetDismissAttempt {
+          if draft.hasContent, !saving, !draft.isImportingImages { close() }
         }
-        .accessibilityIdentifier("setup.draft.discard.confirm")
-        Button(L10n.cancel, role: .cancel) { }
       }
+      .disabled(saving)
     }
 
     @ViewBuilder private var bottomControls: some View {
@@ -149,27 +145,29 @@
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-      } else if draft.hasContent {
-        HStack(spacing: 12) {
-          Spacer(minLength: 0)
-          Button(SetupCopy.discardDraft, role: .destructive) {
-            showsDiscardConfirmation = true
-          }
-          .font(.caption).frame(minHeight: 44)
-          .fixedSize(horizontal: true, vertical: false)
-          .disabled(draft.isImportingImages)
-          .accessibilityIdentifier("setup.draft.discard")
-        }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 12)
-        .frame(maxWidth: 580)
-        .frame(maxWidth: .infinity)
       }
     }
 
     private static let space = "setup"
 
     private var canDrop: Bool { draft.isValid && !draft.isImportingImages && !saving }
+
+    /// Nothing written closes at once; a draft asks whether to throw it away.
+    private func close() {
+      if draft.hasContent {
+        focus = nil
+        showsDiscardConfirmation = true
+      } else {
+        dismiss()
+      }
+    }
+
+    private func discard() {
+      speechInput.stop()
+      speechField = nil
+      draft.isConsumed = true
+      dismiss()
+    }
 
     private func settleTitle() {
       if draft.settleTitle() { titleMoved = true }

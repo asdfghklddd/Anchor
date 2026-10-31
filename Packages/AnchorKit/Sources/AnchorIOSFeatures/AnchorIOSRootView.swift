@@ -116,7 +116,8 @@ struct AnchorWorkspaceView: View {
     @State private var suspendedSetup = false
     @State private var fullScreen: AnchorFullScreen?
     @State private var invitation = WorkInvitation()
-    @State private var harborMode: WorkInvitationHarbor.Mode?
+    /// The tour's turn prompt is up (the person's own home asks nothing).
+    @State private var turnOffered = false
     @State private var arrivalPending = false
     @State private var invitationDeferred = false
     @State private var anchorDrops = 0
@@ -125,7 +126,6 @@ struct AnchorWorkspaceView: View {
     @State private var settledTaskID: UUID?
     @State private var anchorSettles = 0
     @AnchorReducedMotion private var reduceMotion
-    @State private var anchorWeighs = 0
     @State private var gravity = DeviceGravityMonitor()
     @State private var posture = DevicePosture.unknown
     @State private var promptedRecoverySessionID: UUID?
@@ -191,11 +191,7 @@ struct AnchorWorkspaceView: View {
                             else if tour == nil || requested == .setup { sheet = requested }
                         },
                         onTask: openHostedTask,
-                        invitation: harborMode,
-                        onInvitationEnd: endHarbor,
                         anchorDrops: anchorDrops,
-                        anchorWeighs: anchorWeighs,
-                        gravity: gravity,
                         settlingTaskID: settlingTaskID,
                         settledTaskID: settledTaskID,
                         anchorSettles: anchorSettles,
@@ -208,7 +204,7 @@ struct AnchorWorkspaceView: View {
                         if let tour {
                             GeometryReader { proxy in
                                 TourCoach(tour: tour, spots: anchors.mapValues { proxy[$0] }, size: proxy.size,
-                                          inviting: harborMode == .inviting, gravity: gravity,
+                                          inviting: turnOffered, gravity: gravity,
                                           onSideways: openSidewaysDesk)
                             }
                             .ignoresSafeArea()
@@ -500,10 +496,11 @@ struct AnchorWorkspaceView: View {
         )
         switch event {
         case .offered:
-            // Never over a sheet or cover: wait until the home is in view.
-            if holdingOffer || sheet != nil || fullScreen != nil { invitationDeferred = true } else { harborMode = .inviting }
+            // Only the tour asks for the turn, and never over a sheet or cover.
+            guard tour != nil else { break }
+            if holdingOffer || sheet != nil || fullScreen != nil { invitationDeferred = true } else { turnOffered = true }
         case .arrived:
-            harborMode = nil
+            turnOffered = false
             arrivalPending = true
             // Play once for this turn, not again when a pushed detail returns.
             Task { @MainActor in
@@ -511,25 +508,23 @@ struct AnchorWorkspaceView: View {
                 arrivalPending = false
             }
         case .weighed:
-            harborMode = .weighing
-            anchorWeighs += 1
+            break
         case nil:
             if !invitation.isOffered {
                 invitationDeferred = false
-                if harborMode == .inviting { harborMode = nil }
+                turnOffered = false
             }
         }
-        RotationTrace.note("invitation \(event.map { "\($0)" } ?? "unchanged"), harbor \(harborMode.map { "\($0)" } ?? "none")")
-        // One motion sensor, read only while the invitation is on screen.
-        if harborMode == .inviting { gravity.start() } else { gravity.stop() }
+        RotationTrace.note("invitation \(event.map { "\($0)" } ?? "unchanged"), turn prompt \(turnOffered)")
+        // One motion sensor, read only while the turn prompt is on screen.
+        if turnOffered { gravity.start() } else { gravity.stop() }
     }
 
-    /// A sheet or cover opened over a running invitation (for example the
-    /// grown anchor was tapped to drop another one): pause it, unseen time
-    /// must not use it up, and bring it back once the home is in view.
+    /// A sheet or cover opened over the tour's turn prompt: put it away and
+    /// bring it back once the home is in view.
     private func holdInvitationBehindCover() {
-        guard harborMode == .inviting else { return }
-        harborMode = nil
+        guard turnOffered else { return }
+        turnOffered = false
         invitationDeferred = true
         gravity.stop()
     }
@@ -557,15 +552,9 @@ struct AnchorWorkspaceView: View {
             try? await Task.sleep(for: .seconds(delay))
             guard invitationDeferred, invitation.isOffered, sheet == nil, fullScreen == nil, posture == .portrait else { return }
             invitationDeferred = false
-            harborMode = .inviting
+            turnOffered = true
             gravity.start()
         }
-    }
-
-    private func endHarbor() {
-        if harborMode == .inviting { invitation.expire() }
-        harborMode = nil
-        gravity.stop()
     }
 
     @ViewBuilder

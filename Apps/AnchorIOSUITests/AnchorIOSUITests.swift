@@ -6,7 +6,7 @@ final class AnchorIOSUITests: XCTestCase {
     }
 
     @MainActor
-    func testClosingSetupKeepsDraftUntilDiscardOrSuccessfulCreation() throws {
+    func testClosingSetupWithDraftAsksBeforeDiscarding() throws {
         XCUIDevice.shared.orientation = .portrait
         let app = isolatedApplication()
         defer { app.terminate() }
@@ -16,15 +16,8 @@ final class AnchorIOSUITests: XCTestCase {
         create.tap()
         type("Keep this draft", into: element("setup.goal.field", in: app))
         type("Keep my plan too", into: element("setup.steps.field", in: app))
+        // Closing with a draft asks first, from the close button.
         app.buttons["setup.close.button"].tap()
-        XCTAssertTrue(element("setup.screen", in: app).waitForNonExistence(timeout: 5))
-        create.tap()
-        let plan = element("setup.steps.field", in: app)
-        XCTAssertTrue(plan.waitForExistence(timeout: 5))
-        XCTAssertEqual(plan.value as? String, "Keep my plan too")
-        XCTAssertEqual(element("setup.goal.field", in: app).value as? String, "Keep this draft")
-        capture("Draft restored after close", app: app)
-        app.buttons["setup.draft.discard"].tap()
         let discard = app.buttons.matching(identifier: "setup.draft.discard.confirm").firstMatch
         XCTAssertTrue(discard.waitForExistence(timeout: 3))
         discard.tap()
@@ -32,7 +25,9 @@ final class AnchorIOSUITests: XCTestCase {
         create.tap()
         assertEmpty(element("setup.goal.field", in: app))
         dropAnchor("Fresh task", plan: "One step", in: app)
-        XCTAssertTrue(app.buttons["Fresh task"].waitForExistence(timeout: 5))
+        // The home card reads as one element: its title, then its status.
+        let card = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Fresh task")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
         create.tap()
         XCTAssertTrue(element("setup.goal.field", in: app).waitForExistence(timeout: 5))
         assertEmpty(element("setup.goal.field", in: app))

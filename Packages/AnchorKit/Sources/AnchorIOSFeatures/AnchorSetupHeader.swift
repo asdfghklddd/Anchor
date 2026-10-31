@@ -3,9 +3,12 @@ import AnchorDesign
 import SwiftUI
 
 /// Close on the left and the title in the middle; the drop itself is the
-/// slider under the plan, where the hand already is.
+/// slider under the plan, where the hand already is. Closing with something
+/// written asks first, from the close button, before the draft is thrown away.
 struct AnchorSetupHeader: View {
     let close: () -> Void
+    @Binding var confirmsDiscard: Bool
+    let discard: () -> Void
 
     @ScaledMetric(relativeTo: .title2) private var figureSize: CGFloat = 26
 
@@ -21,6 +24,12 @@ struct AnchorSetupHeader: View {
             .foregroundStyle(AnchorSetupStyle.ink)
             .accessibilityLabel(L10n.close)
             .accessibilityIdentifier("setup.close.button")
+            .confirmationDialog(SetupCopy.discardDraftQuestion, isPresented: $confirmsDiscard, titleVisibility: .hidden) {
+                Button(SetupCopy.discardDraft, role: .destructive, action: discard)
+                    .accessibilityIdentifier("setup.draft.discard.confirm")
+                Button(SetupCopy.keepEditing, role: .cancel) { }
+                    .accessibilityIdentifier("setup.draft.keep")
+            }
             Spacer(minLength: 4)
             HStack(spacing: 8) {
                 AnchorFigure(color: AnchorSetupStyle.accent, depth: true)

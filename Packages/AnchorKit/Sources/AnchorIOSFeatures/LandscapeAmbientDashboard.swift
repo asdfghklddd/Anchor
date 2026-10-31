@@ -127,8 +127,8 @@ struct LandscapeAmbientDashboard: View {
     private static let leftShift = islandGutter - 15
     /// The library starts 10 pt past the pet's room.
     private static let libraryX = islandGutter + CGFloat(DeskScene.columns) * DeskPet.pixel + 10
-    private static let ink = Color(anchorHex: 0x26599D)
-    private static let quietInk = Color(anchorHex: 0x8F8F8F)
+    private static let ink = DeskStyle.ink
+    private static let quietInk = DeskStyle.quietInk
 
     /// Every part at its Figma place: the clock and date top left, the pet
     /// below them, the conversation count at the foot, the folders on the right.
@@ -277,10 +277,11 @@ struct LandscapeAmbientDashboard: View {
         }
     }
 }
-/// The desk's water: the Figma gradient from near white on the left to light cyan on the right.
+/// The desk's water: the Figma gradient from near white on the left to light
+/// cyan on the right; at night, deep blue to dark teal.
 private struct DeskBackground: View {
     var body: some View {
-        LinearGradient(colors: [Color(anchorHex: 0xF9FCFE), Color(anchorHex: 0xD4F7FF)],
+        LinearGradient(colors: [DeskStyle.waterLeft, DeskStyle.waterRight],
                        startPoint: .leading, endPoint: .trailing)
             .ignoresSafeArea()
     }

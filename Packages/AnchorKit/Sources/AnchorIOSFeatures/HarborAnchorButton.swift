@@ -14,33 +14,16 @@ enum AnchorDrop {
     static let gravity = UnitCurve.bezier(startControlPoint: UnitPoint(x: 0.5, y: 0), endControlPoint: UnitPoint(x: 0.9, y: 0.55))
 }
 
-/// The round anchor button at the bottom of the portrait home, which carries
-/// three moments without words:
-///
-/// - **Anchor dropped** (`drops` changes after setup succeeds): the anchor falls
-///   into the button, meets the water with a splash and a thud, bobs, and
-///   catches with a lighter tap, becoming the button's own anchor.
-/// - **Invitation** (`isInviting`): the cyan disc sinks into the harbor water
-///   and the anchor grows out of it, hanging and rocking like a boat at
-///   anchor. A slow current leans it toward the left edge, the way to turn,
-///   and on a real phone it follows gravity.
-/// - **Weighing** (`weighs` changes): back from landscape, the anchor rises
-///   out of the water and settles into the button again.
-///
-/// The button keeps its action and identity throughout: tapping always opens
-/// a new anchor.
+/// The round anchor button at the bottom of the portrait home. When an anchor
+/// is dropped (`drops` changes after setup succeeds), the anchor falls into the
+/// button, meets the water with a splash and a thud, bobs, and catches with a
+/// lighter tap, becoming the button's own anchor. Tapping always opens a new
+/// anchor.
 struct HarborAnchorButton: View {
-    let isInviting: Bool
     let drops: Int
-    let weighs: Int
-    let gravity: DeviceGravityMonitor
     let action: () -> Void
 
     @AnchorReducedMotion private var reduceMotion
-    /// 0 is the round button, 1 the grown, hanging anchor.
-    @State private var grown: CGFloat = 0
-    @State private var invitedAt = Date.now
-    @State private var pendulum = Pendulum()
     @State private var haptics = AnchorDropHaptics()
 
     private static let disc: CGFloat = 75
@@ -55,11 +38,8 @@ struct HarborAnchorButton: View {
                     Circle()
                         .fill(HomeStyle.anchor)
                         .frame(width: Self.disc, height: Self.disc)
-                        .shadow(color: AnchorIOSStyle.heading.opacity(0.22 * (1 - grown)), radius: 14, y: 6)
-                        // The disc sinks into the water as the anchor grows out of it.
-                        .scaleEffect((1 - grown * 0.5) * motion.dip)
-                        .offset(y: grown * 20)
-                        .opacity(1 - grown)
+                        .shadow(color: AnchorIOSStyle.heading.opacity(0.22), radius: 14, y: 6)
+                        .scaleEffect(motion.dip)
                     anchor.opacity(motion.resting)
                     falling(motion)
                 }
@@ -67,62 +47,21 @@ struct HarborAnchorButton: View {
             } keyframes: { _ in
                 dropKeyframes
             }
-            .contentShape(Circle().scale(1 + grown * 0.4))
+            .contentShape(Circle())
         }
         .buttonStyle(AnchorPressButtonStyle())
         .accessibilityLabel(L10n.establishAnchor)
-        .accessibilityHint(isInviting ? L10n.workInvitation : "")
         .accessibilityIdentifier("anchor.note.button")
-        .onChange(of: isInviting) { _, inviting in setGrown(inviting) }
         .onChange(of: drops) { _, _ in
             if reduceMotion { haptics.playCatch() } else { haptics.playDrop(after: AnchorDrop.contact) }
         }
-        .onChange(of: weighs) { _, _ in playWeigh() }
-        .onAppear { if isInviting { setGrown(true) } }
     }
-
-    // MARK: The anchor
 
     private var anchor: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: grown == 0 || reduceMotion)) { context in
-            let size = Self.mark + grown * 70
-            let swing = grown > 0 ? angle(at: context.date.timeIntervalSince(invitedAt)) : 0
-            VStack(spacing: 0) {
-                // A short rope from above: the anchor hangs, it does not float.
-                Capsule()
-                    .fill(AnchorIOSStyle.secondaryText.opacity(0.7))
-                    .frame(width: 1.6, height: 44 * grown)
-                    .opacity(Double(grown))
-                AnchorFigure(color: AnchorIOSStyle.onAccent, depth: true)
-                    .frame(width: size, height: size)
-            }
-            // Angles follow screen gravity (negative = toward the left edge); a
-            // hanging anchor's bottom swings left under a clockwise rotation.
-            .rotationEffect(.radians(-swing), anchor: .top)
-            .offset(y: -grown * 62)
-        }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
-
-    /// Boat roll, three slow currents to the left, and real gravity on device.
-    private func angle(at elapsed: TimeInterval) -> Double {
-        if reduceMotion { return -0.28 }
-        let roll = 0.10 * sin(2 * .pi * elapsed / 5.2)
-        var current = 0.0
-        if elapsed > 1.2, elapsed < 15 {
-            let phase = (elapsed - 1.2).truncatingRemainder(dividingBy: 4.6)
-            if phase < 1.6 { current = -0.42 * sin(.pi * phase / 1.6) }
-        }
-        let tilt = gravity.isAvailable ? gravity.angle : 0
-        return pendulum.step(toward: roll + current + tilt, at: elapsed)
-    }
-
-    private func setGrown(_ inviting: Bool) {
-        if inviting { invitedAt = .now; pendulum = Pendulum() }
-        withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.7, bounce: 0.28)) {
-            grown = inviting ? 1 : 0
-        }
+        AnchorFigure(color: AnchorIOSStyle.onAccent, depth: true)
+            .frame(width: Self.mark, height: Self.mark)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 
     // MARK: Anchor dropped
@@ -244,19 +183,6 @@ struct HarborAnchorButton: View {
             SpringKeyframe(1, duration: 0.3, spring: .bouncy)
         }
     }
-
-    // MARK: Weighing
-
-    private func playWeigh() {
-        guard !reduceMotion else { return }
-        invitedAt = .now
-        pendulum = Pendulum()
-        withAnimation(nil) { grown = 1 }
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(650))
-            withAnimation(.spring(duration: 0.6, bounce: 0.2)) { grown = 0 }
-        }
-    }
 }
 
 /// Everything that moves during one drop, read once per frame.
@@ -274,21 +200,4 @@ struct DropMotion {
     var dip: CGFloat = 1
 }
 
-/// A damped pendulum stepped once per frame. Reference state on purpose: it
-/// integrates between frames and must not trigger view updates itself.
-final class Pendulum {
-    private var angle = 0.0
-    private var velocity = 0.0
-    private var lastTime: TimeInterval?
-
-    func step(toward target: Double, at time: TimeInterval) -> Double {
-        let dt = min(1.0 / 20, max(0, time - (lastTime ?? time)))
-        lastTime = time
-        // Stiffness and damping give an anchor that swings past once and settles.
-        let acceleration = -26 * (angle - target) - 3.4 * velocity
-        velocity += acceleration * dt
-        angle += velocity * dt
-        return angle
-    }
-}
 #endif

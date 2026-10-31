@@ -35,6 +35,7 @@ enum SetupCopy {
     static let doneEditing = AnchorStrings.value("setup.plan.edit.done", default: "Done editing")
     static let discardDraft = AnchorStrings.value("setup.draft.discard", default: "Discard draft")
     static let discardDraftQuestion = AnchorStrings.value("setup.draft.discard.question", default: "Discard this draft?")
+    static let keepEditing = AnchorStrings.value("setup.draft.keep", default: "Keep editing")
 
     static func split(_ count: Int) -> String {
         count == 1 ? splitOne : String(format: splitMany, count)
