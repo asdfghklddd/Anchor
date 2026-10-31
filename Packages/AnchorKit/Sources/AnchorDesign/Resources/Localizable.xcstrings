@@ -11382,13 +11382,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Select the Codex sessions folder and Claude Code projects folder together, when both are installed. Anchor remembers access and discovers new conversations automatically."
+            "value" : "Just click Connect. Anchor only reads the Codex and Claude Code conversation folders, remembers access, and finds new conversations automatically."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "如果两者都已安装，请在此窗口中同时选择 Codex 的 sessions 文件夹和 Claude Code 的 projects 文件夹。Anchor 会记住访问权限并自动发现新对话。"
+            "value" : "直接点「连接」即可。Anchor 只读取 Codex 和 Claude Code 的对话文件夹，记住权限后会自动发现新对话。"
           }
         }
       }
@@ -11398,13 +11398,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connect selected folders"
+            "value" : "Connect"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "连接所选文件夹"
+            "value" : "连接"
           }
         }
       }
@@ -11430,13 +11430,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Select the Codex sessions folder or Claude Code projects folder."
+            "value" : "No Codex or Claude Code conversations were found. Open your home folder and click Connect."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请选择 Codex 的 sessions 文件夹或 Claude Code 的 projects 文件夹。"
+            "value" : "没有找到 Codex 或 Claude Code 的对话。请回到个人文件夹后点「连接」。"
           }
         }
       }

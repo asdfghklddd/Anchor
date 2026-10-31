@@ -286,92 +286,79 @@ public final class MacSourceSetupModel {
     }
 
     /// Grants one persistent, folder-scoped access flow for the local agent logs.
-    /// The person can select Codex `sessions` and Claude Code `projects` in the
-    /// same panel; discovery then follows new conversations without per-session
-    /// approval. Only these two log folders are accepted.
+    /// The panel opens on the home folder, so a single click on Connect grants
+    /// it; Anchor then saves read-only bookmarks for only Codex `sessions` and
+    /// Claude Code `projects` and lets the wider grant go. Picking `.codex`,
+    /// `.claude` or the two log folders themselves works the same way.
     public func authorizeAgentSessionFolders() async {
         guard !isWorking else { return }
         isWorking = true
         errorMessage = nil
         defer { isWorking = false }
 
-        let codexSessionsURL = CodexSessionFileLocator().rootURL.standardizedFileURL
-        let homeURL = codexSessionsURL
+        let homeURL = CodexSessionFileLocator().rootURL
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-        let claudeProjectsURL = homeURL
-            .appending(path: ".claude/projects", directoryHint: .isDirectory)
-            .standardizedFileURL
 
         let panel = NSOpenPanel()
         panel.title = L10n.sourceSetupAgentFoldersPanelTitle
         panel.message = L10n.sourceSetupAgentFoldersPanelMessage
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
+        panel.canCreateDirectories = false
         panel.allowsMultipleSelection = true
         panel.directoryURL = homeURL
         panel.showsHiddenFiles = true
         panel.prompt = L10n.sourceSetupAgentFoldersPanelPrompt
         guard await panel.begin() == .OK else { return }
 
-        var codexSelection: URL?
-        var claudeSelection: URL?
+        // Paths compare without trailing slashes; URL equality does not.
+        let homePath = homeURL.standardizedFileURL.path
+        let codexPath = homePath + "/.codex/sessions"
+        let claudePath = homePath + "/.claude/projects"
+        var codexFolder: URL?
+        var claudeFolder: URL?
+        var grantedURLs: [URL] = []
         for url in panel.urls {
-            let selection = url.standardizedFileURL
-            if selection == codexSessionsURL {
-                codexSelection = url
-            } else if selection == claudeProjectsURL {
-                claudeSelection = url
+            let path = url.standardizedFileURL.path
+            let codex = [homePath, homePath + "/.codex", codexPath].contains(path)
+            let claude = [homePath, homePath + "/.claude", claudePath].contains(path)
+            guard codex || claude, url.startAccessingSecurityScopedResource() else { continue }
+            grantedURLs.append(url)
+            if codex {
+                codexFolder = url.appending(path: String(codexPath.dropFirst(path.count)), directoryHint: .isDirectory)
+            }
+            if claude {
+                claudeFolder = url.appending(path: String(claudePath.dropFirst(path.count)), directoryHint: .isDirectory)
             }
         }
-        guard codexSelection != nil || claudeSelection != nil else {
+        defer { for url in grantedURLs { url.stopAccessingSecurityScopedResource() } }
+
+        // A folder that is missing just means that agent is not installed.
+        func readableBookmark(_ url: URL?) -> Data? {
+            guard let url,
+                  (try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)) != nil
+            else { return nil }
+            return try? Self.folderBookmark(for: url)
+        }
+        let codexBookmark = readableBookmark(codexFolder)
+        let claudeBookmark = readableBookmark(claudeFolder)
+        guard codexBookmark != nil || claudeBookmark != nil else {
             errorMessage = L10n.sourceSetupAgentFoldersSelectionError
             return
         }
 
-        var accessedURLs: [URL] = []
-        var codexBookmark: Data?
-        var claudeBookmark: Data?
-        do {
-            if let codexSelection {
-                codexBookmark = try Self.folderBookmark(for: codexSelection)
-                guard codexSelection.startAccessingSecurityScopedResource() else {
-                    throw CocoaError(.fileReadNoPermission)
-                }
-                accessedURLs.append(codexSelection)
-                _ = try FileManager.default.contentsOfDirectory(
-                    at: codexSelection,
-                    includingPropertiesForKeys: nil
-                )
-            }
-            if let claudeSelection {
-                claudeBookmark = try Self.folderBookmark(for: claudeSelection)
-                guard claudeSelection.startAccessingSecurityScopedResource() else {
-                    throw CocoaError(.fileReadNoPermission)
-                }
-                accessedURLs.append(claudeSelection)
-                _ = try FileManager.default.contentsOfDirectory(
-                    at: claudeSelection,
-                    includingPropertiesForKeys: nil
-                )
-            }
-        } catch {
-            for url in accessedURLs { url.stopAccessingSecurityScopedResource() }
-            errorMessage = error.localizedDescription
-            return
-        }
-
-        if let codexSelection, let codexBookmark {
+        if let codexBookmark {
             codexSessionsRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
-            codexSessionsRootSecurityScopedURL = codexSelection
+            codexSessionsRootSecurityScopedURL = nil
             defaults.set(codexBookmark, forKey: Self.codexRootBookmarkKey)
-            await observeAuthorizedCodexFolder(codexSelection)
+            await restoreCodexSessionsRoot()
         }
-        if let claudeSelection, let claudeBookmark {
+        if let claudeBookmark {
             claudeRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
-            claudeRootSecurityScopedURL = claudeSelection
+            claudeRootSecurityScopedURL = nil
             defaults.set(claudeBookmark, forKey: Self.claudeRootBookmarkKey)
-            await observeAuthorizedClaudeFolder(claudeSelection)
+            await restoreClaudeRoot()
         }
         if hasConversationSource { finishCodexOnboarding() }
     }

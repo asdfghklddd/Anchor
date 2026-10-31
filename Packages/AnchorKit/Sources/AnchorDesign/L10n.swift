@@ -283,14 +283,14 @@ public enum L10n {
     )
     public static let sourceSetupAgentFoldersPanelMessage = AnchorStrings.value(
         "source.setup.agents.panel.message",
-        default: "Select the Codex sessions folder and Claude Code projects folder together, when both are installed. Anchor remembers access and discovers new conversations automatically."
+        default: "Just click Connect. Anchor only reads the Codex and Claude Code conversation folders, remembers access, and finds new conversations automatically."
     )
     public static let sourceSetupAgentFoldersPanelPrompt = AnchorStrings.value(
-        "source.setup.agents.panel.prompt", default: "Connect selected folders"
+        "source.setup.agents.panel.prompt", default: "Connect"
     )
     public static let sourceSetupAgentFoldersSelectionError = AnchorStrings.value(
         "source.setup.agents.selection-error",
-        default: "Select the Codex sessions folder or Claude Code projects folder."
+        default: "No Codex or Claude Code conversations were found. Open your home folder and click Connect."
     )
     public static let sourceSetupMacApps = AnchorStrings.value(
         "source.setup.mac-apps",
