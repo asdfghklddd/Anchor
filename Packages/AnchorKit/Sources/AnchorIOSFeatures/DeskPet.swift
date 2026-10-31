@@ -5,10 +5,11 @@ import SwiftUI
 /// Which pet keeps the landscape desk company; chosen in Settings.
 enum DeskPetKind: String, CaseIterable, Identifiable, Sendable {
     case crab
-    case squid
+    case whale
     case octopus
     case hermit
     case jelly
+    case starfish
     case off
 
     static let defaultsKey = "anchor.desk.pet"
@@ -18,10 +19,11 @@ enum DeskPetKind: String, CaseIterable, Identifiable, Sendable {
     var title: String {
         switch self {
         case .crab: AnchorStrings.value("settings.deskPet.crab", default: "Crab")
-        case .squid: AnchorStrings.value("settings.deskPet.squid", default: "Squid kid")
+        case .whale: AnchorStrings.value("settings.deskPet.whale", default: "Whale")
         case .octopus: AnchorStrings.value("settings.deskPet.octopus", default: "Octopus")
         case .hermit: AnchorStrings.value("settings.deskPet.hermit", default: "Hermit crab")
         case .jelly: AnchorStrings.value("settings.deskPet.jelly", default: "Jellyfish")
+        case .starfish: AnchorStrings.value("settings.deskPet.starfish", default: "Starfish")
         case .off: AnchorStrings.value("settings.deskPet.off", default: "Off")
         }
     }
@@ -127,8 +129,7 @@ struct DeskPet: View {
     private func draw(in graphics: GraphicsContext) {
         guard kind != .off, let brain = life.brain, brain.kind == kind else { return }
         DeskSceneRenderer(kind: kind, context: graphics, pixel: Self.pixel, tick: brain.tick, hour: brain.hour,
-                          state: DeskScene.State(brain), screen: screen(brain),
-                          music: !reduceMotion && (brain.act == .dance || brain.act == .sway)).draw()
+                          state: DeskScene.State(brain), screen: screen(brain)).draw()
         DeskPetRenderer(look: look, kind: kind, context: graphics, left: petLeft(brain),
                         ground: DeskScene.floor - 1, pixel: Self.pixel).draw(DeskPetFrame(brain, still: reduceMotion))
     }

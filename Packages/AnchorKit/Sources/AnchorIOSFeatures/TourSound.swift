@@ -194,10 +194,11 @@ enum TourBabble {
     static func pitch(of kind: DeskPetKind) -> Double {
         switch kind {
         case .crab, .off: 470
-        case .squid: 540
+        case .whale: 330
         case .octopus: 390
         case .hermit: 430
         case .jelly: 610
+        case .starfish: 660
         }
     }
 

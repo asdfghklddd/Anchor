@@ -9608,19 +9608,36 @@
         }
       }
     },
-    "settings.deskPet.squid" : {
+    "settings.deskPet.starfish" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Squid kid"
+            "value" : "Starfish"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "鱿鱼仔"
+            "value" : "小海星"
+          }
+        }
+      }
+    },
+    "settings.deskPet.whale" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whale"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "小鲸鱼"
           }
         }
       }

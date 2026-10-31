@@ -29,8 +29,9 @@ extension DeskPetFrame {
 }
 
 /// Draws a pet from its look and the act it is in: a pose (offset, eyes,
-/// arm, turned away, hidden) and the props the act brings (laptop, hard hat,
-/// headphones, glasses, bubbles, a cup, a bulb, z's, hearts, notes).
+/// arm, turned away, hidden, pressed flat) and the props the act brings
+/// (laptop, hard hat, headphones, glasses, bubbles, a cup, a bulb, z's,
+/// hearts, notes, a water spout, a spyglass).
 struct DeskPetRenderer {
     let look: DeskPetLook
     let kind: DeskPetKind
@@ -40,7 +41,7 @@ struct DeskPetRenderer {
     let ground: Int
     let pixel: CGFloat
 
-    private enum Eyes { case open, shut, happy, cross, left, right, angry }
+    private enum Eyes { case open, shut, happy, cross, left, right, angry, wink }
 
     private struct Pose {
         var dx = 0
@@ -53,11 +54,12 @@ struct DeskPetRenderer {
         var stepping = false
         var glow = 0
         var curlStrand = false
+        var squash = false
     }
 
     func draw(_ frame: DeskPetFrame) {
         let pose = pose(for: frame)
-        let flip = kind == .hermit && frame.facing < 0
+        let flip = look.mirrored(facing: frame.facing)
         let top = ground - look.height + 1 + pose.dy
         let paint = Painter(context: context, left: left + pose.dx, top: top, width: look.width,
                             flip: flip, pixel: pixel)
@@ -97,7 +99,6 @@ struct DeskPetRenderer {
             pose.stepping = true
         case .flee, .dash:
             pose.stepping = true
-            if kind == .squid { pose.eyes = .happy }
         case .look:
             pose.eyes = k < frame.length / 2 ? .left : .right
         case .yawn:
@@ -147,11 +148,6 @@ struct DeskPetRenderer {
         case .snap:
             pose.armUp = (k / 2) % 2 == 0
             pose.eyes = .happy
-        case .dance:
-            pose.dx = [0, 1, 2, 1, 0, -1, -2, -1][(k / 2) % 8]
-            pose.dy += k % 4 < 2 ? -1 : 0
-            pose.eyes = .happy
-            pose.armUp = (k / 4) % 2 == 0
         case .ink:
             pose.eyes = .shut
             pose.dx = min(4, k / 3) * (frame.facing < 0 ? -1 : 1)
@@ -167,6 +163,28 @@ struct DeskPetRenderer {
         case .sway:
             pose.dx = [0, 1, 1, 0, -1, -1][(k / 3) % 6]
             pose.eyes = .happy
+        case .spout:
+            pose.eyes = .happy
+            pose.dy += k < 3 ? -1 : 0
+        case .sing:
+            pose.eyes = .shut
+            pose.dy -= (k / 8) % 2
+        case .splash:
+            pose.armUp = (k / 3) % 2 == 0
+            pose.eyes = .happy
+        case .twinkle:
+            pose.glow = (k / 4) % 2 == 0 ? 2 : 1
+            pose.eyes = .happy
+            pose.dy += k < 4 ? -1 : 0
+        case .scope:
+            pose.eyes = .wink
+        case .wish:
+            pose.eyes = .shut
+            pose.glow = 1
+            pose.armUp = true
+        case .cling:
+            pose.eyes = .shut
+            pose.squash = true
         }
         if frame.still {
             pose.dx = 0
@@ -181,7 +199,10 @@ struct DeskPetRenderer {
 
     private func body(_ paint: Painter, _ frame: DeskPetFrame, _ pose: Pose) {
         let lift = (frame.tick / 2) % 2
-        for (y, row) in look.rows.enumerated() {
+        let flat = pose.squash ? Set(look.squash) : []
+        for (y, row) in look.rows.enumerated() where !flat.contains(y) {
+            // Pressed flat, the rows above each left-out one sink into its place.
+            let sink = flat.isEmpty ? 0 : flat.filter { $0 > y }.count
             for (x, c) in row.enumerated() where c != "." {
                 if pose.hidden {
                     guard look.shell.contains(c) else { continue }
@@ -190,16 +211,19 @@ struct DeskPetRenderer {
                     paint.dot(x, y + drop, look.color(c))
                     continue
                 }
-                if pose.armUp, c == "R" { continue }
                 var letter = c
+                if pose.armUp, c == "R" {
+                    guard let under = look.underArm else { continue }
+                    letter = under
+                }
                 if pose.back, c == "e" || c == "E" || look.face.contains(c) { letter = look.backOfHead ?? look.lid }
                 var dy = 0
                 if pose.stepping, y >= look.feetFrom { dy = (x < look.width / 2) == (lift == 0) ? -1 : 0 }
                 var color = look.color(letter)
-                if pose.glow > 0, letter == look.lid {
-                    color = Color(anchorHex: pose.glow == 1 ? 0xDDF7FB : 0xF4FDFE)
+                if pose.glow > 0, letter == look.lid || letter == "R" {
+                    color = Color(anchorHex: pose.glow == 1 ? look.glow.soft : look.glow.bright)
                 }
-                paint.dot(x, y + dy, color)
+                paint.dot(x, y + dy + sink, color)
             }
         }
         if pose.peek {
@@ -230,6 +254,8 @@ struct DeskPetRenderer {
         let lid = look.color(look.lid)
         let ink = DeskPetLook.ink
         for (i, box) in look.eyes.enumerated() {
+            // A wink shuts only the left eye.
+            if style == .wink, i > 0 { continue }
             if style == .angry {
                 // Brows slanting down toward the middle.
                 let inner = i == 0 ? box.x1 : box.x0, outer = i == 0 ? box.x0 : box.x1
@@ -239,7 +265,7 @@ struct DeskPetRenderer {
             }
             for y in box.y0...box.y1 { for x in box.x0...box.x1 { paint.dot(x, y, lid) } }
             switch style {
-            case .shut:
+            case .shut, .wink:
                 for x in box.x0...box.x1 { paint.dot(x, box.y1, ink) }
             case .happy:
                 // A three-pixel ^ per eye, a smile with the eyes.
@@ -273,6 +299,15 @@ struct DeskPetRenderer {
         case .nap, .sleep:
             let count = frame.still ? 3 : (k / 6) % 3 + 1
             for i in 0..<count { paint.glyph(Prop.z, at: w - 1 + i * 3, -1 - i * 4, Prop.color) }
+            if kind == .whale, !frame.still {
+                // A sleepy bubble swells at the blowhole and pops.
+                let size = (t / 8) % 4
+                let (x, y) = look.spout
+                if size == 0 { paint.dot(x, y - 2, Prop.color("b")) }
+                else if size == 1 { paint.grid(Prop.bubble, at: x - 1, y - 4, Prop.color) }
+                else if size == 2 { paint.grid(Prop.bigBubble, at: x - 2, y - 6, Prop.color) }
+                else { paint.grid(Prop.pop, at: x - 2, y - 6, Prop.color) }
+            }
         case .coffee:
             paint.grid(Prop.mug, at: look.hand.x, look.hand.y - 2, Prop.color)
             if (k / 3) % 2 == 0 { paint.dot(look.hand.x + 1, look.hand.y - 4, Prop.color("g")) }
@@ -316,9 +351,6 @@ struct DeskPetRenderer {
         case .build:
             paint.grid(Prop.hardHat, at: cx - 5, look.crown - 3, Prop.color)
             paint.grid((k / 4) % 2 == 0 ? Prop.hammerUp : Prop.hammerDown, at: look.hand.x, look.hand.y - 1, Prop.color)
-        case .dance:
-            headphones(paint)
-            paint.glyph(Prop.note, at: w + 1, 2 - (k % 16) / 4, Prop.color)
         case .sway:
             headphones(paint)
             paint.glyph(Prop.note, at: w, 1 - (k % 16) / 4, Prop.color)
@@ -337,7 +369,7 @@ struct DeskPetRenderer {
         case .water:
             // A can tipped toward the plant on its left, drops falling from the spout.
             // A turned hermit is drawn mirrored, so its left is the far side of the grid.
-            let mirrored = kind == .hermit && frame.facing < 0
+            let mirrored = look.mirrored(facing: frame.facing)
             paint.glyph(Prop.can, at: mirrored ? w : -4, look.hand.y - 4, Prop.color)
             for i in 0..<2 {
                 let fall = (k / 2 + i * 2) % 4
@@ -351,8 +383,59 @@ struct DeskPetRenderer {
             if (k / 3) % 2 == 0 { paint.glyph(Prop.sparkle, at: w / 2 + 2, 2 + (k / 6) % 3, Prop.color) }
         case .glow, .meditate:
             if frame.act == .glow, (k / 4) % 2 == 0 { paint.glyph(Prop.sparkle, at: w - 2, 0, Prop.color) }
+        case .spout:
+            spout(paint, k)
+        case .sing:
+            // Two notes drift up from the face, one after the other.
+            for i in 0..<2 {
+                let rise = (k + i * 8) % 16
+                paint.glyph(Prop.songNote, at: i == 0 ? -2 : 3, look.spout.y + 2 - rise / 2, Prop.color)
+            }
+        case .splash:
+            // Water flung ahead of it, in arcs.
+            for i in 0..<3 {
+                let a = (k + i * 3) % 9
+                let arc = [0, 2, 3, 4, 4, 3, 2, 1, 0][a]
+                paint.dot(-1 - a / 2 - i, look.hand.y + 2 - arc, Prop.color(i == 1 ? "w" : "b"))
+            }
+        case .twinkle:
+            let spots = [(-2, 4), (w + 1, 2), (cx - 1, -4), (w, h - 6), (-3, h - 8)]
+            for (i, spot) in spots.enumerated() where (k / 3 + i) % 3 == 0 {
+                paint.glyph(Prop.sparkle, at: spot.0, spot.1, Prop.color)
+            }
+        case .scope:
+            if look.eyes.count == 2 {
+                let eye = look.eyes[1]
+                paint.grid(Prop.spyglass, at: eye.x0, eye.y0 - 1, Prop.color)
+                if (k / 6) % 2 == 0 { paint.dot(eye.x0 + 7, eye.y0 - 1, Prop.color("w")) }
+            }
+        case .wish:
+            for i in 0..<3 {
+                let rise = (k + i * 4) % 12
+                paint.glyph(i == 1 ? Prop.sparkle : Prop.mote, at: cx - 4 + i * 3, -2 - rise, Prop.color)
+            }
+        case .cling:
+            paint.glyph(Prop.drop, at: w - 4, 7, Prop.color)
         case .idle, .move, .look, .yawn, .stretch, .wave, .happy, .sulk, .hide, .peek, .snap, .dash, .gaze, .reach:
             break
+        }
+    }
+
+    /// Water rises from the blowhole, then breaks into a spray and falls.
+    private func spout(_ paint: Painter, _ k: Int) {
+        let (x, y) = look.spout
+        let height = min(6, k + 1)
+        let falling = k >= 12
+        if !falling {
+            for i in 0..<height { paint.dot(x + (i % 2), y - 1 - i, Prop.color(i == height - 1 ? "w" : "b")) }
+            if k >= 5 {
+                for dx in [-2, -1, 2, 3] { paint.dot(x + dx, y - height - (abs(dx) == 2 ? 0 : 1), Prop.color("b")) }
+            }
+        } else {
+            let drop = (k - 12) / 2
+            for (i, dx) in [-3, -1, 2, 4].enumerated() {
+                paint.dot(x + dx + (dx < 0 ? -drop / 2 : drop / 2), y - 6 + drop + i % 2, Prop.color(i % 2 == 0 ? "b" : "w"))
+            }
         }
     }
 
@@ -453,6 +536,11 @@ private enum Prop {
     static let pebble = [".G.", "GGG"]
     static let sparkle = [".w.", "wcw", ".w."]
     static let can = ["b...", ".bbb", ".bbb", "..b."]
+    static let bigBubble = [".bbb.", "b...b", "b...b", "b...b", ".bbb."]
+    static let pop = ["b...b", "..b..", "b...b"]
+    static let songNote = ["..v", "..v", "vvv", "vv."]
+    static let spyglass = ["...vvvv", "vvvvvvv", "...vvvv"]
+    static let mote = ["Y"]
 
     static func color(_ c: Character) -> Color? {
         switch c {

@@ -140,8 +140,7 @@ enum DeskPetPlanner {
             let room = s.room ?? 0
             var to = random.int(in: 0...max(0, room))
             if abs(to - s.x) < 6 { to = s.x > room / 2 ? max(0, s.x - 12) : min(room, s.x + 12) }
-            let gait: DeskPetGait = s.kind == .squid && random.unit() < 0.4 ? .dash : .walk
-            return [.go(to, gait), .act(.look), .act(.idle, ticks: random.int(in: 24...48))]
+            return [.go(to), .act(.look), .act(.idle, ticks: random.int(in: 24...48))]
         case .glance:
             return [.act(.look), .act(.idle, ticks: 16), .act(.look)]
         case .stretch:
@@ -150,7 +149,7 @@ enum DeskPetPlanner {
             let act = s.nature.shows[random.int(in: 0...(s.nature.shows.count - 1))]
             return [.act(act, ticks: act == .snap ? 24 : nil)]
         case .own:
-            return [.go(s.ownSpot), .effect(.own), .act(own.act, ticks: own.act == .read ? 128 : 64)]
+            return [.go(s.ownSpot)] + own.turn + [.effect(.own), .act(own.act, ticks: own.act == .read ? 128 : 64)]
         case .plant:
             var steps: [DeskPetStep] = [.go(s.plantSpot), .face(-1), .act(.gaze, ticks: 24)]
             if s.dry, m.trust >= 0.5 {
@@ -169,10 +168,15 @@ enum DeskPetPlanner {
                 + (down ? [.act(.yawn), .act(.nap, ticks: random.int(in: 1_440...2_880))] : [.act(.gaze, ticks: 32)])
         case .window:
             var steps: [DeskPetStep] = [.go(s.windowSpot), .face(-1), .act(.gaze, ticks: random.int(in: 40...80))]
-            // Once in a long while, at night, a shooting star crosses the pane.
+            // Once in a long while, at night, a shooting star crosses the pane;
+            // the starfish watches for one more often, and makes a wish on it.
             let night = s.hour >= 21 || s.hour < 5
-            if night, m.starDay != s.today, random.unit() < 0.08 {
-                steps += [.effect(.star), .act(.gaze, ticks: 24), .act(.happy), .act(.petted)]
+            let wisher = s.kind == .starfish
+            if night, m.starDay != s.today, random.unit() < (wisher ? 0.25 : 0.08) {
+                steps += [.effect(.star), .act(.gaze, ticks: 24), .act(wisher ? .wish : .happy), .act(.petted)]
+            } else if s.kind == .whale, random.unit() < 0.3 {
+                // The whale hums to the sky it can see.
+                steps += [.act(.sing)]
             }
             return steps
         case .screen:
@@ -208,7 +212,11 @@ enum DeskPetPlanner {
                 return (s.nook ? [.go((s.room ?? 0) / 2, .dash)] : []) + [.act(.happy), .act(.wave)]
             }
             if m.trust >= 0.3 { return [.act(.wave)] }
-            return s.kind == .hermit ? [.act(.hide, ticks: 32), .act(.peek)] : [.act(.look)]
+            switch s.kind {
+            case .hermit: return [.act(.hide, ticks: 32), .act(.peek)]
+            case .starfish: return [.act(.cling, ticks: 24), .act(.look)]
+            default: return [.act(.look)]
+            }
         case .milestone:
             return [.act(.celebrate, ticks: 32), .act(.wave), .act(.petted)]
         }

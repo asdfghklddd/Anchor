@@ -87,15 +87,17 @@ struct DeskPetMemory: Codable, Equatable, Sendable {
 
 /// Where each pet's memory lives, and how to forget it all.
 enum DeskPetMemoryStore {
-    private static func key(_ kind: DeskPetKind) -> String { "anchor.desk.pet.memory.\(kind.rawValue)" }
+    private static func key(_ pet: String) -> String { "anchor.desk.pet.memory.\(pet)" }
     /// Before memories, trust and the plant were kept on their own.
-    private static func oldTrustKey(_ kind: DeskPetKind) -> String { "anchor.desk.pet.trust.\(kind.rawValue)" }
+    private static func oldTrustKey(_ pet: String) -> String { "anchor.desk.pet.trust.\(pet)" }
     private static let oldGrowthKey = "anchor.desk.plant.growth"
+    /// Pets no longer offered, whose memories a reset still clears.
+    private static let retired = ["squid"]
 
     static func load(_ kind: DeskPetKind, from store: UserDefaults) -> DeskPetMemory? {
-        if let data = store.data(forKey: key(kind)),
+        if let data = store.data(forKey: key(kind.rawValue)),
            let memory = try? JSONDecoder().decode(DeskPetMemory.self, from: data) { return memory }
-        let trust = store.object(forKey: oldTrustKey(kind)) as? Double
+        let trust = store.object(forKey: oldTrustKey(kind.rawValue)) as? Double
         let growth = store.integer(forKey: oldGrowthKey)
         guard trust != nil || growth > 0 else { return nil }
         var memory = DeskPetMemory()
@@ -106,14 +108,14 @@ enum DeskPetMemoryStore {
 
     static func save(_ memory: DeskPetMemory, for kind: DeskPetKind, in store: UserDefaults) {
         guard let data = try? JSONEncoder().encode(memory) else { return }
-        store.set(data, forKey: key(kind))
+        store.set(data, forKey: key(kind.rawValue))
     }
 
     /// Every pet forgets: trust, habits, finds, the plant and the nook.
     static func forgetAll(in store: UserDefaults) {
-        for kind in DeskPetKind.allCases {
-            store.removeObject(forKey: key(kind))
-            store.removeObject(forKey: oldTrustKey(kind))
+        for pet in DeskPetKind.allCases.map(\.rawValue) + retired {
+            store.removeObject(forKey: key(pet))
+            store.removeObject(forKey: oldTrustKey(pet))
         }
         store.removeObject(forKey: oldGrowthKey)
     }

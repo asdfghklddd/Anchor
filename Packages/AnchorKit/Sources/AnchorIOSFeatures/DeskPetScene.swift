@@ -5,9 +5,9 @@ import SwiftUI
 /// The pet's corner of the desk: a millennium-era nook drawn in the pet's own
 /// pixels. Every pet has a window whose sky follows the hour, a desk with a
 /// lamp and a computer, and a plant on the sill; each also has things of its
-/// own (the crab's pegboard and toolbox, the squid kid's poster and boombox,
-/// the octopus's books and lava lamp, the hermit's shell shelf and cactus,
-/// the jellyfish's fish tank). Things can be touched: the blinds, the lamp,
+/// own (the crab's pegboard and toolbox, the whale's life ring and paddling
+/// pool, the octopus's books and lava lamp, the hermit's shell shelf and
+/// cactus, the jellyfish's fish tank, the starfish's glow stars and wishing jar). Things can be touched: the blinds, the lamp,
 /// the computer, the plant, and the pet's own thing, which it walks over to use.
 enum DeskScene {
     /// The nook in cells: 78 × 66 at 3 points each.
@@ -41,15 +41,20 @@ enum DeskScene {
         let frame: CGRect
         let standAt: Int
         let act: DeskPetAct
+        /// The way it turns to use it, for a pet seen from the side.
+        var faces = 0
+
+        var turn: [DeskPetStep] { faces == 0 ? [] : [.face(faces)] }
     }
 
     static func own(_ kind: DeskPetKind) -> Own {
         switch kind {
         case .crab, .off: Own(frame: CGRect(x: 29, y: 8, width: 14, height: 54), standAt: 3, act: .build)
-        case .squid: Own(frame: CGRect(x: 28, y: 7, width: 14, height: 55), standAt: 1, act: .dance)
+        case .whale: Own(frame: CGRect(x: 27, y: 8, width: 16, height: 54), standAt: 1, act: .splash, faces: 1)
         case .octopus: Own(frame: CGRect(x: 27, y: 14, width: 16, height: 48), standAt: 16, act: .read)
         case .hermit: Own(frame: CGRect(x: 27, y: 16, width: 16, height: 6), standAt: 16, act: .polish)
         case .jelly: Own(frame: CGRect(x: 27, y: 50, width: 16, height: 12), standAt: 1, act: .glow)
+        case .starfish: Own(frame: CGRect(x: 28, y: 8, width: 15, height: 54), standAt: 3, act: .wish)
         }
     }
 
@@ -109,8 +114,6 @@ struct DeskSceneRenderer {
     let hour: Int
     let state: DeskScene.State
     let screen: DeskScene.Screen
-    /// The pet is dancing, so the boombox plays.
-    let music: Bool
 
     private var lampOn: Bool { state.lampOn }
 
@@ -237,10 +240,11 @@ struct DeskSceneRenderer {
         let (x0, y0) = (49, 30)
         let shell: (UInt32, UInt32) = switch kind {
         case .crab, .off: (0xEDE7D9, 0xD8D0BF)
-        case .squid: (0xBDB3F4, 0xD4CCFA)
+        case .whale: (0xB4AEDF, 0xD6D2F2)
         case .octopus: (0xF7B3CC, 0xFFD3E2)
         case .hermit: (0x9CC6F2, 0xC9E0F8)
         case .jelly: (0x8FD9E6, 0xC4EEF5)
+        case .starfish: (0xF7D488, 0xFBE7B5)
         }
         grid(art, x0, y0) { letter in
             switch letter {
@@ -321,17 +325,26 @@ struct DeskSceneRenderer {
             grid(DeskSceneArt.pegboard, 29, 8) { DeskSceneArt.color($0) }
             grid(DeskSceneArt.toolbox, 30, DeskScene.floor - 7) { DeskSceneArt.color($0) }
             if since >= 0, since < 20, since % 4 < 2 { dot(36, DeskScene.floor - 9, 0xFFF2B3) }
-        case .squid:
-            grid(DeskSceneArt.poster, 30, 7) { $0 == "P" ? Color(anchorHex: 0xFFE1EC) : DeskSceneArt.color($0) }
-            let beat = music && (tick / 2) % 2 == 0
-            grid(DeskSceneArt.boombox, 28, DeskScene.floor - 7) { letter in
-                letter == "O" && beat ? Color(anchorHex: 0xF7B3CC) : DeskSceneArt.color(letter)
-            }
-            if music {
-                for i in 0..<2 {
-                    let rise = (tick / 3 + i * 5) % 10
-                    dot(31 + i * 8, DeskScene.floor - 9 - rise, i == 0 ? 0x289CB8 : 0xA99CF0)
-                    dot(32 + i * 8, DeskScene.floor - 10 - rise, i == 0 ? 0x289CB8 : 0xA99CF0)
+        case .whale:
+            grid(DeskSceneArt.lifeRing, 31, 9) { DeskSceneArt.color($0) }
+            dot(34, 8, 0x9AAAB6)
+            fill(28, 24, 14, 1, 0xEEDFCB)
+            dot(30, 25, 0x9AAAB6)
+            dot(39, 25, 0x9AAAB6)
+            let (x0, y0) = (27, DeskScene.floor - 6)
+            grid(DeskSceneArt.pool, x0, y0) { DeskSceneArt.color($0) }
+            // The duck bobs across the water, quicker while the whale splashes.
+            let splashing = since >= 0 && since < 40
+            let drift = (tick / (splashing ? 2 : 8)) % 18
+            let dx = drift < 9 ? drift : 18 - drift
+            let bob = splashing ? (tick / 2) % 2 : (tick / 6) % 2
+            grid(DeskSceneArt.duck, x0 + 3 + dx, y0 - 1 + bob) { DeskSceneArt.color($0) }
+            if splashing {
+                for i in 0..<4 {
+                    let k = (since + i * 5) % 10
+                    let x = x0 + 2 + i * 4 + k / 3
+                    let y = y0 - [0, 2, 3, 4, 4, 3, 2, 1, 0, -1][k]
+                    if y < y0 + 1 { dot(x, y, i % 2 == 0 ? 0x8FD9E6 : 0xFFFFFF) }
                 }
             }
         case .octopus:
@@ -368,6 +381,27 @@ struct DeskSceneRenderer {
                 let rise = (tick / 4 + i * 3) % 7
                 dot(x0 + 4 + i * 4, y0 + 8 - rise, 0xFFFFFF)
             }
+        case .starfish:
+            // Glow-in-the-dark stars on the wall: brighter once the lamp is off.
+            let wishing = since >= 0 && since < 48
+            for (i, star) in [(30, 11), (38, 9), (35, 17)].enumerated() {
+                let lit = !lampOn || (wishing && (tick / 3 + i) % 2 == 0)
+                let hex: UInt32 = lit ? 0xFFE58A : 0xFFF2B3
+                for (dx, dy) in [(0, -1), (-1, 0), (0, 0), (1, 0), (0, 1)] { dot(star.0 + dx, star.1 + dy, hex) }
+                if lit { dot(star.0, star.1, 0xFFFFFF) }
+            }
+            grid(DeskSceneArt.stool, 31, DeskScene.floor - 12) { DeskSceneArt.color($0) }
+            let (x0, y0) = (32, DeskScene.floor - 22)
+            grid(DeskSceneArt.jar, x0, y0) { letter in
+                letter == "q" && wishing ? Color(anchorHex: 0xFFF6D6) : DeskSceneArt.color(letter)
+            }
+            if wishing {
+                // The wish rises out of the jar's neck.
+                for i in 0..<2 {
+                    let rise = (since / 2 + i * 4) % 8
+                    dot(x0 + 3 + i, y0 - 1 - rise, i == 0 ? 0xFFE58A : 0xFFFFFF)
+                }
+            }
         }
     }
 
@@ -383,12 +417,12 @@ struct DeskSceneRenderer {
             for (i, hook) in hooks.prefix(count).enumerated() {
                 fill(29 + hook.0, 8 + hook.1, 2, 2, colors[i % colors.count])
             }
-        case .squid:
-            // Stickers on the poster's edges.
-            let spots = [(1, 1), (10, 1), (1, 8), (10, 8), (5, 0), (0, 4), (11, 5), (6, 9)]
-            for (i, spot) in spots.prefix(count).enumerated() {
-                dot(30 + spot.0, 7 + spot.1, colors[i % colors.count])
-                dot(30 + spot.0 + 1, 7 + spot.1, 0xFFFFFF)
+        case .whale:
+            // Sea glass lined up on the shelf above the pool.
+            for i in 0..<count {
+                let x = 29 + i * 2 - (i >= 6 ? 11 : 0)
+                fill(x, 23, 1, 1, colors[i % colors.count])
+                if i % 3 == 1 { dot(x, 22, colors[i % colors.count]) }
             }
         case .octopus:
             // A stack of books on the floor, read and kept.
@@ -408,6 +442,13 @@ struct DeskSceneRenderer {
             let (x0, y0) = (27, DeskScene.floor - 12)
             for (i, column) in [5, 7, 12, 14, 4, 8, 11, 13].prefix(count).enumerated() {
                 dot(x0 + column, y0 + 8, colors[i % colors.count])
+            }
+        case .starfish:
+            // Folded lucky stars filling the wishing jar from the bottom.
+            let (x0, y0) = (32, DeskScene.floor - 22)
+            let spots = [(1, 8), (3, 8), (5, 8), (2, 7), (4, 7), (6, 7), (3, 6), (5, 6)]
+            for (i, spot) in spots.prefix(count).enumerated() {
+                dot(x0 + spot.0, y0 + spot.1, colors[i % colors.count])
             }
         }
     }
@@ -534,27 +575,6 @@ private enum DeskSceneArt {
         "TTTTTTTTTTTT",
         "TTTTTTTTTTTT",
     ]
-    static let boombox = [
-        "....hhhhhh....",
-        "...h......h...",
-        "XXXXXXXXXXXXXX",
-        "XoooXXccXXoooX",
-        "XoOoXXccXXoOoX",
-        "XoooXXXXXXoooX",
-        "XXXXXXXXXXXXXX",
-    ]
-    static let poster = [
-        "PPPPPPPPPPPP",
-        "PPPPPPPPPPPP",
-        "PPPPPYPPPPPP",
-        "PPPPYYYPPPPP",
-        "PPYYYYYYYPPP",
-        "PPPYYYYYPPPP",
-        "PPPYYPYYPPPP",
-        "PPYYPPPYYPPP",
-        "PPPPPPPPPPPP",
-        "PPPPPPPPPPPP",
-    ]
     static let bookshelf = [
         "..1.2...........",
         ".11223.4.5......",
@@ -584,6 +604,54 @@ private enum DeskSceneArt {
         "WWWWWWWWWWWWWWWW",
         "..h..........h..",
     ]
+    static let lifeRing = [
+        "..PPxx..",
+        ".PPPxxx.",
+        "xx....PP",
+        "xx....PP",
+        "PP....xx",
+        "PP....xx",
+        ".xxxPPP.",
+        "..xxPP..",
+    ]
+    static let pool = [
+        "..PPPPPPPPPPPP..",
+        ".PttttttttttttP.",
+        "PPttttttttttttPP",
+        "PPPPPPPPPPPPPPPP",
+        "pppppppppppppppp",
+        ".PPPPPPPPPPPPPP.",
+    ]
+    static let duck = [
+        "..yy.",
+        "yyyya",
+    ]
+    static let stool = [
+        "nnnnnnnnnn",
+        ".s......s.",
+        ".s......s.",
+        ".s......s.",
+        ".s......s.",
+        ".s......s.",
+        ".ssssssss.",
+        ".s......s.",
+        ".s......s.",
+        ".s......s.",
+        ".s......s.",
+        ".s......s.",
+    ]
+    static let jar = [
+        "..nnnn..",
+        "..gggg..",
+        ".gqqqqg.",
+        "gqqqqqqg",
+        "gqqqqqqg",
+        "gqqqqqqg",
+        "gqqqqqqg",
+        "gqqqqqqg",
+        "gqqqqqqg",
+        ".gggggg.",
+    ]
     static let tank = [
         "gggggggggggggggg",
         "gqqqqqqqqqqqqqqg",
@@ -612,9 +680,6 @@ private enum DeskSceneArt {
         case "d": 0x5BB8CC
         case "T": 0x5BB8CC
         case "t": 0x8FD9E6
-        case "X": 0xA99CF0
-        case "O": 0xFFFFFF
-        case "c": 0x2E4A6B
         case "Y": 0xFFF2B3
         case "1": 0xF7B3CC
         case "2": 0xA99CF0
@@ -631,6 +696,9 @@ private enum DeskSceneArt {
         case "x": 0x8FD9E6
         case "q": 0xE3F7FB
         case "s": 0xE9DCC8
+        case "n": 0xEEDFCB
+        case "y": 0xFFE1A8
+        case "a": 0xF4A6C0
         default: nil
         }
         return hex.map { Color(anchorHex: $0) }

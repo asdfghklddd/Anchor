@@ -97,17 +97,59 @@ struct DeskPetBrainTests {
     }
 
     @Test func deskEventsWinAndWorkResumes() {
-        var squid = brain(.squid)
-        squid.update(DeskPetContext(running: true, tasks: 1))
-        #expect(squid.act == .type)
-        squid.hear(.failure)
-        #expect(squid.act == .fail)
-        run(&squid, ticks: squid.length)
-        #expect(squid.act == .type)
-        squid.hear(.question)
-        #expect(squid.act == .think)
-        run(&squid, ticks: squid.length)
-        #expect(squid.act == .wave)
+        var starfish = brain(.starfish)
+        starfish.update(DeskPetContext(running: true, tasks: 1))
+        #expect(starfish.act == .type)
+        starfish.hear(.failure)
+        #expect(starfish.act == .fail)
+        run(&starfish, ticks: starfish.length)
+        #expect(starfish.act == .type)
+        starfish.hear(.question)
+        #expect(starfish.act == .think)
+        run(&starfish, ticks: starfish.length)
+        #expect(starfish.act == .wave)
+    }
+
+    @Test func whaleSpoutsWhenTouchedAndTurnsAwayWhenPoked() {
+        var whale = brain(.whale)
+        whale.tap()
+        #expect(whale.act == .spout || whale.act == .happy)
+        run(&whale, ticks: 40)
+        whale.tap(); whale.tap(); whale.tap()
+        #expect(whale.act == .spout)
+        run(&whale, ticks: whale.length)
+        #expect(whale.act == .sulk)
+    }
+
+    @Test func whaleSingsItselfBetterAfterAFailure() {
+        var whale = brain(.whale)
+        whale.hear(.failure)
+        #expect(whale.act == .fail)
+        run(&whale, ticks: whale.length)
+        #expect(whale.act == .sing)
+    }
+
+    @Test func starfishClingsWhenPokedHoldsOnAndSpinsWhenPokedOn() {
+        var starfish = brain(.starfish)
+        starfish.tap(); starfish.tap(); starfish.tap()
+        #expect(starfish.act == .cling)
+        run(&starfish, ticks: 30)
+        starfish.tap()
+        run(&starfish, ticks: 15)
+        #expect(starfish.act == .cling)
+        for _ in 0..<4 { starfish.tap() }
+        #expect(starfish.act == .dizzy)
+    }
+
+    @Test func eachPetWalksOverToUseItsOwnThing() {
+        for kind in DeskPetKind.allCases where kind != .off {
+            var pet = brain(kind)
+            pet.use(.own)
+            let own = DeskScene.own(kind)
+            var used = false
+            run(&pet, ticks: 600) { if $0.act == own.act { used = true } }
+            #expect(used, "\(kind)")
+        }
     }
 
     // MARK: Its day
@@ -158,12 +200,12 @@ struct DeskPetBrainTests {
     }
 
     @Test func smallAndInPlaceItNeverWalks() {
-        var squid = brain(.squid, stage: .compact)
-        let x = squid.x
-        run(&squid, ticks: 2 * 3_600 * 8, stage: .compact) { pet in
+        var whale = brain(.whale, stage: .compact)
+        let x = whale.x
+        run(&whale, ticks: 2 * 3_600 * 8, stage: .compact) { pet in
             #expect(!pet.act.travels)
         }
-        #expect(squid.x == x)
+        #expect(whale.x == x)
     }
 
     @Test func todaysGoalIsCelebratedOnce() {
@@ -276,6 +318,20 @@ struct DeskPetBrainTests {
         #expect(closePlan.contains(.effect(.water)))
     }
 
+    @Test func theStarfishWishesOnShootingStarsAndTheWhaleHumsAtTheWindow() {
+        let night = memory(trust: 0.5, seen: at(22))
+        var wishes = 0, hums = 0
+        for seed in 1...200 {
+            var random = DeskPetRandom(seed: UInt64(seed))
+            let star = DeskPetPlanner.plan(.window, in: situation(.starfish, memory: night, hour: 22, now: at(22)), random: &random)
+            if star.contains(.act(.wish)) { wishes += 1 }
+            let whale = DeskPetPlanner.plan(.window, in: situation(.whale, memory: night, hour: 14, now: at(14)), random: &random)
+            if whale.contains(.act(.sing)) { hums += 1 }
+        }
+        #expect((25...75).contains(wishes))
+        #expect((35...85).contains(hums))
+    }
+
     private func situation(_ kind: DeskPetKind, memory: DeskPetMemory, hour: Int, now: Date, room: Int? = 40,
                            context: DeskPetContext = .init()) -> DeskPetSituation {
         DeskPetSituation(kind: kind, nature: .of(kind), memory: memory, context: context, now: now, hour: hour,
@@ -302,7 +358,10 @@ struct DeskPetBrainTests {
         DeskPetMemoryStore.save(crab, for: .crab, in: store)
         #expect(DeskPetMemoryStore.load(.crab, from: store)?.collection == 3)
 
+        // A pet no longer offered is forgotten too.
+        store.set(Data([1]), forKey: "anchor.desk.pet.memory.squid")
         DeskPetMemoryStore.forgetAll(in: store)
+        #expect(store.object(forKey: "anchor.desk.pet.memory.squid") == nil)
         #expect(DeskPetMemoryStore.load(.crab, from: store) == nil)
         #expect(DeskPetMemoryStore.load(.hermit, from: store) == nil)
     }

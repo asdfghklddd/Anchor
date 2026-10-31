@@ -6,7 +6,7 @@ import SwiftUI
 struct DeskPetPicker: View {
     @Binding var selection: DeskPetKind
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 4)
 
     var body: some View {
         LazyVGrid(columns: columns, spacing: 10) {

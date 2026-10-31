@@ -11,13 +11,14 @@ enum DeskPetAct: String, CaseIterable, Sendable {
     // Touch
     case happy, petted, startled, angry, sulk, flee, dizzy, hide, peek, zap
     // Each pet's own
-    case build, snap, dance, shades, dash, juggle, read, ink, pebble, polish, glow, meditate, sway
+    case build, snap, shades, dash, juggle, read, ink, pebble, polish, glow, meditate, sway
+    case spout, sing, splash, twinkle, scope, wish, cling
 
     /// Acts that travel to a target column.
     var travels: Bool { [.move, .flee, .dash, .pebble].contains(self) }
 
     /// Busy acts that tire it faster.
-    var lively: Bool { [.dance, .dash, .flee, .celebrate, .juggle, .happy, .angry, .build].contains(self) }
+    var lively: Bool { [.dash, .flee, .celebrate, .juggle, .happy, .angry, .build, .splash].contains(self) }
 }
 
 /// What the desk tells the pet, as it happens.
@@ -55,11 +56,11 @@ struct DeskPetNature: Sendable {
             DeskPetNature(temper: 0.9, timidity: 0.1, stepEvery: 2, stepSize: 1, shows: [.snap],
                           leanings: [.own: 1.6, .lamp: 1.4, .blinds: 1.2, .plant: 0.8, .window: 0.6, .find: 0.8],
                           wakes: 6, sleeps: 22, pace: 0.95)
-        case .squid:
-            // A show-off night owl with energy to spare.
-            DeskPetNature(temper: 0.3, timidity: 0.1, stepEvery: 1, stepSize: 1, shows: [.shades, .dance],
-                          leanings: [.show: 1.8, .wander: 1.5, .greet: 1.4, .own: 1.4, .nap: 0.6, .window: 0.7],
-                          wakes: 9, sleeps: 1, pace: 0.8)
+        case .whale:
+            // Gentle and unhurried, early to bed; sings, and misses the sea at the window.
+            DeskPetNature(temper: 0.2, timidity: 0.3, stepEvery: 3, stepSize: 1, shows: [.spout, .sing],
+                          leanings: [.own: 1.5, .window: 1.5, .nap: 1.4, .greet: 1.3, .show: 1.2, .wander: 0.7],
+                          wakes: 7, sleeps: 22, pace: 1.1)
         case .octopus:
             // Shy and warm; reads, tends the plant.
             DeskPetNature(temper: 0.2, timidity: 0.6, stepEvery: 3, stepSize: 1, shows: [.juggle],
@@ -75,6 +76,11 @@ struct DeskPetNature: Sendable {
             DeskPetNature(temper: 0.4, timidity: 0.3, stepEvery: 3, stepSize: 1, shows: [.sway, .meditate],
                           leanings: [.window: 1.8, .show: 1.3, .own: 1.2, .wander: 1.2],
                           wakes: 8, sleeps: 0, pace: 1)
+        case .starfish:
+            // A cheerful night owl that wishes on stars; slow on its little feet, quick to light up.
+            DeskPetNature(temper: 0.25, timidity: 0.5, stepEvery: 3, stepSize: 1, shows: [.twinkle, .shades, .scope],
+                          leanings: [.window: 2, .own: 1.5, .find: 1.4, .show: 1.3, .greet: 1.2, .nap: 0.8],
+                          wakes: 10, sleeps: 2, pace: 0.9)
         }
     }
 }
@@ -145,7 +151,10 @@ struct DeskPetBrain {
          seed: UInt64 = .random(in: 1...UInt64.max)) {
         self.kind = kind
         nature = .of(kind)
-        width = DeskPetLook.of(kind).width
+        let look = DeskPetLook.of(kind)
+        width = look.width
+        // A pet seen from the side starts out looking the way it is drawn.
+        if look.profile != 0 { facing = look.profile }
         self.now = now
         lastTouch = now
         random = DeskPetRandom(seed: seed)
@@ -207,14 +216,18 @@ struct DeskPetBrain {
             switch kind {
             case .octopus, .hermit: react(.wave)
             case .jelly: react(.glow, then: [.wave])
-            case .crab, .squid, .off: react(.celebrate)
+            case .whale: react(.spout, then: [.happy])
+            case .starfish: react(.twinkle, then: [.celebrate])
+            case .crab, .off: react(.celebrate)
             }
         case .failure:
             switch kind {
             case .crab: react(.angry)
             case .hermit: react(.hide, for: 48, then: [.peek])
             case .octopus: react(.startled, then: [.fail])
-            case .squid, .jelly, .off: react(.fail)
+            // A sad note, then it sings itself better.
+            case .whale: react(.fail, then: [.sing])
+            case .starfish, .jelly, .off: react(.fail)
             }
         case .question:
             react(.think, then: [.wave])
@@ -243,8 +256,8 @@ struct DeskPetBrain {
             else { react(.yawn) }
             return
         }
-        if act == .hide {
-            // Poking a hidden hermit only keeps it inside.
+        if act == .hide || (act == .cling && annoyance < 0.85) {
+            // Poking a hidden hermit only keeps it inside; a clinging starfish holds on.
             actEnd = max(actEnd, tick + 24)
             return
         }
@@ -256,10 +269,13 @@ struct DeskPetBrain {
             } else {
                 react(annoyance < 0.35 ? .happy : .snap)
             }
-        case .squid:
-            if annoyance > 0.9 { react(.dizzy) }
-            else if burst >= 3 { if act != .dance { react(.dance) } }
-            else { react(chance(0.5) ? .happy : .wave) }
+        case .whale:
+            if burst >= 3 || annoyance > 0.6 {
+                // A spout right at you, then its back turned for a while.
+                if act != .sulk { react(.spout, then: [.sulk]) }
+            } else {
+                react(chance(0.5) ? .spout : .happy)
+            }
         case .octopus:
             if burst >= 3 || annoyance > 0.7 {
                 if act != .ink && act != .flee { react(.ink, then: [.flee]) }
@@ -282,6 +298,15 @@ struct DeskPetBrain {
                 react(.zap, then: [.flee])
             } else {
                 react(.happy)
+            }
+        case .starfish:
+            if annoyance >= 0.85 {
+                // Poked off the floor it was holding: it spins.
+                react(.dizzy)
+            } else if burst >= 3 || annoyance > 0.5 {
+                react(.cling, for: 40, then: [.look])
+            } else {
+                react(chance(0.5) ? .twinkle : .happy)
             }
         }
     }
@@ -309,14 +334,14 @@ struct DeskPetBrain {
         case .own:
             // Its own thing draws it over to use it, waking first if it slept.
             awakeUntil = tick + 120
-            guard !(act == .hide || act == .angry || act == .sulk) else { return }
+            guard !(act == .hide || act == .angry || act == .sulk || act == .cling) else { return }
             marks.own = tick
             let own = DeskScene.own(kind)
             settle()
             if let watch { memory.learn(watch.intent, noticed: true) }
             intent = .own
             watch = Watch(intent: .own, until: now.addingTimeInterval(90), noticed: true)
-            plan = [.go(min(own.standAt, stage.room ?? 0)), .act(own.act, ticks: own.act == .read ? 128 : 64)]
+            plan = [.go(min(own.standAt, stage.room ?? 0))] + own.turn + [.act(own.act, ticks: own.act == .read ? 128 : 64)]
             if !advancePlan() { finish() }
         }
     }
@@ -641,16 +666,20 @@ struct DeskPetBrain {
         case .stretch, .peek, .reach: 16
         case .nap: random.int(in: 160...320)
         case .sleep: 80
-        case .coffee, .think, .build, .shades, .juggle: 48
+        case .coffee, .think, .build, .shades, .juggle, .splash, .scope, .wish: 48
         case .type: random.int(in: 60...160)
         case .celebrate, .wave, .snap: 16
         case .fail: 28
         case .petted, .ink, .found: 20
         case .startled, .zap: 12
+        case .spout: 24
+        case .twinkle: 32
+        case .cling: 40
+        case .sing: 64
         case .angry, .dizzy, .polish, .offer: 24
         case .sulk: 48
         case .hide: 56
-        case .dance, .sway: 40
+        case .sway: 40
         case .read, .meditate: 64
         case .glow, .water: 32
         case .gaze: 40
