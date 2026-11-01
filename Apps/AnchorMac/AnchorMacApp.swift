@@ -213,7 +213,18 @@ struct AnchorMacApp: App {
         }
         server.onCurrentProcessSnapshot = currentProcessSnapshot
         advertiser.onCurrentProcessSnapshot = currentProcessSnapshot
+        // Short conversation names, written locally.
+        let summaryBook = SummaryBook(local: LocalSummarizer())
+        let codexBinder = CodexSessionBinder(repository: repository, coordinator: sourceCoordinator,
+            taskRunStore: taskRunStore, checkpointStore: codexCheckpointStore, names: summaryBook)
         let applyInboundEvent: @Sendable (EventEnvelope) async throws -> Void = { envelope in
+            // The phone asks to open a conversation here: now or not at all, never history.
+            if let open = ConversationOpenRequest(envelope: envelope) {
+                if open.isFresh(), let log = await codexBinder.logFile(forSource: open.conversation) {
+                    await MacConversationOpener.open(logAt: log)
+                }
+                return
+            }
             try await repository.applyRemote(envelope)
         }
         server.onEvent = applyInboundEvent
@@ -257,10 +268,6 @@ struct AnchorMacApp: App {
         self.server = server
         proximityAdvertiser = advertiser
         self.cloudSyncRunner = cloudSyncRunner
-        // Short conversation names, written locally.
-        let summaryBook = SummaryBook(local: LocalSummarizer())
-        let codexBinder = CodexSessionBinder(repository: repository, coordinator: sourceCoordinator,
-            taskRunStore: taskRunStore, checkpointStore: codexCheckpointStore, names: summaryBook)
         // The return page's conversation recaps, written by DeepSeek with the key from Settings.
         let modelKeyStore = ModelKeyStore()
         let recapper = ReturnRecapper(
