@@ -227,7 +227,8 @@ struct DesignPreviewFixtureTests {
         func at(_ minutesAgo: Double) -> Date { now.addingTimeInterval(-minutesAgo * 60) }
         func id(_ index: Int) -> UUID { UUID(uuidString: String(format: "1B7A0000-7215-40E0-8B0B-%012d", index))! }
         func conversation(_ index: Int, _ title: String, task: UUID, status: ProcessStatus, started: Double,
-                          ended: Double? = nil, request: String, reply: String = "") -> AnchorProcess {
+                          ended: Double? = nil, request: String, reply: String = "",
+                          digest: ConversationDigest? = nil) -> AnchorProcess {
             let processID = id(index), sourceID = UUID()
             var events = [ProcessEvent(sessionID: task, processID: processID, sourceID: sourceID,
                                        occurredAt: at(started), kind: .created, title: "Codex task_started", metric: nil)]
@@ -239,10 +240,13 @@ struct DesignPreviewFixtureTests {
             }
             return AnchorProcess(id: processID, sessionID: task, sourceID: sourceID, sourceName: "Claude Code",
                                  sourceSymbol: "C", sourceTone: "cyan", title: title, status: status, detail: reply,
-                                 updatedAt: events.map(\.occurredAt).max() ?? now, events: events, request: request)
+                                 updatedAt: events.map(\.occurredAt).max() ?? now, events: events, request: request,
+                                 digest: digest)
         }
 
-        let desk = AnchorSession(id: id(1), goal: AnchorGoal(title: "横屏工作台", completionCriteria: "按设计稿完成"),
+        let desk = AnchorSession(id: id(1), goal: AnchorGoal(title: "横屏工作台", completionCriteria: "按设计稿完成",
+                                                             userPlan: AnchorUserPlan(steps: ["任务进程库", "卡片切换动效", "深色模式检查"],
+                                                                                      completedSteps: [0])),
             startedAt: at(180), processes: [
                 conversation(11, "iOS app UI polish", task: id(1), status: .completed, started: 150, ended: 120,
                              request: "把竖屏首页的卡片间距再收一点，标题和头像对齐。",
@@ -251,22 +255,43 @@ struct DesignPreviewFixtureTests {
                              request: "按设计稿重做横屏工作页：左边大时钟，右边三列任务，每列最多三段对话叠成卡片。",
                              reply: "已完成：左侧换成加宽粗体时钟，右侧按任务分三列，每列最多三张对话卡，点上面的卡会滑到最前面。"),
                 conversation(13, "卡片切换动效", task: id(1), status: .running, started: 5,
-                             request: "卡片切换时加一点简单的物理光影反馈。"),
+                             request: "卡片切换时加一点简单的物理光影反馈。",
+                             digest: ConversationDigest(path: ["卡片换到最前面时会抬起一下", "加了落下时的轻触感"],
+                                                        facts: [.committed("cb7d21a"), .notPushed, .filesChanged(2)],
+                                                        decision: "采纳方案B 光影只在前面那张卡上",
+                                                        keywords: ["光影", "卡片", "触感", "弹跳"],
+                                                        cues: ["DeskTaskLibrary.swift", "CardLift.swift"],
+                                                        latestRequest: "卡片切换时加一点简单的物理光影反馈")),
             ], taskColorIndex: 0)
-        let homework = AnchorSession(id: id(2), goal: AnchorGoal(title: "数据结构作业", completionCriteria: "红黑树通过测试"),
+        let homework = AnchorSession(id: id(2), goal: AnchorGoal(title: "数据结构作业", completionCriteria: "红黑树通过测试",
+                                                                 userPlan: AnchorUserPlan(steps: ["实现插入", "实现删除操作", "写实验报告"],
+                                                                                          completedSteps: [0, 1])),
             startedAt: at(240), processes: [
                 conversation(21, "红黑树删除", task: id(2), status: .completed, started: 70, ended: 52,
                              request: "帮我实现红黑树的删除，包括 fixup，写完跑一下测试。",
                              reply: "已实现 delete 和 fixup，所有测试通过。另外补了一个回归测试，覆盖删除根节点的情况。"),
                 conversation(22, "实验报告", task: id(2), status: .needsDecision, started: 30, ended: 14,
                              request: "根据测试结果写实验报告的第三节。",
-                             reply: "第三节写到复杂度分析时需要你确认：报告里用平均情况还是最坏情况？"),
+                             reply: "第三节写到复杂度分析时需要你确认：报告里用平均情况还是最坏情况？",
+                             digest: ConversationDigest(path: ["已实现 delete 和 fixup，所有测试通过", "第一、二节写好了，放在 report.docx",
+                                                               "第三节写到复杂度分析"],
+                                                        waiting: .init(kind: .answer, text: "报告里用平均情况还是最坏情况？"),
+                                                        facts: [.testsPassed, .filesChanged(3)],
+                                                        keywords: ["红黑树", "复杂度", "实验报告"],
+                                                        cues: ["report.docx", "rbtree.py"],
+                                                        latestRequest: "根据测试结果写实验报告的第三节")),
             ], taskColorIndex: 1)
         let voice = AnchorSession(id: id(3), goal: AnchorGoal(title: "语音陪练", completionCriteria: "语音自然"),
             startedAt: at(300), processes: [
                 conversation(31, "唤醒词误触", task: id(3), status: .failed, started: 90, ended: 75,
                              request: "排查安静环境下的误唤醒。",
-                             reply: "测试失败：安静环境下 20 次里仍有 2 次误唤醒。"),
+                             reply: "测试失败：安静环境下 20 次里仍有 2 次误唤醒。",
+                             digest: ConversationDigest(path: ["阈值从 0.5 提到 0.62", "测试失败：安静环境下 20 次里仍有 2 次误唤醒"],
+                                                        waiting: .init(kind: .act, text: "建议先在安静房间录一段 5 分钟的底噪发给我"),
+                                                        facts: [.testsFailed, .unverified, .filesChanged(1)],
+                                                        keywords: ["误唤醒", "阈值", "底噪"],
+                                                        cues: ["WakeWordDetector.swift"],
+                                                        latestRequest: "排查安静环境下的误唤醒")),
                 conversation(32, "节奏提示音", task: id(3), status: .completed, started: 60, ended: 44,
                              request: "每组动作之间加一个轻的提示音。",
                              reply: "加好了，提示音在每组结束前 3 秒响起，音量跟随系统。"),

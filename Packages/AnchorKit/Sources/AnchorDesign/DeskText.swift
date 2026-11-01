@@ -47,4 +47,48 @@ public enum DeskText {
         "desk.library.show", default: "Brings this conversation to the front")
     public static let you = AnchorStrings.value("desk.library.you", default: "You")
     public static let reply = AnchorStrings.value("desk.library.reply", default: "Reply")
+
+    // MARK: Recall card (a conversation, opened from the desk)
+
+    public static let recallWaitingAnswer = AnchorStrings.value("desk.recall.waiting.answer", default: "Waiting for your answer")
+    public static let recallWaitingAct = AnchorStrings.value("desk.recall.waiting.act", default: "Waiting for you to do")
+    public static let recallRunning = AnchorStrings.value("desk.recall.running", default: "Still working")
+    public static let recallIdle = AnchorStrings.value("desk.recall.idle", default: "Nothing waits on you")
+    public static let recallPlanDone = AnchorStrings.value("desk.recall.plan-done", default: "Every step is done")
+    public static let recallNew = AnchorStrings.value("desk.recall.new", default: "New")
+    public static let recallOpened = AnchorStrings.value("desk.recall.opened", default: "Opened on the Mac")
+    public static let recallNotConnected = AnchorStrings.value("desk.recall.not-connected", default: "The Mac isn't connected")
+    public static let recallOpenOnMac = AnchorStrings.value("desk.recall.open-on-mac", default: "Open on the Mac")
+    public static let recallClose = AnchorStrings.value("desk.recall.close", default: "Close")
+    public static let recallHint = AnchorStrings.value(
+        "desk.recall.hint", default: "Swipe up to open it on the Mac, down to close")
+
+    public static func recallNextStep(_ step: String) -> String {
+        String.localizedStringWithFormat(AnchorStrings.value("desk.recall.next-step", default: "Next: %@"), step)
+    }
+
+    public static func recallDecided(_ decision: String) -> String {
+        String.localizedStringWithFormat(AnchorStrings.value("desk.recall.decided", default: "You decided: %@"), decision)
+    }
+
+    /// A fact about where the work stands, as a short chip.
+    public static func recallFact(_ fact: ConversationDigest.Fact) -> String {
+        switch fact {
+        case let .committed(hash?):
+            String.localizedStringWithFormat(AnchorStrings.value("desk.recall.fact.committed", default: "Committed %@"), hash)
+        case .committed(nil):
+            AnchorStrings.value("desk.recall.fact.committed-plain", default: "Committed")
+        case .pushed: AnchorStrings.value("desk.recall.fact.pushed", default: "Pushed")
+        case .notPushed: AnchorStrings.value("desk.recall.fact.not-pushed", default: "Not pushed")
+        case .testsPassed: AnchorStrings.value("desk.recall.fact.tests-passed", default: "Tests passed")
+        case .testsMostlyPassed: AnchorStrings.value("desk.recall.fact.tests-mostly", default: "Tests mostly passed")
+        case .testsFailed: AnchorStrings.value("desk.recall.fact.tests-failed", default: "Tests failed")
+        case .testsRan: AnchorStrings.value("desk.recall.fact.tests-ran", default: "Tests ran")
+        case .unverified: AnchorStrings.value("desk.recall.fact.unverified", default: "Not tried on a device")
+        case .interrupted: AnchorStrings.value("desk.recall.fact.interrupted", default: "You stopped it")
+        case .stoppedByError: AnchorStrings.value("desk.recall.fact.error", default: "Stopped by an error")
+        case let .filesChanged(count):
+            String.localizedStringWithFormat(AnchorStrings.value("desk.recall.fact.files", default: "%lld files changed"), count)
+        }
+    }
 }

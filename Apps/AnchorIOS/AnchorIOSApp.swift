@@ -15,6 +15,7 @@ struct AnchorIOSApp: App {
     private let recoveryReviewInterval: TimeInterval
     private let tourPending: Bool
     private let linkLauncher: LinkLauncher
+    private let openOnMac: @Sendable (UUID) async -> Bool
 
     init() {
         let environment = ProcessInfo.processInfo.environment
@@ -117,6 +118,18 @@ struct AnchorIOSApp: App {
             bluetooth: scanner
         )
         let repository = LinkedSessionRepository(base: localRepository, transport: transport)
+        let phoneID = identityStore.localDeviceID()
+        // Swiping a desk card up asks the Mac to open that conversation; it is not history.
+        openOnMac = { conversation in
+            guard let envelope = try? ConversationOpenRequest(conversation: conversation).envelope(sourceID: phoneID)
+            else { return false }
+            do {
+                try await transport.send(envelope)
+                return true
+            } catch {
+                return false
+            }
+        }
         let applyEvent: @Sendable (EventEnvelope) async throws -> Void = { [weak repository] event in
             // The Mac's day so far is a snapshot for the home, not history.
             if AnchoringLog.receive(event) { return }
@@ -179,6 +192,7 @@ struct AnchorIOSApp: App {
                 tourPending: tourPending,
                 startLink: linkLauncher.start
             )
+            .environment(\.openConversationOnMac, openOnMac)
         }
     }
 }

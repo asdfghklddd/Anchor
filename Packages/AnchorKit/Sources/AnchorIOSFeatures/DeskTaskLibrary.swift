@@ -43,6 +43,25 @@ struct DeskTaskLibrary: View {
     /// A card pulled this far comes to the front.
     private static let pullToFront: CGFloat = 28
 
+    /// The conversation opened over the library, and the folder it grew from.
+    private struct Recall: Equatable {
+        let task: UUID
+        let conversation: UUID
+        let folder: Int
+        let seen: Set<String>
+    }
+
+    @State private var recall: Recall?
+    /// How far the open card is being swiped: down closes it, up sends it to the Mac.
+    @State private var recallSwipe: CGFloat = 0
+    @State private var recallNotice: String?
+    @State private var sentToMac = 0
+    @Environment(\.openConversationOnMac) private var openOnMac
+    /// A swipe this far, or flung this fast, closes the card or sends it.
+    private static let recallSwipeDistance: CGFloat = 70
+    private static let recallFling: CGFloat = 220
+    private static let recallPop = Animation.spring(response: 0.42, dampingFraction: 0.66)
+
     /// Figma metrics, in points on the 874 × 402 desk. The folders are narrower
     /// than the Figma so the library clears the Dynamic Island on either edge.
     enum Metrics {
@@ -93,9 +112,12 @@ struct DeskTaskLibrary: View {
                 .scrollClipDisabled(tasks.count <= Metrics.slots)
                 .scrollIndicators(.hidden)
                 .frame(width: Metrics.width, height: Metrics.folder.height, alignment: .topLeading)
+                .opacity(recall == nil ? 1 : 0.35)
+                .overlay { recallLayer }
             }
         }
         .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: landings)
+        .sensoryFeedback(.success, trigger: sentToMac)
         // Folders follow real membership changes; ordinary refreshes keep them still.
         .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: tasks.map(\.id))
         .accessibilityElement(children: .contain)
@@ -183,7 +205,7 @@ struct DeskTaskLibrary: View {
         let isRed = process.needsRescue
         let worked = DeskDuration.text(workedTime(process, in: task))
         return Button {
-            if isFront { onTask(task.id) } else { bringToFront(process, of: task) }
+            if isFront { openRecall(process, of: task) } else { bringToFront(process, of: task) }
         } label: {
             VStack(alignment: .leading, spacing: 0) {
                 // The title gets the whole row, so ten characters always fit.
@@ -231,7 +253,7 @@ struct DeskTaskLibrary: View {
         .accessibilityLabel(process.title)
         .accessibilityValue([isRed ? DeskText.needsYou : nil, worked, isFront ? spokenExchange(process) : nil]
             .compactMap { $0 }.joined(separator: "\n"))
-        .accessibilityHint(isFront ? DeskText.openTask : DeskText.showConversation)
+        .accessibilityHint(isFront ? DeskText.recallHint : DeskText.showConversation)
         .accessibilityAddTraits(isFront ? [.isButton, .isSelected] : .isButton)
         .accessibilityIdentifier("ambient.conversation.\(process.id)")
     }
@@ -341,6 +363,114 @@ struct DeskTaskLibrary: View {
             try? await Task.sleep(for: .milliseconds(300))
             landings += 1
         }
+    }
+
+    // MARK: The open card
+
+    /// The open card over the library, grown out of its folder; tapping beside it closes it.
+    @ViewBuilder
+    private var recallLayer: some View {
+        if let recall, let task = tasks.first(where: { $0.id == recall.task }),
+           let process = TaskConversationStack.conversations(of: task).first(where: { $0.conversationKey == recall.conversation }) {
+            ZStack(alignment: .top) {
+                Color.clear
+                    .contentShape(.rect)
+                    .onTapGesture { closeRecall() }
+                    .accessibilityHidden(true)
+                DeskRecallCard(process: process, task: task, palette: DeskFolderPalette(task),
+                               worked: DeskDuration.text(workedTime(process, in: task)),
+                               fallbackReply: reply(for: process), seenPath: recall.seen,
+                               onTask: { onTask(task.id) })
+                    .offset(y: recallSwipe)
+                    .gesture(recallSwipeGesture)
+                    .accessibilityAction(named: DeskText.recallOpenOnMac) { sendRecallToMac() }
+                    .accessibilityAction(.escape) { closeRecall() }
+                    .transition(reduceMotion ? .opacity
+                        : .scale(scale: 0.3, anchor: UnitPoint(x: (CGFloat(recall.folder) + 0.5) / CGFloat(Metrics.slots), y: 0.3))
+                            .combined(with: .opacity))
+            }
+            .id(recall.conversation)
+        }
+        if let recallNotice {
+            Text(recallNotice)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(DeskStyle.text)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(DeskStyle.card, in: Capsule())
+                .shadow(color: .black.opacity(0.12), radius: 8, y: 2)
+                .frame(maxHeight: .infinity, alignment: .top)
+                .padding(.top, 8)
+                .transition(.opacity.combined(with: .offset(y: -6)))
+                .accessibilityAddTraits(.updatesFrequently)
+        }
+    }
+
+    private var recallSwipeGesture: some Gesture {
+        DragGesture(minimumDistance: 6)
+            .onChanged { value in
+                // Down follows the finger; up a little ahead of it, toward the Mac.
+                let dy = value.translation.height
+                recallSwipe = dy > 0 ? dy : dy * 1.1
+            }
+            .onEnded { value in
+                let dy = value.translation.height
+                let flung = value.predictedEndTranslation.height
+                if dy < -Self.recallSwipeDistance || flung < -Self.recallFling {
+                    sendRecallToMac()
+                } else if dy > Self.recallSwipeDistance || flung > Self.recallFling {
+                    closeRecall()
+                } else {
+                    withAnimation(reduceMotion ? .easeOut(duration: 0.16) : Self.slide) { recallSwipe = 0 }
+                }
+            }
+    }
+
+    private func openRecall(_ process: AnchorProcess, of task: AnchorSession) {
+        let folder = tasks.firstIndex { $0.id == task.id } ?? 0
+        let next = Recall(task: task.id, conversation: process.conversationKey, folder: min(folder, Metrics.slots - 1),
+                          seen: DeskRecallMemory.seen(process.conversationKey))
+        recallSwipe = 0
+        withAnimation(reduceMotion ? .easeOut(duration: 0.16) : Self.recallPop) { recall = next }
+        landings += 1
+    }
+
+    /// Puts the card back into its folder; what it showed counts as seen.
+    private func closeRecall() {
+        guard let recall else { return }
+        rememberSeen(recall)
+        withAnimation(reduceMotion ? .easeOut(duration: 0.16) : Self.slide) {
+            self.recall = nil
+            recallSwipe = 0
+        }
+    }
+
+    /// The card flies up toward the Mac and the conversation opens there.
+    private func sendRecallToMac() {
+        guard let recall else { return }
+        rememberSeen(recall)
+        let conversation = recall.conversation
+        withAnimation(reduceMotion ? .easeOut(duration: 0.16) : .easeIn(duration: 0.22)) {
+            recallSwipe = reduceMotion ? 0 : -Metrics.folder.height * 1.4
+            self.recall = nil
+        }
+        Task { @MainActor in
+            let opened = await openOnMac(conversation)
+            if opened { sentToMac += 1 }
+            withAnimation(.easeOut(duration: 0.2)) {
+                recallNotice = opened ? DeskText.recallOpened : DeskText.recallNotConnected
+            }
+            recallSwipe = 0
+            try? await Task.sleep(for: .seconds(1.8))
+            withAnimation(.easeOut(duration: 0.3)) { recallNotice = nil }
+        }
+    }
+
+    private func rememberSeen(_ recall: Recall) {
+        guard let task = tasks.first(where: { $0.id == recall.task }),
+              let path = TaskConversationStack.conversations(of: task)
+                .first(where: { $0.conversationKey == recall.conversation })?.digest?.path else { return }
+        DeskRecallMemory.remember(path, for: recall.conversation)
     }
 
     // MARK: Accessibility sizes
