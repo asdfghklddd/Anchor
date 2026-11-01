@@ -116,6 +116,7 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                     }
                     var lastSize: UInt64?
                     var grewAt = Date.now
+                    var transcriptFollower: ConversationTranscript.Follower?
                     while !Task.isCancelled {
                         let attributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path)
                         let size = (attributes?[.size] as? NSNumber)?.uint64Value ?? 0
@@ -126,6 +127,7 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                         let currentIdentity = attributes.flatMap(Self.fileIdentity)
                         if currentIdentity != identity {
                             scanner.reset()
+                            transcriptFollower = nil
                             offset = 0
                             identity = currentIdentity
                             if let store = checkpointStore {
@@ -133,6 +135,7 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                             }
                         } else if size < offset {
                             scanner.reset()
+                            transcriptFollower = nil
                             offset = 0
                             if let store = checkpointStore {
                                 try await store.remove(for: sourceKey)
@@ -156,6 +159,8 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                                 : CodexAutoAssociation.latestUserRequest(at: fileURL).flatMap(CodexGlanceText.request(from:))
                             // Each turn carries the name as of now, so a rename reaches the phone with the next turn.
                             let name = scannedRecords.isEmpty ? nil : await conversationName?()
+                            let digest = latestTurn == nil ? nil
+                                : ConversationDigest.read(at: fileURL, title: name ?? conversationTitle, follower: &transcriptFollower)
                             for scanned in scannedRecords {
                                 if scanned.record.timestamp < context.startedAt {
                                     if let store = checkpointStore, let identity {
@@ -184,7 +189,8 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
                                     tests: scanned.tests,
                                     waitingForReply: scanned.waitingForReply,
                                     request: scanned.record.turnID == latestTurn ? request : nil,
-                                    workedSeconds: scanned.work.seconds
+                                    workedSeconds: scanned.work.seconds,
+                                    digest: scanned.record.turnID == latestTurn ? digest : nil
                                 )
                                 if let identity, checkpointStore != nil {
                                     await deliveryState.prepare(

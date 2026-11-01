@@ -491,6 +491,7 @@ public enum SessionReducer {
                         process.sessionID = session.id
                         // A turn's end read apart from its start may not repeat the request.
                         process.request = process.request ?? existing.request
+                        process.digest = process.digest ?? existing.digest
                     }
                     var events = existing.events
                     for event in observation.process.events where !events.contains(where: { $0.id == event.id }) {

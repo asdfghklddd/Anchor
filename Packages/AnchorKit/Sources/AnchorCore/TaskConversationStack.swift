@@ -47,7 +47,7 @@ public struct TaskConversationStack: Hashable, Sendable {
     }
 
     /// Every AI conversation of the task, each as its latest turn, in the order
-    /// they joined. A turn that does not repeat the request keeps the one before.
+    /// they joined. A turn that does not repeat the request or the digest keeps the one before.
     public static func conversations(of task: AnchorSession) -> [AnchorProcess] {
         var order: [UUID] = []
         var turns: [UUID: [AnchorProcess]] = [:]
@@ -59,6 +59,9 @@ public struct TaskConversationStack: Hashable, Sendable {
             guard let group = turns[key], var latest = group.max(by: { $0.updatedAt < $1.updatedAt }) else { return nil }
             if latest.request == nil {
                 latest.request = group.sorted { $0.updatedAt > $1.updatedAt }.lazy.compactMap(\.request).first
+            }
+            if latest.digest == nil {
+                latest.digest = group.sorted { $0.updatedAt > $1.updatedAt }.lazy.compactMap(\.digest).first
             }
             return latest
         }

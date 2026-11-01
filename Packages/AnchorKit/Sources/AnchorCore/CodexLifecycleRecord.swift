@@ -49,7 +49,7 @@ public struct CodexLifecycleRecord: Codable, Hashable, Sendable {
     /// `end` carries what the turn reported when it ended: the opening of its
     /// final reply, or the error that made it fail. Only that short preview
     /// and `request`, the opening of the person's latest request, leave the
-    /// Mac, over the local link, with the turn's test verdict and whether it
+    /// Mac, over the local link, with the conversation's `digest`, with the turn's test verdict and whether it
     /// ended waiting for the person's reply.
     func externalEvent(
         sessionID: UUID,
@@ -63,7 +63,8 @@ public struct CodexLifecycleRecord: Codable, Hashable, Sendable {
         tests: TestOutcome? = nil,
         waitingForReply: Bool = false,
         request: String? = nil,
-        workedSeconds: TimeInterval? = nil
+        workedSeconds: TimeInterval? = nil,
+        digest: ConversationDigest? = nil
     ) -> ExternalProcessEvent {
         let failedByError = lifecycle == .completed && end?.hasError == true
         let finished = lifecycle == .completed && !failedByError
@@ -90,7 +91,8 @@ public struct CodexLifecycleRecord: Codable, Hashable, Sendable {
                                                            progress: nil, detail: detail, updatedAt: timestamp,
                                                            stepID: stepID,
                                                            testOutcome: lifecycle == .started ? nil : tests,
-                                                           request: request, workedSeconds: workedSeconds),
+                                                           request: request, workedSeconds: workedSeconds,
+                                                           digest: digest),
                                     event: event, deduplicationKey: key,
                                     observedOutcome: lifecycle == .aborted ? .interrupted : nil)
     }

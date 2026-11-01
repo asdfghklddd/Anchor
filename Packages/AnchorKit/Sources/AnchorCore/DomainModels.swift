@@ -107,6 +107,9 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
     /// turns as the Mac read them from the log: through this turn once it
     /// ends, before it while it runs. `nil` from Macs that do not send it.
     public var workedSeconds: TimeInterval?
+    /// Where the conversation stands, as the Mac read it from the log when
+    /// this turn started or ended; `nil` from Macs that do not send it.
+    public var digest: ConversationDigest?
 
     public init(
         id: UUID = UUID(),
@@ -130,7 +133,8 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
         stepID: UUID? = nil,
         testOutcome: TestOutcome? = nil,
         request: String? = nil,
-        workedSeconds: TimeInterval? = nil
+        workedSeconds: TimeInterval? = nil,
+        digest: ConversationDigest? = nil
     ) {
         self.id = id
         self.sessionID = sessionID
@@ -154,6 +158,7 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
         self.testOutcome = testOutcome
         self.request = request
         self.workedSeconds = workedSeconds
+        self.digest = digest
     }
 }
 
