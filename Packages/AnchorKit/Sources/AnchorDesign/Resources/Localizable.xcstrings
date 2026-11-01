@@ -844,13 +844,13 @@
     "Confirmed" : {
 
     },
+    "Connect" : {
+
+    },
     "Connect Codex and Claude folders once…" : {
 
     },
     "Connect local agent sessions" : {
-
-    },
-    "Connect selected folders" : {
 
     },
     "Connect your local Codex and Claude Code session folders once. Anchor will discover new conversations, titles, and turn status automatically; adjust task placement when needed. Terminal commands use the shell connection below." : {
@@ -3225,6 +3225,9 @@
 
     },
     "is waiting for input" : {
+
+    },
+    "Just click Connect. Anchor only reads the Codex and Claude Code conversation folders, remembers access, and finds new conversations automatically." : {
 
     },
     "just now" : {
@@ -5614,6 +5617,9 @@
 
     },
     "No changes received yet. This summary updates as records arrive." : {
+
+    },
+    "No Codex or Claude Code conversations were found. Open your home folder and click Connect." : {
 
     },
     "No events yet" : {
@@ -9119,12 +9125,6 @@
 
     },
     "Search history" : {
-
-    },
-    "Select the Codex sessions folder and Claude Code projects folder together, when both are installed. Anchor remembers access and discovers new conversations automatically." : {
-
-    },
-    "Select the Codex sessions folder or Claude Code projects folder." : {
 
     },
     "Selected process" : {
