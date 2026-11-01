@@ -29,15 +29,16 @@ struct DeskRecallCard: View {
     private var isRunning: Bool { process.status == .running || process.status == .queued }
 
     var body: some View {
-        VStack(spacing: 0) {
-            grabber
-            HStack(alignment: .top, spacing: 12) {
+        ZStack(alignment: .top) {
+            HStack(alignment: .top, spacing: 14) {
                 conversation
                 anchor
-                    .frame(width: 168)
+                    .frame(width: 172)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 14)
+            .padding(.horizontal, 18)
+            .padding(.top, 22)
+            .padding(.bottom, 16)
+            grabber
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(DeskStyle.card, in: .rect(cornerRadius: 24, style: .continuous))
@@ -47,27 +48,33 @@ struct DeskRecallCard: View {
 
     /// Up is the Mac, beside the phone on the desk: the handle points there.
     private var grabber: some View {
-        VStack(spacing: 3) {
+        HStack(spacing: 4) {
             Image(systemName: "chevron.compact.up")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: 15, weight: .semibold))
             Image(systemName: "desktopcomputer")
-                .font(.system(size: 11))
+                .font(.system(size: 10))
         }
-        .foregroundStyle(DeskStyle.quietInk.opacity(0.7))
-        .padding(.top, 6)
-        .padding(.bottom, 2)
+        .foregroundStyle(DeskStyle.quietInk.opacity(0.6))
+        .padding(.top, 5)
         .accessibilityHidden(true)
     }
 
     // MARK: The conversation
 
     private var conversation: some View {
-        VStack(alignment: .leading, spacing: 9) {
+        VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(process.title)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(DeskStyle.text)
-                    .lineLimit(1)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(process.title)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(DeskStyle.text)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Text(worked)
+                        .font(.system(size: 11))
+                        .foregroundStyle(palette.ink)
+                        .lineLimit(1)
+                }
                 if let words = digest?.keywords, !words.isEmpty {
                     Text(words.joined(separator: " · "))
                         .font(.system(size: 12))
@@ -79,9 +86,11 @@ struct DeskRecallCard: View {
             if let facts = digest?.facts, !facts.isEmpty {
                 DeskChipRow(chips: facts.map(DeskText.recallFact))
             }
+            // The path sits at the bottom, where the card ends: older above, now last.
+            Spacer(minLength: 2)
             path
         }
-        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     /// The strongest cue for picking the work back up: what it waits on the person for.
@@ -108,14 +117,14 @@ struct DeskRecallCard: View {
                 .foregroundStyle(highlighted ? palette.ink : DeskStyle.quietInk)
             if let text, !text.isEmpty {
                 Text(text)
-                    .font(.system(size: 14))
+                    .font(.system(size: 15))
                     .foregroundStyle(DeskStyle.text)
-                    .lineLimit(2)
+                    .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 7)
+        .padding(.horizontal, 11)
+        .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(highlighted ? palette.front : DeskStyle.quietInk.opacity(0.1),
                     in: .rect(cornerRadius: 12, style: .continuous))
@@ -125,19 +134,31 @@ struct DeskRecallCard: View {
     /// The last few replies' openings, oldest first, along a thin line.
     private var path: some View {
         let steps = digest?.path ?? []
-        return VStack(alignment: .leading, spacing: 4) {
+        return VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
                 let isNow = index == steps.count - 1
                 let isNew = !seenPath.contains(step)
-                HStack(alignment: .firstTextBaseline, spacing: 7) {
-                    Circle()
-                        .fill(isNew ? palette.ink : DeskStyle.quietInk.opacity(0.45))
-                        .frame(width: 6, height: 6)
+                HStack(alignment: .top, spacing: 8) {
+                    VStack(spacing: 2) {
+                        Circle()
+                            .fill(isNew ? palette.ink : DeskStyle.quietInk.opacity(0.45))
+                            .frame(width: 7, height: 7)
+                            .padding(.top, 5)
+                        if !isNow {
+                            Capsule()
+                                .fill(DeskStyle.quietInk.opacity(0.25))
+                                .frame(width: 1.5)
+                                .frame(maxHeight: .infinity)
+                        }
+                    }
+                    .frame(width: 7)
                     Text(step)
-                        .font(.system(size: 12.5, weight: isNow ? .medium : .regular))
+                        .font(.system(size: 13, weight: isNow ? .medium : .regular))
                         .foregroundStyle(isNow ? DeskStyle.text : DeskStyle.quietInk)
                         .lineLimit(1)
+                        .padding(.bottom, isNow ? 0 : 6)
                 }
+                .fixedSize(horizontal: false, vertical: true)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel(isNew ? "\(DeskText.recallNew): \(step)" : step)
             }
@@ -148,37 +169,51 @@ struct DeskRecallCard: View {
 
     private var anchor: some View {
         Button(action: onTask) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 9) {
                 Text(task.goal.title)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(palette.ink)
                     .lineLimit(2)
                 if let plan = task.goal.userPlan, !plan.items.isEmpty {
-                    Text(plan.nextStepIndex.map { DeskText.recallNextStep(plan.steps[$0]) } ?? DeskText.recallPlanDone)
-                        .font(.system(size: 13))
-                        .foregroundStyle(DeskStyle.text)
-                        .lineLimit(3)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(plan.nextStepIndex.map { DeskText.recallNextStep(plan.steps[$0]) } ?? DeskText.recallPlanDone)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(DeskStyle.text)
+                            .lineLimit(3)
+                            .fixedSize(horizontal: false, vertical: true)
+                        // One mark per step of the person's plan, filled when done.
+                        HStack(spacing: 3) {
+                            ForEach(plan.items.indices, id: \.self) { index in
+                                Capsule()
+                                    .fill(plan.isDone(index) ? palette.ink : DeskStyle.quietInk.opacity(0.25))
+                                    .frame(height: 3)
+                            }
+                        }
+                        .accessibilityHidden(true)
+                    }
                 }
                 if let decision = digest?.decision {
                     Text(DeskText.recallDecided(decision))
-                        .font(.system(size: 12))
+                        .font(.system(size: 12.5))
                         .foregroundStyle(DeskStyle.text)
                         .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
+                Spacer(minLength: 0)
                 if let cues = digest?.cues, !cues.isEmpty {
                     Text(cues.joined(separator: "\n"))
                         .font(.system(size: 10.5, design: .monospaced))
                         .foregroundStyle(DeskStyle.quietInk)
                         .lineLimit(3)
                 }
-                Spacer(minLength: 0)
-                Text([worked, process.sourceName].filter { !$0.isEmpty }.joined(separator: " · "))
+                Text(process.sourceName)
                     .font(.system(size: 11))
                     .foregroundStyle(DeskStyle.quietInk)
+                    .lineLimit(1)
             }
             .padding(12)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(palette.front.opacity(0.55), in: .rect(cornerRadius: 16, style: .continuous))
+            .background(palette.front.opacity(0.6), in: .rect(cornerRadius: 16, style: .continuous))
             .contentShape(.rect)
         }
         .buttonStyle(AnchorPressButtonStyle())
