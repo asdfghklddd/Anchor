@@ -7,9 +7,12 @@ public enum ConversationDialect: String, Codable, Hashable, Sendable {
     case codex
     /// Claude Code (`~/.claude/projects/<project>/<session>.jsonl`).
     case claudeCode
+    /// DeepSeek Harness, read from its status files rather than a log (`HarnessSessionStatus`).
+    case deepseekHarness
 
     /// Codex opens with `session_meta`; Claude Code entries carry a `sessionId`.
     public static func of(_ url: URL) -> ConversationDialect {
+        if HarnessSessionStatus.isStatusFile(url) { return .deepseekHarness }
         guard let handle = try? FileHandle(forReadingFrom: url) else { return .codex }
         defer { try? handle.close() }
         guard let data = try? handle.read(upToCount: 16 * 1_024) else { return .codex }
@@ -44,6 +47,8 @@ struct ConversationLogReader: Sendable {
 
     mutating func read(_ line: Data) -> [TurnLogRecord] {
         switch dialect {
+        case .deepseekHarness:
+            return []
         case .claudeCode:
             return claude.read(line)
         case .codex:

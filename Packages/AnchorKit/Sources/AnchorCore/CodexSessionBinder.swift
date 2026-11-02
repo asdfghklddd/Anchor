@@ -47,6 +47,7 @@ public actor CodexSessionBinder {
         )
         let conversation = CodexSessionMetadata.read(from: fileURL)
         let isClaudeCode = conversation?.originator == CodexSessionMetadata.claudeCodeOriginator
+        let isHarness = conversation?.originator == HarnessSessionStatus.originator
         try await taskRunStore.host(task: task)
         try await taskRunStore.upsert(workItem: workItem)
         let repository = self.repository
@@ -58,29 +59,29 @@ public actor CodexSessionBinder {
             guard let bound = await repository.currentProjection().hostedSessions.first(where: { $0.id == session.id }) else { return nil }
             return ProcessSourceSessionContext(sessionID: bound.id, startedAt: bound.startedAt)
         }
-        let codexSource = CodexLifecycleFileSource(
-            fileURL: fileURL,
-            sessionContextProvider: boundSessionContext,
-            checkpointStore: checkpointStore,
-            descriptor: SourceDescriptor(
-                id: sourceID,
-                name: conversation?.sourceName ?? "Codex",
-                kind: .integration,
-                symbol: isClaudeCode ? "CC" : "C",
-                tone: isClaudeCode ? "coral" : "cyan",
-                capabilities: [.observe],
-                permission: .granted
-            ),
-            conversationTitle: conversation?.workspaceName,
-            conversationName: conversationName,
-            stepID: stepID
+        let descriptor = SourceDescriptor(
+            id: sourceID,
+            name: conversation?.sourceName ?? "Codex",
+            kind: .integration,
+            symbol: isHarness ? "DS" : (isClaudeCode ? "CC" : "C"),
+            tone: isHarness ? "periwinkle" : (isClaudeCode ? "coral" : "cyan"),
+            capabilities: [.observe],
+            permission: .granted
         )
+        let source: any ProcessSource = isHarness
+            ? DeepSeekHarnessSource(fileURL: fileURL, sessionContextProvider: boundSessionContext,
+                                    descriptor: descriptor, conversationTitle: conversation?.workspaceName,
+                                    conversationName: conversationName, stepID: stepID)
+            : CodexLifecycleFileSource(fileURL: fileURL, sessionContextProvider: boundSessionContext,
+                                       checkpointStore: checkpointStore, descriptor: descriptor,
+                                       conversationTitle: conversation?.workspaceName,
+                                       conversationName: conversationName, stepID: stepID)
         try await coordinator.setAssociation(
             AnchorEventAssociation(taskID: task.id, workItemID: workItem.id, confirmedByUser: !automaticallyMatched, automaticallyMatched: automaticallyMatched),
             for: session.id,
-            sourceID: codexSource.descriptor.id
+            sourceID: sourceID
         )
-        await coordinator.register(codexSource)
+        await coordinator.register(source)
         logFiles[sourceID] = fileURL
     }
 

@@ -51,6 +51,10 @@ public struct ConversationTranscript: Hashable, Sendable {
     /// reads its tail, and each later one only what was written since.
     public static func follow(_ url: URL, with follower: inout Follower?, limit: Int = roundLimit,
                               windows: [UInt64] = defaultWindows) -> ConversationTranscript? {
+        // A harness status file is small and rewritten whole: read it again each time.
+        if HarnessSessionStatus.isStatusFile(url) {
+            return HarnessSessionStatus(contentsOf: url)?.transcript(limit: limit)
+        }
         guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
         guard let size = try? handle.seekToEnd() else { return nil }

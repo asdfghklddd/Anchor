@@ -4959,6 +4959,40 @@
         }
       }
     },
+    "mac.sources.deepseek" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepSeek Harness"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepSeek Harness"
+          }
+        }
+      }
+    },
+    "mac.sources.deepseek.lost-access" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The DeepSeek Harness folder can no longer be read. Allow it again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "之前授权的 DeepSeek Harness 文件夹已无法读取，请重新授权。"
+          }
+        }
+      }
+    },
     "mac.status.agent.grant" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11910,13 +11944,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connect Codex and Claude folders once…"
+            "value" : "Connect agent folders once…"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "一次连接 Codex 和 Claude 文件夹…"
+            "value" : "一次连接 agent 文件夹…"
           }
         }
       }
@@ -11926,13 +11960,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Just click Connect. Anchor only reads the Codex and Claude Code conversation folders, remembers access, and finds new conversations automatically."
+            "value" : "Just click Connect. Anchor only reads the Codex, Claude Code and DeepSeek Harness conversation folders, remembers access, and finds new conversations automatically."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "直接点「连接」即可。Anchor 只读取 Codex 和 Claude Code 的对话文件夹，记住权限后会自动发现新对话。"
+            "value" : "直接点「连接」即可。Anchor 只读取 Codex、Claude Code 和 DeepSeek Harness 的对话文件夹，记住权限后会自动发现新对话。"
           }
         }
       }
@@ -11974,13 +12008,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No Codex or Claude Code conversations were found. Open your home folder and click Connect."
+            "value" : "No Codex, Claude Code or DeepSeek Harness conversations were found. Open your home folder and click Connect."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "没有找到 Codex 或 Claude Code 的对话。请回到个人文件夹后点「连接」。"
+            "value" : "没有找到 Codex、Claude Code 或 DeepSeek Harness 的对话。请回到个人文件夹后点「连接」。"
           }
         }
       }

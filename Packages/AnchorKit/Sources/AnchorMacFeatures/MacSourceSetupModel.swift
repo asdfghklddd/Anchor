@@ -20,15 +20,17 @@ public final class MacSourceSetupModel {
     public private(set) var codexSessionsFolderName: String?
     /// Set once the person granted Claude Code's `projects` folder.
     public private(set) var claudeProjectsFolderName: String?
+    /// Set once the person granted DeepSeek Harness's session status folder.
+    public private(set) var harnessFolderName: String?
     public private(set) var taskState: AnchorTaskState?
 
-    /// Any agent's conversations can be read: Codex, Claude Code, or both.
+    /// Any agent's conversations can be read: Codex, Claude Code, DeepSeek Harness.
     public var hasConversationSource: Bool {
-        codexSessionsFolderName != nil || claudeProjectsFolderName != nil
+        codexSessionsFolderName != nil || claudeProjectsFolderName != nil || harnessFolderName != nil
     }
     public var errorMessage: String?
     /// The granted log folders, for counting the day's tokens.
-    public var agentLogRoots: [URL] { [codexSessionsRootURL, claudeRootURL].compactMap { $0 } }
+    public var agentLogRoots: [URL] { [codexSessionsRootURL, claudeRootURL, harnessRootURL].compactMap { $0 } }
 
     public var showsCodexOnboarding = false
     public var onNeedsAttention: (@MainActor () -> Void)?
@@ -163,6 +165,9 @@ public final class MacSourceSetupModel {
     private var claudeRootURL: URL?
     private var claudeRootSecurityScopedURL: URL?
     private var claudeSupervisor: CodexTaskSupervisor?
+    private var harnessRootURL: URL?
+    private var harnessRootSecurityScopedURL: URL?
+    private var harnessSupervisor: DeepSeekHarnessSupervisor?
     private var codexDiscoveryTask: Task<Void, Never>?
     private var registeredBindings = Set<TrackedCodexSession>()
     private var observedAnchorSessionID: UUID?
@@ -182,11 +187,16 @@ public final class MacSourceSetupModel {
     private func location(of url: URL) -> (source: ConversationDialect?, path: String)? {
         if let root = codexSessionsRootURL, let path = Self.relativePath(for: url, under: root) { return (nil, path) }
         if let root = claudeRootURL, let path = Self.relativePath(for: url, under: root) { return (.claudeCode, path) }
+        if let root = harnessRootURL, let path = Self.relativePath(for: url, under: root) { return (.deepseekHarness, path) }
         return nil
     }
 
     private func root(for source: ConversationDialect?) -> URL? {
-        source == .claudeCode ? claudeRootURL : codexSessionsRootURL
+        switch source {
+        case .claudeCode: claudeRootURL
+        case .deepseekHarness: harnessRootURL
+        case .codex, nil: codexSessionsRootURL
+        }
     }
 
     public init(
@@ -259,6 +269,7 @@ public final class MacSourceSetupModel {
 
         await restoreCodexSessionsRoot()
         await restoreClaudeRoot()
+        await restoreHarnessRoot()
         await restoreTrackedCodexSessions()
 
         if codexSecurityScopedURL == nil,
@@ -287,9 +298,10 @@ public final class MacSourceSetupModel {
 
     /// Grants one persistent, folder-scoped access flow for the local agent logs.
     /// The panel opens on the home folder, so a single click on Connect grants
-    /// it; Anchor then saves read-only bookmarks for only Codex `sessions` and
-    /// Claude Code `projects` and lets the wider grant go. Picking `.codex`,
-    /// `.claude` or the two log folders themselves works the same way.
+    /// it; Anchor then saves read-only bookmarks for only Codex `sessions`,
+    /// Claude Code `projects` and DeepSeek Harness's status folder, and lets the
+    /// wider grant go. Picking `.codex`, `.claude`, `.dsh` or the log folders
+    /// themselves works the same way.
     public func authorizeAgentSessionFolders() async {
         guard !isWorking else { return }
         isWorking = true
@@ -316,20 +328,26 @@ public final class MacSourceSetupModel {
         let homePath = homeURL.standardizedFileURL.path
         let codexPath = homePath + "/.codex/sessions"
         let claudePath = homePath + "/.claude/projects"
+        let harnessPath = homePath + "/" + HarnessSessionStatus.rootPath
         var codexFolder: URL?
         var claudeFolder: URL?
+        var harnessFolder: URL?
         var grantedURLs: [URL] = []
         for url in panel.urls {
             let path = url.standardizedFileURL.path
             let codex = [homePath, homePath + "/.codex", codexPath].contains(path)
             let claude = [homePath, homePath + "/.claude", claudePath].contains(path)
-            guard codex || claude, url.startAccessingSecurityScopedResource() else { continue }
+            let harness = [homePath, homePath + "/.dsh", harnessPath].contains(path)
+            guard codex || claude || harness, url.startAccessingSecurityScopedResource() else { continue }
             grantedURLs.append(url)
             if codex {
                 codexFolder = url.appending(path: String(codexPath.dropFirst(path.count)), directoryHint: .isDirectory)
             }
             if claude {
                 claudeFolder = url.appending(path: String(claudePath.dropFirst(path.count)), directoryHint: .isDirectory)
+            }
+            if harness {
+                harnessFolder = url.appending(path: String(harnessPath.dropFirst(path.count)), directoryHint: .isDirectory)
             }
         }
         defer { for url in grantedURLs { url.stopAccessingSecurityScopedResource() } }
@@ -343,7 +361,8 @@ public final class MacSourceSetupModel {
         }
         let codexBookmark = readableBookmark(codexFolder)
         let claudeBookmark = readableBookmark(claudeFolder)
-        guard codexBookmark != nil || claudeBookmark != nil else {
+        let harnessBookmark = readableBookmark(harnessFolder)
+        guard codexBookmark != nil || claudeBookmark != nil || harnessBookmark != nil else {
             errorMessage = L10n.sourceSetupAgentFoldersSelectionError
             return
         }
@@ -359,6 +378,12 @@ public final class MacSourceSetupModel {
             claudeRootSecurityScopedURL = nil
             defaults.set(claudeBookmark, forKey: Self.claudeRootBookmarkKey)
             await restoreClaudeRoot()
+        }
+        if let harnessBookmark {
+            harnessRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
+            harnessRootSecurityScopedURL = nil
+            defaults.set(harnessBookmark, forKey: Self.harnessRootBookmarkKey)
+            await restoreHarnessRoot()
         }
         if hasConversationSource { finishCodexOnboarding() }
     }
@@ -445,7 +470,7 @@ public final class MacSourceSetupModel {
     }
 
     public func refreshCodexCandidates() async {
-        guard codexSupervisor != nil || claudeSupervisor != nil else {
+        guard codexSupervisor != nil || claudeSupervisor != nil || harnessSupervisor != nil else {
             codexCandidates = []
             codexConversations = []
             return
@@ -457,6 +482,7 @@ public final class MacSourceSetupModel {
     private func currentSummaries() async -> [CodexConversationSummary] {
         var summaries = await codexSupervisor?.summaries() ?? []
         summaries += await claudeSupervisor?.summaries() ?? []
+        summaries += await harnessSupervisor?.summaries() ?? []
         return summaries.sorted { lhs, rhs in
             if lhs.candidate.modifiedAt != rhs.candidate.modifiedAt {
                 return lhs.candidate.modifiedAt > rhs.candidate.modifiedAt
@@ -516,6 +542,30 @@ public final class MacSourceSetupModel {
         restartCodexDiscovery()
     }
 
+    /// The same for DeepSeek Harness's session status folder.
+    func observeAuthorizedHarnessFolder(_ url: URL) async {
+        harnessRootURL = url
+        harnessFolderName = url.lastPathComponent
+        harnessSupervisor = DeepSeekHarnessSupervisor(rootURL: url)
+        await restoreTrackedCodexSessions()
+        restartCodexDiscovery()
+    }
+
+    private func restoreHarnessRoot() async {
+        guard harnessRootSecurityScopedURL == nil,
+              let url = resolveBookmarkedURL(for: Self.harnessRootBookmarkKey),
+              url.startAccessingSecurityScopedResource() else { return }
+        do {
+            _ = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
+        } catch {
+            url.stopAccessingSecurityScopedResource()
+            errorMessage = MacDeepSeekHarnessCopy.lostAccess
+            return
+        }
+        harnessRootSecurityScopedURL = url
+        await observeAuthorizedHarnessFolder(url)
+    }
+
     private func restoreClaudeRoot() async {
         guard claudeRootSecurityScopedURL == nil,
               let url = resolveBookmarkedURL(for: Self.claudeRootBookmarkKey),
@@ -537,13 +587,15 @@ public final class MacSourceSetupModel {
         codexSecurityScopedURL?.stopAccessingSecurityScopedResource()
         codexSessionsRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
         claudeRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
+        harnessRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
         codexSecurityScopedURL = nil
         codexSessionsRootSecurityScopedURL = nil
         claudeRootSecurityScopedURL = nil
+        harnessRootSecurityScopedURL = nil
     }
 
     private func restoreTrackedCodexSessions() async {
-        guard codexSessionsRootURL != nil || claudeRootURL != nil,
+        guard codexSessionsRootURL != nil || claudeRootURL != nil || harnessRootURL != nil,
               let sessions = await autoAssociationSessions?(),
               let onCodexSessionAssociated else { return }
         let selectedID = await currentAnchorSessionID?()
@@ -834,6 +886,13 @@ public final class MacSourceSetupModel {
     private static let codexRootBookmarkKey = "anchor.mac.source-setup.codex-root.v1"
     nonisolated private static let codexTrackedSessionsKey = "anchor.mac.source-setup.codex-tracked.v1"
     private static let claudeRootBookmarkKey = "anchor.mac.source-setup.claude-root.v1"
+    private static let harnessRootBookmarkKey = "anchor.mac.source-setup.deepseek-harness-root.v1"
+}
+
+enum MacDeepSeekHarnessCopy {
+    static let title = AnchorStrings.value("mac.sources.deepseek", default: "DeepSeek Harness")
+    static let lostAccess = AnchorStrings.value(
+        "mac.sources.deepseek.lost-access", default: "The DeepSeek Harness folder can no longer be read. Allow it again.")
 }
 
 enum MacClaudeCodeCopy {

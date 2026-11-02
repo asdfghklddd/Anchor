@@ -1,6 +1,7 @@
 import Foundation
 
-/// Tokens agents used per half hour, read from Codex and Claude Code logs.
+/// Tokens agents used per half hour, read from Codex and Claude Code logs and
+/// DeepSeek Harness status files.
 /// Counts fresh input plus output; cached reads are left out, since they
 /// repeat context the agent already paid for. Only counts leave the logs.
 public actor TokenTally {
@@ -8,6 +9,8 @@ public actor TokenTally {
         let size: UInt64
         let modified: Date
         let slots: [Date: Int]
+        /// A harness session's running total when last read.
+        var total: Int? = nil
     }
 
     private var files: [URL: FileTally] = [:]
@@ -21,13 +24,20 @@ public actor TokenTally {
             guard let walker = FileManager.default.enumerator(
                 at: root, includingPropertiesForKeys: [.contentModificationDateKey, .fileSizeKey],
                 options: [.skipsHiddenFiles]) else { continue }
-            for case let url as URL in walker where url.pathExtension == "jsonl" {
+            for case let url as URL in walker
+            where url.pathExtension == "jsonl" || HarnessSessionStatus.isStatusFile(url) {
                 guard let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey]),
                       let modified = values.contentModificationDate, modified >= since else { continue }
                 let size = UInt64(values.fileSize ?? 0)
                 seen.insert(url)
                 if let known = files[url], known.size == size, known.modified == modified { continue }
-                files[url] = FileTally(size: size, modified: modified, slots: Self.read(url))
+                if url.pathExtension == "json" {
+                    if let tally = Self.harness(url, modified: modified, known: files[url], since: since) {
+                        files[url] = tally
+                    }
+                } else {
+                    files[url] = FileTally(size: size, modified: modified, slots: Self.read(url))
+                }
             }
         }
         files = files.filter { seen.contains($0.key) }
@@ -37,6 +47,23 @@ public actor TokenTally {
             for (start, tokens) in tally.slots where start >= floor { totals[start, default: 0] += tokens }
         }
         return totals.sorted { $0.key < $1.key }.map { DayActivity.TokenSlot(start: $0.key, tokens: $0.value) }
+    }
+
+    /// A harness session keeps only a running total, so its rise since the last
+    /// read is put in the half hour the file changed. On first sight, a session
+    /// begun today counts whole; an older one counts only what it adds from now.
+    private static func harness(_ url: URL, modified: Date, known: FileTally?, since: Date) -> FileTally? {
+        guard let status = HarnessSessionStatus(contentsOf: url) else { return nil }
+        var slots = known?.slots ?? [:]
+        let added: Int
+        if let previous = known?.total {
+            added = max(0, status.tokens - previous)
+        } else {
+            added = (status.createdAt ?? .distantPast) >= since ? status.tokens : 0
+        }
+        if added > 0 { slots[DayActivity.slotStart(of: modified), default: 0] += added }
+        let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize).flatMap { $0 }.map(UInt64.init) ?? 0
+        return FileTally(size: size, modified: modified, slots: slots, total: status.tokens)
     }
 
     static func read(_ url: URL) -> [Date: Int] {

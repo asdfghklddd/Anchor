@@ -24,6 +24,7 @@ public struct CodexSessionMetadata: Hashable, Sendable {
     /// The desktop app is branded ChatGPT; CLI and editor clients remain Codex.
     public var sourceName: String {
         if originator == Self.claudeCodeOriginator { return Self.claudeCodeOriginator }
+        if originator == HarnessSessionStatus.originator { return HarnessSessionStatus.sourceName }
         return originator?.localizedCaseInsensitiveContains("desktop") == true ? "ChatGPT" : "Codex"
     }
 
@@ -32,6 +33,13 @@ public struct CodexSessionMetadata: Hashable, Sendable {
     static let userThreadSources: Set<String> = ["user", "chatgpt_handoff"]
 
     public static func read(from url: URL) -> CodexSessionMetadata? {
+        if HarnessSessionStatus.isStatusFile(url) {
+            return HarnessSessionStatus(contentsOf: url).map {
+                CodexSessionMetadata(id: $0.id, createdAt: $0.createdAt, workspaceName: $0.workspaceName,
+                                     originator: HarnessSessionStatus.originator, threadSource: nil,
+                                     isSubagent: !$0.isUserConversation)
+            }
+        }
         guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
         guard let data = try? handle.read(upToCount: 256 * 1_024),

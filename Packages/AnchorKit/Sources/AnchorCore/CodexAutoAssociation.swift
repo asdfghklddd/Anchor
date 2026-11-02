@@ -45,6 +45,9 @@ public enum CodexAutoAssociation {
     }
 
     private static func userRequest(at url: URL, latest: Bool) -> String? {
+        if HarnessSessionStatus.isStatusFile(url) {
+            return HarnessSessionStatus(contentsOf: url)?.request(latest: latest)
+        }
         guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
         // Bounded header + tail covers large injected setup context. Only a
