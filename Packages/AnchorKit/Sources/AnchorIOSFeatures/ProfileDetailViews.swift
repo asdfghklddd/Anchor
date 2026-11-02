@@ -14,14 +14,12 @@ struct ProfileDetailSheet: View {
     var onEditSteps: (([AnchorUserPlan.Step]) -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.anchorTour) private var tour
 
     var body: some View {
         NavigationStack {
             ZStack {
                 HarborBackground()
 
-                ScrollViewReader { scroller in
                 ScrollView {
                     VStack(alignment: .leading, spacing: AnchorSpacing.large) {
                         detailHero
@@ -63,13 +61,6 @@ struct ProfileDetailSheet: View {
                     .frame(maxWidth: .infinity)
                 }
                 .scrollIndicators(.hidden)
-                // In the tour, the question comes into view with the ring on it.
-                .task(id: tour?.stage) {
-                    guard tour?.stage == .reading, let question else { return }
-                    try? await Task.sleep(for: .seconds(0.35))
-                    withAnimation(AnchorMotion.panel) { scroller.scrollTo(question, anchor: .center) }
-                }
-                }
             }
             .navigationTitle(kind.title)
             .navigationBarTitleDisplayMode(.inline)
@@ -186,11 +177,6 @@ struct ProfileDetailSheet: View {
                         }
                     }
                     .padding(.vertical, 10)
-                    .overlay {
-                        if tour?.stage == .reading, process.id == question {
-                            TourHalo(radius: 14).padding(.horizontal, -4)
-                        }
-                    }
                     .id(process.id)
                     // A status that changes while you read crossfades instead of jumping.
                     .animation(AnchorMotion.micro, value: process.status)
@@ -261,11 +247,6 @@ struct ProfileDetailSheet: View {
                 .font(.title3.bold())
                 .foregroundStyle(AnchorPalette.ink)
         }
-    }
-
-    /// The conversation waiting on the person, which the tour rings.
-    private var question: UUID? {
-        processes.first { $0.status == .needsDecision }?.id
     }
 
     private var processes: [AnchorProcess] {

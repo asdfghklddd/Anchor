@@ -17,6 +17,8 @@ enum TourSpot: Hashable {
     case taskFolder(UUID)
     /// The card in front of a task's folder.
     case frontCard(UUID)
+    /// The conversation opened over the desk, and what it waits on the person for.
+    case recallCard, recallWaiting
 }
 
 struct TourSpotKey: PreferenceKey {
@@ -44,42 +46,62 @@ extension View {
 
 // MARK: Hints
 
-/// The tour's line: large, plain and left-aligned, in the same place on
-/// each screen, saying what to do and what it makes happen. When the screen
-/// moves on by itself, the new line arrives under the one before, which
-/// shrinks and stays, so nothing read halfway is lost.
-struct TourCaption: View {
+/// The tour's line: one short line in the same place on each screen, on a
+/// frosted plate that keeps it legible over whatever lies under it. When the
+/// screen moves on by itself, the line is replaced and the plate follows its
+/// size.
+struct TourCaption<Lead: View>: View {
     let text: String
-    /// The line said just before on this screen.
-    var earlier: String? = nil
+    /// A small picture on the plate before the line, such as the phone turning.
+    @ViewBuilder var lead: Lead
 
     @AnchorReducedMotion private var reduceMotion
     @Environment(\.launchSplashShowing) private var covered
-    /// The halo comes up with the first line and stays while the caption does.
+    /// The plate comes up with the first line and stays while the caption does.
     @State private var shown = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let earlier {
-                Text(earlier)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(TourInk.earlier)
-                    .lineSpacing(2)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .id(earlier)
-                    .transition(.opacity)
+        HStack(spacing: 12) {
+            lead
+            ZStack(alignment: .topLeading) {
+                TourRisingLine(text: text, reduceMotion: reduceMotion)
+                    .id(text)
+                    .transition(.asymmetric(insertion: .identity, removal: .opacity))
             }
-            TourRisingLine(text: text, reduceMotion: reduceMotion)
-                .id(text)
-                .transition(.asymmetric(insertion: .identity, removal: .opacity))
         }
-        .background { TourCaptionHalo().opacity(shown ? 1 : 0) }
-        .animation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.5, bounce: 0.1), value: earlier)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 13)
+        .background { TourPlate().opacity(shown ? 1 : 0) }
+        .animation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.5, bounce: 0.1), value: text)
         .task(id: covered) {
             guard !covered else { return }
-            withAnimation(.easeOut(duration: 0.5)) { shown = true }
+            withAnimation(.easeOut(duration: 0.4)) { shown = true }
         }
+    }
+}
+
+extension TourCaption where Lead == EmptyView {
+    init(text: String) {
+        self.init(text: text) { EmptyView() }
+    }
+}
+
+/// Frosted glass under the tour's words: a strong blur of what lies behind,
+/// a hairline of light at its edge and a soft shadow, so a line reads over a
+/// busy screen without hiding it.
+struct TourPlate: View {
+    var radius: CGFloat = 22
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        shape
+            .fill(.regularMaterial)
+            .overlay { shape.strokeBorder(.white.opacity(colorScheme == .dark ? 0.12 : 0.55), lineWidth: 0.75) }
+            .shadow(color: .black.opacity(colorScheme == .dark ? 0.3 : 0.1), radius: 18, y: 8)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 }
 
@@ -87,7 +109,6 @@ struct TourCaption: View {
 /// reads as something said to the person; the rings on targets share it.
 enum TourInk {
     static let guide = adaptive(0x0A8FB3, dark: 0x5CCDE8)
-    static let earlier = adaptive(0x4F6E7C, dark: 0x9DB4BF)
 
     private static func adaptive(_ light: UInt32, dark: UInt32) -> Color {
         Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(Color(anchorHex: dark)) : UIColor(Color(anchorHex: light)) })
@@ -108,7 +129,6 @@ private struct TourRisingLine: View {
             .foregroundStyle(TourInk.guide)
             .lineSpacing(3)
             .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, alignment: .leading)
             .textRenderer(TourRise(elapsed: reduceMotion ? TourRise.settled : elapsed))
             .opacity(reduceMotion && elapsed == 0 ? 0 : 1)
             // The first line waits for the launch splash, so its arrival is seen.
@@ -157,52 +177,6 @@ private struct TourRise: TextRenderer, Animatable {
                 }
             }
         }
-    }
-}
-
-/// A faint oval of blur behind the whole caption, feathered to nothing at
-/// its edge, so the words lift off the page without a card around them.
-private struct TourCaptionHalo: View {
-    var body: some View {
-        ZStack {
-            Rectangle().fill(.ultraThinMaterial).opacity(0.5)
-            Rectangle().fill(AnchorIOSStyle.canvasTop.opacity(0.1))
-        }
-        .mask {
-            EllipticalGradient(stops: [
-                .init(color: .black, location: 0.25),
-                .init(color: .black.opacity(0.5), location: 0.6),
-                .init(color: .clear, location: 1),
-            ])
-        }
-        .padding(.horizontal, -30)
-        .padding(.vertical, -34)
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
-}
-
-/// A light wash under a caption, so the line reads over the real screen
-/// without darkening it: a short fade, then solid behind the words, and a
-/// fade out at the bottom when something the person needs sits just below.
-/// Keep the caption at least `fade` below the wash's top.
-struct TourScrim: View {
-    var fadesOut = false
-
-    static let fade: CGFloat = 40
-
-    var body: some View {
-        let wash = AnchorIOSStyle.canvasTop
-        VStack(spacing: 0) {
-            LinearGradient(colors: [wash.opacity(0), wash], startPoint: .top, endPoint: .bottom)
-                .frame(height: Self.fade)
-            wash
-            if fadesOut {
-                LinearGradient(colors: [wash, wash.opacity(0)], startPoint: .top, endPoint: .bottom)
-                    .frame(height: 18)
-            }
-        }
-        .allowsHitTesting(false)
     }
 }
 
@@ -311,9 +285,9 @@ struct TourSkip: View {
     var body: some View {
         Button(TourCopy.skip) { tour.skip() }
             .font(.subheadline.weight(.medium))
-            .foregroundStyle(AnchorIOSStyle.secondaryText.opacity(0.8))
+            .foregroundStyle(AnchorIOSStyle.secondaryText)
+            .buttonStyle(.glass)
             .frame(minWidth: 44, minHeight: 44)
-            .contentShape(.rect)
             .accessibilityIdentifier("tour.skip")
     }
 }
@@ -341,8 +315,8 @@ struct TourCoach: View {
 
     @Environment(\.launchSplashShowing) private var covered
 
-    /// The cards float in, and the first line is read, before the ring moves on.
-    static let helloLength: TimeInterval = 4.2
+    /// The cards float in under the ring before it moves on.
+    static let helloLength: TimeInterval = 3.2
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -352,10 +326,7 @@ struct TourCoach: View {
                     .transition(.opacity)
             case .anchored:
                 if let button = spots[.anchorButton] {
-                    TourFirstDrop(origin: CGPoint(x: button.midX, y: button.midY), size: size,
-                                  title: tour.ownTask.flatMap { id in
-                                      tour.model.projection.hostedSessions.first { $0.id == id }?.goal.title
-                                  })
+                    TourFirstDrop(origin: CGPoint(x: button.midX, y: button.midY), size: size)
                     .transition(.opacity)
                 }
             case .ending:
@@ -402,21 +373,22 @@ struct TourCoach: View {
                     .frame(width: ring.rect.width, height: ring.rect.height)
                     .offset(x: ring.rect.minX, y: ring.rect.minY)
             }
-            caption
+            if isButton {
+                caption
+                    .transition(.opacity)
+            }
         }
     }
 
-    /// Just above the anchor button, on a wash that fades out before it.
+    /// Just above the anchor button. The cards say what they are by themselves;
+    /// only the tap is asked for.
     private var caption: some View {
-        let below = spots[.anchorButton].map { size.height - $0.minY + 14 } ?? 140
+        let below = spots[.anchorButton].map { size.height - $0.minY + 30 } ?? 140
         return VStack(spacing: 0) {
             Spacer(minLength: 0)
-            TourCaption(text: isButton ? TourCopy.anchorButton : TourCopy.hello,
-                        earlier: isButton ? TourCopy.hello : nil)
-                .frame(maxWidth: 440)
-                .padding(.horizontal, 26)
-                .padding(.top, 8)
-                .padding(.bottom, 16)
+            TourCaption(text: TourCopy.anchorButton)
+                .frame(maxWidth: 440, alignment: .leading)
+                .padding(.horizontal, 20)
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, below)
         }
@@ -434,7 +406,6 @@ struct TourFirstDrop: View {
     /// The anchor button's middle, where the anchor meets the water.
     let origin: CGPoint
     let size: CGSize
-    let title: String?
 
     @AnchorReducedMotion private var reduceMotion
     @State private var start = Date.now
@@ -495,34 +466,24 @@ struct TourFirstDrop: View {
         }
     }
 
+    /// The new card in the list below says which task it was.
     private var words: some View {
-        VStack(spacing: 8) {
-            Text(TourCopy.firstAnchor)
-                .font(.system(size: 30, weight: .bold))
-                .foregroundStyle(AnchorIOSStyle.heading)
-            if let title {
-                Text(title)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(AnchorIOSStyle.secondaryText)
-            }
-        }
-        .multilineTextAlignment(.center)
-        .padding(.horizontal, 36)
-        .padding(.vertical, 30)
-        .background {
-            // A patch of still water over the dome, soft at its edges.
-            RoundedRectangle(cornerRadius: 48, style: .continuous)
-                .fill(AnchorIOSStyle.canvasTop)
-                .blur(radius: 16)
-        }
+        Text(TourCopy.firstAnchor)
+            .font(.system(size: 30, weight: .bold))
+            .foregroundStyle(AnchorIOSStyle.heading)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 22)
+            .background { TourPlate(radius: 28) }
+            .padding(.horizontal, 24)
     }
 }
 
 // MARK: The ending
 
 /// The sample tasks have weighed anchor and the sea is empty. One line on
-/// what Anchor is for, what the person did in the tour, and Start, which
-/// hands over to their own Anchor and its connection card.
+/// what Anchor is for, and Start, which hands over to their own Anchor and
+/// its connection card.
 struct TourEnding: View {
     let tour: AnchorTour
 
@@ -537,12 +498,11 @@ struct TourEnding: View {
                 .foregroundStyle(AnchorIOSStyle.heading)
                 .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 22)
+                .padding(.vertical, 20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background { TourPlate(radius: 26) }
                 .appear(shown, after: 0, reduceMotion: reduceMotion)
-            Text(TourCopy.endingStats(conversations: tour.conversationsMoved, minutes: AnchorTour.dialMinutes))
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(AnchorIOSStyle.secondaryText)
-                .fixedSize(horizontal: false, vertical: true)
-                .appear(shown, after: 0.5, reduceMotion: reduceMotion)
             Button { tour.start() } label: {
                 Text(TourCopy.start)
                     .font(.headline)
@@ -551,12 +511,12 @@ struct TourEnding: View {
             }
             .buttonStyle(.glassProminent)
             .tint(AnchorIOSStyle.action)
-            .padding(.top, 30)
-            .appear(shown, after: 1.0, reduceMotion: reduceMotion)
+            .padding(.top, 22)
+            .appear(shown, after: 0.7, reduceMotion: reduceMotion)
             .accessibilityIdentifier("tour.start")
         }
         .frame(maxWidth: 440, alignment: .leading)
-        .padding(.horizontal, 26)
+        .padding(.horizontal, 20)
         .padding(.bottom, 54)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background {
@@ -605,9 +565,9 @@ struct SpotlightVeil: Shape {
 
 // MARK: Turning
 
-/// After the drop: a phone outline turns on its side over the line saying
-/// what waits there, in the same place above the harbor as the lines
-/// before. If the screen cannot turn, a quiet line says why and offers the
+/// After the drop: a phone outline turns on its side beside the line, on
+/// one plate in the same place above the harbor as the line before. If the
+/// screen cannot turn, a second plate asks about the lock and offers the
 /// desk here instead.
 struct TourTurnPrompt: View {
     let gravity: DeviceGravityMonitor
@@ -618,17 +578,18 @@ struct TourTurnPrompt: View {
     var body: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 0)
-            VStack(alignment: .leading, spacing: 12) {
-                TourPhoneTurn()
-                    .frame(width: 140, height: 140)
-                    .scaleEffect(0.7)
-                    .frame(width: 98, height: 98)
-                TourCaption(text: TourCopy.turn)
+            VStack(alignment: .leading, spacing: 10) {
+                TourCaption(text: TourCopy.turn) {
+                    TourPhoneTurn()
+                        .frame(width: 140, height: 140)
+                        .scaleEffect(0.42)
+                        .frame(width: 58, height: 58)
+                }
                 if showsLock { lock }
             }
             .frame(maxWidth: 440, alignment: .leading)
-            .padding(.horizontal, 26)
-            .padding(.bottom, 16)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 18)
             .frame(maxWidth: .infinity)
             // The anchor button stays clear below.
             Color.clear.frame(height: 130)
@@ -656,6 +617,10 @@ struct TourTurnPrompt: View {
                 .tint(AnchorIOSStyle.action)
                 .accessibilityIdentifier("tour.sideways")
         }
+        .padding(.leading, 16)
+        .padding(.trailing, 8)
+        .padding(.vertical, 8)
+        .background { TourPlate(radius: 20) }
         .transition(.opacity.combined(with: .offset(y: 6)))
     }
 }
@@ -829,15 +794,33 @@ private struct TourDeskCoach: View {
                         .transition(.opacity)
                 }
                 column {
-                    TourCaption(text: line, earlier: earlierLine)
+                    TourCaption(text: line)
+                }
+            case .reading:
+                // The open card keeps its own swipes; a tap beside it closes it too.
+                if let waiting = spots[.recallWaiting] {
+                    TourHalo(radius: 16)
+                        .frame(width: waiting.width + 10, height: waiting.height + 10)
+                        .offset(x: waiting.minX - 5, y: waiting.minY - 5)
+                        .transition(.opacity)
+                }
+                if let card = spots[.recallCard] {
+                    TourGrip { CGSize(width: 0, height: 90 * $0) }
+                        .position(x: card.midX, y: card.minY + 34)
+                        .transition(.opacity)
+                }
+                column {
+                    TourCaption(text: TourCopy.recall)
                 }
             case .called:
                 TourBlocker {}
                 column {
-                    TourPhoneTurn(upright: true)
-                        .frame(width: 110, height: 110)
-                        .frame(maxWidth: .infinity)
-                    TourCaption(text: TourCopy.called)
+                    TourCaption(text: TourCopy.called) {
+                        TourPhoneTurn(upright: true)
+                            .frame(width: 140, height: 140)
+                            .scaleEffect(0.32)
+                            .frame(width: 44, height: 44)
+                    }
                 }
                 .transition(.opacity)
             default:
@@ -891,27 +874,19 @@ private struct TourDeskCoach: View {
         return lit < DeskTaskLibrary.Metrics.slots ? TourCopy.folders : TourCopy.ownTask
     }
 
-    private var earlierLine: String? {
-        if tour.stage == .waiting { return TourCopy.ownTask }
-        return lit < DeskTaskLibrary.Metrics.slots ? nil : TourCopy.folders
-    }
-
     /// The column left of the folders, clear of the Dynamic Island's edge:
-    /// the line at its foot on a light wash, Skip under it.
+    /// the line at its foot on its plate, over the pet's room, Skip under it.
     private func column(@ViewBuilder _ content: () -> some View) -> some View {
-        let edge: CGFloat = 58
-        let right = (folders.first?.minX ?? size.width * 0.36) - 16
-        return VStack(alignment: .leading, spacing: 10) {
+        let edge: CGFloat = 50
+        let right = (folders.first?.minX ?? size.width * 0.36) - 12
+        return VStack(alignment: .leading, spacing: 8) {
             Spacer(minLength: 0)
-            VStack(alignment: .leading, spacing: 14) { content() }
-                .padding(.top, TourScrim.fade + 24)
+            content()
                 .padding(.leading, edge)
-                .padding(.trailing, 4)
-                .background { TourScrim() }
             TourSkip(tour: tour)
-                .padding(.leading, edge - 12)
+                .padding(.leading, edge)
         }
-        .padding(.bottom, 6)
+        .padding(.bottom, 12)
         .frame(width: max(200, right), height: size.height, alignment: .leading)
     }
 }

@@ -176,24 +176,28 @@
     // MARK: Reading aloud in the tour
 
     /// The line says what to do: read the title, then the plan, then slide.
-    /// Under it, a way out for someone who cannot talk right now.
+    /// Beside it, a way out for someone who cannot talk right now. While the
+    /// tour reads for them the fields fill by themselves, so no line is needed.
     private var tourLine: some View {
-      VStack(alignment: .trailing, spacing: 4) {
+      HStack(spacing: 10) {
         TourCaption(text: tourText)
-          .padding(.top, 6)
+          .opacity(readsForPerson && reading != nil ? 0 : 1)
+          .animation(AnchorMotion.micro, value: readsForPerson && reading != nil)
+        Spacer(minLength: 0)
         if reading != nil, !readsForPerson {
           Button(TourCopy.readForMe, action: readForPerson)
             .font(.footnote.weight(.medium))
             .foregroundStyle(AnchorIOSStyle.action)
+            .buttonStyle(.glass)
             .frame(minHeight: 44)
             .accessibilityIdentifier("tour.read.skip")
         }
       }
+      .padding(.top, 6)
     }
 
     private var tourText: String {
-      if readsForPerson, reading != nil { return TourCopy.readingForYou }
-      return switch reading {
+      switch reading {
       case .title: missed ? TourCopy.readAgain : TourCopy.readTitle
       case .plan: missed ? TourCopy.readAgain : TourCopy.readPlan
       case nil: TourCopy.slide

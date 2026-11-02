@@ -79,8 +79,6 @@ final class AnchorTour {
     private(set) var awayMinutes = 0
     /// What the agents did on the dial so far.
     private(set) var landed: [TourMac.Note] = []
-    /// The conversations the agents moved along during the tour, for the ending.
-    private(set) var conversationsMoved = 0
     let model: AnchorSessionModel
     let log: AnchoringLog
 
@@ -275,7 +273,6 @@ final class AnchorTour {
     func leave() {
         guard stage == .returned else { return }
         stage = .leaving
-        conversationsMoved = model.projection.hostedSessions.reduce(0) { $0 + $1.processes.count }
         cancelWork()
         work.append(Task { [model] in
             try? await Task.sleep(for: .seconds(0.6))
@@ -438,11 +435,18 @@ struct TourMac {
 
     /// The survey stops to ask the person something: on the desk it takes
     /// its task's color and an anchor, and comes to the front.
+    /// Its card, opened, reads what the Mac took from the conversation.
     func question(now: Date) -> SessionCommand {
-        .forSession(homeworkID, .updateProcess(conversation(
+        var process = conversation(
             survey, in: homeworkID, agent: .codex, title: TourCopy.survey,
             request: TourCopy.surveyRequest, reply: TourCopy.surveyReply,
-            status: .needsDecision, worked: 410, at: now)))
+            status: .needsDecision, worked: 410, at: now)
+        process.digest = ConversationDigest(
+            path: TourCopy.surveyPath,
+            waiting: .init(kind: .answer, text: TourCopy.surveyReply),
+            facts: [.filesChanged(1)],
+            latestRequest: TourCopy.surveyRequest)
+        return .forSession(homeworkID, .updateProcess(process))
     }
 
     /// News while the person is away, by the minute on the dial: their own
@@ -512,36 +516,29 @@ struct TourMac {
 // MARK: Copy
 
 enum TourCopy {
-    static let hello = AnchorStrings.value("tour.hello", default: "These are today's tasks, and the AI moving them along.")
     static let anchorButton = AnchorStrings.value("tour.anchor", default: "Tap the anchor to drop one of your own.")
-    static let readTitle = AnchorStrings.value("tour.read.title", default: "Tap the mic and read this line aloud.")
-    static let readPlan = AnchorStrings.value("tour.read.plan", default: "Now read the plan.")
-    static let readAgain = AnchorStrings.value("tour.read.again", default: "Didn't catch that. Once more?")
+    static let readTitle = AnchorStrings.value("tour.read.title", default: "Read this line aloud.")
+    static let readPlan = AnchorStrings.value("tour.read.plan", default: "Now the plan.")
+    static let readAgain = AnchorStrings.value("tour.read.again", default: "Didn't catch that. Once more.")
     static let readForMe = AnchorStrings.value("tour.read.skip", default: "Can't talk right now")
-    static let readingForYou = AnchorStrings.value("tour.read.forYou", default: "Reading it for you.")
-    static let slide = AnchorStrings.value("tour.slide", default: "Slide the anchor to the end and let it sink.")
-    static let turn = AnchorStrings.value("tour.turn", default: "Turn sideways into the workbench: every AI task on your computer, at a glance.")
+    static let slide = AnchorStrings.value("tour.slide", default: "Slide the anchor all the way.")
+    static let turn = AnchorStrings.value("tour.turn", default: "Turn sideways into the workbench.")
     static let lockQuestion = AnchorStrings.value("tour.lock", default: "Portrait Orientation Lock on?")
     static let openHere = AnchorStrings.value("tour.lock.open", default: "Open the desk here")
     static let backUpright = AnchorStrings.value("tour.lock.back", default: "Back to the home")
     static let replay = AnchorStrings.value("tour.replay", default: "Replay the tour")
-    static let folders = AnchorStrings.value("tour.folders", default: "Each folder is a task; its cards are the AI conversations on it.")
-    static let waiting = AnchorStrings.value("tour.waiting", default: "An AI is waiting on you. Tap to see.")
-    static let ownTask = AnchorStrings.value("tour.own", default: "The task you just dropped: an AI is already on it.")
-    static let reading = AnchorStrings.value("tour.reading", default: "Answer it at your Mac, then close this.")
-    static let called = AnchorStrings.value("tour.called", default: "Oops! A friend just asked you out for coffee mid-work. Grab your phone and go.")
-    static let dial = AnchorStrings.value("tour.dial", default: "Turn the dial to see what happens while you're away.")
-    static let apart = AnchorStrings.value("tour.apart", default: "Away from your Mac for 5 minutes. Your agents keep working.")
-    static let together = AnchorStrings.value("tour.together", default: "Back at your desk.")
-    static let connect = AnchorStrings.value("tour.connect", default: "Connect your Mac to start anchoring for real.")
+    static let folders = AnchorStrings.value("tour.folders", default: "Each folder is a task.")
+    static let waiting = AnchorStrings.value("tour.waiting", default: "An AI is waiting on you. Tap it.")
+    static let ownTask = AnchorStrings.value("tour.own", default: "Your task: an AI is already on it.")
+    static let recall = AnchorStrings.value("tour.recall", default: "Swipe down to put it back.")
+    static let called = AnchorStrings.value("tour.called", default: "A friend asks you out for coffee. Take your phone and go.")
+    static let dial = AnchorStrings.value("tour.dial", default: "Turn the dial.")
+    static let apart = AnchorStrings.value("tour.apart", default: "5 minutes away. Your AI keeps working.")
+    static let together = AnchorStrings.value("tour.together", default: "You're back.")
+    static let connect = AnchorStrings.value("tour.connect", default: "Connect your Mac to start.")
     static let firstAnchor = AnchorStrings.value("tour.first", default: "Your first anchor is down.")
     static let reminder = AnchorStrings.value("tour.reminder", default: "Away too long, and Anchor will remind you to come back.")
     static let ending = AnchorStrings.value("tour.ending", default: "Anchor one thing. The AI moves it along on your computer; step away and miss nothing.")
-    static func endingStats(conversations: Int, minutes: Int) -> String {
-        String.localizedStringWithFormat(
-            AnchorStrings.value("tour.ending.stats", default: "You dropped an anchor · the AI moved %1$lld conversations · you were away %2$lld minutes"),
-            conversations, minutes)
-    }
     static let start = AnchorStrings.value("tour.start", default: "Start using Anchor")
     static let skip = AnchorStrings.value("tour.skip", default: "Skip")
 
@@ -574,6 +571,10 @@ enum TourCopy {
     static let survey = AnchorStrings.value("tour.survey", default: "Clean survey")
     static let surveyRequest = AnchorStrings.value("tour.survey.request", default: "Handle the empty values and duplicate rows in survey.csv")
     static let surveyReply = AnchorStrings.value("tour.survey.reply", default: "37 rows have no age. Should I drop them, or fill in the median?")
+    static let surveyPath = [
+        AnchorStrings.value("tour.survey.path1", default: "Read survey.csv: 412 rows"),
+        AnchorStrings.value("tour.survey.path2", default: "Removed 9 duplicate rows"),
+    ]
     static let charts = AnchorStrings.value("tour.charts", default: "Chart script")
     static let chartsRequest = AnchorStrings.value("tour.charts.request", default: "Plot the satisfaction scores with matplotlib")
     static let chartsReply = AnchorStrings.value("tour.charts.reply", default: "Saved figures/satisfaction.png: scores 1–5 across, people up the side.")

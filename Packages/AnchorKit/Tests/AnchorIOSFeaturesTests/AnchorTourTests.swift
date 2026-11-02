@@ -87,6 +87,11 @@ struct AnchorTourTests {
         tour.dropped(UUID())
         tour.reachedDesk()
         try await waitFor(.waiting, in: tour, seconds: AnchorTour.deskLook + 2)
+        // Its recall card reads the question as one waiting for an answer.
+        try await waitUntil(seconds: 3) {
+            tour.model.projection.hostedSessions.first { $0.id == tour.waitingTaskID }?
+                .processes.contains { $0.digest?.waiting?.kind == .answer } == true
+        }
         tour.opened(UUID())
         #expect(tour.stage == .waiting)
         tour.opened(tour.waitingTaskID)
@@ -137,7 +142,6 @@ struct AnchorTourTests {
         tour.start()
         #expect(tour.stage == .returned)
         tour.leave()
-        #expect(tour.conversationsMoved > 0)
         try await waitFor(.ending, in: tour, seconds: 4)
         #expect(tour.model.projection.hostedSessions.isEmpty)
         tour.start()
@@ -205,6 +209,12 @@ struct AnchorTourTests {
         let deadline = Date.now + seconds
         while tour.stage != stage, Date.now < deadline { try await Task.sleep(for: .milliseconds(100)) }
         #expect(tour.stage == stage)
+    }
+
+    private func waitUntil(seconds: Double, _ condition: () -> Bool) async throws {
+        let deadline = Date.now + seconds
+        while !condition(), Date.now < deadline { try await Task.sleep(for: .milliseconds(100)) }
+        #expect(condition())
     }
 
     /// English splitting leans on the system's language tagger, which the simulator lacks.

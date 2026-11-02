@@ -9,13 +9,12 @@ final class OnboardingRecordingUITests: XCTestCase {
     /// The words the walk looks for, in the language being filmed.
     private struct Words {
         let survey: String
-        let close: String
         let languages: [String]
 
         static func of(_ code: String) -> Words {
             code == "en"
-                ? Words(survey: "Clean survey", close: "Close", languages: ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"])
-                : Words(survey: "清洗问卷", close: "关闭", languages: ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"])
+                ? Words(survey: "Clean survey", languages: ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"])
+                : Words(survey: "清洗问卷", languages: ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"])
         }
     }
 
@@ -62,10 +61,12 @@ final class OnboardingRecordingUITests: XCTestCase {
         // The card is there from the start; its question arrives once the ring has walked the folders.
         pause(10)
         tap(question)
+        // Its recall card opens over the desk; a swipe down puts it back.
+        let recall = app.descendants(matching: .any)["desk.recall"]
+        XCTAssertTrue(recall.waitForExistence(timeout: 5))
         pause(4)
-        let close = app.buttons[words.close].firstMatch
-        XCTAssertTrue(close.waitForExistence(timeout: 5))
-        tap(close)
+        let card = recall.frame
+        drag(from: CGPoint(x: card.midX, y: card.minY + 40), to: CGPoint(x: card.midX, y: card.minY + 220), velocity: 700)
         // A friend calls the person away.
         pause(3.5)
 

@@ -14348,13 +14348,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Away from your Mac for 5 minutes. Your agents keep working."
+            "value" : "5 minutes away. Your AI keeps working."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "离开电脑 5 分钟，你的 AI 仍在继续工作。"
+            "value" : "离开 5 分钟，AI 仍在工作。"
           }
         }
       }
@@ -14365,13 +14365,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Oops! A friend just asked you out for coffee mid-work. Grab your phone and go."
+            "value" : "A friend asks you out for coffee. Take your phone and go."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "糟糕！工作途中临时有朋友约你喝咖啡，拿起手机出发吧。"
+            "value" : "朋友约你喝咖啡，拿起手机出发。"
           }
         }
       }
@@ -14450,13 +14450,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connect your Mac to start anchoring for real."
+            "value" : "Connect your Mac to start."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "连上你的 Mac，开始真正地投锚吧。"
+            "value" : "连上你的 Mac，开始投锚。"
           }
         }
       }
@@ -14535,13 +14535,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Turn the dial to see what happens while you're away."
+            "value" : "Turn the dial."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "转动表盘，看看你不在时发生了什么。"
+            "value" : "转动表盘。"
           }
         }
       }
@@ -14559,23 +14559,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "锚定一件事，\nAI 在电脑上推进；\n你走开，也不会错过。"
-          }
-        }
-      }
-    },
-    "tour.ending.stats" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You dropped an anchor · the AI moved %1$lld conversations · you were away %2$lld minutes"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "投下 1 个锚 · AI 推进了 %1$lld 段对话 · 离开 %2$lld 分钟"
           }
         }
       }
@@ -14603,30 +14586,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Each folder is a task; its cards are the AI conversations on it."
+            "value" : "Each folder is a task."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "每个文件夹是一项任务，里面的卡片是在做它的 AI 对话。"
-          }
-        }
-      }
-    },
-    "tour.hello" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "These are today's tasks, and the AI moving them along."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "这是你今天投锚的任务，AI 正在推进。"
+            "value" : "每个文件夹，一项任务。"
           }
         }
       }
@@ -14824,13 +14790,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The task you just dropped: an AI is already on it."
+            "value" : "Your task: an AI is already on it."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你刚投下的任务，AI 已经开工了。"
+            "value" : "你的任务，AI 已开工。"
           }
         }
       }
@@ -14977,30 +14943,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Didn't catch that. Once more?"
+            "value" : "Didn't catch that. Once more."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "没听清，再读一次？"
-          }
-        }
-      }
-    },
-    "tour.read.forYou" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reading it for you."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "替你读一遍。"
+            "value" : "没听清，再读一次。"
           }
         }
       }
@@ -15011,13 +14960,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Now read the plan."
+            "value" : "Now the plan."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "再读一下计划。"
+            "value" : "再读计划。"
           }
         }
       }
@@ -15045,30 +14994,30 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap the mic and read this line aloud."
+            "value" : "Read this line aloud."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "轻点麦克风，把这句读出来。"
+            "value" : "读出这句。"
           }
         }
       }
     },
-    "tour.reading" : {
+    "tour.recall" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Answer it at your Mac, then close this."
+            "value" : "Swipe down to put it back."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "去 Mac 上回答它，看完关掉。"
+            "value" : "下滑收起。"
           }
         }
       }
@@ -15283,13 +15232,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Slide the anchor to the end and let it sink."
+            "value" : "Slide the anchor all the way."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "把锚滑到底，让它沉下去。"
+            "value" : "把锚滑到底。"
           }
         }
       }
@@ -15324,6 +15273,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "清洗问卷"
+          }
+        }
+      }
+    },
+    "tour.survey.path1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read survey.csv: 412 rows"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "读了 survey.csv：412 行"
+          }
+        }
+      }
+    },
+    "tour.survey.path2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed 9 duplicate rows"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删掉了 9 行重复数据"
           }
         }
       }
@@ -15385,13 +15368,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Back at your desk."
+            "value" : "You're back."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "回到桌前。"
+            "value" : "回来了。"
           }
         }
       }
@@ -15402,13 +15385,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Turn sideways into the workbench: every AI task on your computer, at a glance."
+            "value" : "Turn sideways into the workbench."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "横屏进入工作台，\n电脑上的所有 AI 任务尽收眼底。"
+            "value" : "横过来，进入工作台。"
           }
         }
       }
@@ -15419,13 +15402,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An AI is waiting on you. Tap to see."
+            "value" : "An AI is waiting on you. Tap it."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "有个 AI 在等你拿主意，点开看看。"
+            "value" : "有个 AI 在等你，点开。"
           }
         }
       }

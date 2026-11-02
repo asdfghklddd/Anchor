@@ -57,6 +57,8 @@ struct DeskTaskLibrary: View {
     @State private var recallNotice: String?
     @State private var sentToMac = 0
     @Environment(\.openConversationOnMac) private var openOnMac
+    /// The tour's pretend Mac opens whatever it is sent, and its cards leave no memory behind.
+    @Environment(\.anchorTour) private var tour
     /// A swipe this far, or flung this fast, closes the card or sends it.
     private static let recallSwipeDistance: CGFloat = 70
     private static let recallFling: CGFloat = 220
@@ -381,6 +383,9 @@ struct DeskTaskLibrary: View {
                                worked: DeskDuration.text(workedTime(process, in: task)),
                                fallbackReply: reply(for: process), seenPath: recall.seen,
                                onTask: { onTask(task.id) })
+                    .tourSpot(.recallCard)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("desk.recall")
                     .offset(y: recallSwipe)
                     .gesture(recallSwipeGesture)
                     .accessibilityAction(named: DeskText.recallOpenOnMac) { sendRecallToMac() }
@@ -433,6 +438,7 @@ struct DeskTaskLibrary: View {
         recallSwipe = 0
         withAnimation(reduceMotion ? .easeOut(duration: 0.16) : Self.recallPop) { recall = next }
         landings += 1
+        tour?.opened(task.id)
     }
 
     /// Puts the card back into its folder; what it showed counts as seen.
@@ -443,6 +449,7 @@ struct DeskTaskLibrary: View {
             self.recall = nil
             recallSwipe = 0
         }
+        tour?.closedTask()
     }
 
     /// The card flies up toward the Mac and the conversation opens there.
@@ -454,8 +461,9 @@ struct DeskTaskLibrary: View {
             recallSwipe = reduceMotion ? 0 : -Metrics.folder.height * 1.4
             self.recall = nil
         }
+        tour?.closedTask()
         Task { @MainActor in
-            let opened = await openOnMac(conversation)
+            let opened = tour != nil ? true : await openOnMac(conversation)
             if opened { sentToMac += 1 }
             withAnimation(.easeOut(duration: 0.2)) {
                 recallNotice = opened ? DeskText.recallOpened : DeskText.recallNotConnected
@@ -467,7 +475,7 @@ struct DeskTaskLibrary: View {
     }
 
     private func rememberSeen(_ recall: Recall) {
-        guard let task = tasks.first(where: { $0.id == recall.task }),
+        guard tour == nil, let task = tasks.first(where: { $0.id == recall.task }),
               let path = TaskConversationStack.conversations(of: task)
                 .first(where: { $0.conversationKey == recall.conversation })?.digest?.path else { return }
         DeskRecallMemory.remember(path, for: recall.conversation)

@@ -128,6 +128,7 @@ struct DeskRecallCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(highlighted ? palette.front : DeskStyle.quietInk.opacity(0.1),
                     in: .rect(cornerRadius: 12, style: .continuous))
+        .tourSpot(highlighted ? TourSpot.recallWaiting : nil)
         .accessibilityElement(children: .combine)
     }
 

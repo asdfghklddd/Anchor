@@ -341,7 +341,6 @@ struct AnchorWorkspaceView: View {
                     tour.setupClosed()
                 }
             }
-            if previousSheet == .profileDetail(.session) { tour?.closedTask() }
             presentDeferredInvitation(after: dropped ? 1.9 : 0.4)
             if suspendedSetup, posture == .portrait {
                 suspendedSetup = false
@@ -598,8 +597,9 @@ struct AnchorWorkspaceView: View {
                 .safeAreaInset(edge: .top, spacing: 0) {
                     if welcomesConnection {
                         TourCaption(text: TourCopy.connect)
-                            .padding(.horizontal, 26)
-                            .padding(.top, 26)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 22)
                     }
                 }
                 .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large]
@@ -626,18 +626,6 @@ struct AnchorWorkspaceView: View {
                     Task { _ = await model.send(.updatePlanSteps(steps)) }
                 }
             )
-            // Under the task, never over it: its question stays readable.
-            .safeAreaInset(edge: .bottom) {
-                if tour?.stage == .reading {
-                    TourCaption(text: TourCopy.reading)
-                        .frame(maxWidth: 460)
-                        .padding(.horizontal, 26)
-                        .padding(.top, 48)
-                        .padding(.bottom, 10)
-                        .frame(maxWidth: .infinity)
-                        .background { TourScrim().ignoresSafeArea() }
-                }
-            }
             .presentationDetents([.large])
         case .setup:
             NavigationStack {
@@ -682,7 +670,6 @@ struct AnchorWorkspaceView: View {
     }
 
     private func openHostedTask(_ id: UUID) {
-        tour?.opened(id)
         Task {
             if await model.selectHostedTask(id) { sheet = .profileDetail(.session) }
         }
