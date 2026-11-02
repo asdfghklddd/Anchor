@@ -12,10 +12,10 @@
 # app's Code list) and Anchor's Mac data and settings. Codex, Claude and
 # Anchor quit while it is copied and open again after.
 #
-# Runs only as the account named by ANCHOR_DEMO_USER (default: anchordemo).
+# Runs only as the account named by ANCHOR_DEMO_USER (default: andy).
 set -euo pipefail
 
-DEMO_USER="${ANCHOR_DEMO_USER:-anchordemo}"
+DEMO_USER="${ANCHOR_DEMO_USER:-andy}"
 DEMO_ROOT="$HOME/AnchorDemo"
 SNAPSHOT="$DEMO_ROOT/.snapshot"
 TAG="anchor-demo-start"

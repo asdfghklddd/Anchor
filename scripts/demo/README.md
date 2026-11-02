@@ -1,21 +1,21 @@
 # 演示还原工具
 
-在单独的 macOS 演示账户里，把 3 个演示项目、Codex 和 Claude Code 的对话、Anchor 的 Mac 数据一起存成一个起点，演示完一键回到那里。只在名为 `anchordemo` 的账户里运行，在别的账户里会直接拒绝。
+在单独的 macOS 演示账户里，把 3 个演示项目、Codex 和 Claude Code 的对话、Anchor 的 Mac 数据一起存成一个起点，演示完一键回到那里。只在名为 `andy` 的账户里运行，在别的账户里会直接拒绝。
 
 ## 第一次准备
 
-1. 在系统设置 › 用户与群组里新建账户，短名称填 `anchordemo`。
+1. 在系统设置 › 用户与群组里新建账户，短名称是 `andy`（已建好）。
 2. 在你自己的账户里，把这个文件夹复制到两个账户都能读到的位置：
 
    ```bash
    cp -R scripts/demo /Users/Shared/AnchorDemoKit
    ```
 
-3. 登录 `anchordemo` 账户，完成这几件事：
+3. 登录 `andy` 账户，完成这几件事：
    - 登录 Codex 和 Claude。
    - 打开 Anchor，连接文件夹，并和 iPhone 配对。
    - 在 `~/AnchorDemo/` 里放好 3 个演示项目的 git 仓库，然后真跑几轮对话，攒出历史。
-4. 准备好以后，在 `anchordemo` 账户里存下起点：
+4. 准备好以后，在 `andy` 账户里存下起点：
 
    ```bash
    /Users/Shared/AnchorDemoKit/anchor-demo.sh save
@@ -49,13 +49,13 @@ Anchor 重新打开、手机连上之后，两边都会回到起点。
 
 ## 演示结束后移除
 
-1. 删掉存下的起点和仓库里的标签。在 `anchordemo` 账户里运行：
+1. 删掉存下的起点和仓库里的标签。在 `andy` 账户里运行：
 
    ```bash
    /Users/Shared/AnchorDemoKit/anchor-demo.sh remove
    ```
 
-2. 在系统设置 › 用户与群组里删除 `anchordemo` 账户。这个账户里的所有东西会一起删掉，包括演示项目、对话和那份 Anchor 数据。
+2. 在系统设置 › 用户与群组里删除 `andy` 账户。这个账户里的所有东西会一起删掉，包括演示项目、对话和那份 Anchor 数据。
 3. 在你自己的账户里删除这个工具：
 
    ```bash
