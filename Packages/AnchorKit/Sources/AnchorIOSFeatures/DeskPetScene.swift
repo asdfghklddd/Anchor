@@ -114,6 +114,9 @@ struct DeskSceneRenderer {
     let hour: Int
     let state: DeskScene.State
     let screen: DeskScene.Screen
+    /// The desk's dark water: the nook's walls, wood and frames go dusky,
+    /// while its lights (stars, the lamp, the screen) keep their glow.
+    var dark = false
 
     private var lampOn: Bool { state.lampOn }
 
@@ -131,15 +134,15 @@ struct DeskSceneRenderer {
     // MARK: Shared things
 
     private func floor() {
-        fill(0, DeskScene.floor, DeskScene.columns, 1, 0xDDEFF5)
-        fill(0, DeskScene.floor + 1, DeskScene.columns, 1, 0xE9F6FA)
+        fill(0, DeskScene.floor, DeskScene.columns, 1, room(0xDDEFF5))
+        fill(0, DeskScene.floor + 1, DeskScene.columns, 1, room(0xE9F6FA))
     }
 
     private func window() {
         let (x0, y0, w, h) = (3, 4, 22, 21)
         let night = hour >= 20 || hour < 6
         let dusk = (17..<20).contains(hour)
-        let sky: UInt32 = night ? 0x2A3F6B : (dusk ? 0xFCDCCB : 0xBFE9FA)
+        let sky: UInt32 = night ? 0x2A3F6B : room(dusk ? 0xFCDCCB : 0xBFE9FA)
         fill(x0, y0, w, h, sky)
         if night {
             for (i, star) in [(5, 7), (9, 6), (14, 9), (19, 13), (6, 16), (12, 14), (20, 21)].enumerated() {
@@ -172,23 +175,24 @@ struct DeskSceneRenderer {
         }
         if state.blindsDown {
             for y in stride(from: y0, to: y0 + h, by: 2) {
-                fill(x0, y, w, 1, 0xF2F7FA)
-                fill(x0, y + 1, w, 1, 0xE3EEF2)
+                fill(x0, y, w, 1, room(0xF2F7FA))
+                fill(x0, y + 1, w, 1, room(0xE3EEF2))
             }
-            fill(x0 + w - 2, y0 + h - 1, 1, 3, 0x9AAAB6)
+            fill(x0 + w - 2, y0 + h - 1, 1, 3, room(0x9AAAB6))
         }
         // Frame and cross bars.
-        fill(x0, y0, w, 1, 0xFFFFFF)
-        fill(x0, y0 + h - 1, w, 1, 0xFFFFFF)
-        fill(x0, y0, 1, h, 0xFFFFFF)
-        fill(x0 + w - 1, y0, 1, h, 0xFFFFFF)
+        let frame = room(0xFFFFFF)
+        fill(x0, y0, w, 1, frame)
+        fill(x0, y0 + h - 1, w, 1, frame)
+        fill(x0, y0, 1, h, frame)
+        fill(x0 + w - 1, y0, 1, h, frame)
         if !state.blindsDown {
-            fill(x0 + 10, y0, 2, h, 0xFFFFFF)
-            fill(x0, y0 + 10, w, 1, 0xFFFFFF)
+            fill(x0 + 10, y0, 2, h, frame)
+            fill(x0, y0 + 10, w, 1, frame)
         }
         // The sill.
-        fill(1, 25, 26, 1, 0xFFFFFF)
-        fill(1, 26, 26, 1, 0xE3EEF2)
+        fill(1, 25, 26, 1, frame)
+        fill(1, 26, 26, 1, room(0xE3EEF2))
     }
 
     private func plant() {
@@ -197,7 +201,7 @@ struct DeskSceneRenderer {
         // Left dry, the green fades toward straw.
         let pale: UInt32 = kind == .hermit ? 0xB5CFA0 : 0xC9D9A8
         grid(art, x, y) { letter in
-            state.wilted && (letter == "L" || letter == "G") ? Color(anchorHex: pale) : DeskSceneArt.color(letter)
+            state.wilted && (letter == "L" || letter == "G") ? Color(anchorHex: pale) : self.art(letter)
         }
         // Leaves grown from watering on different days, up to three.
         let leaf: UInt32 = state.wilted ? pale : (kind == .hermit ? 0x6CC7A8 : 0x7AD3B6)
@@ -219,18 +223,18 @@ struct DeskSceneRenderer {
     }
 
     private func desk() {
-        fill(44, 46, 34, 1, 0xFBF4EA)
-        fill(44, 47, 34, 1, 0xEEDFCB)
-        for column in [46, 47, 75, 76] { fill(column, 48, 1, 14, 0xE9DCC8) }
-        fill(62, 48, 14, 7, 0xF6ECDF)
-        fill(62, 54, 14, 1, 0xE9DCC8)
-        fill(68, 51, 2, 1, 0xC9B79C)
-        grid(DeskSceneArt.keyboard, 51, 44) { $0 == "k" ? Color(anchorHex: 0xFFFFFF) : Color(anchorHex: 0xD8E4EA) }
+        fill(44, 46, 34, 1, room(0xFBF4EA))
+        fill(44, 47, 34, 1, room(0xEEDFCB))
+        for column in [46, 47, 75, 76] { fill(column, 48, 1, 14, room(0xE9DCC8)) }
+        fill(62, 48, 14, 7, room(0xF6ECDF))
+        fill(62, 54, 14, 1, room(0xE9DCC8))
+        fill(68, 51, 2, 1, room(0xC9B79C))
+        grid(DeskSceneArt.keyboard, 51, 44) { Color(anchorHex: room($0 == "k" ? 0xFFFFFF : 0xD8E4EA)) }
         // A sheet per task, stacked at the desk's edge; three make a pile.
         for i in 0..<state.papers {
             let shift = [0, 1, -1][i]
-            fill(44 + shift, 45 - i, 5, 1, 0xFFFFFF)
-            dot(48 + shift, 45 - i, 0xD8E4EA)
+            fill(44 + shift, 45 - i, 5, 1, room(0xFFFFFF))
+            dot(48 + shift, 45 - i, room(0xD8E4EA))
         }
     }
 
@@ -239,7 +243,7 @@ struct DeskSceneRenderer {
         let art = crt ? DeskSceneArt.crt : DeskSceneArt.imac
         let (x0, y0) = (49, 30)
         let shell: (UInt32, UInt32) = switch kind {
-        case .crab, .off: (0xEDE7D9, 0xD8D0BF)
+        case .crab, .off: (room(0xEDE7D9), room(0xD8D0BF))
         case .whale: (0xB4AEDF, 0xD6D2F2)
         case .octopus: (0xF7B3CC, 0xFFD3E2)
         case .hermit: (0x9CC6F2, 0xC9E0F8)
@@ -250,9 +254,9 @@ struct DeskSceneRenderer {
             switch letter {
             case "B", "C": Color(anchorHex: shell.0)
             case "b", "c": Color(anchorHex: shell.1)
-            case "w", "i": Color(anchorHex: 0xFFFFFF)
-            case "l": Color(anchorHex: 0xB7AE9C)
-            case "g": Color(anchorHex: screen == .off ? 0xB7AE9C : 0x7AD3B6)
+            case "w", "i": Color(anchorHex: room(0xFFFFFF))
+            case "l": Color(anchorHex: room(0xB7AE9C))
+            case "g": Color(anchorHex: screen == .off ? room(0xB7AE9C) : 0x7AD3B6)
             case "s": nil
             default: nil
             }
@@ -309,8 +313,8 @@ struct DeskSceneRenderer {
         grid(DeskSceneArt.lamp, x0, y0) { letter in
             switch letter {
             case "S": Color(anchorHex: 0xFFC2D6)
-            case "a": Color(anchorHex: 0x9AAAB6)
-            case "l": Color(anchorHex: lampOn ? 0xFFF2B3 : 0xE3EEF2)
+            case "a": Color(anchorHex: room(0x9AAAB6))
+            case "l": Color(anchorHex: lampOn ? 0xFFF2B3 : room(0xE3EEF2))
             default: nil
             }
         }
@@ -322,23 +326,23 @@ struct DeskSceneRenderer {
         let since = tick - state.ownAt
         switch kind {
         case .crab, .off:
-            grid(DeskSceneArt.pegboard, 29, 8) { DeskSceneArt.color($0) }
-            grid(DeskSceneArt.toolbox, 30, DeskScene.floor - 7) { DeskSceneArt.color($0) }
+            grid(DeskSceneArt.pegboard, 29, 8) { art($0) }
+            grid(DeskSceneArt.toolbox, 30, DeskScene.floor - 7) { art($0) }
             if since >= 0, since < 20, since % 4 < 2 { dot(36, DeskScene.floor - 9, 0xFFF2B3) }
         case .whale:
-            grid(DeskSceneArt.lifeRing, 31, 9) { DeskSceneArt.color($0) }
-            dot(34, 8, 0x9AAAB6)
-            fill(28, 24, 14, 1, 0xEEDFCB)
-            dot(30, 25, 0x9AAAB6)
-            dot(39, 25, 0x9AAAB6)
+            grid(DeskSceneArt.lifeRing, 31, 9) { art($0) }
+            dot(34, 8, room(0x9AAAB6))
+            fill(28, 24, 14, 1, room(0xEEDFCB))
+            dot(30, 25, room(0x9AAAB6))
+            dot(39, 25, room(0x9AAAB6))
             let (x0, y0) = (27, DeskScene.floor - 6)
-            grid(DeskSceneArt.pool, x0, y0) { DeskSceneArt.color($0) }
+            grid(DeskSceneArt.pool, x0, y0) { art($0) }
             // The duck bobs across the water, quicker while the whale splashes.
             let splashing = since >= 0 && since < 40
             let drift = (tick / (splashing ? 2 : 8)) % 18
             let dx = drift < 9 ? drift : 18 - drift
             let bob = splashing ? (tick / 2) % 2 : (tick / 6) % 2
-            grid(DeskSceneArt.duck, x0 + 3 + dx, y0 - 1 + bob) { DeskSceneArt.color($0) }
+            grid(DeskSceneArt.duck, x0 + 3 + dx, y0 - 1 + bob) { art($0) }
             if splashing {
                 for i in 0..<4 {
                     let k = (since + i * 5) % 10
@@ -348,9 +352,9 @@ struct DeskSceneRenderer {
                 }
             }
         case .octopus:
-            grid(DeskSceneArt.bookshelf, 27, 14) { DeskSceneArt.color($0) }
+            grid(DeskSceneArt.bookshelf, 27, 14) { art($0) }
             let (x0, y0) = (36, DeskScene.floor - 10)
-            grid(DeskSceneArt.lava, x0, y0) { DeskSceneArt.color($0) }
+            grid(DeskSceneArt.lava, x0, y0) { art($0) }
             // Two blobs rise and sink in the glass.
             for i in 0..<2 {
                 let phase = Double(tick + i * 37) / 22
@@ -358,14 +362,14 @@ struct DeskSceneRenderer {
                 fill(x0 + 2 + i, y, 2, 1, 0xF08DB3)
             }
         case .hermit:
-            grid(DeskSceneArt.shells, 27, 16) { DeskSceneArt.color($0) }
+            grid(DeskSceneArt.shells, 27, 16) { art($0) }
             if since >= 0, since < 24 || (tick / 8) % 23 == 0 {
                 dot(37, 16, 0xFFFFFF)
                 dot(36, 17, 0xFFFFFF)
             }
         case .jelly:
             let (x0, y0) = (27, DeskScene.floor - 12)
-            grid(DeskSceneArt.tank, x0, y0) { DeskSceneArt.color($0) }
+            grid(DeskSceneArt.tank, x0, y0) { art($0) }
             // Two fish cross the tank, faster just after a touch.
             let quick = since >= 0 && since < 40
             for (i, color) in [UInt32(0xF7B3CC), 0xFFE1A8].enumerated() {
@@ -390,10 +394,10 @@ struct DeskSceneRenderer {
                 for (dx, dy) in [(0, -1), (-1, 0), (0, 0), (1, 0), (0, 1)] { dot(star.0 + dx, star.1 + dy, hex) }
                 if lit { dot(star.0, star.1, 0xFFFFFF) }
             }
-            grid(DeskSceneArt.stool, 31, DeskScene.floor - 12) { DeskSceneArt.color($0) }
+            grid(DeskSceneArt.stool, 31, DeskScene.floor - 12) { art($0) }
             let (x0, y0) = (32, DeskScene.floor - 22)
             grid(DeskSceneArt.jar, x0, y0) { letter in
-                letter == "q" && wishing ? Color(anchorHex: 0xFFF6D6) : DeskSceneArt.color(letter)
+                letter == "q" && wishing ? Color(anchorHex: 0xFFF6D6) : art(letter)
             }
             if wishing {
                 // The wish rises out of the jar's neck.
@@ -454,6 +458,16 @@ struct DeskSceneRenderer {
     }
 
     // MARK: Painting
+
+    /// A piece of the room itself in the desk's current light.
+    private func room(_ hex: UInt32) -> UInt32 {
+        dark ? DeskSceneArt.dusk[hex] ?? hex : hex
+    }
+
+    /// The art's color for a letter, with the room's own parts in the desk's light.
+    private func art(_ letter: Character) -> Color? {
+        DeskSceneArt.hex(letter).map { Color(anchorHex: room($0)) }
+    }
 
     private func dot(_ x: Int, _ y: Int, _ hex: UInt32, opacity: Double = 1) {
         fill(x, y, 1, 1, hex, opacity: opacity)
@@ -667,8 +681,34 @@ private enum DeskSceneArt {
         "..TT........TT..",
     ]
 
-    static func color(_ c: Character) -> Color? {
-        let hex: UInt32? = switch c {
+    /// The room's pale parts (walls, wood, frames, glass) on the desk's dark
+    /// water, a few steps above it so they read without glowing. Lights and
+    /// the pets' colored things are not here and keep their colors.
+    static let dusk: [UInt32: UInt32] = [
+        0xFFFFFF: 0x3B5866, // frames, sill, planks, keys, paper
+        0xF2F7FA: 0x2E4A57, // blinds, pegboard
+        0xE3EEF2: 0x26404C, // shadows, the lamp's bulb when off
+        0xDDEFF5: 0x2A4A57, // floor
+        0xE9F6FA: 0x1D3742,
+        0xC9DCE4: 0x203946, // pegboard holes
+        0x9AAAB6: 0x6E8494, // metal: hooks, the lamp's arm, the pull cord
+        0xD8E4EA: 0x2C4550, // the keyboard's base, a sheet's corner
+        0xFBF4EA: 0x56493D, // the desk's wood
+        0xF6ECDF: 0x4C4137,
+        0xEEDFCB: 0x463C33,
+        0xE9DCC8: 0x3F362E,
+        0xC9B79C: 0x7A6B58,
+        0xEDE7D9: 0x4D4A43, // the beige CRT
+        0xD8D0BF: 0x403D37,
+        0xB7AE9C: 0x6E675A,
+        0xE3F7FB: 0x1F4552, // water and glass in the tank and the jar
+        0xC4EEF5: 0x3F7380,
+        0xBFE9FA: 0x5C93AB, // a daytime sky
+        0xFCDCCB: 0xA97F74, // a dusk sky
+    ]
+
+    static func hex(_ c: Character) -> UInt32? {
+        switch c {
         case "L": 0x7AD3B6
         case "G": 0x6CC7A8
         case "P": 0xF7B3CC
@@ -701,7 +741,6 @@ private enum DeskSceneArt {
         case "a": 0xF4A6C0
         default: nil
         }
-        return hex.map { Color(anchorHex: $0) }
     }
 }
 #endif

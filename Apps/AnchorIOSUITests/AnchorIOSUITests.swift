@@ -230,9 +230,6 @@ final class AnchorIOSUITests: XCTestCase {
         XCUIDevice.shared.orientation = .landscapeRight
         XCTAssertTrue(element("ambient.screen", in: app).waitForExistence(timeout: 8))
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label == %@", "Production UI test task")).firstMatch.exists)
-        XCTAssertTrue(app.buttons["ambient.tasks.manage"].exists)
-        app.buttons["ambient.tasks.manage"].tap()
-        XCTAssertTrue(app.buttons["hosted.tasks.create"].waitForExistence(timeout: 5))
     }
 
     @MainActor

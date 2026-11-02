@@ -50,6 +50,7 @@ struct DeskPet: View {
 
     @AnchorReducedMotion private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.colorScheme) private var colorScheme
     @State private var life = DeskPetLife.shared
     @State private var columns = 0
     @State private var touches = 0
@@ -129,7 +130,7 @@ struct DeskPet: View {
     private func draw(in graphics: GraphicsContext) {
         guard kind != .off, let brain = life.brain, brain.kind == kind else { return }
         DeskSceneRenderer(kind: kind, context: graphics, pixel: Self.pixel, tick: brain.tick, hour: brain.hour,
-                          state: DeskScene.State(brain), screen: screen(brain)).draw()
+                          state: DeskScene.State(brain), screen: screen(brain), dark: colorScheme == .dark).draw()
         DeskPetRenderer(look: look, kind: kind, context: graphics, left: petLeft(brain),
                         ground: DeskScene.floor - 1, pixel: Self.pixel).draw(DeskPetFrame(brain, still: reduceMotion))
     }

@@ -131,7 +131,7 @@ struct LandscapeAmbientDashboard: View {
     private static let quietInk = DeskStyle.quietInk
 
     /// Every part at its Figma place: the clock and date top left, the pet
-    /// below them, the conversation count at the foot, the folders on the right.
+    /// below them, how current the copy is at the foot, the folders on the right.
     private func desk(now: Date) -> some View {
         ZStack(alignment: .topLeading) {
             DeskClockText(text: Self.time(now), color: Self.ink)
@@ -160,27 +160,10 @@ struct LandscapeAmbientDashboard: View {
                     .offset(x: 24 + Self.leftShift, y: 358)
                     .accessibilityIdentifier("ambient.freshness")
             }
-            Button(action: onManage) {
-                Text(DeskText.conversationCount(conversationCount))
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Self.quietInk)
-                    .frame(minHeight: 44)
-                    .contentShape(.rect)
-            }
-            .buttonStyle(.plain)
-            .frame(width: 243, alignment: .trailing)
-            .offset(x: Self.leftShift, y: 350)
-            .accessibilityLabel(AnchorStrings.value("home.tasks.manage", default: "Manage hosted tasks"))
-            .accessibilityValue(DeskText.conversationCount(conversationCount))
-            .accessibilityIdentifier("ambient.tasks.manage")
             DeskTaskLibrary(tasks: tasks, now: now, swells: swellsByConversation, swellTone: swellTone,
                             settled: settled, onTask: onTask)
                 .offset(x: Self.libraryX, y: 32)
         }
-    }
-
-    private var conversationCount: Int {
-        tasks.reduce(0) { $0 + TaskConversationStack.conversations(of: $1).count }
     }
 
     /// "21:27": the desk always shows a 24-hour clock, as the design does.
