@@ -22,6 +22,11 @@ public enum AnchorStrings {
 #endif
     }()
 
+    /// The language the interface is shown in, such as "zh-Hans" or "en".
+    public static var interfaceLanguage: String {
+        interfaceBundle.preferredLocalizations.first ?? "en"
+    }
+
     public static func value(_ key: StaticString, default defaultValue: String.LocalizationValue) -> String {
         String(localized: key, defaultValue: defaultValue, bundle: interfaceBundle)
     }

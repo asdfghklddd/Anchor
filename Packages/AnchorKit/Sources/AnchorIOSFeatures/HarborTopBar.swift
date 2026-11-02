@@ -130,6 +130,7 @@ struct HarborTopBar: View {
     private var trailingButton: some View {
         if let tour, tour.stage < .returned {
             TourSkip(tour: tour)
+                .tourSpot(.skip)
         } else {
             settingsButton
         }

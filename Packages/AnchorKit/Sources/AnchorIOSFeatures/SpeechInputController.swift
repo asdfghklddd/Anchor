@@ -189,7 +189,7 @@ final class SpeechInputController {
     }
 
     private func beginRecognition(requestID: UUID) async {
-        guard let recognizer = SFSpeechRecognizer(locale: Locale.current) ?? SFSpeechRecognizer(locale: Locale(identifier: "en-US")),
+        guard let recognizer = SFSpeechRecognizer(locale: Self.speechLocale()) ?? SFSpeechRecognizer(locale: Locale(identifier: "en-US")),
               recognizer.isAvailable else {
             errorMessage = L10n.voiceInputUnavailable
             return
@@ -283,6 +283,30 @@ final class SpeechInputController {
             inputCleanup(audioEngine: audioEngine, requestID: requestID)
             errorMessage = L10n.voiceInputFailed
         }
+    }
+
+    /// Dictation listens in the interface's language, which is also the
+    /// language of the tour's lines. The phone's region can be anywhere: a
+    /// Chinese interface on a phone set to the Netherlands must not end up
+    /// with an English recognizer.
+    nonisolated static func speechLocale(
+        language: String = AnchorStrings.interfaceLanguage,
+        region: Locale.Region? = Locale.current.region,
+        supported: Set<Locale> = SFSpeechRecognizer.supportedLocales()
+    ) -> Locale {
+        let wanted = Locale.Language(identifier: language)
+        let spoken = supported.filter { $0.language.languageCode == wanted.languageCode }
+            .sorted { $0.identifier < $1.identifier }
+        let preferred: [Locale.Region]
+        if wanted.languageCode == .chinese {
+            preferred = wanted.script == .hanTraditional ? [.taiwan, .hongKong] : [.chinaMainland]
+        } else {
+            preferred = [region, .unitedStates, .unitedKingdom].compactMap { $0 }
+        }
+        for place in preferred {
+            if let match = spoken.first(where: { $0.region == place }) { return match }
+        }
+        return spoken.first ?? Locale(identifier: "en-US")
     }
 
     private func inputCleanup(audioEngine: AVAudioEngine, requestID: UUID) {

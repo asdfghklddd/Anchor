@@ -1,6 +1,11 @@
 #if os(iOS)
 import SwiftUI
 
+extension EnvironmentValues {
+    /// The launch splash still covers the app: arrivals meant to be watched wait for it.
+    @Entry public var launchSplashShowing = false
+}
+
 public struct AnchorLaunchGate<Content: View>: View {
     @AnchorReducedMotion private var reduceMotion
 
@@ -20,6 +25,7 @@ public struct AnchorLaunchGate<Content: View>: View {
             content
                 .allowsHitTesting(!isPresentingSplash)
                 .accessibilityHidden(isPresentingSplash)
+                .environment(\.launchSplashShowing, isPresentingSplash)
 
             if isPresentingSplash {
                 HarborLaunchSplash(startedAt: startedAt, timing: timing, onSkip: skip)

@@ -34,7 +34,8 @@ struct HomeTaskLibrary: View {
     @State private var openID: UUID?
     @AnchorReducedMotion private var reduceMotion
     @Environment(\.anchorTour) private var tour
-    /// The tour opens on its cards floating up one by one.
+    @Environment(\.launchSplashShowing) private var covered
+    /// The tour opens on its cards floating up one by one, once the splash has gone.
     @State private var arrived = false
 
     private var floatsIn: Bool { tour?.stage == .hello && !reduceMotion && !arrived }
@@ -89,7 +90,7 @@ struct HomeTaskLibrary: View {
         .shadow(color: HomeStyle.cardShadow.opacity(0.13), radius: 10, y: 3)
         .animation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity, value: tasks.map(\.id))
         .animation(AnchorMotion.micro, value: tasks.isEmpty)
-        .task { arrived = true }
+        .task(id: covered) { if !covered { arrived = true } }
     }
 }
 

@@ -9,6 +9,8 @@ import UserNotifications
 /// The parts of the real home and desk the tour lights, in the order it lights them.
 enum TourSpot: Hashable {
     case tasks, anchorButton
+    /// Skip in the home's top bar, which answers even while the rest is held.
+    case skip
     /// A folder on the desk, by its place from the left.
     case folder(Int)
     /// A task's folder on the desk.
@@ -52,29 +54,131 @@ struct TourCaption: View {
     var earlier: String? = nil
 
     @AnchorReducedMotion private var reduceMotion
+    @Environment(\.launchSplashShowing) private var covered
+    /// The halo comes up with the first line and stays while the caption does.
+    @State private var shown = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let earlier {
                 Text(earlier)
                     .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(AnchorIOSStyle.secondaryText)
+                    .foregroundStyle(TourInk.earlier)
                     .lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .id(earlier)
                     .transition(.opacity)
             }
-            Text(text)
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(AnchorIOSStyle.heading)
-                .lineSpacing(3)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            TourRisingLine(text: text, reduceMotion: reduceMotion)
                 .id(text)
-                .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 10)))
+                .transition(.asymmetric(insertion: .identity, removal: .opacity))
         }
-        .animation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.5, bounce: 0.1), value: text)
+        .background { TourCaptionHalo().opacity(shown ? 1 : 0) }
+        .animation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.5, bounce: 0.1), value: earlier)
+        .task(id: covered) {
+            guard !covered else { return }
+            withAnimation(.easeOut(duration: 0.5)) { shown = true }
+        }
+    }
+}
+
+/// The tour's own voice, kept apart from the app's navy headings so a line
+/// reads as something said to the person; the rings on targets share it.
+enum TourInk {
+    static let guide = adaptive(0x0A8FB3, dark: 0x5CCDE8)
+    static let earlier = adaptive(0x4F6E7C, dark: 0x9DB4BF)
+
+    private static func adaptive(_ light: UInt32, dark: UInt32) -> Color {
+        Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(Color(anchorHex: dark)) : UIColor(Color(anchorHex: light)) })
+    }
+}
+
+/// A new line arrives two characters at a time, each rising out of a soft
+/// blur into place, rather than being printed on the page.
+private struct TourRisingLine: View {
+    let text: String
+    let reduceMotion: Bool
+    @Environment(\.launchSplashShowing) private var covered
+    @State private var elapsed: Double = 0
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 22, weight: .semibold))
+            .foregroundStyle(TourInk.guide)
+            .lineSpacing(3)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .textRenderer(TourRise(elapsed: reduceMotion ? TourRise.settled : elapsed))
+            .opacity(reduceMotion && elapsed == 0 ? 0 : 1)
+            // The first line waits for the launch splash, so its arrival is seen.
+            .task(id: covered) {
+                guard !covered, elapsed == 0 else { return }
+                withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .linear(duration: TourRise.settled)) {
+                    elapsed = TourRise.settled
+                }
+            }
+    }
+}
+
+/// Draws each pair of glyphs rising 8 pt out of a 5 pt blur over half a
+/// second, the pairs starting one after another; a long line keeps the
+/// whole arrival under a second and a half.
+private struct TourRise: TextRenderer, Animatable {
+    var elapsed: Double
+
+    static let rise = 0.5
+    static let spread = 0.9
+    static let settled = rise + spread
+
+    var animatableData: Double {
+        get { elapsed }
+        set { elapsed = newValue }
+    }
+
+    func draw(layout: Text.Layout, in context: inout GraphicsContext) {
+        let pairs = max(1, layout.flatMap { $0 }.reduce(0) { $0 + $1.count } / 2)
+        let step = min(0.055, Self.spread / Double(pairs))
+        var index = 0
+        for line in layout {
+            for run in line {
+                for glyph in run {
+                    let t = min(1, max(0, (elapsed - Double(index / 2) * step) / Self.rise))
+                    // A strong ease-out: quick to start, soft to land.
+                    let p = 1 - pow(1 - t, 4)
+                    var copy = context
+                    copy.opacity = p
+                    if p < 1 {
+                        copy.translateBy(x: 0, y: (1 - p) * 8)
+                        copy.addFilter(.blur(radius: (1 - p) * 5))
+                    }
+                    copy.draw(glyph)
+                    index += 1
+                }
+            }
+        }
+    }
+}
+
+/// A faint oval of blur behind the whole caption, feathered to nothing at
+/// its edge, so the words lift off the page without a card around them.
+private struct TourCaptionHalo: View {
+    var body: some View {
+        ZStack {
+            Rectangle().fill(.ultraThinMaterial).opacity(0.5)
+            Rectangle().fill(AnchorIOSStyle.canvasTop.opacity(0.1))
+        }
+        .mask {
+            EllipticalGradient(stops: [
+                .init(color: .black, location: 0.25),
+                .init(color: .black.opacity(0.5), location: 0.6),
+                .init(color: .clear, location: 1),
+            ])
+        }
+        .padding(.horizontal, -30)
+        .padding(.vertical, -34)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 
@@ -118,8 +222,8 @@ struct TourHalo: View {
                 ring(delay: 1.2)
             }
             RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .stroke(AnchorIOSStyle.action, lineWidth: 2)
-                .shadow(color: AnchorIOSStyle.action.opacity(0.35), radius: 8)
+                .stroke(TourInk.guide, lineWidth: 2)
+                .shadow(color: TourInk.guide.opacity(0.35), radius: 8)
         }
         .keyframeAnimator(initialValue: 1.0, trigger: nudges) { content, scale in
             content.scaleEffect(scale)
@@ -135,7 +239,7 @@ struct TourHalo: View {
         TimelineView(.animation) { context in
             let phase = (context.date.timeIntervalSinceReferenceDate + delay).truncatingRemainder(dividingBy: 2.4) / 2.4
             RoundedRectangle(cornerRadius: radius + 16 * phase, style: .continuous)
-                .stroke(AnchorIOSStyle.action.opacity(0.5 * (1 - phase)), lineWidth: 2)
+                .stroke(TourInk.guide.opacity(0.5 * (1 - phase)), lineWidth: 2)
                 .padding(-16 * phase)
         }
     }
@@ -158,9 +262,9 @@ struct TourGrip: View {
             let fade = t < 0.3 ? t / 0.3 : max(0, 1 - max(0, t - 2.2) / 0.4)
             Circle()
                 .fill(Color.white.opacity(0.35))
-                .overlay { Circle().strokeBorder(AnchorIOSStyle.action, lineWidth: 2.5) }
+                .overlay { Circle().strokeBorder(TourInk.guide, lineWidth: 2.5) }
                 .frame(width: size, height: size)
-                .shadow(color: AnchorIOSStyle.action.opacity(0.3), radius: 6)
+                .shadow(color: TourInk.guide.opacity(0.3), radius: 6)
                 .offset(glide(eased))
                 .opacity(fade)
         }
@@ -174,14 +278,29 @@ struct TourGrip: View {
 struct TourBlocker: View {
     var hole: CGRect?
     var radius: CGFloat = 0
+    /// A second way through, for Skip where it sits under the blocker.
+    var opening: CGRect?
     let onMiss: () -> Void
 
     var body: some View {
         let veil = SpotlightVeil(hole: hole ?? .zero, radius: radius)
-        veil.fill(Color.clear)
-            .contentShape(veil, eoFill: true)
+        let held = TourBlockerShape(veil: veil, opening: opening)
+        held.fill(Color.clear)
+            .contentShape(held, eoFill: true)
             .onTapGesture(perform: onMiss)
             .accessibilityHidden(true)
+    }
+}
+
+/// The veil with the opening cut out as well; drawn even-odd.
+private struct TourBlockerShape: Shape {
+    let veil: SpotlightVeil
+    let opening: CGRect?
+
+    func path(in rect: CGRect) -> Path {
+        var path = veil.path(in: rect)
+        if let opening, !opening.isEmpty { path.addRect(opening) }
+        return path
     }
 }
 
@@ -220,6 +339,8 @@ struct TourCoach: View {
     @AnchorReducedMotion private var reduceMotion
     @State private var nudges = 0
 
+    @Environment(\.launchSplashShowing) private var covered
+
     /// The cards float in, and the first line is read, before the ring moves on.
     static let helloLength: TimeInterval = 4.2
 
@@ -252,8 +373,9 @@ struct TourCoach: View {
         .frame(width: size.width, height: size.height)
         .animation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.55, bounce: 0.08), value: tour.stage)
         .animation(AnchorMotion.panel, value: inviting)
-        .task(id: tour.stage) {
-            guard tour.stage == .hello else { return }
+        // The hello beat starts once the launch splash has gone.
+        .task(id: tour.stage == .hello && !covered) {
+            guard tour.stage == .hello, !covered else { return }
             try? await Task.sleep(for: .seconds(Self.helloLength))
             guard !Task.isCancelled else { return }
             tour.greeted()
@@ -271,10 +393,10 @@ struct TourCoach: View {
         return spots[.tasks].map { ($0.insetBy(dx: -6, dy: -6), 26) }
     }
 
-    /// Only the anchor button answers; a tap anywhere else nudges the ring.
+    /// Only the anchor button and Skip answer; a tap anywhere else nudges the ring.
     private var home: some View {
         ZStack(alignment: .topLeading) {
-            TourBlocker(hole: button?.rect, radius: button?.radius ?? 0) { nudges += 1 }
+            TourBlocker(hole: button?.rect, radius: button?.radius ?? 0, opening: spots[.skip]) { nudges += 1 }
             if let ring {
                 TourHalo(radius: ring.radius, nudges: nudges)
                     .frame(width: ring.rect.width, height: ring.rect.height)
@@ -293,10 +415,9 @@ struct TourCoach: View {
                         earlier: isButton ? TourCopy.hello : nil)
                 .frame(maxWidth: 440)
                 .padding(.horizontal, 26)
-                .padding(.top, TourScrim.fade + 8)
+                .padding(.top, 8)
                 .padding(.bottom, 16)
                 .frame(maxWidth: .infinity)
-                .background { TourScrim(fadesOut: true) }
                 .padding(.bottom, below)
         }
         .frame(width: size.width, height: size.height)
@@ -507,10 +628,8 @@ struct TourTurnPrompt: View {
             }
             .frame(maxWidth: 440, alignment: .leading)
             .padding(.horizontal, 26)
-            .padding(.top, TourScrim.fade)
             .padding(.bottom, 16)
             .frame(maxWidth: .infinity)
-            .background { TourScrim(fadesOut: true) }
             // The anchor button stays clear below.
             Color.clear.frame(height: 130)
         }

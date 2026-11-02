@@ -99,6 +99,28 @@ final class OnboardingRecordingUITests: XCTestCase {
         pause(3.5)
     }
 
+    /// Skip on the tour's home leaves for the person's own Anchor, even while
+    /// the home only answers its anchor button.
+    @MainActor
+    func testSkipLeavesTheTourFromTheHome() throws {
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchEnvironment["ANCHOR_UI_TESTING"] = "1"
+        app.launchEnvironment["ANCHOR_UI_TEST_STORAGE_ID"] = UUID().uuidString
+        app.launchEnvironment["ANCHOR_TOUR"] = "1"
+        app.launchArguments += Words.of("zh").languages
+        defer { app.terminate() }
+        app.launch()
+
+        let skip = app.buttons["tour.skip"]
+        XCTAssertTrue(skip.waitForExistence(timeout: 15))
+        // Once the ring is on the anchor button, the rest of the home is held.
+        pause(5.5)
+        tap(skip)
+        let gone = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: skip)
+        wait(for: [gone], timeout: 6)
+    }
+
     // MARK: Steps
 
     /// The dial turns clockwise a quarter at a time, each a straight stroke
