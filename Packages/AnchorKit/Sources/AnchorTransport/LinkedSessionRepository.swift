@@ -5,7 +5,7 @@ public protocol AnchorEventTransport: Sendable {
     func send(_ event: EventEnvelope) async throws
 }
 
-public actor LinkedSessionRepository: SessionRepository, DataResetting {
+public actor LinkedSessionRepository: SessionRepository, DataResetting, PeerCopying {
     private struct ActiveFlush {
         let id: UUID
         let task: Task<Void, Never>
@@ -129,6 +129,16 @@ public actor LinkedSessionRepository: SessionRepository, DataResetting {
     /// The receiver's event IDs, source sequences, and deduplication keys make
     /// this safe when both peers already contain some or all of the history.
     public func reconcilePeerHistory() async {
+        // A phone that emptied itself asks for the peer's copy instead.
+        if let copying = base as? any PeerCopying,
+           let request = try? await copying.takePeerCopy() {
+            do {
+                try await transport.send(request)
+            } catch {
+                try? await copying.awaitPeerCopy()
+            }
+            return
+        }
         while true {
             if let activeFlush {
                 await activeFlush.task.value
@@ -156,25 +166,57 @@ public actor LinkedSessionRepository: SessionRepository, DataResetting {
             let retainedEvents = await eventBackedBase.retainedEvents().filter {
                 reconciliationSessionIDs.contains($0.sessionID)
             }
-            let transport = self.transport
-            let id = UUID()
-            let task = Task {
-                for event in retainedEvents {
-                    do {
-                        try await transport.send(event)
-                        try await eventBackedBase.markDelivered(event.id)
-                    } catch {
-                        return
-                    }
-                }
-            }
-            activeFlush = ActiveFlush(id: id, task: task)
-            await task.value
-            if activeFlush?.id == id {
-                activeFlush = nil
-            }
+            await send(retainedEvents, from: eventBackedBase)
             return
         }
+    }
+
+    /// Sends every retained event, finished tasks included, to a peer that
+    /// emptied itself and asked. Resets stay behind: what they cleared is
+    /// already gone from this history.
+    public func resendAllHistory() async {
+        while true {
+            if let activeFlush {
+                await activeFlush.task.value
+                if self.activeFlush?.id == activeFlush.id {
+                    self.activeFlush = nil
+                }
+                continue
+            }
+            guard let eventBackedBase else { return }
+            let history = await eventBackedBase.retainedEvents().filter { !$0.isDataReset }
+            await send(history, from: eventBackedBase)
+            return
+        }
+    }
+
+    private func send(_ events: [EventEnvelope], from eventBackedBase: any EventBackedSessionRepository) async {
+        let transport = self.transport
+        let id = UUID()
+        let task = Task {
+            for event in events {
+                do {
+                    try await transport.send(event)
+                    try await eventBackedBase.markDelivered(event.id)
+                } catch {
+                    return
+                }
+            }
+        }
+        activeFlush = ActiveFlush(id: id, task: task)
+        await task.value
+        if activeFlush?.id == id {
+            activeFlush = nil
+        }
+    }
+
+    public func awaitPeerCopy() async throws {
+        guard let copying = base as? any PeerCopying else { throw SessionRepositoryError.malformedEvent }
+        try await copying.awaitPeerCopy()
+    }
+
+    public func takePeerCopy() async throws -> EventEnvelope? {
+        try await (base as? any PeerCopying)?.takePeerCopy()
     }
 }
 

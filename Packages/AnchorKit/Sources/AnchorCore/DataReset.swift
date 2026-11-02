@@ -80,3 +80,38 @@ extension SessionProjection {
 extension EventEnvelope {
     public var isDataReset: Bool { type == AnchorDataReset.envelopeType }
 }
+
+/// The phone's request, once it has emptied itself, for everything the Mac
+/// holds. Like opening a conversation it travels outside the event history.
+public struct PeerHistoryRequest: Codable, Hashable, Sendable {
+    public static let envelopeType = "anchor.history.v1"
+
+    public let requestedAt: Date
+
+    public init(requestedAt: Date = .now) {
+        self.requestedAt = requestedAt
+    }
+
+    public func envelope(sourceID: UUID) throws -> EventEnvelope {
+        EventEnvelope(sessionID: UUID(), sourceID: sourceID, sequence: 0, timestamp: requestedAt,
+                      type: Self.envelopeType, payload: try JSONEncoder.anchor.encode(self))
+    }
+
+    public init?(envelope: EventEnvelope) {
+        guard envelope.type == Self.envelopeType,
+              let request = try? JSONDecoder.anchor.decode(PeerHistoryRequest.self, from: envelope.payload)
+        else { return nil }
+        self = request
+    }
+}
+
+/// A repository that can drop its copy and take the paired device's instead,
+/// such as a phone going back to where a restored Mac is.
+public protocol PeerCopying: Sendable {
+    /// Empties this copy now and trades nothing with the peer until it next
+    /// connects, so neither side's newer changes reach the other.
+    func awaitPeerCopy() async throws
+    /// On connecting: empties this copy again and returns the request for the
+    /// peer's history, or nil when no copy is awaited.
+    func takePeerCopy() async throws -> EventEnvelope?
+}

@@ -225,6 +225,11 @@ struct AnchorMacApp: App {
                 }
                 return
             }
+            // The phone emptied itself and asks for everything this Mac holds.
+            if PeerHistoryRequest(envelope: envelope) != nil {
+                Task { await repository.resendAllHistory() }
+                return
+            }
             try await repository.applyRemote(envelope)
         }
         server.onEvent = applyInboundEvent

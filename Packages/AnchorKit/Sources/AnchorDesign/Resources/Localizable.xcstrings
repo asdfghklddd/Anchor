@@ -9795,6 +9795,40 @@
         }
       }
     },
+    "settings.data.confirm-from-mac.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This iPhone empties now. The next time your Mac connects, it sends every task and all history it has. Your Mac doesn't change."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这台 iPhone 会马上清空。Mac 下次连上时，会把它的全部任务和历史发过来。Mac 上的内容不变。"
+          }
+        }
+      }
+    },
+    "settings.data.confirm-from-mac.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync again from your Mac?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从 Mac 重新同步？"
+          }
+        }
+      }
+    },
     "settings.data.everything-cleared" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9825,6 +9859,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "当前 %1$lld 个 · 历史 %2$lld 个"
+          }
+        }
+      }
+    },
+    "settings.data.from-mac" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync Again from Mac"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从 Mac 重新同步"
+          }
+        }
+      }
+    },
+    "settings.data.from-mac.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empty this iPhone, then take everything on your Mac"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空这台 iPhone，再取回 Mac 上的全部内容"
+          }
+        }
+      }
+    },
+    "settings.data.from-mac.waiting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emptied · waiting for your Mac to connect again"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已清空 · 等 Mac 再次连上"
           }
         }
       }

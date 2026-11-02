@@ -56,7 +56,7 @@ public actor InMemorySessionRepository: SessionRepository {
 /// service is available. It starts with an empty projection and only persists
 /// state created by the user or received from a real peer; it never supplies
 /// demo fixtures.
-public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting {
+public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting, PeerCopying {
     private struct PersistedState: Codable, Sendable {
         let schemaVersion: Int
         let baseProjection: SessionProjection
@@ -68,6 +68,8 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
         var forgottenSessionIDs: Set<UUID>?
         /// Per source, conversation rows below this sequence were cleared.
         var conversationsClearedBefore: [UUID: UInt64]?
+        /// Emptied, waiting for the peer's copy on the next connection.
+        var awaitsPeerCopy: Bool?
     }
 
     private struct LegacyPersistedState: Codable, Sendable {
@@ -87,6 +89,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
     private var peerContactAt: Date?
     private var forgottenSessionIDs: Set<UUID>
     private var conversationsClearedBefore: [UUID: UInt64]
+    private var awaitsPeerCopy: Bool
     private let storageURL: URL
     private var continuations: [UUID: AsyncStream<SessionProjection>.Continuation] = [:]
 
@@ -100,12 +103,14 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
         var restoredContact: Date?
         var restoredForgotten: Set<UUID> = []
         var restoredCleared: [UUID: UInt64] = [:]
+        var restoredAwaits = false
         if let data = storedData,
            let persisted = Self.decodePersistedState(data),
            persisted.schemaVersion == Self.schemaVersion {
             restoredContact = persisted.peerContactAt
             restoredForgotten = persisted.forgottenSessionIDs ?? []
             restoredCleared = persisted.conversationsClearedBefore ?? [:]
+            restoredAwaits = persisted.awaitsPeerCopy ?? false
             baseProjection = persisted.baseProjection
             events = persisted.events
             outbox = persisted.outbox
@@ -134,6 +139,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
 
         forgottenSessionIDs = restoredForgotten
         conversationsClearedBefore = restoredCleared
+        awaitsPeerCopy = restoredAwaits
         let cleanedBase = RetiredRecordingCleanup.clean(baseProjection)
         let cleanedEvents = RetiredRecordingCleanup.filteredEvents(events)
         let retainedIDs = Set(cleanedEvents.map(\.id))
@@ -151,7 +157,8 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
                 let cleaned = PersistedState(schemaVersion: Self.schemaVersion,
                     baseProjection: cleanedBase, events: cleanedEvents, outbox: cleanedOutbox,
                     nextSequence: nextSequence, peerContactAt: restoredContact,
-                    forgottenSessionIDs: restoredForgotten, conversationsClearedBefore: restoredCleared)
+                    forgottenSessionIDs: restoredForgotten, conversationsClearedBefore: restoredCleared,
+                    awaitsPeerCopy: restoredAwaits)
                 try JSONEncoder.anchor.encode(cleaned).write(to: resolvedURL, options: .atomic)
                 baseProjection = cleanedBase
                 events = cleanedEvents
@@ -194,6 +201,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
         result.peerContactAt = peerContactAt
         result.unsentChanges = outbox.count
         result.forgottenTaskIDs = forgottenSessionIDs
+        result.awaitsPeerCopy = awaitsPeerCopy
         return result
     }
 
@@ -295,6 +303,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
     /// A reset goes first: what follows it, such as conversations the Mac reads
     /// again, carries older timestamps and must not reach the peer before it.
     public func pendingEvents() -> [EventEnvelope] {
+        guard !awaitsPeerCopy else { return [] }
         let sorted = outbox.sorted(by: Self.eventSort)
         return sorted.filter(\.isDataReset) + sorted.filter { !$0.isDataReset }
     }
@@ -303,11 +312,14 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
     /// acknowledged previously. A paired peer can replay this history after a
     /// reconnect and rely on repository-level idempotency for reconciliation.
     public func retainedEvents() -> [EventEnvelope] {
-        events.sorted(by: Self.eventSort)
+        guard !awaitsPeerCopy else { return [] }
+        return events.sorted(by: Self.eventSort)
     }
 
     public func applyRemote(_ envelope: EventEnvelope) throws {
         notePeerContact()
+        // Whatever the peer sends before its full copy is consumed, not kept.
+        if awaitsPeerCopy { return }
         if RetiredRecordingCleanup.sessionIDs.contains(envelope.sessionID) { return }
         if let operation = try? JSONDecoder.anchor.decode(SessionOperation.self, from: envelope.payload),
            case let .observeProcess(observation) = RetiredRecordingCleanup.unscoped(operation),
@@ -553,6 +565,49 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
         broadcast()
     }
 
+    // MARK: Taking the peer's copy
+
+    public func awaitPeerCopy() throws {
+        try emptyCopy(awaitingPeer: true)
+    }
+
+    public func takePeerCopy() throws -> EventEnvelope? {
+        guard awaitsPeerCopy else { return nil }
+        let request = try PeerHistoryRequest().envelope(sourceID: sourceID)
+        // Changes made while waiting go too: the peer's copy is the whole truth.
+        try emptyCopy(awaitingPeer: false)
+        return request
+    }
+
+    /// Unlike a reset, leaves no trace for the peer: no tombstones, nothing
+    /// queued. The source sequence carries on, so this device's next changes
+    /// never collide with ones the peer already holds.
+    private func emptyCopy(awaitingPeer: Bool) throws {
+        let previousAwaits = awaitsPeerCopy
+        awaitsPeerCopy = awaitingPeer
+        do {
+            try write(baseProjection: .empty, events: [], outbox: [], nextSequence: nextSequence,
+                      forgottenSessionIDs: [], conversationsClearedBefore: [:])
+        } catch {
+            awaitsPeerCopy = previousAwaits
+            throw error
+        }
+        baseProjection = .empty
+        events = []
+        outbox = []
+        forgottenSessionIDs = []
+        conversationsClearedBefore = [:]
+        projection = Self.replay(
+            baseProjection: baseProjection,
+            events: events,
+            connection: projection.connection,
+            proximity: projection.proximity,
+            sourceHealth: projection.sourceHealth,
+            durableSyncState: projection.durableSyncState
+        )
+        broadcast()
+    }
+
     private static func operation(in envelope: EventEnvelope) -> SessionOperation? {
         guard envelope.type == EventEnvelope.operationType else { return nil }
         return try? JSONDecoder.anchor.decode(SessionOperation.self, from: envelope.payload)
@@ -571,7 +626,9 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
         baseProjection: SessionProjection,
         events: [EventEnvelope],
         outbox: [EventEnvelope],
-        nextSequence: UInt64
+        nextSequence: UInt64,
+        forgottenSessionIDs: Set<UUID>? = nil,
+        conversationsClearedBefore: [UUID: UInt64]? = nil
     ) throws {
         try FileManager.default.createDirectory(
             at: storageURL.deletingLastPathComponent(),
@@ -584,8 +641,9 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
             outbox: outbox,
             nextSequence: nextSequence,
             peerContactAt: peerContactAt,
-            forgottenSessionIDs: forgottenSessionIDs,
-            conversationsClearedBefore: conversationsClearedBefore
+            forgottenSessionIDs: forgottenSessionIDs ?? self.forgottenSessionIDs,
+            conversationsClearedBefore: conversationsClearedBefore ?? self.conversationsClearedBefore,
+            awaitsPeerCopy: awaitsPeerCopy
         )
         let data = try JSONEncoder.anchor.encode(state)
         try data.write(to: storageURL, options: .atomic)

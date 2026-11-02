@@ -3,14 +3,38 @@ import AnchorCore
 import AnchorDesign
 import SwiftUI
 
-/// Starting over: clears tasks here and on the paired Mac. The name, pet,
-/// reminders and pairing stay.
+/// Starting over: clears tasks here and on the paired Mac, or takes the
+/// Mac's copy instead. The name, pet, reminders and pairing stay.
 struct LocalDataSettingsView: View {
     let model: AnchorSessionModel
 
     private enum Reset: Identifiable {
-        case anchors, everything
+        case anchors, everything, fromMac
         var id: Self { self }
+
+        var action: String {
+            switch self {
+            case .anchors: LocalDataCopy.clearAnchors
+            case .everything: LocalDataCopy.clearEverything
+            case .fromMac: LocalDataCopy.fromMac
+            }
+        }
+
+        var confirmTitle: String {
+            switch self {
+            case .anchors: LocalDataCopy.confirmAnchorsTitle
+            case .everything: LocalDataCopy.confirmEverythingTitle
+            case .fromMac: LocalDataCopy.confirmFromMacTitle
+            }
+        }
+
+        var confirmMessage: String {
+            switch self {
+            case .anchors: LocalDataCopy.confirmAnchorsMessage
+            case .everything: LocalDataCopy.confirmEverythingMessage
+            case .fromMac: LocalDataCopy.confirmFromMacMessage
+            }
+        }
     }
 
     @State private var pending: Reset?
@@ -43,7 +67,18 @@ struct LocalDataSettingsView: View {
             }
             .listRowBackground(AnchorIOSStyle.surface)
 
-            if let finished {
+            Section {
+                Button(role: .destructive) { pending = .fromMac } label: {
+                    row(LocalDataCopy.fromMac,
+                        detail: projection.awaitsPeerCopy ? LocalDataCopy.fromMacWaiting : LocalDataCopy.fromMacDetail,
+                        symbol: "arrow.triangle.2.circlepath")
+                }
+                .disabled(projection.awaitsPeerCopy || isWorking)
+                .accessibilityIdentifier("settings.data.from-mac")
+            }
+            .listRowBackground(AnchorIOSStyle.surface)
+
+            if let finished, finished != .fromMac {
                 Section {
                     Label(finished == .anchors ? LocalDataCopy.anchorsCleared : LocalDataCopy.everythingCleared,
                           systemImage: "checkmark.circle.fill")
@@ -61,16 +96,15 @@ struct LocalDataSettingsView: View {
         .anchorIOSListSurface()
         .navigationTitle(LocalDataCopy.title)
         .confirmationDialog(
-            pending == .everything ? LocalDataCopy.confirmEverythingTitle : LocalDataCopy.confirmAnchorsTitle,
+            pending?.confirmTitle ?? "",
             isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }),
             titleVisibility: .visible,
             presenting: pending
         ) { reset in
-            Button(reset == .everything ? LocalDataCopy.clearEverything : LocalDataCopy.clearAnchors,
-                   role: .destructive) { perform(reset) }
+            Button(reset.action, role: .destructive) { perform(reset) }
             Button(L10n.cancel, role: .cancel) {}
         } message: { reset in
-            Text(reset == .everything ? LocalDataCopy.confirmEverythingMessage : LocalDataCopy.confirmAnchorsMessage)
+            Text(reset.confirmMessage)
         }
     }
 
@@ -91,6 +125,11 @@ struct LocalDataSettingsView: View {
         isWorking = true
         Task {
             defer { isWorking = false }
+            if reset == .fromMac {
+                // The tasks come back from the Mac with their plan images; the row says it waits.
+                if await model.awaitPeerCopy() { finished = reset }
+                return
+            }
             guard let goals = await model.forgetTasks(includingHistory: reset == .everything) else { return }
             AnchorPlanImages.remove(goalIDs: goals.map(\.id))
             finished = reset
@@ -114,6 +153,16 @@ enum LocalDataCopy {
         default: "Every task and all history disappear from this iPhone and your Mac. This can't be undone.")
     static let anchorsCleared = AnchorStrings.value("settings.data.anchors-cleared", default: "Anchors cleared")
     static let everythingCleared = AnchorStrings.value("settings.data.everything-cleared", default: "Local data cleared")
+    static let fromMac = AnchorStrings.value("settings.data.from-mac", default: "Sync Again from Mac")
+    static let fromMacDetail = AnchorStrings.value(
+        "settings.data.from-mac.detail", default: "Empty this iPhone, then take everything on your Mac")
+    static let fromMacWaiting = AnchorStrings.value(
+        "settings.data.from-mac.waiting", default: "Emptied · waiting for your Mac to connect again")
+    static let confirmFromMacTitle = AnchorStrings.value(
+        "settings.data.confirm-from-mac.title", default: "Sync again from your Mac?")
+    static let confirmFromMacMessage = AnchorStrings.value(
+        "settings.data.confirm-from-mac.message",
+        default: "This iPhone empties now. The next time your Mac connects, it sends every task and all history it has. Your Mac doesn't change.")
     static let macLater = AnchorStrings.value(
         "settings.data.mac-later", default: "Your Mac clears them the next time it connects.")
 

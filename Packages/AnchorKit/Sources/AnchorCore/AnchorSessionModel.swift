@@ -187,6 +187,22 @@ public final class AnchorSessionModel {
         return sessions.map(\.goal)
     }
 
+    /// Empties this device and takes the paired device's whole copy the next
+    /// time it connects. The paired device keeps what it has.
+    @discardableResult
+    public func awaitPeerCopy() async -> Bool {
+        guard let copying = repository as? any PeerCopying else { return false }
+        do {
+            try await copying.awaitPeerCopy()
+            lastError = nil
+        } catch {
+            lastError = error.localizedDescription
+            return false
+        }
+        projection = present(await repository.currentProjection())
+        return true
+    }
+
     /// Removes agent conversations from active tasks here and on the paired device.
     @discardableResult
     public func clearConversations() async -> Bool {

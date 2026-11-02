@@ -24,6 +24,8 @@ public struct SessionProjection: Codable, Hashable, Sendable {
     public var unsentChanges: Int
     /// Tasks the person cleared, so stores that mirror tasks can drop them. Never sent.
     public var forgottenTaskIDs: Set<UUID> = []
+    /// This copy was emptied and waits for the peer's on the next connection. Never sent.
+    public var awaitsPeerCopy = false
 
     public init(
         session: AnchorSession? = nil,
@@ -90,6 +92,7 @@ public struct SessionProjection: Codable, Hashable, Sendable {
         peerContactAt = nil
         unsentChanges = 0
         forgottenTaskIDs = []
+        awaitsPeerCopy = false
     }
 
     public static let empty = SessionProjection()
