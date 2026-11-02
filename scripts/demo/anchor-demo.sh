@@ -9,8 +9,9 @@
 # The starting point holds every git repository in ~/AnchorDemo (its branch
 # and commit, as the tag anchor-demo-start), the agents' conversations
 # (~/.codex without sign-in files; Claude Code's sessions, also the Claude
-# app's Code list) and Anchor's Mac data and settings. Codex, Claude and
-# Anchor quit while it is copied and open again after.
+# app's Code list; DeepSeek Harness's sessions and their status files) and
+# Anchor's Mac data and settings. Codex, Claude, DeepSeek Harness and Anchor
+# quit while it is copied and open again after.
 #
 # Runs only as the account named by ANCHOR_DEMO_USER (default: andy).
 set -euo pipefail
@@ -21,7 +22,7 @@ SNAPSHOT="$DEMO_ROOT/.snapshot"
 TAG="anchor-demo-start"
 PREFS_DOMAIN="${ANCHOR_DEMO_PREFS:-com.andywang.anchor}"
 # Apps to quit and reopen, by bundle ID. Empty skips quitting entirely.
-APPS="${ANCHOR_DEMO_APPS-com.andywang.anchor com.openai.codex com.anthropic.claudefordesktop}"
+APPS="${ANCHOR_DEMO_APPS-com.andywang.anchor com.openai.codex com.anthropic.claudefordesktop com.deepseek.dsh}"
 
 # Conversation data, relative to home. Paths missing from the starting point
 # are removed on restore, except ~/.codex, which also holds sign-in.
@@ -36,6 +37,8 @@ MANAGED=(
   ".claude/plans"
   ".claude/history.jsonl"
   "Library/Application Support/Claude/claude-code-sessions"
+  ".dsh/sessions"
+  ".dsh/storages"
   "Library/Application Support/Anchor"
 )
 # Never copied, never deleted: sign-in, locks and scratch.

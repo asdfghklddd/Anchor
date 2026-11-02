@@ -12,7 +12,7 @@
    ```
 
 3. 登录 `andy` 账户，完成这几件事：
-   - 登录 Codex 和 Claude。
+   - 登录 Codex、Claude 和 DeepSeek Harness。
    - 打开 Anchor，连接文件夹，并和 iPhone 配对。
    - 在 `~/AnchorDemo/` 里放好 3 个演示项目的 git 仓库，然后真跑几轮对话，攒出历史。
 4. 准备好以后，在 `andy` 账户里存下起点：
@@ -21,7 +21,7 @@
    /Users/Shared/AnchorDemoKit/anchor-demo.sh save
    ```
 
-   如果哪个仓库还有没提交的改动，会拒绝保存。存的时候 Codex、Claude 和 Anchor 会先退出，存完再重新打开。
+   如果哪个仓库还有没提交的改动，会拒绝保存。存的时候 Codex、Claude、DeepSeek Harness 和 Anchor 会先退出，存完再重新打开。
 
 ## 每次刷新
 
@@ -45,6 +45,7 @@ Anchor 重新打开、手机连上之后，两边都会回到起点。
 - `~/AnchorDemo` 里的每个 git 仓库：存下当时的分支，并在那次提交上打标签 `anchor-demo-start`。还原时，演示中的改动、新文件和 agent 新开的分支都会被清掉。
 - `~/.codex`，但不包括登录文件 `auth*.json`，所以登录状态不受影响。
 - Claude Code 的对话：`~/.claude/projects` 等目录，以及 Claude App 里 Code 页面的会话列表。
+- DeepSeek Harness 的对话和状态文件（`~/.dsh/sessions`、`~/.dsh/storages`），不包括登录文件 `~/.dsh/.credentials.yaml`。
 - Anchor 的 Mac 数据（`~/Library/Application Support/Anchor`）和它的设置。设置里包括对话归档到哪个任务。
 
 ## 演示结束后移除
