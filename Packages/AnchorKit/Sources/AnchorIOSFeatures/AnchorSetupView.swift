@@ -34,18 +34,27 @@
         AnchorSetupHeader(close: close, confirmsDiscard: $showsDiscardConfirmation, discard: discard)
         ScrollView {
           VStack(alignment: .leading, spacing: 14) {
-            if tour != nil { tourLine }
+            // Held in place here; drawn over the frost, where it answers.
+            if tour != nil {
+              tourLine(live: false)
+                .opacity(0)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+                .tourSpot(.setupLine)
+            }
             AnchorSetupInput(
               draft: draft, speech: speechInput, focus: $focus,
               titleMoved: titleMoved,
               readAlong: reading.map { ($0, Self.line(for: $0), heard.lit) },
               guidesVoice: reading != nil && !readsForPerson,
               beginSpeech: beginSpeech, endSpeech: speechInput.finish)
+            .tourSpot(.setupInput)
             AnchorDropSlider(
               enabled: draft.isValid && !draft.isImportingImages, saving: saving,
               stepCount: draft.steps.count, onDrop: saveTask,
               guides: tour != nil && reading == nil, releases: sinking)
               .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { sliderFrame = $0 }
+              .tourSpot(.setupSlider)
               .padding(.top, 10)
             if let saveError {
               Text(saveError).font(.caption).foregroundStyle(AnchorIOSStyle.secondaryText)
@@ -71,6 +80,16 @@
           }
           .ignoresSafeArea()
       }
+      .overlayPreferenceValue(TourSpotKey.self) { anchors in
+        if tour != nil, !sinking {
+          GeometryReader { proxy in
+            tourLayer(anchors.mapValues { proxy[$0] })
+          }
+          .ignoresSafeArea()
+          .transition(.opacity)
+        }
+      }
+      .animation(.easeOut(duration: 0.4), value: sinking)
       .overlay(alignment: .topLeading) {
         if sinking, let sliderFrame {
           SetupSink(from: CGPoint(x: sliderFrame.maxX - 32, y: sliderFrame.midY))
@@ -175,10 +194,30 @@
 
     // MARK: Reading aloud in the tour
 
+    /// The page under frost, clear where the voice goes (both fields for the
+    /// title, the plan's for the plan) and then on the slider; the line sits
+    /// sharp on the glass above them.
+    private func tourLayer(_ spots: [TourSpot: CGRect]) -> some View {
+      let clear: (CGRect, CGFloat)? = switch reading {
+      case .title: spots[.setupInput].map { ($0.insetBy(dx: -6, dy: -6), AnchorSetupStyle.inputRadius + 6) }
+      case .plan: spots[readsForPerson ? .setupInput : .setupPlan].map { ($0.insetBy(dx: -6, dy: -6), AnchorSetupStyle.inputRadius + 6) }
+      case nil: spots[.setupSlider].map { ($0.insetBy(dx: -6, dy: -6), $0.height / 2 + 6) }
+      }
+      return ZStack(alignment: .topLeading) {
+        TourFrost(hole: clear?.0, radius: clear?.1 ?? 0)
+        if let line = spots[.setupLine] {
+          tourLine(live: true)
+            .frame(width: line.width, alignment: .leading)
+            .offset(x: line.minX, y: line.minY)
+        }
+      }
+    }
+
     /// The line says what to do: read the title, then the plan, then slide.
     /// Beside it, a way out for someone who cannot talk right now. While the
     /// tour reads for them the fields fill by themselves, so no line is needed.
-    private var tourLine: some View {
+    /// `live` is the one drawn over the frost; the other only holds its place.
+    private func tourLine(live: Bool) -> some View {
       HStack(spacing: 10) {
         TourCaption(text: tourText)
           .opacity(readsForPerson && reading != nil ? 0 : 1)
@@ -190,7 +229,7 @@
             .foregroundStyle(AnchorIOSStyle.action)
             .buttonStyle(.glass)
             .frame(minHeight: 44)
-            .accessibilityIdentifier("tour.read.skip")
+            .accessibilityIdentifier(live ? "tour.read.skip" : "tour.read.skip.held")
         }
       }
       .padding(.top, 6)

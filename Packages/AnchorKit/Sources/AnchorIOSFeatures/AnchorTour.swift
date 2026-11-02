@@ -444,7 +444,6 @@ struct TourMac {
         process.digest = ConversationDigest(
             path: TourCopy.surveyPath,
             waiting: .init(kind: .answer, text: TourCopy.surveyReply),
-            facts: [.filesChanged(1)],
             latestRequest: TourCopy.surveyRequest)
         return .forSession(homeworkID, .updateProcess(process))
     }

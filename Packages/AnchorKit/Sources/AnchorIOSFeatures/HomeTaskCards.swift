@@ -61,6 +61,7 @@ struct HomeTaskLibrary: View {
                     VStack(spacing: 12) {
                         ForEach(Array(HomeTaskLimit.shown(tasks).enumerated()), id: \.element.id) { index, task in
                             HomeTaskCard(task: task)
+                                .tourSpot(.homeTask(task.id))
                                 .opacity(floatsIn ? 0 : 1)
                                 .offset(y: floatsIn ? 28 : 0)
                                 .animation(.spring(duration: 0.6, bounce: 0.2).delay(0.35 + Double(index) * 0.22), value: arrived)

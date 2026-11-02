@@ -32,6 +32,7 @@
       VStack(alignment: .leading, spacing: 12) {
         titleCard
         planCard
+          .tourSpot(.setupPlan)
         if let error = speech.errorMessage {
           Text(error).font(.caption).foregroundStyle(AnchorSetupStyle.secondary)
             .accessibilityIdentifier("setup.input.error")
