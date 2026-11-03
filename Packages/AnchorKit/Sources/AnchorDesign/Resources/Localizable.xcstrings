@@ -14325,6 +14325,40 @@
         }
       }
     },
+    "tour.again.down" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open it again. Swipe down this time."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再打开它，这次往下滑。"
+          }
+        }
+      }
+    },
+    "tour.again.up" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open it again. Swipe up this time."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再打开它，这次往上滑。"
+          }
+        }
+      }
+    },
     "tour.anchor" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14338,6 +14372,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "轻点锚，投下你自己的。"
+          }
+        }
+      }
+    },
+    "tour.anchor.waiting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The anchor means an AI is waiting on you. Tap it."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "锚亮了，是 AI 在等你。点开它。"
           }
         }
       }
@@ -14440,6 +14491,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "用 matplotlib 画出满意度评分的分布"
+          }
+        }
+      }
+    },
+    "tour.clock" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your time linked to the Mac adds up here."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连着 Mac 的时间，都记在这里。"
           }
         }
       }
@@ -14869,6 +14937,23 @@
         }
       }
     },
+    "tour.pet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It lives on your desk. Say hi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "它住在你的桌上，点点它。"
+          }
+        }
+      }
+    },
     "tour.portfolio" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14937,74 +15022,6 @@
         }
       }
     },
-    "tour.read.again" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Didn't catch that. Once more."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "没听清，再读一次。"
-          }
-        }
-      }
-    },
-    "tour.read.plan" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Now the plan."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "再读计划。"
-          }
-        }
-      }
-    },
-    "tour.read.skip" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Can't talk right now"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "现在不方便说话"
-          }
-        }
-      }
-    },
-    "tour.read.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Read this line aloud."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "读出这句。"
-          }
-        }
-      }
-    },
     "tour.recall" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15018,6 +15035,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "下滑收起。"
+          }
+        }
+      }
+    },
+    "tour.recall.up" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe up to carry on at your Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上滑，到 Mac 上接着聊。"
           }
         }
       }
@@ -15137,6 +15171,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "给 App 加深色模式"
+          }
+        }
+      }
+    },
+    "tour.sent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It's open on your Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已在 Mac 上打开。"
           }
         }
       }
@@ -15396,23 +15447,6 @@
         }
       }
     },
-    "tour.waiting" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "An AI is waiting on you. Tap it."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "有个 AI 在等你，点开。"
-          }
-        }
-      }
-    },
     "Trusted device connected" : {
 
     },
@@ -15427,6 +15461,40 @@
     },
     "Unavailable in this build" : {
 
+    },
+    "tour.voice.plan" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Once more for the plan."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再点一下，说计划。"
+          }
+        }
+      }
+    },
+    "tour.voice.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the mic and say the task."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点一下麦克风，说出这件事。"
+          }
+        }
+      }
     },
     "unknown" : {
       "localizations" : {

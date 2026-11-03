@@ -59,6 +59,8 @@ struct DeskTaskLibrary: View {
     @Environment(\.openConversationOnMac) private var openOnMac
     /// The tour's pretend Mac opens whatever it is sent, and its cards leave no memory behind.
     @Environment(\.anchorTour) private var tour
+    /// The tour is pointing at the waiting card: its anchor drops in and calls.
+    private var tourCalls: Bool { tour.map { $0.stage == .waiting || $0.stage == .again } ?? false }
     /// A swipe this far, or flung this fast, closes the card or sends it.
     private static let recallSwipeDistance: CGFloat = 70
     private static let recallFling: CGFloat = 220
@@ -226,6 +228,7 @@ struct DeskTaskLibrary: View {
                     if isRed {
                         HarborAnchorGlyph(color: palette.ink, lineWidth: 1.8)
                             .frame(width: 15, height: 15)
+                            .modifier(TourAnchorCall(calling: isFront && tourCalls, tint: palette.ink))
                             .accessibilityHidden(true)
                     }
                 }
@@ -449,7 +452,7 @@ struct DeskTaskLibrary: View {
             self.recall = nil
             recallSwipe = 0
         }
-        tour?.closedTask()
+        tour?.closedTask(sentToMac: false)
     }
 
     /// The card flies up toward the Mac and the conversation opens there.
@@ -461,7 +464,7 @@ struct DeskTaskLibrary: View {
             recallSwipe = reduceMotion ? 0 : -Metrics.folder.height * 1.4
             self.recall = nil
         }
-        tour?.closedTask()
+        tour?.closedTask(sentToMac: true)
         Task { @MainActor in
             let opened = tour != nil ? true : await openOnMac(conversation)
             if opened { sentToMac += 1 }

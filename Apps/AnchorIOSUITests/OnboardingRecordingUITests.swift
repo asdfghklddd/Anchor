@@ -31,18 +31,21 @@ final class OnboardingRecordingUITests: XCTestCase {
         app.launchArguments += words.languages
         app.launch()
 
-        // The sample cards float in; the ring moves to the anchor by itself.
+        // The home whole, then today's anchoring counts up, then the cards;
+        // the clear part moves to the anchor by itself.
         let anchor = app.buttons["anchor.note.button"]
         XCTAssertTrue(anchor.waitForExistence(timeout: 15))
-        pause(5.5)
+        pause(10)
         tap(anchor)
 
-        // The person can't talk now, so the tour reads the task in for them.
-        let readForMe = app.buttons["tour.read.skip"]
-        XCTAssertTrue(readForMe.waitForExistence(timeout: 5))
+        // A tap on the microphone says the task, another says the plan.
+        let mic = app.descendants(matching: .any)["setup.voice.input.button"]
+        XCTAssertTrue(mic.waitForExistence(timeout: 5))
         pause(2.5)
-        tap(readForMe)
-        pause(11)
+        tap(mic)
+        pause(4)
+        tap(mic)
+        pause(9)
 
         // The slide that drops the anchor.
         let slider = app.descendants(matching: .any)["setup.start.button"]
@@ -58,17 +61,29 @@ final class OnboardingRecordingUITests: XCTestCase {
         XCUIDevice.shared.orientation = .landscapeLeft
         let question = app.staticTexts[words.survey].firstMatch
         XCTAssertTrue(question.waitForExistence(timeout: 12))
-        // The card is there from the start; its question arrives once the ring has walked the folders.
-        pause(10)
+        // The ring walks the folders, then waits on the pet for a hello.
+        let pet = app.descendants(matching: .any)["desk.pet"]
+        XCTAssertTrue(pet.waitForExistence(timeout: 12))
+        pause(2.5)
+        tap(pet)
+        // The question arrives, its anchor dropping onto the card.
+        pause(4.5)
         tap(question)
         // Its recall card opens over the desk; a swipe down puts it back.
         let recall = app.descendants(matching: .any)["desk.recall"]
         XCTAssertTrue(recall.waitForExistence(timeout: 5))
         pause(4)
-        let card = recall.frame
+        var card = recall.frame
         drag(from: CGPoint(x: card.midX, y: card.minY + 40), to: CGPoint(x: card.midX, y: card.minY + 220), velocity: 700)
-        // A friend calls the person away.
+        // Opened again, and swiped up: the Mac beside it catches it.
+        pause(3)
+        tap(question)
+        XCTAssertTrue(recall.waitForExistence(timeout: 5))
         pause(3.5)
+        card = recall.frame
+        drag(from: CGPoint(x: card.midX, y: card.maxY - 40), to: CGPoint(x: card.midX, y: card.maxY - 240), velocity: 700)
+        // The window opens on the Mac, then a friend calls the person away.
+        pause(6)
 
         // Picked up: the reminder question, if the system has never asked.
         XCUIDevice.shared.orientation = .portrait

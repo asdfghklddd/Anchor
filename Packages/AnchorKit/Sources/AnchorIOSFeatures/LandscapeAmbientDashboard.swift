@@ -149,6 +149,7 @@ struct LandscapeAmbientDashboard: View {
             if petKind != .off {
                 DeskPet(kind: petKind, context: .of(tasks), signals: petSignals)
                     .frame(width: CGFloat(DeskScene.columns) * DeskPet.pixel)
+                    .tourSpot(.pet)
                     .offset(x: 15 + Self.leftShift, y: 339 - DeskPet.height)
             }
             if case .behind = projection.freshness, !tasks.isEmpty {

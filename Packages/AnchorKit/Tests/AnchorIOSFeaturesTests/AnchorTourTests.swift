@@ -21,7 +21,7 @@ struct AnchorTourTests {
     }
 
     @Test func theHomeOpensOnTwoTasksFromAConnectedMac() {
-        let tour = AnchorTour()
+        let tour = AnchorTour(hasPet: false)
         defer { tour.end() }
         let projection = tour.model.projection
         #expect(projection.connection == .connected)
@@ -33,8 +33,15 @@ struct AnchorTourTests {
     }
 
     @Test func everyStepMovesOnByWhatThePersonDoesOrWhatHappens() async throws {
-        let tour = AnchorTour()
+        let tour = AnchorTour(hasPet: false)
         defer { tour.end() }
+        // The home is seen whole first, then today's anchoring, then the cards.
+        #expect(tour.stage == .glance)
+        tour.sawClock()
+        #expect(tour.stage == .glance)
+        tour.glanced()
+        #expect(tour.stage == .clock)
+        tour.sawClock()
         #expect(tour.stage == .hello)
         tour.greeted()
         #expect(tour.stage == .anchorButton)
@@ -59,13 +66,13 @@ struct AnchorTourTests {
     }
 
     @Test func skipLeavesFromAnyStepButNotOnceLeaving() async throws {
-        let tour = AnchorTour()
+        let tour = AnchorTour(hasPet: false)
         defer { tour.end() }
         tour.greeted()
         tour.skip()
         #expect(tour.stage == .finished)
         // The return page's Back to Home is already leaving; Skip changes nothing then.
-        let late = AnchorTour()
+        let late = AnchorTour(hasPet: false)
         defer { late.end() }
         late.greeted()
         late.setupOpened()
@@ -80,7 +87,7 @@ struct AnchorTourTests {
     }
 
     @Test func theRedCardOpensThenAFriendCalls() async throws {
-        let tour = AnchorTour()
+        let tour = AnchorTour(hasPet: false)
         defer { tour.end() }
         tour.greeted()
         tour.setupOpened()
@@ -96,8 +103,21 @@ struct AnchorTourTests {
         #expect(tour.stage == .waiting)
         tour.opened(tour.waitingTaskID)
         #expect(tour.stage == .reading)
-        tour.closedTask()
-        #expect(tour.stage == .called)
+        #expect(tour.asks == .down)
+        // Down first; then it is opened again for the way up.
+        tour.closedTask(sentToMac: false)
+        #expect(tour.stage == .again)
+        #expect(tour.asks == .up)
+        tour.opened(tour.waitingTaskID)
+        #expect(tour.stage == .reading)
+        // Down once more still asks for up.
+        tour.closedTask(sentToMac: false)
+        #expect(tour.stage == .again)
+        tour.opened(tour.waitingTaskID)
+        tour.closedTask(sentToMac: true)
+        // Up last: the Mac catches it, then the friend calls.
+        #expect(tour.stage == .sending)
+        try await waitFor(.called, in: tour, seconds: AnchorTour.sendLength + 1)
         // Back to Home only ends the tour from the return page.
         tour.leave()
         #expect(tour.stage == .called)
@@ -105,8 +125,40 @@ struct AnchorTourTests {
         #expect(tour.stage == .away)
     }
 
+    @Test func upFirstThenDownGoesStraightToTheFriend() async throws {
+        let tour = AnchorTour(hasPet: false)
+        defer { tour.end() }
+        tour.greeted()
+        tour.setupOpened()
+        tour.dropped(UUID())
+        tour.reachedDesk()
+        try await waitFor(.waiting, in: tour, seconds: AnchorTour.deskLook + 2)
+        tour.opened(tour.waitingTaskID)
+        tour.closedTask(sentToMac: true)
+        #expect(tour.stage == .again)
+        #expect(tour.asks == .down)
+        tour.opened(tour.waitingTaskID)
+        tour.closedTask(sentToMac: false)
+        #expect(tour.stage == .called)
+    }
+
+    @Test func thePetIsMetBeforeTheQuestion() async throws {
+        let tour = AnchorTour(hasPet: true)
+        defer { tour.end() }
+        tour.greeted()
+        tour.setupOpened()
+        tour.dropped(UUID())
+        tour.reachedDesk()
+        try await waitFor(.pet, in: tour, seconds: AnchorTour.deskLook + 2)
+        // The question waits until the pet has been greeted.
+        try await Task.sleep(for: .seconds(1))
+        #expect(tour.stage == .pet)
+        tour.pettedPet()
+        try await waitFor(.waiting, in: tour, seconds: AnchorTour.petAnswer + 1)
+    }
+
     @Test func theDialTurnsTheTimeAwayThenBringsThePersonBack() async throws {
-        let tour = AnchorTour()
+        let tour = AnchorTour(hasPet: false)
         defer { tour.end() }
         tour.greeted()
         tour.setupOpened()
@@ -129,7 +181,7 @@ struct AnchorTourTests {
     }
 
     @Test func backHomeEndsOnTheEmptySeaUntilStart() async throws {
-        let tour = AnchorTour()
+        let tour = AnchorTour(hasPet: false)
         defer { tour.end() }
         tour.greeted()
         tour.setupOpened()
@@ -149,7 +201,7 @@ struct AnchorTourTests {
     }
 
     @Test func pickingThePhoneUpEarlyStillLeavesTheDesk() {
-        let tour = AnchorTour()
+        let tour = AnchorTour(hasPet: false)
         defer { tour.end() }
         tour.greeted()
         tour.setupOpened()

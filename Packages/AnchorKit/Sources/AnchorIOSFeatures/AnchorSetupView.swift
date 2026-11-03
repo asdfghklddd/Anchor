@@ -17,13 +17,9 @@
     @State private var saving = false
     @State private var saveError: String?
     @State private var titleMoved = false
-    /// The tour's line being read aloud: the title, then the plan.
+    /// The tour's line the microphone says next: the title, then the plan.
     @State private var reading: AnchorSetupField?
     @State private var heard = TourReadAlong(heard: "", line: "")
-    /// The last try was not heard; the line asks again.
-    @State private var missed = false
-    /// The tour reads the rest itself, for someone who cannot talk now.
-    @State private var readsForPerson = false
     /// The tour's first drop: the water rises and takes the anchor before the page goes.
     @State private var sinking = false
     @State private var sliderFrame: CGRect?
@@ -46,8 +42,9 @@
               draft: draft, speech: speechInput, focus: $focus,
               titleMoved: titleMoved,
               readAlong: reading.map { ($0, Self.line(for: $0), heard.lit) },
-              guidesVoice: reading != nil && !readsForPerson,
-              beginSpeech: beginSpeech, endSpeech: speechInput.finish)
+              guidesVoice: reading != nil,
+              // In the tour a tap says the whole line; letting go doesn't cut it short.
+              beginSpeech: beginSpeech, endSpeech: tour != nil ? {} : speechInput.finish)
             .tourSpot(.setupInput)
             AnchorDropSlider(
               enabled: draft.isValid && !draft.isImportingImages, saving: saving,
@@ -104,7 +101,7 @@
         if tour != nil { reading = .title } else { focus = .title }
       }
       .onChange(of: speechInput.transcript) { _, transcript in
-        if let reading, !readsForPerson {
+        if let reading, tour != nil {
           hear(transcript, reading: reading)
           return
         }
@@ -115,21 +112,7 @@
         }
       }
       .onChange(of: speechInput.isRecording) { _, isRecording in
-        if !isRecording, let reading, speechField == reading, !readsForPerson {
-          // The person stopped: most of the line is enough; otherwise once more.
-          speechField = nil
-          if TourReadAlong(heard: speechInput.transcript, line: Self.line(for: reading)).isEnough {
-            accept(reading)
-          } else {
-            missed = true
-          }
-          return
-        }
-        if !isRecording, speechField == .title { settleTitle() }
-      }
-      // Without a microphone or the permission for it, the tour reads for them.
-      .onChange(of: speechInput.errorMessage) { _, error in
-        if error != nil, reading != nil { readForPerson() }
+        if !isRecording, speechField == .title, tour == nil { settleTitle() }
       }
       .onChange(of: draft.goalTitle) { _, title in
         // Return in the title moves on to the plan; pasted lines go with it.
@@ -200,7 +183,7 @@
     private func tourLayer(_ spots: [TourSpot: CGRect]) -> some View {
       let clear: (CGRect, CGFloat)? = switch reading {
       case .title: spots[.setupInput].map { ($0.insetBy(dx: -6, dy: -6), AnchorSetupStyle.inputRadius + 6) }
-      case .plan: spots[readsForPerson ? .setupInput : .setupPlan].map { ($0.insetBy(dx: -6, dy: -6), AnchorSetupStyle.inputRadius + 6) }
+      case .plan: spots[.setupPlan].map { ($0.insetBy(dx: -6, dy: -6), AnchorSetupStyle.inputRadius + 6) }
       case nil: spots[.setupSlider].map { ($0.insetBy(dx: -6, dy: -6), $0.height / 2 + 6) }
       }
       return ZStack(alignment: .topLeading) {
@@ -213,32 +196,22 @@
       }
     }
 
-    /// The line says what to do: read the title, then the plan, then slide.
-    /// Beside it, a way out for someone who cannot talk right now. While the
-    /// tour reads for them the fields fill by themselves, so no line is needed.
-    /// `live` is the one drawn over the frost; the other only holds its place.
+    /// The line says what to do: tap the microphone for the title, again
+    /// for the plan, then slide. `live` is the one drawn over the frost; the
+    /// other only holds its place.
     private func tourLine(live: Bool) -> some View {
       HStack(spacing: 10) {
         TourCaption(text: tourText)
-          .opacity(readsForPerson && reading != nil ? 0 : 1)
-          .animation(AnchorMotion.micro, value: readsForPerson && reading != nil)
         Spacer(minLength: 0)
-        if reading != nil, !readsForPerson {
-          Button(TourCopy.readForMe, action: readForPerson)
-            .font(.footnote.weight(.medium))
-            .foregroundStyle(AnchorIOSStyle.action)
-            .buttonStyle(.glass)
-            .frame(minHeight: 44)
-            .accessibilityIdentifier(live ? "tour.read.skip" : "tour.read.skip.held")
-        }
       }
+      .frame(minHeight: 44)
       .padding(.top, 6)
     }
 
     private var tourText: String {
       switch reading {
-      case .title: missed ? TourCopy.readAgain : TourCopy.readTitle
-      case .plan: missed ? TourCopy.readAgain : TourCopy.readPlan
+      case .title: TourCopy.readTitle
+      case .plan: TourCopy.readPlan
       case nil: TourCopy.slide
       }
     }
@@ -247,11 +220,10 @@
       field == .title ? TourCopy.spokenTitle : TourCopy.spokenPlan
     }
 
-    /// The line lights as far as the voice has reached; most of it heard is enough.
+    /// The line lights as far as the voice has reached.
     private func hear(_ transcript: String, reading: AnchorSetupField) {
       let heard = TourReadAlong(heard: transcript, line: Self.line(for: reading))
       withAnimation(AnchorMotion.micro) { self.heard = heard }
-      if heard.isRead { accept(reading) }
     }
 
     /// The line goes in whole, a bell rings, and the next line is up.
@@ -259,7 +231,6 @@
       guard reading == field else { return }
       speechField = nil
       speechInput.stop()
-      missed = false
       withAnimation(AnchorMotion.micro) {
         if field == .title { draft.goalTitle = Self.line(for: .title) } else { draft.actionPlan = Self.line(for: .plan) }
         heard = TourReadAlong(heard: "", line: "")
@@ -272,20 +243,15 @@
       }
     }
 
-    /// The tour says the rest itself, as dictation would hear it.
-    private func readForPerson() {
-      guard let first = reading, !readsForPerson else { return }
-      readsForPerson = true
-      missed = false
-      speechInput.stop()
+    /// The tour's microphone: a tap says the waiting line at a quick
+    /// speaking pace, lighting it as it goes, without a microphone,
+    /// recognizer or permission. Said through, it goes in whole.
+    private func say(_ field: AnchorSetupField) {
+      guard speechField == nil else { return }
+      speechField = field
       Task {
-        for field in first == .title ? [AnchorSetupField.title, .plan] : [.plan] {
-          speechField = field
-          guard await speechInput.play(Self.line(for: field)) else { break }
-          try? await Task.sleep(for: .seconds(0.3))
-        }
-        speechField = nil
-        withAnimation(AnchorMotion.micro) { reading = nil }
+        let said = await speechInput.play(Self.line(for: field))
+        if said { accept(field) } else { speechField = nil }
       }
     }
 
@@ -294,9 +260,7 @@
     private func beginSpeech() {
       focus = nil
       if tour != nil {
-        guard let reading, !readsForPerson else { return }
-        speechField = reading
-        speechInput.start(initialText: "")
+        if let reading { say(reading) }
         return
       }
       speechField = draft.isValid ? .plan : .title

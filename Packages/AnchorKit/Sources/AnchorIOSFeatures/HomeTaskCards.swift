@@ -38,7 +38,7 @@ struct HomeTaskLibrary: View {
     /// The tour opens on its cards floating up one by one, once the splash has gone.
     @State private var arrived = false
 
-    private var floatsIn: Bool { tour?.stage == .hello && !reduceMotion && !arrived }
+    private var floatsIn: Bool { (tour.map { $0.stage <= .hello } ?? false) && !reduceMotion && !arrived }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -64,7 +64,8 @@ struct HomeTaskLibrary: View {
                                 .tourSpot(.homeTask(task.id))
                                 .opacity(floatsIn ? 0 : 1)
                                 .offset(y: floatsIn ? 28 : 0)
-                                .animation(.spring(duration: 0.6, bounce: 0.2).delay(0.35 + Double(index) * 0.22), value: arrived)
+                                // Quick enough to have landed before the tour's frost comes in.
+                                .animation(.spring(duration: 0.5, bounce: 0.2).delay(0.1 + Double(index) * 0.12), value: arrived)
                                 .modifier(HomeSwipeToComplete(
                                     isOpen: Binding(get: { openID == task.id },
                                                     set: { openID = $0 ? task.id : (openID == task.id ? nil : openID) }),

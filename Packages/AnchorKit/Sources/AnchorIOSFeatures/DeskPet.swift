@@ -51,6 +51,8 @@ struct DeskPet: View {
     @AnchorReducedMotion private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.colorScheme) private var colorScheme
+    /// The tour waits for the pet to be greeted.
+    @Environment(\.anchorTour) private var tour
     @State private var life = DeskPetLife.shared
     @State private var columns = 0
     @State private var touches = 0
@@ -69,6 +71,7 @@ struct DeskPet: View {
         .onLongPressGesture(minimumDuration: 0.5) {
             touches += 1
             life.press()
+            tour?.pettedPet()
         }
         .gesture(SpatialTapGesture().onEnded { touch(at: $0.location) })
         .sensoryFeedback(.impact(weight: .light, intensity: 0.5), trigger: touches)
@@ -93,7 +96,16 @@ struct DeskPet: View {
         }
         .onDisappear { life.save() }
         .onChange(of: scenePhase) { if scenePhase != .active { life.save() } }
-        .accessibilityHidden(true)
+        // Only the tour asks for the pet, so only then can VoiceOver reach it.
+        .accessibilityElement()
+        .accessibilityLabel(kind.title)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction {
+            life.tap()
+            tour?.pettedPet()
+        }
+        .accessibilityIdentifier("desk.pet")
+        .accessibilityHidden(tour?.stage != .pet)
     }
 
     private struct Loop: Hashable {
@@ -114,6 +126,8 @@ struct DeskPet: View {
         let cell = CGPoint(x: location.x / Self.pixel, y: location.y / Self.pixel)
         let pet = CGRect(x: petLeft(brain), y: DeskScene.floor - look.height - 3, width: look.width, height: look.height + 3)
         touches += 1
+        // In the tour, any touch in the nook greets the pet.
+        tour?.pettedPet()
         if pet.contains(cell) {
             life.tap()
         } else if let thing = DeskScene.thing(at: cell, for: kind) {

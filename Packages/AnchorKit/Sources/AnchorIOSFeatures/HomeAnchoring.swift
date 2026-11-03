@@ -106,6 +106,13 @@ struct HomeAnchoringPanel: View {
     @AppStorage(AnchoringLog.goalKey) private var goalMinutes = AnchoringLog.defaultGoalMinutes
     @State private var editingGoal = false
     @AnchorReducedMotion private var reduceMotion
+    @Environment(\.anchorTour) private var tour
+    /// When the tour began counting the day up from nothing, while it shows this panel.
+    @State private var countFrom: Date?
+
+    /// The count waits for the frost's cut to open, then runs.
+    private static let countDelay: TimeInterval = 0.5
+    private static let countLength: TimeInterval = 2.4
 
     var body: some View {
         VStack(spacing: 0) {
@@ -114,21 +121,46 @@ struct HomeAnchoringPanel: View {
                 .foregroundStyle(HomeStyle.ink)
                 .frame(height: 22)
                 .accessibilityAddTraits(.isHeader)
-            // Ticks each second only while linked; otherwise the total holds still.
-            TimelineView(.periodic(from: .now, by: log.linkedSince == nil ? 60 : 1)) { context in
-                clock(seconds: log.total(now: context.date))
+            if let countFrom {
+                // The tour's count: the clock runs up to today's total as the bars rise.
+                TimelineView(.animation) { context in
+                    let p = Self.counted(since: countFrom, at: context.date)
+                    VStack(spacing: 0) {
+                        clock(seconds: log.total(now: context.date) * (1 - pow(1 - p, 3)))
+                            .padding(.top, -1)
+                        goal
+                            .padding(.top, 9)
+                        HomeTokenBars(tokens: log.tokens, now: context.date, rise: p)
+                            .padding(.top, 12)
+                    }
+                }
+            } else {
+                // Ticks each second only while linked; otherwise the total holds still.
+                TimelineView(.periodic(from: .now, by: log.linkedSince == nil ? 60 : 1)) { context in
+                    clock(seconds: log.total(now: context.date))
+                }
+                .padding(.top, -1)
+                goal
+                    .padding(.top, 9)
+                TimelineView(.periodic(from: .now, by: 60)) { context in
+                    HomeTokenBars(tokens: log.tokens, now: context.date)
+                }
+                .padding(.top, 12)
             }
-            .padding(.top, -1)
-            goal
-                .padding(.top, 9)
-            TimelineView(.periodic(from: .now, by: 60)) { context in
-                HomeTokenBars(tokens: log.tokens, now: context.date)
-            }
-            .padding(.top, 12)
+        }
+        .task(id: tour?.stage == .clock) {
+            guard tour?.stage == .clock, !reduceMotion else { return }
+            countFrom = .now
+            try? await Task.sleep(for: .seconds(Self.countDelay + Self.countLength + 0.1))
+            countFrom = nil
         }
         .sheet(isPresented: $editingGoal) {
             HomeGoalPicker(minutes: $goalMinutes)
         }
+    }
+
+    private static func counted(since start: Date, at now: Date) -> Double {
+        min(1, max(0, (now.timeIntervalSince(start) - countDelay) / countLength))
     }
 
     private func clock(seconds: TimeInterval) -> some View {
@@ -173,6 +205,8 @@ struct HomeAnchoringPanel: View {
 struct HomeTokenBars: View {
     let tokens: [Date: Int]
     let now: Date
+    /// How far the bars have risen, left to right, as the tour counts the day up.
+    var rise = 1.0
     static let past = 16
     static let ahead = 7
     private static let pitch: CGFloat = 15
@@ -187,8 +221,11 @@ struct HomeTokenBars: View {
         let busiest = max(1, starts.compactMap { tokens[$0] }.max() ?? 1)
         VStack(spacing: 2) {
             HStack(alignment: .bottom, spacing: Self.pitch - Self.barWidth) {
-                ForEach(starts, id: \.self) { start in
+                ForEach(Array(starts.enumerated()), id: \.element) { index, start in
+                    let grown = min(1, max(0, (rise - Double(index) / Double(starts.count) * 0.6) / 0.4))
                     slot(start: start, current: current, busiest: busiest)
+                        .scaleEffect(x: 1, y: grown, anchor: .bottom)
+                        .opacity(grown > 0 ? 1 : 0)
                         .frame(width: Self.barWidth, height: Self.tallest, alignment: .bottom)
                 }
             }

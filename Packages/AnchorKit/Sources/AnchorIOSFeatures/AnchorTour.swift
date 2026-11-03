@@ -37,6 +37,10 @@ public enum AnchorTourGate {
 @Observable
 final class AnchorTour {
     enum Stage: Int, Comparable {
+        /// The whole home, clear, for a moment before the frost comes in.
+        case glance
+        /// Today's anchoring is the clear part: its clock counts up and its bars rise.
+        case clock
         /// The sample cards float up under a ring; the ring moves on by itself.
         case hello
         /// The anchor button is lit and waits for its tap.
@@ -49,10 +53,17 @@ final class AnchorTour {
         case turn
         /// The landscape desk: the ring walks the folders and rests on the person's own.
         case desk
+        /// The pet's nook is the clear part, waiting for a tap on the pet.
+        case pet
         /// The question waiting on the homework is lit as it comes to the front.
         case waiting
-        /// The question's task is open.
+        /// The question's recall card is open, asking for the swipe in `asks`.
         case reading
+        /// The card is back in its folder; the tour asks to open it once more
+        /// for the other swipe.
+        case again
+        /// Swiped up: the conversation flies to the Mac and opens there.
+        case sending
         /// A friend asks the person down for coffee; the desk waits for the phone to come up.
         case called
         /// The phone is up and the link to the Mac breaks; the person turns
@@ -72,7 +83,7 @@ final class AnchorTour {
         static func < (lhs: Stage, rhs: Stage) -> Bool { lhs.rawValue < rhs.rawValue }
     }
 
-    private(set) var stage = Stage.hello {
+    private(set) var stage = Stage.glance {
         didSet { if stage != oldValue { RotationTrace.note("tour stage \(oldValue) → \(stage)") } }
     }
     /// Minutes the dial has turned through while away.
@@ -96,6 +107,18 @@ final class AnchorTour {
     @ObservationIgnored private var awayNews: [TourMac.Beat] = []
     @ObservationIgnored private var asked = false
 
+    /// The two ways an open recall card goes: down closes it, up sends it to the Mac.
+    enum Swipe {
+        case down, up
+    }
+
+    /// The swipe the open card asks for: down first, then the other one.
+    private(set) var asks = Swipe.down
+    @ObservationIgnored private var swiped: Set<Swipe> = []
+    /// Whether a pet lives on the desk to be met; with none the step is skipped.
+    @ObservationIgnored private let hasPet: Bool
+    @ObservationIgnored private var petted = false
+
     /// The task whose question the desk lights.
     var waitingTaskID: UUID { mac.homeworkID }
 
@@ -106,7 +129,8 @@ final class AnchorTour {
     /// The first drop's moment on the home, before the phone is asked to turn.
     static let dropLength: TimeInterval = 3.0
 
-    init() {
+    init(hasPet: Bool = DeskPetKind(rawValue: ProfilePreferences.store.string(forKey: DeskPetKind.defaultsKey) ?? "") != .off) {
+        self.hasPet = hasPet
         let folder = FileManager.default.temporaryDirectory
             .appending(path: "AnchorTour", directoryHint: .isDirectory)
             .appending(path: UUID().uuidString, directoryHint: .isDirectory)
@@ -138,9 +162,23 @@ final class AnchorTour {
 
     // MARK: Stages
 
+    /// The home has been seen whole: the frost comes in on today's anchoring.
+    func glanced() {
+        if stage == .glance { stage = .clock }
+    }
+
+    /// The day has counted up: the clear part moves on to the cards.
+    func sawClock() {
+        if stage == .clock { stage = .hello }
+    }
+
+    /// How long the home stays clear before the frost, and how long the clock step lasts.
+    static let glanceLength: TimeInterval = 1.0
+    static let clockLength: TimeInterval = 4.2
+
     /// The cards have landed: the ring moves to the anchor button.
     func greeted() {
-        if stage == .hello { stage = .anchorButton }
+        if stage <= .hello { stage = .anchorButton }
     }
 
     func setupOpened() {
@@ -168,8 +206,8 @@ final class AnchorTour {
     }
 
     /// The desk is up, on a turned phone or drawn sideways under the lock.
-    /// The ring walks the folders and rests on the person's own, then a
-    /// question arrives on its own.
+    /// The ring walks the folders and rests on the person's own, then moves
+    /// to the pet; once it has been greeted, a question arrives on its own.
     func reachedDesk() {
         guard stage == .turn || stage == .anchored else { return }
         stage = .desk
@@ -177,15 +215,30 @@ final class AnchorTour {
         for beat in deskNews {
             later(beat.after) { [weak self] in await self?.send(beat) }
         }
-        later(Self.deskLook) { [weak self] in self?.ask() }
+        later(Self.deskLook) { [weak self] in self?.meetPet() }
     }
+
+    private func meetPet() {
+        guard stage == .desk else { return }
+        if hasPet { stage = .pet } else { ask() }
+    }
+
+    /// The pet was tapped: it answers, then the desk moves on to the question.
+    func pettedPet() {
+        guard stage == .pet, !petted else { return }
+        petted = true
+        later(Self.petAnswer) { [weak self] in self?.ask() }
+    }
+
+    /// Time for the pet's answer to a tap to show before the question comes.
+    static let petAnswer: TimeInterval = 1.6
 
     /// The ring's walk over the folders, and a moment on the person's own.
     static let deskLook: TimeInterval = 6.4
 
     /// The ring settles on the homework first, then its question arrives under it.
     private func ask() {
-        guard stage == .desk else { return }
+        guard stage == .desk || stage == .pet else { return }
         stage = .waiting
         later(0.7) { [weak self] in await self?.sendQuestion() }
     }
@@ -199,13 +252,32 @@ final class AnchorTour {
 
     /// The person opened a task on the desk; the question's task moves the tour on.
     func opened(_ taskID: UUID) {
-        if stage == .waiting, taskID == waitingTaskID { stage = .reading }
+        if stage == .waiting || stage == .again, taskID == waitingTaskID { stage = .reading }
     }
 
-    /// The question's task closed: a friend calls the person away.
-    func closedTask() {
-        if stage == .reading { stage = .called }
+    /// The open card went one way. Once both ways are done, a friend calls
+    /// the person away; sent up last, the Mac is seen opening it first.
+    func closedTask(sentToMac: Bool = false) {
+        guard stage == .reading else { return }
+        let swipe = sentToMac ? Swipe.up : .down
+        swiped.insert(swipe)
+        guard swiped.count == 2 else {
+            asks = swipe == .down ? .up : .down
+            stage = .again
+            return
+        }
+        guard sentToMac else {
+            stage = .called
+            return
+        }
+        stage = .sending
+        later(Self.sendLength) { [weak self] in
+            if self?.stage == .sending { self?.stage = .called }
+        }
     }
+
+    /// The card's flight to the Mac and the window opening there.
+    static let sendLength: TimeInterval = 2.8
 
     /// The phone came up off the desk. Bluetooth to the Mac drops once the
     /// dial passes its first minute, and the agents' news lands as it turns.
@@ -516,10 +588,8 @@ struct TourMac {
 
 enum TourCopy {
     static let anchorButton = AnchorStrings.value("tour.anchor", default: "Tap the anchor to drop one of your own.")
-    static let readTitle = AnchorStrings.value("tour.read.title", default: "Read this line aloud.")
-    static let readPlan = AnchorStrings.value("tour.read.plan", default: "Now the plan.")
-    static let readAgain = AnchorStrings.value("tour.read.again", default: "Didn't catch that. Once more.")
-    static let readForMe = AnchorStrings.value("tour.read.skip", default: "Can't talk right now")
+    static let readTitle = AnchorStrings.value("tour.voice.title", default: "Tap the mic and say the task.")
+    static let readPlan = AnchorStrings.value("tour.voice.plan", default: "Once more for the plan.")
     static let slide = AnchorStrings.value("tour.slide", default: "Slide the anchor all the way.")
     static let turn = AnchorStrings.value("tour.turn", default: "Turn sideways into the workbench.")
     static let lockQuestion = AnchorStrings.value("tour.lock", default: "Portrait Orientation Lock on?")
@@ -527,9 +597,15 @@ enum TourCopy {
     static let backUpright = AnchorStrings.value("tour.lock.back", default: "Back to the home")
     static let replay = AnchorStrings.value("tour.replay", default: "Replay the tour")
     static let folders = AnchorStrings.value("tour.folders", default: "Each folder is a task.")
-    static let waiting = AnchorStrings.value("tour.waiting", default: "An AI is waiting on you. Tap it.")
+    static let clock = AnchorStrings.value("tour.clock", default: "Your time linked to the Mac adds up here.")
+    static let pet = AnchorStrings.value("tour.pet", default: "It lives on your desk. Say hi.")
+    static let waiting = AnchorStrings.value("tour.anchor.waiting", default: "The anchor means an AI is waiting on you. Tap it.")
     static let ownTask = AnchorStrings.value("tour.own", default: "Your task: an AI is already on it.")
     static let recall = AnchorStrings.value("tour.recall", default: "Swipe down to put it back.")
+    static let recallUp = AnchorStrings.value("tour.recall.up", default: "Swipe up to carry on at your Mac.")
+    static let againUp = AnchorStrings.value("tour.again.up", default: "Open it again. Swipe up this time.")
+    static let againDown = AnchorStrings.value("tour.again.down", default: "Open it again. Swipe down this time.")
+    static let sent = AnchorStrings.value("tour.sent", default: "It's open on your Mac.")
     static let called = AnchorStrings.value("tour.called", default: "A friend asks you out for coffee. Take your phone and go.")
     static let dial = AnchorStrings.value("tour.dial", default: "Turn the dial.")
     static let apart = AnchorStrings.value("tour.apart", default: "5 minutes away. Your AI keeps working.")
