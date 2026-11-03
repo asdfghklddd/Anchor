@@ -81,13 +81,15 @@ extension TourCaption where Lead == EmptyView {
     }
 }
 
-/// Frosted glass over the whole screen, wiped clear only where the step's
-/// target is. The glass condenses in as the patch opens out from the
-/// target's middle; the patch fades into the frost over a soft margin and
-/// glides from target to target; each time it lands, a streak of light runs
-/// once round its edge, which then breathes softly, as glass catching the
-/// light. A tap that misses brightens it once. With no target the whole
-/// screen frosts, the patch closing into where it last was.
+/// Frosted glass over the whole screen, cut clean around the step's target
+/// like a pane with a window in it. The cut opens out from the target's
+/// middle as the glass condenses, and glides from target to target; its edge
+/// is the pane's own: a little shade where the glass is thick, a hairline of
+/// light brighter where the light falls from above, and a faint dark line
+/// holding the clear part. Each time the cut lands, a streak of light runs
+/// once round it, then the edge breathes; a tap that misses brightens it
+/// once. With no target the whole screen frosts, the cut closing into where
+/// it last was.
 struct TourFrost: View {
     /// The part left clear, in this view's space; none frosts everything.
     var hole: CGRect?
@@ -97,34 +99,33 @@ struct TourFrost: View {
     @AnchorReducedMotion private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @State private var shown = false
-    /// Where the patch last was, so frosting over closes it there, not in a corner.
+    /// Where the cut last was, so frosting over closes it there, not in a corner.
     @State private var resting: CGRect?
     /// Each landing somewhere new sends the light round the edge.
     @State private var landings = 0
     @State private var drift = false
 
-    /// How far the frost takes to fade out at the patch's edge.
-    static let feather: CGFloat = 18
+    /// The clear margin around the target, beyond what the step already leaves.
+    static let margin: CGFloat = 2
     static let glide = Animation.spring(duration: 0.8, bounce: 0.12)
 
     var body: some View {
-        let target = hole ?? resting.map { CGRect(x: $0.midX, y: $0.midY, width: 0, height: 0) } ?? .zero
-        let open = hole.map { $0.insetBy(dx: -Self.feather, dy: -Self.feather) } ?? target
-        let clear = shown ? open : CGRect(x: open.midX, y: open.midY, width: 0, height: 0)
-        let corner = hole == nil || !shown ? 0 : radius + Self.feather
+        let target = hole.map { $0.insetBy(dx: -Self.margin, dy: -Self.margin) }
+            ?? resting.map { CGRect(x: $0.midX, y: $0.midY, width: 0, height: 0) } ?? .zero
+        let cut = shown ? target : CGRect(x: target.midX, y: target.midY, width: 0, height: 0)
+        let corner = hole == nil || !shown ? 0 : radius + Self.margin
         glass
             .mask {
-                SpotlightVeil(hole: clear, radius: corner)
+                SpotlightVeil(hole: cut, radius: corner)
                     .fill(style: FillStyle(eoFill: true))
-                    .blur(radius: Self.feather)
             }
-            .opacity(shown ? 1 : 0)
             .overlay(alignment: .topLeading) {
-                if let hole, shown {
-                    TourGlint(rect: hole, radius: radius, landings: landings, nudges: nudges)
+                if hole != nil, shown {
+                    TourGlint(cut: cut, radius: corner, landings: landings, nudges: nudges)
                         .transition(.opacity)
                 }
             }
+            .opacity(shown ? 1 : 0)
             .animation(reduceMotion ? .easeOut(duration: 0.25) : Self.glide, value: hole)
             .allowsHitTesting(false)
             .accessibilityHidden(true)
@@ -167,10 +168,12 @@ struct TourFrost: View {
     }
 }
 
-/// The light along the clear patch's edge: a streak that runs once round
-/// it when the patch lands, then a soft breathing glow.
+/// The cut's edge, drawn over the whole pane in its space: the shade of the
+/// glass's thickness just outside the cut, a faint dark line holding the
+/// clear part, and the hairline of light on the edge itself, brighter at the
+/// top left; a streak runs once round it when the cut lands.
 private struct TourGlint: View {
-    let rect: CGRect
+    let cut: CGRect
     let radius: CGFloat
     let landings: Int
     let nudges: Int
@@ -179,46 +182,63 @@ private struct TourGlint: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: radius + 4, style: .continuous)
-        let edge = rect.insetBy(dx: -4, dy: -4)
         let dark = colorScheme == .dark
-        ZStack {
-            TimelineView(.animation(paused: reduceMotion)) { context in
-                let t = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 3.4) / 3.4
-                let breath = reduceMotion ? 0.7 : 0.5 + 0.4 * (0.5 - 0.5 * cos(t * 2 * .pi))
-                ZStack {
-                    shape.stroke(.white.opacity(0.85 * breath), lineWidth: 1.2).blur(radius: 0.8)
-                    shape.stroke(.white.opacity((dark ? 0.32 : 0.75) * breath), lineWidth: 8).blur(radius: 9)
-                    shape.stroke(TourInk.guide.opacity(0.3 * breath), lineWidth: 6).blur(radius: 14)
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        ZStack(alignment: .topLeading) {
+            // The glass's thickness: shade on the frost, fading out from the cut.
+            TourCutOutline(rect: cut, radius: radius)
+                .stroke(Color.black.opacity(dark ? 0.45 : 0.14), lineWidth: 14)
+                .blur(radius: 7)
+                .mask {
+                    SpotlightVeil(hole: cut, radius: radius).fill(style: FillStyle(eoFill: true))
                 }
-            }
-            if !reduceMotion {
-                // The streak: a short bright arc that travels the whole edge once.
-                Color.clear.keyframeAnimator(initialValue: 1.0, trigger: landings) { _, run in
+            ZStack {
+                shape.inset(by: -1.2)
+                    .stroke(Color.black.opacity(dark ? 0.5 : 0.1), lineWidth: 0.6)
+                TimelineView(.animation(paused: reduceMotion)) { context in
+                    let t = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 3.4) / 3.4
+                    let breath = reduceMotion ? 1 : 0.72 + 0.28 * (0.5 - 0.5 * cos(t * 2 * .pi))
                     ZStack {
-                        shape.trim(from: max(0, run - 0.16), to: run)
-                            .stroke(.white, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
-                            .blur(radius: 1)
-                        shape.trim(from: max(0, run - 0.16), to: run)
-                            .stroke(.white.opacity(dark ? 0.5 : 0.9), style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                            .blur(radius: 8)
+                        shape.stroke(
+                            LinearGradient(colors: [.white.opacity(dark ? 0.75 : 1), .white.opacity(dark ? 0.12 : 0.35)],
+                                           startPoint: .topLeading, endPoint: .bottomTrailing),
+                            lineWidth: 1.2)
+                        // A soft catch of light along the top edge.
+                        shape.stroke(
+                            LinearGradient(colors: [.white.opacity(dark ? 0.3 : 0.55), .clear],
+                                           startPoint: .top, endPoint: .center),
+                            lineWidth: 3)
+                            .blur(radius: 1.5)
                     }
-                    .opacity(run >= 1 ? 0 : 1)
-                } keyframes: { _ in
-                    LinearKeyframe(0.0, duration: 0.01)
-                    LinearKeyframe(0.0, duration: 0.45)
-                    CubicKeyframe(1.0, duration: 1.25)
+                    .opacity(breath)
+                }
+                if !reduceMotion {
+                    // The streak: a short bright arc that travels the whole edge once.
+                    Color.clear.keyframeAnimator(initialValue: 1.0, trigger: landings) { _, run in
+                        ZStack {
+                            shape.trim(from: max(0, run - 0.14), to: run)
+                                .stroke(.white, style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
+                            shape.trim(from: max(0, run - 0.14), to: run)
+                                .stroke(.white.opacity(dark ? 0.45 : 0.8), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                                .blur(radius: 4)
+                        }
+                        .opacity(run >= 1 ? 0 : 1)
+                    } keyframes: { _ in
+                        LinearKeyframe(0.0, duration: 0.01)
+                        LinearKeyframe(0.0, duration: 0.45)
+                        CubicKeyframe(1.0, duration: 1.25)
+                    }
                 }
             }
+            .frame(width: cut.width, height: cut.height)
+            .keyframeAnimator(initialValue: 1.0, trigger: nudges) { content, glow in
+                content.brightness(0.3 * (glow - 1)).scaleEffect(1 + 0.03 * (glow - 1))
+            } keyframes: { _ in
+                SpringKeyframe(2.0, duration: 0.18)
+                SpringKeyframe(1.0, duration: 0.5)
+            }
+            .offset(x: cut.minX, y: cut.minY)
         }
-        .frame(width: edge.width, height: edge.height)
-        .keyframeAnimator(initialValue: 1.0, trigger: nudges) { content, glow in
-            content.brightness(0.25 * (glow - 1)).scaleEffect(1 + 0.04 * (glow - 1))
-        } keyframes: { _ in
-            SpringKeyframe(2.0, duration: 0.18)
-            SpringKeyframe(1.0, duration: 0.5)
-        }
-        .offset(x: edge.minX, y: edge.minY)
         .allowsHitTesting(false)
     }
 }
@@ -689,6 +709,25 @@ private extension View {
     }
 }
 
+/// The cut's outline alone, in the pane's space, moving with the cut.
+private struct TourCutOutline: Shape {
+    var rect: CGRect
+    var radius: CGFloat
+
+    var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<AnimatablePair<CGFloat, CGFloat>, CGFloat>> {
+        get { AnimatablePair(AnimatablePair(rect.minX, rect.minY), AnimatablePair(AnimatablePair(rect.width, rect.height), radius)) }
+        set {
+            rect = CGRect(x: newValue.first.first, y: newValue.first.second,
+                          width: newValue.second.first.first, height: newValue.second.first.second)
+            radius = newValue.second.second
+        }
+    }
+
+    func path(in _: CGRect) -> Path {
+        Path(roundedRect: rect, cornerRadius: radius, style: .continuous)
+    }
+}
+
 /// The whole screen with a rounded hole, filled even-odd. The hole moves
 /// smoothly from one part of the screen to the next.
 struct SpotlightVeil: Shape {
@@ -999,8 +1038,7 @@ private struct TourDeskCoach: View {
             guard let card = spots[.frontCard(tour.waitingTaskID)] else { return nil }
             return Hole(rect: card.insetBy(dx: -6, dy: -6), radius: 21)
         case .reading:
-            // Tucked inside the card, so its soft edge doesn't uncover the clock behind.
-            return spots[.recallCard].map { Hole(rect: $0.insetBy(dx: 18, dy: 18), radius: 8) }
+            return spots[.recallCard].map { Hole(rect: $0.insetBy(dx: -4, dy: -4), radius: 28) }
         default:
             return nil
         }
