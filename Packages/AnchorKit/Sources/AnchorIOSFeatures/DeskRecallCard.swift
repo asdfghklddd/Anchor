@@ -28,7 +28,31 @@ struct DeskRecallCard: View {
     private var digest: ConversationDigest? { process.digest }
     private var isRunning: Bool { process.status == .running || process.status == .queued }
 
+    private var otherConversations: [AnchorProcess] {
+        Array(TaskConversationStack.conversations(of: task)
+            .filter { $0.conversationKey != process.conversationKey }
+            .sorted { $0.updatedAt > $1.updatedAt }
+            .prefix(3))
+    }
+
     var body: some View {
+        // As tall as what it has to say; a long conversation fills the desk and trims.
+        ViewThatFits(in: .vertical) {
+            content
+                .frame(minHeight: 190, alignment: .top)
+                .fixedSize(horizontal: false, vertical: true)
+            content
+                .frame(maxHeight: .infinity, alignment: .top)
+        }
+        .frame(maxWidth: .infinity, alignment: .top)
+        .background(DeskStyle.card, in: .rect(cornerRadius: 24, style: .continuous))
+        // One flat card: the glow falls around it, not on the words and boxes inside.
+        .compositingGroup()
+        .shadow(color: palette.glow.opacity(0.28), radius: 24, y: 4)
+        .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
+    }
+
+    private var content: some View {
         ZStack(alignment: .top) {
             HStack(alignment: .top, spacing: 14) {
                 conversation
@@ -36,26 +60,22 @@ struct DeskRecallCard: View {
                     .frame(width: 172)
             }
             .padding(.horizontal, 18)
-            .padding(.top, 22)
+            .padding(.top, 34)
             .padding(.bottom, 16)
             grabber
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(DeskStyle.card, in: .rect(cornerRadius: 24, style: .continuous))
-        .shadow(color: palette.glow.opacity(0.28), radius: 24, y: 4)
-        .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
     }
 
     /// Up is the Mac, beside the phone on the desk: the handle points there.
     private var grabber: some View {
         HStack(spacing: 4) {
             Image(systemName: "chevron.compact.up")
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: 22, weight: .semibold))
             Image(systemName: "desktopcomputer")
-                .font(.system(size: 10))
+                .font(.system(size: 15))
         }
-        .foregroundStyle(DeskStyle.quietInk.opacity(0.6))
-        .padding(.top, 5)
+        .foregroundStyle(DeskStyle.quietInk.opacity(0.8))
+        .padding(.top, 8)
         .accessibilityHidden(true)
     }
 
@@ -82,6 +102,8 @@ struct DeskRecallCard: View {
                         .lineLimit(1)
                 }
             }
+            .layoutPriority(2)
+            ask
             waiting
             if let facts = digest?.facts, !facts.isEmpty {
                 DeskChipRow(chips: facts.map(DeskText.recallFact))
@@ -89,8 +111,22 @@ struct DeskRecallCard: View {
             // The path sits at the bottom, where the card ends: older above, now last.
             Spacer(minLength: 2)
             path
+                .layoutPriority(1)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    /// What the person last asked, so the answer below has its question.
+    /// While a turn runs, the box below already shows it.
+    @ViewBuilder
+    private var ask: some View {
+        if !isRunning, let request = digest?.latestRequest ?? process.request, !request.isEmpty {
+            Text(request)
+                .font(.system(size: 13))
+                .foregroundStyle(DeskStyle.text.opacity(0.7))
+                .lineLimit(2)
+                .layoutPriority(1)
+        }
     }
 
     /// The strongest cue for picking the work back up: what it waits on the person for.
@@ -103,12 +139,9 @@ struct DeskRecallCard: View {
         } else if let waiting = digest?.waiting {
             label = waiting.kind == .answer ? DeskText.recallWaitingAnswer : DeskText.recallWaitingAct
             text = waiting.text
-        } else if digest == nil {
-            label = DeskText.recallIdle
-            text = fallbackReply
         } else {
             label = DeskText.recallIdle
-            text = nil
+            text = fallbackReply
         }
         let highlighted = !isRunning && digest?.waiting != nil
         return VStack(alignment: .leading, spacing: 3) {
@@ -119,8 +152,6 @@ struct DeskRecallCard: View {
                 Text(text)
                     .font(.system(size: 15))
                     .foregroundStyle(DeskStyle.text)
-                    .lineLimit(3)
-                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(.horizontal, 11)
@@ -175,24 +206,7 @@ struct DeskRecallCard: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(palette.ink)
                     .lineLimit(2)
-                if let plan = task.goal.userPlan, !plan.items.isEmpty {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(plan.nextStepIndex.map { DeskText.recallNextStep(plan.steps[$0]) } ?? DeskText.recallPlanDone)
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(DeskStyle.text)
-                            .lineLimit(3)
-                            .fixedSize(horizontal: false, vertical: true)
-                        // One mark per step of the person's plan, filled when done.
-                        HStack(spacing: 3) {
-                            ForEach(plan.items.indices, id: \.self) { index in
-                                Capsule()
-                                    .fill(plan.isDone(index) ? palette.ink : DeskStyle.quietInk.opacity(0.25))
-                                    .frame(height: 3)
-                            }
-                        }
-                        .accessibilityHidden(true)
-                    }
-                }
+                planSteps
                 if let decision = digest?.decision {
                     Text(DeskText.recallDecided(decision))
                         .font(.system(size: 12.5))
@@ -200,6 +214,7 @@ struct DeskRecallCard: View {
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                otherConversationRows
                 Spacer(minLength: 0)
                 if let cues = digest?.cues, !cues.isEmpty {
                     Text(cues.joined(separator: "\n"))
@@ -220,6 +235,53 @@ struct DeskRecallCard: View {
         .buttonStyle(AnchorPressButtonStyle())
         .accessibilityHint(DeskText.openTask)
     }
+
+    /// The person's plan around where it stands: the next step clear, the others quiet.
+    @ViewBuilder
+    private var planSteps: some View {
+        if let plan = task.goal.userPlan, !plan.items.isEmpty {
+            let first = max(0, min((plan.nextStepIndex ?? plan.items.count) - 1, plan.items.count - Self.shownSteps))
+            VStack(alignment: .leading, spacing: 5) {
+                ForEach(first..<min(first + Self.shownSteps, plan.items.count), id: \.self) { index in
+                    let isNext = plan.nextStepIndex == index
+                    HStack(alignment: .firstTextBaseline, spacing: 5) {
+                        Image(systemName: plan.isDone(index) ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 10))
+                            .foregroundStyle(plan.isDone(index) || isNext ? palette.ink : DeskStyle.quietInk)
+                        Text(plan.steps[index])
+                            .font(.system(size: isNext ? 13.5 : 12.5, weight: isNext ? .medium : .regular))
+                            .foregroundStyle(isNext ? DeskStyle.text : DeskStyle.quietInk)
+                            .lineLimit(isNext ? 3 : 1)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            }
+        }
+    }
+
+    /// The task's other conversations, the ones that need the person marked.
+    @ViewBuilder
+    private var otherConversationRows: some View {
+        let others = otherConversations
+        if !others.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(others) { other in
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(other.needsRescue ? palette.ink : DeskStyle.quietInk.opacity(0.4))
+                            .frame(width: 5, height: 5)
+                        Text(other.title)
+                            .font(.system(size: 12))
+                            .foregroundStyle(DeskStyle.quietInk)
+                            .lineLimit(1)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            }
+        }
+    }
+
+    private static let shownSteps = 5
 }
 
 /// Short facts as chips, wrapping onto a second row when they must.

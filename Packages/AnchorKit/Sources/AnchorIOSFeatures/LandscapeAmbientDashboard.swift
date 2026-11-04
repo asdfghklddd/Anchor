@@ -134,12 +134,10 @@ struct LandscapeAmbientDashboard: View {
     static let canvas = CGSize(width: 874, height: 402)
     /// The Dynamic Island takes one edge when the phone turns; its pill reaches
     /// about 50 pt in, so the left column and the library keep 58 pt clear on both sides.
+    /// The clock starts on this same edge, in line with the pet's room, and sits above the island's height.
     private static let islandGutter: CGFloat = 58
     /// How far the left column moves right from the Figma's 15 pt margin.
     private static let leftShift = islandGutter - 15
-    /// The clock and date sit above the island's height, so they can come 5% of
-    /// the screen further left than the pet, clear of the first folder's glow.
-    private static let clockShift = leftShift - canvas.width * 0.05
     /// The library starts 10 pt past the pet's room.
     private static let libraryX = islandGutter + CGFloat(DeskScene.columns) * DeskPet.pixel + 10
     private static let ink = DeskStyle.ink
@@ -149,18 +147,20 @@ struct LandscapeAmbientDashboard: View {
     /// below them, how current the copy is at the foot, the folders on the right.
     private func desk(now: Date) -> some View {
         ZStack(alignment: .topLeading) {
-            DeskClockText(text: Self.time(now), color: Self.ink)
-                .accessibilityIdentifier("ambient.time")
-                .offset(x: 27 + Self.clockShift, y: 41)
-            HStack(spacing: 12) {
-                Text(now.formatted(.dateTime.weekday(.wide).locale(AnchorStrings.interfaceLocale)))
-                Text(now.formatted(.dateTime.month().day().locale(AnchorStrings.interfaceLocale)))
+            // The date ends where the clock ends, however wide its digits are.
+            // A little under the Figma's 47 pt, so the widest time ("04:00") still clears the first folder.
+            VStack(alignment: .trailing, spacing: 18) {
+                DeskClockText(text: Self.time(now), capHeight: 44, color: Self.ink)
+                    .accessibilityIdentifier("ambient.time")
+                HStack(spacing: 12) {
+                    Text(now.formatted(.dateTime.weekday(.wide).locale(AnchorStrings.interfaceLocale)))
+                    Text(now.formatted(.dateTime.month().day().locale(AnchorStrings.interfaceLocale)))
+                }
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Self.ink)
+                .lineLimit(1)
             }
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(Self.ink)
-            .lineLimit(1)
-            .frame(width: 242, alignment: .trailing)
-            .offset(x: Self.clockShift, y: 103)
+            .offset(x: Self.islandGutter, y: 41)
             if petKind != .off {
                 DeskPet(kind: petKind, context: .of(tasks), signals: petSignals)
                     .frame(width: CGFloat(DeskScene.columns) * DeskPet.pixel)

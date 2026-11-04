@@ -242,6 +242,40 @@ struct AnchorTourTests {
         #expect(!TourReadAlong(heard: "hello there", line: "Add dark mode to the app").isEnough)
     }
 
+    /// The line lights as far as the voice has reached: never ahead of it from letters
+    /// found further along, and it only moves forward as more is said.
+    @Test func aLineLightsOnlyAsFarAsTheVoice() {
+        let line = "First list the color variables, then replace the hard-coded colors"
+        #expect(TourReadAlong(heard: "First", line: line).lit == 5)
+        #expect(TourReadAlong(heard: "First list", line: line).lit == 10)
+        var lit = 0
+        var said = ""
+        for chunk in SpeechInputController.spokenChunks(of: line) {
+            said += chunk
+            let now = TourReadAlong(heard: said, line: line).lit
+            #expect(now >= lit)
+            #expect(now <= said.count + 1)
+            lit = now
+        }
+        #expect(lit == line.count)
+    }
+
+    /// Few tasks take the room from the empty slots; the library's width never changes.
+    @Test func fewTasksWidenAndEmptySlotsNarrow() {
+        typealias Metrics = DeskTaskLibrary.Metrics
+        for tasks in 1...2 {
+            let widths = DeskLibraryWidths(tasks: tasks)
+            #expect(widths.folder > Metrics.folder.width && widths.empty < Metrics.folder.width)
+            let total = CGFloat(tasks) * widths.folder + CGFloat(Metrics.slots - tasks) * widths.empty
+                + Metrics.folderSpacing * CGFloat(Metrics.slots - 1)
+            #expect(total == Metrics.width)
+        }
+        for tasks in [0, 3] {
+            #expect(DeskLibraryWidths(tasks: tasks).folder == Metrics.folder.width)
+            #expect(DeskLibraryWidths(tasks: tasks).empty == Metrics.folder.width)
+        }
+    }
+
     /// The voice is off in the tour for now; the engine stays ready for a character.
     @Test func thePetSpeaksInTheShapeOfTheWords() {
         let chinese = TourBabble.syllables(of: "妈麻马骂")

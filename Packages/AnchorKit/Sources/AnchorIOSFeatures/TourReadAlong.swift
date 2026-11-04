@@ -29,24 +29,17 @@ struct TourReadAlong: Equatable {
                     ? table[i - 1][j - 1] + 1 : max(table[i - 1][j], table[i][j - 1])
             }
         }
-        var furthest = -1
-        var i = said.count, j = goal.count
-        while i > 0, j > 0 {
-            if said[i - 1] == goal[j - 1] {
-                furthest = max(furthest, j - 1)
-                i -= 1
-                j -= 1
-            } else if table[i - 1][j] >= table[i][j - 1] {
-                i -= 1
-            } else {
-                j -= 1
-            }
-        }
-        heard = Double(table[said.count][goal.count]) / Double(goal.count)
-        guard furthest >= 0 else {
+        let best = table[said.count][goal.count]
+        heard = Double(best) / Double(goal.count)
+        guard best > 0 else {
             lit = 0
             return
         }
+        // The voice has reached the shortest start of the line that holds all of
+        // that run, never the same letters found further along, and it can't be
+        // far ahead of how much was said.
+        let reached = (1...goal.count).first { table[said.count][$0] == best } ?? goal.count
+        let furthest = min(reached, said.count + Self.slack) - 1
         // An English word lights whole; the punctuation after it comes along.
         var end = wanted[furthest] + 1
         if !Self.isIdeograph(characters[end - 1]) {
@@ -58,6 +51,9 @@ struct TourReadAlong: Equatable {
         while end < characters.count, characters[end].isPunctuation { end += 1 }
         lit = end
     }
+
+    /// How many characters a misheard or skipped word may put the voice ahead of what was said.
+    private static let slack = 8
 
     /// Enough of the line heard while the person is still talking.
     var isRead: Bool { heard >= 0.6 }

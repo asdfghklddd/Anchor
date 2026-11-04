@@ -54,6 +54,8 @@ struct DeskTaskLibrary: View {
     @State private var recall: Recall?
     /// How far the open card is being swiped: down closes it, up sends it to the Mac.
     @State private var recallSwipe: CGFloat = 0
+    /// The card is on its way to the Mac: it flies off the top before it goes.
+    @State private var recallFlying = false
     @State private var recallNotice: String?
     @State private var sentToMac = 0
     @Environment(\.openConversationOnMac) private var openOnMac
@@ -65,6 +67,9 @@ struct DeskTaskLibrary: View {
     private static let recallSwipeDistance: CGFloat = 70
     private static let recallFling: CGFloat = 220
     private static let recallPop = Animation.spring(response: 0.42, dampingFraction: 0.66)
+    private static let recallFlightSeconds = 0.34
+    /// Slow to leave, then gone: it picks up speed all the way off the top.
+    private static let recallFlight = Animation.timingCurve(0.35, 0.1, 0.85, 0.5, duration: recallFlightSeconds)
 
     /// Figma metrics, in points on the 874 × 402 desk. The folders are narrower
     /// than the Figma so the library clears the Dynamic Island on either edge.
@@ -84,6 +89,9 @@ struct DeskTaskLibrary: View {
     }
 
     private static let slide = Animation.spring(response: 0.44, dampingFraction: 0.82)
+    private var widths: DeskLibraryWidths { DeskLibraryWidths(tasks: tasks.count) }
+    private var cardWidth: CGFloat { widths.folder - Metrics.cardInset * 2 }
+    private var isWide: Bool { widths.folder > Metrics.folder.width }
 
     // Accessibility sizes list everything at these sizes instead.
     private var nameSize: CGFloat { max(17, nameScaled) }
@@ -116,7 +124,7 @@ struct DeskTaskLibrary: View {
                 .scrollClipDisabled(tasks.count <= Metrics.slots)
                 .scrollIndicators(.hidden)
                 .frame(width: Metrics.width, height: Metrics.folder.height, alignment: .topLeading)
-                .opacity(recall == nil ? 1 : 0.35)
+                .opacity(recall == nil || recallFlying ? 1 : 0.35)
                 .overlay { recallLayer }
             }
         }
@@ -149,11 +157,11 @@ struct DeskTaskLibrary: View {
             }
             .padding(.horizontal, Metrics.cardInset)
             .padding(.top, Metrics.tab)
-            .frame(width: Metrics.folder.width, height: Metrics.folder.height, alignment: .topLeading)
+            .frame(width: widths.folder, height: Metrics.folder.height, alignment: .topLeading)
             // The cards cast onto each other; their shadows never muddy the water outside.
             .clipShape(DeskFolderShape(tabWidth: tabWidths[task.id] ?? 72, tabHeight: Metrics.tab, radius: Metrics.radius))
         }
-        .frame(width: Metrics.folder.width, height: Metrics.folder.height, alignment: .topLeading)
+        .frame(width: widths.folder, height: Metrics.folder.height, alignment: .topLeading)
         .accessibilityElement(children: .contain)
     }
 
@@ -180,7 +188,7 @@ struct DeskTaskLibrary: View {
                 .contentShape(.rect)
         }
         .buttonStyle(AnchorPressButtonStyle())
-        .frame(maxWidth: Metrics.folder.width, alignment: .leading)
+        .frame(maxWidth: widths.folder, alignment: .leading)
         .accessibilityLabel(task.goal.title)
         .accessibilityHint(DeskText.openTask)
         .accessibilityIdentifier("hosted.task.\(task.id)")
@@ -202,7 +210,7 @@ struct DeskTaskLibrary: View {
                         : .asymmetric(insertion: .offset(y: 36).combined(with: .opacity), removal: .opacity))
             }
         }
-        .frame(width: Metrics.card.width, alignment: .top)
+        .frame(width: cardWidth, alignment: .top)
         // Cards move when the stack's order changes, not on every refresh.
         .animation(reduceMotion ? .easeOut(duration: 0.16) : Self.slide, value: stack.cards.map(\.conversationKey))
     }
@@ -235,7 +243,7 @@ struct DeskTaskLibrary: View {
             .padding(.leading, 12)
             .padding(.trailing, 4)
             .padding(.top, 10)
-            .frame(width: Metrics.card.width, height: Metrics.card.height, alignment: .topLeading)
+            .frame(width: cardWidth, height: Metrics.card.height, alignment: .topLeading)
             .overlay(alignment: .topTrailing) {
                 if isRed {
                     DeskCardAnchor()
@@ -279,13 +287,16 @@ struct DeskTaskLibrary: View {
                 .lineSpacing(2.3)
                 .foregroundStyle(DeskStyle.text)
                 .lineLimit(4)
-                .frame(width: 130, height: 61, alignment: .topLeading)
+                // Three folders line their replies up; a wide one lets the reply follow on.
+                .frame(maxWidth: .infinity, minHeight: isWide ? nil : 61, maxHeight: 61, alignment: .topLeading)
+                .padding(.trailing, 12)
             Text(reply(for: process))
                 .font(.system(size: 10))
                 .lineSpacing(2)
                 .foregroundStyle(DeskFolderPalette.replyInk)
                 .lineLimit(6)
-                .frame(width: 124, height: 84, alignment: .topLeading)
+                .frame(maxWidth: .infinity, minHeight: isWide ? nil : 84, maxHeight: isWide ? nil : 84, alignment: .topLeading)
+                .padding(.trailing, 18)
                 .padding(.top, 9)
         }
         .padding(.top, 3)
@@ -296,7 +307,7 @@ struct DeskTaskLibrary: View {
             .font(.system(size: 11))
             .foregroundStyle(DeskFolderPalette.replyInk)
             .padding(12)
-            .frame(width: Metrics.card.width, height: Metrics.card.height, alignment: .topLeading)
+            .frame(width: cardWidth, height: Metrics.card.height, alignment: .topLeading)
             .background {
                 RoundedRectangle(cornerRadius: Metrics.radius, style: .continuous)
                     .fill(DeskStyle.card)
@@ -310,13 +321,16 @@ struct DeskTaskLibrary: View {
             RoundedRectangle(cornerRadius: Metrics.radius, style: .continuous)
                 .strokeBorder(DeskFolderPalette.replyInk, style: StrokeStyle(lineWidth: 3, dash: [8, 6]))
             Text(DeskText.noOtherTask)
-                .font(.system(size: 14, weight: .bold))
+                .font(.system(size: widths.empty < Metrics.folder.width ? 13 : 14, weight: .bold))
                 .foregroundStyle(DeskFolderPalette.replyInk)
+                .multilineTextAlignment(.center)
+                .minimumScaleFactor(0.8)
+                .padding(.horizontal, 6)
         }
-        .frame(width: Metrics.empty.width, height: Metrics.empty.height)
+        .frame(width: widths.empty - (Metrics.folder.width - Metrics.empty.width), height: Metrics.empty.height)
         .padding(.leading, Metrics.empty.minX)
         .padding(.top, Metrics.empty.minY)
-        .frame(width: Metrics.folder.width, height: Metrics.folder.height, alignment: .topLeading)
+        .frame(width: widths.empty, height: Metrics.folder.height, alignment: .topLeading)
         .accessibilityElement(children: .combine)
     }
 
@@ -399,12 +413,13 @@ struct DeskTaskLibrary: View {
                     .tourSpot(.recallCard)
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("desk.recall")
+                    .scaleEffect(recallFlying ? 0.84 : 1)
                     .offset(y: recallSwipe)
                     .gesture(recallSwipeGesture)
                     .accessibilityAction(named: DeskText.recallOpenOnMac) { sendRecallToMac() }
                     .accessibilityAction(.escape) { closeRecall() }
                     .transition(reduceMotion ? .opacity
-                        : .scale(scale: 0.3, anchor: UnitPoint(x: (CGFloat(recall.folder) + 0.5) / CGFloat(Metrics.slots), y: 0.3))
+                        : .scale(scale: 0.3, anchor: UnitPoint(x: widths.middleFraction(ofFolder: recall.folder), y: 0.3))
                             .combined(with: .opacity))
             }
             .id(recall.conversation)
@@ -468,22 +483,42 @@ struct DeskTaskLibrary: View {
 
     /// The card flies up toward the Mac and the conversation opens there.
     private func sendRecallToMac() {
-        guard let recall else { return }
+        guard let recall, !recallFlying else { return }
         rememberSeen(recall)
         let conversation = recall.conversation
         AnchorSound.shared.play(.sendUp)
-        withAnimation(reduceMotion ? .easeOut(duration: 0.16) : .easeIn(duration: 0.22)) {
-            recallSwipe = reduceMotion ? 0 : -Metrics.folder.height * 1.4
-            self.recall = nil
+        if reduceMotion {
+            withAnimation(.easeOut(duration: 0.16)) {
+                recallSwipe = 0
+                self.recall = nil
+            }
+            tour?.closedTask(sentToMac: true)
+        } else {
+            withAnimation(Self.recallFlight) {
+                recallFlying = true
+                recallSwipe = -Metrics.folder.height * 1.25
+            }
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(Self.recallFlightSeconds))
+                // Already off the screen, so it goes without a transition back to its folder.
+                var quietly = Transaction()
+                quietly.disablesAnimations = true
+                withTransaction(quietly) {
+                    self.recall = nil
+                    recallSwipe = 0
+                    recallFlying = false
+                }
+                tour?.closedTask(sentToMac: true)
+            }
         }
-        tour?.closedTask(sentToMac: true)
         Task { @MainActor in
             let opened = tour != nil ? true : await openOnMac(conversation)
             if opened { sentToMac += 1 }
+            // The word comes once the card has left, never over it.
+            if !reduceMotion { try? await Task.sleep(for: .seconds(Self.recallFlightSeconds)) }
             withAnimation(.easeOut(duration: 0.2)) {
                 recallNotice = opened ? DeskText.recallOpened : DeskText.recallNotConnected
             }
-            recallSwipe = 0
             try? await Task.sleep(for: .seconds(1.8))
             withAnimation(.easeOut(duration: 0.3)) { recallNotice = nil }
         }
@@ -531,6 +566,31 @@ struct DeskTaskLibrary: View {
                 }
             }
         }
+    }
+}
+
+/// How the library's width is shared. Three tasks, or none, take equal slots;
+/// with one or two, the empty slots narrow and the tasks get the room.
+struct DeskLibraryWidths: Equatable {
+    let folder: CGFloat
+    let empty: CGFloat
+
+    init(tasks: Int) {
+        typealias Metrics = DeskTaskLibrary.Metrics
+        empty = switch tasks {
+        case 1: 72
+        case 2: 84
+        default: Metrics.folder.width
+        }
+        let emptySlots = max(0, Metrics.slots - tasks)
+        folder = (1...2).contains(tasks)
+            ? (Metrics.width - CGFloat(emptySlots) * empty - Metrics.folderSpacing * CGFloat(Metrics.slots - 1)) / CGFloat(tasks)
+            : Metrics.folder.width
+    }
+
+    /// Where a folder's middle falls across the library, 0 to 1.
+    func middleFraction(ofFolder index: Int) -> CGFloat {
+        (CGFloat(index) * (folder + DeskTaskLibrary.Metrics.folderSpacing) + folder / 2) / DeskTaskLibrary.Metrics.width
     }
 }
 

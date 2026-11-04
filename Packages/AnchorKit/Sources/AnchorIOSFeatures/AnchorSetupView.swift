@@ -223,6 +223,8 @@
     /// The line lights as far as the voice has reached.
     private func hear(_ transcript: String, reading: AnchorSetupField) {
       let heard = TourReadAlong(heard: transcript, line: Self.line(for: reading))
+      // The recognizer revises itself as it goes; what was lit stays lit until the line starts over.
+      guard transcript.isEmpty || heard.lit >= self.heard.lit else { return }
       withAnimation(AnchorMotion.micro) { self.heard = heard }
     }
 

@@ -1883,23 +1883,6 @@
         }
       }
     },
-    "desk.recall.next-step" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Next: %@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "下一步：%@"
-          }
-        }
-      }
-    },
     "desk.recall.not-connected" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1947,23 +1930,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已在电脑上打开"
-          }
-        }
-      }
-    },
-    "desk.recall.plan-done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every step is done"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "步骤都做完了"
           }
         }
       }

@@ -54,7 +54,6 @@ public enum DeskText {
     public static let recallWaitingAct = AnchorStrings.value("desk.recall.waiting.act", default: "Waiting for you to do")
     public static let recallRunning = AnchorStrings.value("desk.recall.running", default: "Still working")
     public static let recallIdle = AnchorStrings.value("desk.recall.idle", default: "Nothing waits on you")
-    public static let recallPlanDone = AnchorStrings.value("desk.recall.plan-done", default: "Every step is done")
     public static let recallNew = AnchorStrings.value("desk.recall.new", default: "New")
     public static let recallOpened = AnchorStrings.value("desk.recall.opened", default: "Opened on the Mac")
     public static let recallNotConnected = AnchorStrings.value("desk.recall.not-connected", default: "The Mac isn't connected")
@@ -62,10 +61,6 @@ public enum DeskText {
     public static let recallClose = AnchorStrings.value("desk.recall.close", default: "Close")
     public static let recallHint = AnchorStrings.value(
         "desk.recall.hint", default: "Swipe up to open it on the Mac, down to close")
-
-    public static func recallNextStep(_ step: String) -> String {
-        String.localizedStringWithFormat(AnchorStrings.value("desk.recall.next-step", default: "Next: %@"), step)
-    }
 
     public static func recallDecided(_ decision: String) -> String {
         String.localizedStringWithFormat(AnchorStrings.value("desk.recall.decided", default: "You decided: %@"), decision)

@@ -39,7 +39,7 @@ enum AnchorSoundEffect: CaseIterable, Sendable {
     case cardTap
     /// A card on the desk opens.
     case cardOpen
-    /// A card flies up to the Mac.
+    /// A card flies up to the Mac: a quick rising swoosh.
     case sendUp
 }
 
@@ -245,7 +245,7 @@ enum AnchorSynth {
         case .failed: normalized(mix(tone(392, length: 0.26, decay: 0.09), tone(311, length: 0.4, decay: 0.14), at: 0.13), peak: 0.34)
         case .cardTap: normalized(mix(thud(240, length: 0.06, decay: 0.022), rustle(length: 0.03, decay: 0.01, smoothing: 0.25, seed: 5)), peak: 0.18)
         case .cardOpen: normalized(mix(air(length: 0.14, from: 0.08, to: 0.3), sweep(from: 420, to: 760, length: 0.1, loudness: 0.35)), peak: 0.2)
-        case .sendUp: normalized(mix(air(length: 0.3, from: 0.04, to: 0.6), bell([1_568], length: 0.42, decay: 0.14), at: 0.2), peak: 0.36)
+        case .sendUp: normalized(swoosh(length: 0.3), peak: 0.46)
         }
     }
 
@@ -354,6 +354,21 @@ enum AnchorSynth {
             let x = Double(i) / Double(count)
             smooth += (noise.next() - smooth) * (from + (to - from) * x)
             return Float(smooth * sin(.pi * x) * 1.6)
+        }
+    }
+
+    /// Something leaving fast: a tone gliding up inside rising air, swelling late and cut short.
+    private static func swoosh(length: Double) -> [Float] {
+        var noise = Noise(seed: 33)
+        var smooth = 0.0
+        var phase = 0.0
+        let count = Int(length * rate)
+        return (0..<count).map { i in
+            let x = Double(i) / Double(count)
+            phase += 2 * .pi * (300 * pow(5.5, x * x)) / rate
+            smooth += (noise.next() - smooth) * (0.05 + 0.65 * x)
+            let swell = pow(sin(.pi * pow(x, 1.5)), 1.4)
+            return Float((0.6 * sin(phase) + 0.9 * smooth) * swell)
         }
     }
 
