@@ -1,15 +1,30 @@
 import SwiftUI
 
-/// A subtle physical response for card-like controls without delaying navigation.
+/// A physical response to a press, without delaying navigation: it gives quickly
+/// under the finger and springs back when let go.
 public struct AnchorPressButtonStyle: ButtonStyle {
-    @AnchorReducedMotion private var reduceMotion
+    public enum Feel: Sendable {
+        /// Cards and rows: a slight give and nothing to feel, since scrolls often start on them.
+        case card
+        /// Small controls: a clearer press, with a light tap as the finger lands.
+        case control
+    }
 
-    public init() {}
+    @AnchorReducedMotion private var reduceMotion
+    private let feel: Feel
+
+    public init(_ feel: Feel = .card) {
+        self.feel = feel
+    }
 
     public func makeBody(configuration: Configuration) -> some View {
+        let pressed = configuration.isPressed
         configuration.label
-            .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.98)
-            .opacity(configuration.isPressed ? 0.92 : 1)
-            .animation(reduceMotion ? nil : AnchorMotion.press, value: configuration.isPressed)
+            .scaleEffect(reduceMotion || !pressed ? 1 : feel == .card ? 0.98 : 0.9)
+            .opacity(pressed ? 0.92 : 1)
+            .animation(reduceMotion ? nil : pressed ? AnchorMotion.press : AnchorMotion.release, value: pressed)
+            .sensoryFeedback(trigger: pressed) { _, now in
+                now && feel == .control ? .impact(weight: .light, intensity: 0.55) : nil
+            }
     }
 }

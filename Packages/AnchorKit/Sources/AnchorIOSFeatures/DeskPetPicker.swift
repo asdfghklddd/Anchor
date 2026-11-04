@@ -6,13 +6,15 @@ import SwiftUI
 struct DeskPetPicker: View {
     @Binding var selection: DeskPetKind
 
+    @AnchorReducedMotion private var reduceMotion
+
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 4)
 
     var body: some View {
         LazyVGrid(columns: columns, spacing: 10) {
             ForEach(DeskPetKind.allCases) { kind in
                 Button { selection = kind } label: { tile(kind) }
-                    .buttonStyle(.plain)
+                    .buttonStyle(AnchorPressButtonStyle())
                     .accessibilityLabel(kind.title)
                     .accessibilityAddTraits(selection == kind ? .isSelected : [])
                     .accessibilityIdentifier("settings.deskPet.\(kind.rawValue)")
@@ -34,6 +36,9 @@ struct DeskPetPicker: View {
                 }
             }
             .frame(height: 54)
+            // The one chosen stands up a little.
+            .scaleEffect(chosen && !reduceMotion ? 1.08 : 1)
+            .animation(reduceMotion ? nil : AnchorMotion.release, value: chosen)
             Text(kind.title)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(chosen ? AnchorIOSStyle.heading : AnchorIOSStyle.secondaryText)
@@ -49,6 +54,7 @@ struct DeskPetPicker: View {
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(chosen ? AnchorIOSStyle.cyan : AnchorIOSStyle.border, lineWidth: chosen ? 2 : 1)
         }
+        .animation(AnchorMotion.micro, value: chosen)
         .contentShape(.rect(cornerRadius: 14))
     }
 }

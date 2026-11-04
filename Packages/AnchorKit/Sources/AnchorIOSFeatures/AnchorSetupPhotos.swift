@@ -22,12 +22,15 @@ struct AnchorSetupPhotos: View {
                                     .frame(width: 64, height: 64)
                                     .clipShape(.rect(cornerRadius: 10))
                             }
+                            .buttonStyle(AnchorPressButtonStyle())
                             .accessibilityLabel("\(SetupCopy.photo) \(index + 1)")
                             if let remove {
                                 Button { remove(index) } label: {
                                     Image(systemName: "minus.circle")
                                         .frame(width: 44, height: 44)
                                 }
+                                .buttonStyle(AnchorPressButtonStyle(.control))
+                                .foregroundStyle(.tint)
                                 .accessibilityLabel("\(SetupCopy.removePhoto) \(index + 1)")
                             }
                         }

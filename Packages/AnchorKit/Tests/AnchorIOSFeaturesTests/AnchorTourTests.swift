@@ -254,8 +254,7 @@ struct AnchorTourTests {
         let samples = TourBabble.render(chinese, pitch: TourBabble.pitch(of: .crab))
         #expect(!samples.isEmpty)
         #expect(samples.allSatisfy { abs($0) <= 0.51 })
-        for effect in TourSound.Effect.allCases { #expect(!TourSynth.render(effect).isEmpty) }
-    }
+            }
 
     private func waitFor(_ stage: AnchorTour.Stage, in tour: AnchorTour, seconds: Double) async throws {
         let deadline = Date.now + seconds

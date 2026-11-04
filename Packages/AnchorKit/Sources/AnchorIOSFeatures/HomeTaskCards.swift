@@ -172,7 +172,7 @@ private struct HomeSwipeToComplete: ViewModifier {
                     .frame(maxHeight: .infinity)
                     .background(HomeStyle.done, in: .rect(cornerRadius: HomeTaskCard.radius))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(AnchorPressButtonStyle(.control))
                 .opacity(offset < -1 ? 1 : 0)
                 .accessibilityHidden(true)
             }
@@ -214,7 +214,10 @@ private struct HomeSwipeToComplete: ViewModifier {
         }
         Task {
             // If it couldn't be finished, the card comes back.
-            guard !(await onComplete()) else { return }
+            guard !(await onComplete()) else {
+                AnchorSound.shared.play(.taskDone)
+                return
+            }
             withAnimation(reduceMotion ? .easeOut(duration: 0.16) : AnchorMotion.continuity) {
                 completing = false
                 isOpen = false

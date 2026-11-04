@@ -151,7 +151,10 @@ struct ReturnView: View {
     private func present() {
         guard scenePhase == .active, !presented else { return }
         if page == nil { page = tasks.first?.id }
-        if model.claimReturnFeedback() { feedback += 1 }
+        if model.claimReturnFeedback() {
+            feedback += 1
+            AnchorSound.shared.play(.rejoin)
+        }
         withAnimation(reduceMotion ? .easeOut(duration: 0.16) : .spring(duration: 0.42, bounce: 0.2)) {
             presented = true
         }

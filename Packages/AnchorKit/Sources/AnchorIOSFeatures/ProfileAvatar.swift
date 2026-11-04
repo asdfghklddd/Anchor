@@ -55,7 +55,7 @@ struct ProfileAvatarButton: View {
                 }
                 .shadow(color: AnchorPalette.brandDeep.opacity(0.18), radius: 6, y: 3)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AnchorPressButtonStyle(.control))
         .disabled(loading)
         .contextMenu {
             if !avatarData.isEmpty {

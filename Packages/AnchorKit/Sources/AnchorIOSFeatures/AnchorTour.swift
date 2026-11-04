@@ -246,7 +246,7 @@ final class AnchorTour {
     private func sendQuestion() async {
         guard !asked else { return }
         asked = true
-        TourSound.shared.play(.question)
+        AnchorSound.shared.play(.question)
         _ = await model.send(mac.question(now: .now))
     }
 
@@ -375,7 +375,7 @@ final class AnchorTour {
     func end() {
         cancelWork()
         listener?.cancel()
-        TourSound.shared.stop()
+        AnchorSound.shared.stop()
         try? FileManager.default.removeItem(at: storageURL.deletingLastPathComponent())
         AnchoringLog.clearTour()
     }

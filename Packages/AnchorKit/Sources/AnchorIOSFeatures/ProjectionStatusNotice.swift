@@ -55,7 +55,7 @@ struct ProjectionStatusNotice: View {
                     .stroke(AnchorPalette.fluoriteBorder, lineWidth: 1)
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AnchorPressButtonStyle())
         .accessibilityIdentifier("status.connection.notice")
     }
 }

@@ -161,7 +161,7 @@
           }
           .frame(minHeight: 44).contentShape(.rect)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AnchorPressButtonStyle(.control))
         .foregroundStyle(AnchorIOSStyle.action)
         .accessibilityHint(SetupCopy.splitHint)
         .accessibilityIdentifier("setup.steps.preview")

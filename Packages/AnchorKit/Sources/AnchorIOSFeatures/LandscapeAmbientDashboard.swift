@@ -20,6 +20,8 @@ struct LandscapeAmbientDashboard: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AnchorReducedMotion private var reduceMotion
+    /// The tour stages its own arrivals and sounds them itself.
+    @Environment(\.anchorTour) private var tour
     @ScaledMetric(relativeTo: .largeTitle) private var clockScaled: CGFloat = 68
     @ScaledMetric(relativeTo: .body) private var detailScaled: CGFloat = 17
     @ScaledMetric(relativeTo: .title2) private var emptyPromptScaled: CGFloat = 24
@@ -112,9 +114,19 @@ struct LandscapeAmbientDashboard: View {
         let statuses = arrived.compactMap { key in
             tasks.first { $0.id == key.task }?.taskProcesses.first { $0.id == key.process }?.status
         }
-        if statuses.contains(.failed) { petSignals.failures += 1 }
-        else if statuses.contains(.needsDecision) { petSignals.questions += 1 }
-        else { petSignals.results += 1 }
+        // The phone is on its stand and the eyes are elsewhere: news is also heard.
+        let sound: AnchorSound.Effect
+        if statuses.contains(.failed) {
+            petSignals.failures += 1
+            sound = .failed
+        } else if statuses.contains(.needsDecision) {
+            petSignals.questions += 1
+            sound = .question
+        } else {
+            petSignals.results += 1
+            sound = .ding
+        }
+        if tour == nil { AnchorSound.shared.play(sound) }
     }
 
     // MARK: The Figma desk

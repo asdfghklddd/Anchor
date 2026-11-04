@@ -313,6 +313,9 @@
     "After your choice, Anchor will resume the workflow." : {
 
     },
+    "AI runs multithreaded." : {
+
+    },
     "All done" : {
 
     },
@@ -526,9 +529,6 @@
       }
     },
     "Anchor" : {
-
-    },
-    "ANCHOR" : {
 
     },
     "ANCHOR ACTIVE" : {
@@ -15514,21 +15514,6 @@
         }
       }
     },
-    "Trusted device connected" : {
-
-    },
-    "Try again" : {
-
-    },
-    "Turn the phone sideways to go back to the desk" : {
-
-    },
-    "Turn your phone to the left to open the work desk." : {
-
-    },
-    "Unavailable in this build" : {
-
-    },
     "tour.voice.plan" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15562,6 +15547,21 @@
           }
         }
       }
+    },
+    "Trusted device connected" : {
+
+    },
+    "Try again" : {
+
+    },
+    "Turn the phone sideways to go back to the desk" : {
+
+    },
+    "Turn your phone to the left to open the work desk." : {
+
+    },
+    "Unavailable in this build" : {
+
     },
     "unknown" : {
       "localizations" : {
@@ -15799,6 +15799,9 @@
 
     },
     "Your work is still moving" : {
+
+    },
+    "Your work keeps a main thread." : {
 
     },
     "Your work was held safely." : {

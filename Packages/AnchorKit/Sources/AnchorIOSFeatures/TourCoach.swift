@@ -640,7 +640,7 @@ struct TourFirstDrop: View {
             start = .now
             try? await Task.sleep(for: .seconds(Self.contact))
             guard !Task.isCancelled else { return }
-            TourSound.shared.play(.anchored)
+            AnchorSound.shared.play(.anchored)
             landed += 1
             try? await Task.sleep(for: .seconds(0.35))
             onLanded()
@@ -1423,15 +1423,15 @@ struct TourAwayDial: View {
         .onChange(of: tour.awayMinutes) { passed, now in
             if passed < AnchorTour.linkBreaksAt, now >= AnchorTour.linkBreaksAt {
                 breakAt = .now
-                TourSound.shared.play(.snap)
+                AnchorSound.shared.play(.snap)
             } else if passed < AnchorTour.awayAt, now >= AnchorTour.awayAt {
-                TourSound.shared.play(.away)
+                AnchorSound.shared.play(.away)
             }
         }
         .onChange(of: isBack) { _, back in
             guard back else { return }
             backAt = .now
-            TourSound.shared.play(.rejoin)
+            AnchorSound.shared.play(.rejoin)
         }
     }
 

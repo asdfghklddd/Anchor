@@ -44,7 +44,7 @@ public struct AnchorIOSRootView: View {
     }
 
     public var body: some View {
-        AnchorLaunchGate {
+        AnchorLaunchGate(onImpact: { AnchorSound.shared.play(.launchSplash) }) {
             ZStack {
                 if let tour {
                     AnchorWorkspaceView(model: tour.model, recoveryReviewInterval: recoveryReviewInterval,

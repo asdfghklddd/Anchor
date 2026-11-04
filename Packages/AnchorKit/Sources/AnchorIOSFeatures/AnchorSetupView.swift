@@ -239,7 +239,7 @@
       // After the microphone has let go of the audio session.
       Task {
         try? await Task.sleep(for: .seconds(0.3))
-        TourSound.shared.play(.ding)
+        AnchorSound.shared.play(.ding)
       }
     }
 

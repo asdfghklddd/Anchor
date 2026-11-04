@@ -20,7 +20,7 @@ struct AnchorSetupHeader: View {
                     .background(AnchorSetupStyle.controlSurface, in: .circle)
                     .frame(width: 44, height: 44).contentShape(.rect)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(AnchorPressButtonStyle(.control))
             .foregroundStyle(AnchorSetupStyle.ink)
             .accessibilityLabel(L10n.close)
             .accessibilityIdentifier("setup.close.button")

@@ -12,10 +12,14 @@ public struct AnchorLaunchGate<Content: View>: View {
     @State private var isPresentingSplash = true
     @State private var startedAt = Date.now
     @State private var skippedAt: Double?
+    @State private var impacts = 0
 
+    private let onImpact: @MainActor () -> Void
     private let content: Content
 
-    public init(@ViewBuilder content: () -> Content) {
+    /// `onImpact` runs when the anchor hits the water, unless the scene was skipped first.
+    public init(onImpact: @escaping @MainActor () -> Void = {}, @ViewBuilder content: () -> Content) {
+        self.onImpact = onImpact
         self.content = content()
     }
 
@@ -37,6 +41,8 @@ public struct AnchorLaunchGate<Content: View>: View {
         // so a slow cold start never skips the opening beats.
         .onAppear { startedAt = .now }
         .task(id: timing) { await dismissWhenFinished() }
+        .task { await markImpact() }
+        .sensoryFeedback(.impact(flexibility: .soft, intensity: 0.7), trigger: impacts)
     }
 
     private var timing: HarborLaunchChoreography.Timing {
@@ -46,6 +52,19 @@ public struct AnchorLaunchGate<Content: View>: View {
     private func skip() {
         guard skippedAt == nil else { return }
         skippedAt = Date.now.timeIntervalSince(startedAt)
+    }
+
+    /// The anchor's splash is felt and heard. Under reduced motion nothing falls.
+    @MainActor
+    private func markImpact() async {
+        guard !reduceMotion else { return }
+        let remaining = HarborLaunchChoreography.impactTime - Date.now.timeIntervalSince(startedAt)
+        if remaining > 0 {
+            do { try await Task.sleep(for: .seconds(remaining)) } catch { return }
+        }
+        guard skippedAt == nil else { return }
+        impacts += 1
+        onImpact()
     }
 
     @MainActor

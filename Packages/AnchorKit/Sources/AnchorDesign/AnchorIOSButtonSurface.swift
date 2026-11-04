@@ -18,8 +18,13 @@ struct AnchorIOSButtonSurface: View {
                 in: .rect(cornerRadius: AnchorIOSStyle.cardRadius)
             )
             .opacity(configuration.isPressed ? 0.82 : isEnabled ? 1 : 0.62)
-            .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.98)
-            .animation(reduceMotion ? nil : AnchorMotion.press, value: configuration.isPressed)
+            .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.97)
+            .animation(reduceMotion ? nil : configuration.isPressed ? AnchorMotion.press : AnchorMotion.release,
+                       value: configuration.isPressed)
+            // A main action is felt as the finger lands.
+            .sensoryFeedback(trigger: configuration.isPressed) { _, now in
+                now ? .impact(weight: .light, intensity: 0.7) : nil
+            }
     }
 }
 #endif

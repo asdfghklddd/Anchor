@@ -100,7 +100,7 @@ private struct ProfileNameField: View {
                             .foregroundStyle(AnchorPalette.secondaryText)
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(AnchorPressButtonStyle(.control))
                 .accessibilityLabel(name)
                 .accessibilityHint(AnchorStrings.value("profile.name.edit", default: "Edit name"))
                 .accessibilityIdentifier("profile.name.button")
@@ -361,7 +361,7 @@ struct ProfileView: View {
                         .padding(.vertical, 11)
                         .contentShape(.rect)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(AnchorPressButtonStyle())
                     if index < min(2, (projection.session?.records.count ?? 1) - 1) {
                         Divider().padding(.leading, 45)
                     }
@@ -419,7 +419,7 @@ struct HistoryView: View {
                 Button { onOpen(session.id) } label: {
                     HistoryRow(session: session)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(AnchorPressButtonStyle())
                 .accessibilityIdentifier("history.row.\(session.id.uuidString)")
                 .listRowBackground(AnchorIOSStyle.surface)
             }

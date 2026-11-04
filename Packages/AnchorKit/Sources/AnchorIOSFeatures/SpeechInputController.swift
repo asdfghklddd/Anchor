@@ -24,6 +24,11 @@ final class SpeechInputController {
     // the user has cancelled and started a new recording.
     private nonisolated(unsafe) static var activeAudioSessionID: UUID?
 
+    /// The microphone has the audio session: nothing else may touch it now.
+    nonisolated static var holdsAudioSession: Bool {
+        audioSessionQueue.sync { activeAudioSessionID != nil }
+    }
+
     private(set) var transcript = ""
     private(set) var isRecording = false
     private(set) var isRequestingPermission = false

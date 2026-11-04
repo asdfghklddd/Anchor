@@ -24,6 +24,8 @@ struct HarborAnchorButton: View {
     let action: () -> Void
 
     @AnchorReducedMotion private var reduceMotion
+    /// The tour's first drop has its own fanfare.
+    @Environment(\.anchorTour) private var tour
     @State private var haptics = AnchorDropHaptics()
 
     private static let disc: CGFloat = 75
@@ -49,11 +51,12 @@ struct HarborAnchorButton: View {
             }
             .contentShape(Circle())
         }
-        .buttonStyle(AnchorPressButtonStyle())
+        .buttonStyle(AnchorPressButtonStyle(.control))
         .accessibilityLabel(L10n.establishAnchor)
         .accessibilityIdentifier("anchor.note.button")
         .onChange(of: drops) { _, _ in
             if reduceMotion { haptics.playCatch() } else { haptics.playDrop(after: AnchorDrop.contact) }
+            if tour == nil { AnchorSound.shared.play(.drop, after: reduceMotion ? 0 : AnchorDrop.contact) }
         }
     }
 

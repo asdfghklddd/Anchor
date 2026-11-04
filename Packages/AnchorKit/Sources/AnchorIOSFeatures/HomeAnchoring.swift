@@ -194,7 +194,7 @@ struct HomeAnchoringPanel: View {
             .padding(.horizontal, 12)
             .contentShape(.rect)
         }
-        .buttonStyle(AnchorPressButtonStyle())
+        .buttonStyle(AnchorPressButtonStyle(.control))
         .accessibilityIdentifier("home.anchoring.goal")
     }
 }

@@ -368,6 +368,7 @@ struct DeskTaskLibrary: View {
         picks[task.id] = TaskConversationStack.Pick(conversation: process.conversationKey, at: .now)
         guard !reduceMotion else {
             landings += 1
+            AnchorSound.shared.play(.cardTap)
             return
         }
         lifts[process.id, default: 0] += 1
@@ -375,6 +376,7 @@ struct DeskTaskLibrary: View {
             // The tap comes when the card lands, not when it leaves.
             try? await Task.sleep(for: .milliseconds(300))
             landings += 1
+            AnchorSound.shared.play(.cardTap)
         }
     }
 
@@ -449,6 +451,7 @@ struct DeskTaskLibrary: View {
         recallSwipe = 0
         withAnimation(reduceMotion ? .easeOut(duration: 0.16) : Self.recallPop) { recall = next }
         landings += 1
+        AnchorSound.shared.play(.cardOpen)
         tour?.opened(task.id)
     }
 
@@ -468,6 +471,7 @@ struct DeskTaskLibrary: View {
         guard let recall else { return }
         rememberSeen(recall)
         let conversation = recall.conversation
+        AnchorSound.shared.play(.sendUp)
         withAnimation(reduceMotion ? .easeOut(duration: 0.16) : .easeIn(duration: 0.22)) {
             recallSwipe = reduceMotion ? 0 : -Metrics.folder.height * 1.4
             self.recall = nil

@@ -55,6 +55,7 @@ struct AnchorSavedPlan: View {
                 // The bounce and the haptic land on the same frame.
                 bounces[pendingCheck, default: 0] += 1
                 savedChecks += 1
+                AnchorSound.shared.play(done.count == plan.items.count ? .planDone : .step)
             }
             .sheet(isPresented: $editing) {
                 if let onEditSteps { AnchorPlanEditor(plan: plan, onSave: onEditSteps) }

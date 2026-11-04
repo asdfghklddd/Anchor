@@ -67,7 +67,7 @@ struct HarborTopBar: View {
         Button(action: onProfile) {
             ProfileAvatar(size: 47)
         }
-        .buttonStyle(AnchorPressButtonStyle())
+        .buttonStyle(AnchorPressButtonStyle(.control))
         .accessibilityLabel(L10n.profile)
         .accessibilityIdentifier("topbar.profile.button")
     }
@@ -105,7 +105,7 @@ struct HarborTopBar: View {
             .frame(minWidth: 44, minHeight: 44, alignment: .leading)
             .contentShape(Rectangle())
         }
-        .buttonStyle(AnchorPressButtonStyle())
+        .buttonStyle(AnchorPressButtonStyle(.control))
         .accessibilityIdentifier("workspace.connection.action")
     }
 
@@ -138,16 +138,18 @@ struct HarborTopBar: View {
 
     private var settingsButton: some View {
         Button(action: onSettings) {
+            // The whole disc is the button: it presses as one and all of it answers a tap.
             Image(systemName: "gearshape")
                 .font(.body.bold())
                 .frame(width: 18, height: 18)
+                .foregroundStyle(AnchorIOSStyle.action)
+                .frame(width: 44, height: 44)
+                .background(AnchorIOSStyle.surface, in: .circle)
+                .overlay { Circle().strokeBorder(AnchorIOSStyle.border, lineWidth: 1) }
+                .contentShape(.circle)
+                .shadow(color: AnchorIOSStyle.heading.opacity(0.08), radius: 6, y: 3)
         }
-        .foregroundStyle(AnchorIOSStyle.action)
-        .frame(width: 44, height: 44)
-        .background(AnchorIOSStyle.surface, in: .circle)
-        .overlay { Circle().strokeBorder(AnchorIOSStyle.border, lineWidth: 1) }
-        .shadow(color: AnchorIOSStyle.heading.opacity(0.08), radius: 6, y: 3)
-        .buttonStyle(AnchorPressButtonStyle())
+        .buttonStyle(AnchorPressButtonStyle(.control))
         .accessibilityLabel(L10n.settings)
         .accessibilityIdentifier("topbar.settings.button")
     }
