@@ -37,8 +37,6 @@ enum AnchorSoundEffect: CaseIterable, Sendable {
     case failed
     /// A card on the desk lands in front.
     case cardTap
-    /// A card on the desk opens.
-    case cardOpen
     /// A card flies up to the Mac: a quick rising swoosh.
     case sendUp
 }
@@ -244,7 +242,6 @@ enum AnchorSynth {
                                        bell([1_319], length: 0.5, decay: 0.18), at: 0.2), peak: 0.4)
         case .failed: normalized(mix(tone(392, length: 0.26, decay: 0.09), tone(311, length: 0.4, decay: 0.14), at: 0.13), peak: 0.34)
         case .cardTap: normalized(mix(thud(240, length: 0.06, decay: 0.022), rustle(length: 0.03, decay: 0.01, smoothing: 0.25, seed: 5)), peak: 0.18)
-        case .cardOpen: normalized(mix(air(length: 0.14, from: 0.08, to: 0.3), sweep(from: 420, to: 760, length: 0.1, loudness: 0.35)), peak: 0.2)
         case .sendUp: normalized(swoosh(length: 0.3), peak: 0.46)
         }
     }

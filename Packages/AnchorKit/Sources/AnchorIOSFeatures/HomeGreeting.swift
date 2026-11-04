@@ -101,6 +101,8 @@ struct HomeGreeting: View {
 /// answers they get on the desk.
 struct HomePet: View {
     let tasks: [AnchorSession]
+    /// False for a second view of the pet over the home, which already lives its day.
+    var lives = true
     @AppStorage(DeskPetKind.defaultsKey, store: ProfilePreferences.store) private var kind = DeskPetKind.crab
     @AnchorReducedMotion private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
@@ -161,6 +163,7 @@ struct HomePet: View {
     /// Eight steps a second; with reduced motion only time away is lived,
     /// for the right still pose.
     private func live() async {
+        guard lives else { return }
         guard !reduceMotion else {
             life.settle(now: .now)
             return

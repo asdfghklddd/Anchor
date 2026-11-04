@@ -20,7 +20,7 @@ struct AnchorSoundTests {
 
         #expect(peak(.cardTap) < peak(.step) && peak(.step) < peak(.ding))
         #expect(peak(.launchSplash) <= 0.3)
-        #expect(seconds(.cardTap) < 0.1 && seconds(.step) < 0.3 && seconds(.cardOpen) < 0.2)
+        #expect(seconds(.cardTap) < 0.1 && seconds(.step) < 0.3)
         #expect(seconds(.launchSplash) < 0.5 && seconds(.drop) < 1)
     }
 

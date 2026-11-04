@@ -66,6 +66,8 @@ struct DeskTaskLibrary: View {
     /// A swipe this far, or flung this fast, closes the card or sends it.
     private static let recallSwipeDistance: CGFloat = 70
     private static let recallFling: CGFloat = 220
+    /// Wider and taller than any screen the desk is drawn on.
+    private static let besideCard: CGFloat = 4000
     private static let recallPop = Animation.spring(response: 0.42, dampingFraction: 0.66)
     private static let recallFlightSeconds = 0.34
     /// Slow to leave, then gone: it picks up speed all the way off the top.
@@ -402,9 +404,15 @@ struct DeskTaskLibrary: View {
         if let recall, let task = tasks.first(where: { $0.id == recall.task }),
            let process = TaskConversationStack.conversations(of: task).first(where: { $0.conversationKey == recall.conversation }) {
             ZStack(alignment: .top) {
+                // Anywhere beside the card closes it, the clock and the pet's room too:
+                // the catcher reaches past the library without changing its layout.
                 Color.clear
-                    .contentShape(.rect)
-                    .onTapGesture { closeRecall() }
+                    .overlay {
+                        Color.clear
+                            .frame(width: Self.besideCard, height: Self.besideCard)
+                            .contentShape(.rect)
+                            .onTapGesture { closeRecall() }
+                    }
                     .accessibilityHidden(true)
                 DeskRecallCard(process: process, task: task, palette: DeskFolderPalette(task),
                                worked: DeskDuration.text(workedTime(process, in: task)),
@@ -466,13 +474,12 @@ struct DeskTaskLibrary: View {
         recallSwipe = 0
         withAnimation(reduceMotion ? .easeOut(duration: 0.16) : Self.recallPop) { recall = next }
         landings += 1
-        AnchorSound.shared.play(.cardOpen)
         tour?.opened(task.id)
     }
 
     /// Puts the card back into its folder; what it showed counts as seen.
     private func closeRecall() {
-        guard let recall else { return }
+        guard let recall, !recallFlying else { return }
         rememberSeen(recall)
         withAnimation(reduceMotion ? .easeOut(duration: 0.16) : Self.slide) {
             self.recall = nil
