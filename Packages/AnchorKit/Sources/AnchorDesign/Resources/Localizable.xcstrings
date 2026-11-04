@@ -14460,70 +14460,70 @@
         }
       }
     },
-    "tour.charts" : {
+    "tour.refs" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chart script"
+            "value" : "References"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "绘图脚本"
+            "value" : "参考文献"
           }
         }
       }
     },
-    "tour.charts.recap" : {
+    "tour.refs.recap" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The satisfaction chart is saved to figures/satisfaction.png: scores 1–5 across, people up the side. 4 is the most common, about 40%, so it leans satisfied."
+            "value" : "The references are done: all 32 are in references.docx in APA 7th style. 2 are missing page numbers, so those need you."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "满意度图表已存到 figures/satisfaction.png：横轴是 1–5 分，纵轴是人数，4 分最多，整体偏满意。"
+            "value" : "参考文献整理好了：32 篇已按 GB/T 7714 存到 references.docx，有 2 篇缺页码，需要你补上。"
           }
         }
       }
     },
-    "tour.charts.reply" : {
+    "tour.refs.reply" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Saved figures/satisfaction.png: scores 1–5 across, people up the side."
+            "value" : "All 32 are formatted in references.docx. 2 are missing page numbers and are marked."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已保存 figures/satisfaction.png：横轴是 1–5 分，纵轴是人数。"
+            "value" : "32 篇都转好了，存到 references.docx；有 2 篇缺页码，已标出来。"
           }
         }
       }
     },
-    "tour.charts.request" : {
+    "tour.refs.request" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Plot the satisfaction scores with matplotlib"
+            "value" : "Format the 32 entries in refs.bib in APA 7th style"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "用 matplotlib 画出满意度评分的分布"
+            "value" : "把 refs.bib 里的 32 篇文献整理成 GB/T 7714 格式"
           }
         }
       }
@@ -14562,70 +14562,70 @@
         }
       }
     },
-    "tour.deploy" : {
+    "tour.webhook" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deploy script"
+            "value" : "Stripe webhook"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "部署脚本"
+            "value" : "支付回调"
           }
         }
       }
     },
-    "tour.deploy.recap" : {
+    "tour.webhook.recap" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The deploy workflow is ready: pushing to main deploys to Vercel. One step is left for you: add VERCEL_TOKEN in the repository settings."
+            "value" : "The webhook is ready: a successful payment turns on Pro. One step is left for you: set STRIPE_WEBHOOK_SECRET in production."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "部署流程写好了：推送到 main 就会自动部署到 Vercel。还差一步，需要你在仓库设置里添加 VERCEL_TOKEN。"
+            "value" : "支付回调写好了：付款成功自动开通 Pro，已验签并防重复。还差一步，需要你在线上环境配好 STRIPE_WEBHOOK_SECRET。"
           }
         }
       }
     },
-    "tour.deploy.reply" : {
+    "tour.webhook.reply" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Added .github/workflows/deploy.yml. Pushing to main deploys. Add VERCEL_TOKEN in the repository settings."
+            "value" : "Added /api/webhooks/stripe with signature checks and idempotency. Set STRIPE_WEBHOOK_SECRET before going live."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已添加 .github/workflows/deploy.yml，推送到 main 就会自动部署。还需要在仓库设置里填好 VERCEL_TOKEN。"
+            "value" : "已加 /api/webhooks/stripe，验签和防重复都做好了。上线前还要配好 STRIPE_WEBHOOK_SECRET。"
           }
         }
       }
     },
-    "tour.deploy.request" : {
+    "tour.webhook.request" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Write a GitHub Action that deploys to Vercel"
+            "value" : "Handle Stripe’s payment webhook: turn on Pro when a payment succeeds"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "写一个部署到 Vercel 的 GitHub Action"
+            "value" : "处理 Stripe 的付款回调：付款成功就给用户开通 Pro"
           }
         }
       }
@@ -14698,92 +14698,92 @@
         }
       }
     },
-    "tour.homepage" : {
+    "tour.pricing" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Home layout"
+            "value" : "Pricing page"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "首页布局"
+            "value" : "定价页"
           }
         }
       }
     },
-    "tour.homepage.recap" : {
+    "tour.pricing.recap" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The two-column home layout is in: an intro on the left, three featured project cards on the right. Narrow screens stack them; preview at localhost:5173."
+            "value" : "The pricing page is in: Free and Pro tiers, Pro at $9 a month with a yearly toggle. Narrow screens stack them; preview at localhost:5173."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "首页双栏布局已完成：左边是自我介绍，右边是三张精选项目卡片；窄屏时自动改为上下排列，可在 localhost:5173 预览。"
+            "value" : "定价页已完成：免费版和 Pro 两档，Pro 每月 9 美元，可切换年付；窄屏自动上下排列，可在 localhost:5173 预览。"
           }
         }
       }
     },
-    "tour.homepage.reply" : {
+    "tour.pricing.reply" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The two-column layout is in. On narrow screens it stacks. Preview at localhost:5173."
+            "value" : "The pricing page is in, with a monthly/yearly toggle. On narrow screens it stacks. Preview at localhost:5173."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "两栏布局已完成，窄屏时会自动改为上下排列。预览：localhost:5173"
+            "value" : "定价页写好了，月付年付可切换，窄屏自动上下排列。预览：localhost:5173"
           }
         }
       }
     },
-    "tour.homepage.request" : {
+    "tour.pricing.request" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Make the home page two columns: an intro on the left, three featured project cards on the right"
+            "value" : "Build the pricing page: Free and Pro tiers, Pro at $9 a month, with a yearly toggle"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "把首页改成两栏：左边是自我介绍，右边放三个精选项目卡片"
+            "value" : "写定价页：免费版和 Pro 两档，Pro 每月 9 美元，支持切换年付"
           }
         }
       }
     },
-    "tour.homework" : {
+    "tour.thesis" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Data analysis homework"
+            "value" : "Thesis data analysis"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "数据分析作业"
+            "value" : "毕业论文数据分析"
           }
         }
       }
     },
-    "tour.homework.step1" : {
+    "tour.thesis.step1" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -14800,36 +14800,53 @@
         }
       }
     },
-    "tour.homework.step2" : {
+    "tour.thesis.step2" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Draw three charts"
+            "value" : "Run the regression"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "画三张图表"
+            "value" : "跑回归分析"
           }
         }
       }
     },
-    "tour.homework.step3" : {
+    "tour.thesis.step3" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Write the conclusion"
+            "value" : "Write chapter 4"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "写结论"
+            "value" : "写第四章"
+          }
+        }
+      }
+    },
+    "tour.library" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your anchored tasks live here, three at most."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "锚定的任务都在这里，\n最多三件。"
           }
         }
       }
@@ -14902,70 +14919,70 @@
         }
       }
     },
-    "tour.palette" : {
+    "tour.crash" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Color variables"
+            "value" : "Find the crash"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "颜色变量"
+            "value" : "定位闪退"
           }
         }
       }
     },
-    "tour.palette.recap" : {
+    "tour.crash.recap" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Done: scanned 26 files and folded 42 hard-coded colors into 18 color variables in Colors.swift, each named for what it's for."
+            "value" : "Done: crash.log points to the cause. When the login expires, the refresh callback force-unwraps nil at AuthSession.swift line 142."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已完成：扫描了 26 个文件，把 42 处写死的颜色归并成 18 个颜色变量，统一放进 Colors.swift，按用途命名。"
+            "value" : "已完成：看完 crash.log 定位到原因。登录过期时，刷新回调强制解包了空值，在 AuthSession.swift 第 142 行。"
           }
         }
       }
     },
-    "tour.palette.reply" : {
+    "tour.crash.reply" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Found 42 hard-coded colors and folded them into 18 variables in Colors.swift."
+            "value" : "Found it: when the login expires, the refresh callback force-unwraps nil at AuthSession.swift line 142."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "找到 42 处写死的颜色，已合并成 Colors.swift 里的 18 个变量。"
+            "value" : "找到了：登录过期时，刷新回调强制解包了空值，在 AuthSession.swift 第 142 行。"
           }
         }
       }
     },
-    "tour.palette.request" : {
+    "tour.crash.request" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "List every hard-coded color in the project as a table of color variables"
+            "value" : "Read crash.log and find out why the login screen crashes"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "把项目里写死的颜色都找出来，整理成一张颜色变量表"
+            "value" : "看 crash.log，找出登录页闪退的原因"
           }
         }
       }
@@ -14987,70 +15004,70 @@
         }
       }
     },
-    "tour.portfolio" : {
+    "tour.pro" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Launch the portfolio site"
+            "value" : "Ship Pro subscriptions"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "作品集网站上线"
+            "value" : "上线 Pro 订阅"
           }
         }
       }
     },
-    "tour.portfolio.step1" : {
+    "tour.pro.step1" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gather project screenshots"
+            "value" : "Hook up Stripe billing"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "整理项目截图"
+            "value" : "接入 Stripe 订阅"
           }
         }
       }
     },
-    "tour.portfolio.step2" : {
+    "tour.pro.step2" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Write the home page copy"
+            "value" : "Build the pricing page"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "写首页文案"
+            "value" : "写定价页"
           }
         }
       }
     },
-    "tour.portfolio.step3" : {
+    "tour.pro.step3" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deploy to Vercel"
+            "value" : "Ship to production"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "部署到 Vercel"
+            "value" : "部署上线"
           }
         }
       }
@@ -15106,53 +15123,53 @@
         }
       }
     },
-    "tour.replace" : {
+    "tour.fix" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Replace colors"
+            "value" : "Fix the crash"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "替换颜色"
+            "value" : "修复闪退"
           }
         }
       }
     },
-    "tour.replace.recap" : {
+    "tour.fix.recap" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "In progress: swapping hard-coded colors for the new variables. 9 of 18 files are done, mostly home and settings; the lists should follow within 10 minutes."
+            "value" : "In progress: AuthSession.swift is fixed and 3 new unit tests pass. The full regression suite should finish within 10 minutes."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "进行中：正在用新变量替换写死的颜色，已改完 9/18 个文件，主要是首页和设置页；剩下的列表页预计 10 分钟内完成。"
+            "value" : "进行中：已改好 AuthSession.swift，新增的 3 个单元测试通过，正在跑完整回归测试，预计 10 分钟内完成。"
           }
         }
       }
     },
-    "tour.replace.request" : {
+    "tour.fix.request" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Replace every hard-coded color with the new variables"
+            "value" : "Remove the force-unwrap and add a unit test for an expired login"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "把所有写死的颜色换成新的颜色变量"
+            "value" : "修掉这个强制解包，补上登录过期的单元测试"
           }
         }
       }
@@ -15180,13 +15197,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "First list the color variables, then replace the hard-coded colors, then add a dark value for each color, and finally check contrast on a real phone"
+            "value" : "First read the crash logs to find the cause, then fix it and add a unit test, then run the regression tests, and finally ship the fix"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "先梳理项目里的颜色变量，接着把写死的颜色换成变量，然后补上每个颜色的深色值，最后在真机上检查对比度"
+            "value" : "先看日志定位闪退原因，接着修好并补上单元测试，然后跑一遍回归测试，最后发布新版本"
           }
         }
       }
@@ -15197,13 +15214,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add dark mode to the app"
+            "value" : "Fix the login screen crash"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "给 App 加深色模式"
+            "value" : "修复登录页闪退"
           }
         }
       }
@@ -15225,70 +15242,70 @@
         }
       }
     },
-    "tour.seo" : {
+    "tour.e2e" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Page titles"
+            "value" : "Billing tests"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "页面标题"
+            "value" : "订阅测试"
           }
         }
       }
     },
-    "tour.seo.recap" : {
+    "tour.e2e.recap" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Finished while you were away: all five pages now have titles and descriptions. Project pages use each project's summary; the home title keeps your name and focus."
+            "value" : "Finished while you were away: 6 end-to-end tests cover upgrade, renewal, cancellation and failed payments. All pass."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你离开时已完成：5 个页面都加上了标题和描述，项目页直接用了各自的项目简介，首页标题保留了你的名字和方向。"
+            "value" : "你离开时已完成：6 个端到端用例覆盖升级、续费、取消和付款失败，全部通过。"
           }
         }
       }
     },
-    "tour.seo.reply" : {
+    "tour.e2e.reply" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Five pages now have titles and descriptions; the project pages use each project's summary."
+            "value" : "Wrote 6 tests covering upgrade, renewal, cancellation and failed payments. All pass."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "5 个页面都加好了 title 和 description，项目页用的是各自的项目简介。"
+            "value" : "写了 6 个用例，覆盖升级、续费、取消和付款失败，全部通过。"
           }
         }
       }
     },
-    "tour.seo.request" : {
+    "tour.e2e.request" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Give every page a title and a description"
+            "value" : "Write end-to-end tests for the subscription flow with Playwright"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "给每个页面加上 title 和 description"
+            "value" : "用 Playwright 给订阅流程写端到端测试"
           }
         }
       }

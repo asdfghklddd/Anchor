@@ -3,6 +3,14 @@ import Testing
 
 @Suite("Plan step splitter")
 struct PlanStepSplitterTests {
+    /// The plan read aloud in the tour becomes its four steps, in either language.
+    @Test func theTourPlanSplitsIntoItsSteps() {
+        #expect(PlanStepSplitter.steps(from: "先看日志定位闪退原因，接着修好并补上单元测试，然后跑一遍回归测试，最后发布新版本")
+            == ["看日志定位闪退原因", "修好并补上单元测试", "跑一遍回归测试", "发布新版本"])
+        #expect(PlanStepSplitter.steps(from: "First read the crash logs to find the cause, then fix it and add a unit test, then run the regression tests, and finally ship the fix")
+            == ["Read the crash logs to find the cause", "Fix it and add a unit test", "Run the regression tests", "Ship the fix"])
+    }
+
     @Test("Each line is a step")
     func lines() {
         #expect(PlanStepSplitter.steps(from: "梳理现有信息架构\n\n确定首页内容层级\n") == ["梳理现有信息架构", "确定首页内容层级"])

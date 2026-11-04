@@ -23,20 +23,20 @@ public struct MacDemoScript: Sendable {
         public var next: Scene? { Scene(rawValue: rawValue + 1) }
     }
 
-    private let portfolio = UUID()
-    private let homework = UUID()
+    private let pro = UUID()
+    private let thesis = UUID()
     private let own = UUID()
-    private let homepage = UUID()
-    private let deploy = UUID()
+    private let pricing = UUID()
+    private let webhook = UUID()
     private let survey = UUID()
-    private let charts = UUID()
-    private let palette = UUID()
+    private let refs = UUID()
+    private let crash = UUID()
     private let firstStep = UUID()
 
     public init() {}
 
     /// Every task the demo puts on the island, to take them off again.
-    public var taskIDs: Set<UUID> { [portfolio, homework, own] }
+    public var taskIDs: Set<UUID> { [pro, thesis, own] }
 
     public func commands(for scene: Scene, now: Date) -> [SessionCommand] {
         switch scene {
@@ -44,31 +44,31 @@ public struct MacDemoScript: Sendable {
             [
                 .updateSignals(connection: .connected, proximity: .near, at: now),
                 .hostSession(AnchorSession(
-                    id: homework,
-                    goal: AnchorGoal(title: Copy.homework, completionCriteria: "",
-                                     userPlan: AnchorUserPlan(steps: Copy.homeworkSteps, reviewedAt: now - 3_000)),
+                    id: thesis,
+                    goal: AnchorGoal(title: Copy.thesis, completionCriteria: "",
+                                     userPlan: AnchorUserPlan(steps: Copy.thesisSteps, reviewedAt: now - 3_000)),
                     startedAt: now - 6_000,
                     processes: [
-                        conversation(survey, in: homework, agent: .codex, title: Copy.survey,
+                        conversation(survey, in: thesis, agent: .codex, title: Copy.survey,
                                      request: Copy.surveyRequest, status: .running, at: now - 240),
-                        conversation(charts, in: homework, agent: .claude, title: Copy.charts,
-                                     request: Copy.chartsRequest, status: .completed, at: now - 1_500),
+                        conversation(refs, in: thesis, agent: .claude, title: Copy.refs,
+                                     request: Copy.refsRequest, status: .completed, at: now - 1_500),
                     ],
                     taskColorIndex: 1)),
                 .hostSession(AnchorSession(
-                    id: portfolio,
-                    goal: AnchorGoal(title: Copy.portfolio, completionCriteria: "",
-                                     userPlan: AnchorUserPlan(steps: Copy.portfolioSteps, completedSteps: [0],
+                    id: pro,
+                    goal: AnchorGoal(title: Copy.pro, completionCriteria: "",
+                                     userPlan: AnchorUserPlan(steps: Copy.proSteps, completedSteps: [0],
                                                               reviewedAt: now - 1_200)),
                     startedAt: now - 9_000,
                     processes: [
-                        conversation(homepage, in: portfolio, agent: .claude, title: Copy.homepage,
-                                     request: Copy.homepageRequest, status: .running, at: now - 200),
-                        conversation(deploy, in: portfolio, agent: .codex, title: Copy.deploy,
-                                     request: Copy.deployRequest, status: .completed, at: now - 1_800),
+                        conversation(pricing, in: pro, agent: .claude, title: Copy.pricing,
+                                     request: Copy.pricingRequest, status: .running, at: now - 200),
+                        conversation(webhook, in: pro, agent: .codex, title: Copy.webhook,
+                                     request: Copy.webhookRequest, status: .completed, at: now - 1_800),
                     ],
                     taskColorIndex: 0)),
-                .selectSession(portfolio),
+                .selectSession(pro),
             ]
         case .dropped:
             [
@@ -78,29 +78,29 @@ public struct MacDemoScript: Sendable {
                                      userPlan: AnchorUserPlan(items: ownSteps, reviewedAt: now)),
                     startedAt: now,
                     processes: [
-                        conversation(palette, in: own, agent: .claude, title: Copy.palette,
-                                     request: Copy.paletteRequest, status: .running, at: now),
+                        conversation(crash, in: own, agent: .claude, title: Copy.crash,
+                                     request: Copy.crashRequest, status: .running, at: now),
                     ],
                     taskColorIndex: 2)),
                 .selectSession(own),
             ]
         case .finished:
             [
-                .forSession(portfolio, .updateProcess(conversation(
-                    homepage, in: portfolio, agent: .claude, title: Copy.homepage,
-                    request: Copy.homepageRequest, status: .completed, at: now))),
+                .forSession(pro, .updateProcess(conversation(
+                    pricing, in: pro, agent: .claude, title: Copy.pricing,
+                    request: Copy.pricingRequest, status: .completed, at: now))),
             ]
         case .waiting:
             [
-                .forSession(homework, .updateProcess(conversation(
-                    survey, in: homework, agent: .codex, title: Copy.survey,
+                .forSession(thesis, .updateProcess(conversation(
+                    survey, in: thesis, agent: .codex, title: Copy.survey,
                     request: Copy.surveyRequest, status: .needsDecision, at: now))),
             ]
         case .closing:
             [
                 .forSession(own, .updateProcess(conversation(
-                    palette, in: own, agent: .claude, title: Copy.palette,
-                    request: Copy.paletteRequest, status: .completed, at: now))),
+                    crash, in: own, agent: .claude, title: Copy.crash,
+                    request: Copy.crashRequest, status: .completed, at: now))),
                 .forSession(own, .setPlanStep(id: firstStep, done: true)),
             ]
         }
@@ -130,30 +130,30 @@ public struct MacDemoScript: Sendable {
 
     /// The iPhone tour's words, so both films show the same work.
     private enum Copy {
-        static let portfolio = AnchorStrings.value("tour.portfolio", default: "Launch the portfolio site")
-        static let portfolioSteps = [
-            AnchorStrings.value("tour.portfolio.step1", default: "Gather project screenshots"),
-            AnchorStrings.value("tour.portfolio.step2", default: "Write the home page copy"),
-            AnchorStrings.value("tour.portfolio.step3", default: "Deploy to Vercel"),
+        static let pro = AnchorStrings.value("tour.pro", default: "Ship Pro subscriptions")
+        static let proSteps = [
+            AnchorStrings.value("tour.pro.step1", default: "Hook up Stripe billing"),
+            AnchorStrings.value("tour.pro.step2", default: "Build the pricing page"),
+            AnchorStrings.value("tour.pro.step3", default: "Ship to production"),
         ]
-        static let homepage = AnchorStrings.value("tour.homepage", default: "Home layout")
-        static let homepageRequest = AnchorStrings.value("tour.homepage.request", default: "Make the home page two columns: an intro on the left, three featured project cards on the right")
-        static let deploy = AnchorStrings.value("tour.deploy", default: "Deploy script")
-        static let deployRequest = AnchorStrings.value("tour.deploy.request", default: "Write a GitHub Action that deploys to Vercel")
-        static let homework = AnchorStrings.value("tour.homework", default: "Data analysis homework")
-        static let homeworkSteps = [
-            AnchorStrings.value("tour.homework.step1", default: "Clean the survey data"),
-            AnchorStrings.value("tour.homework.step2", default: "Draw three charts"),
-            AnchorStrings.value("tour.homework.step3", default: "Write the conclusion"),
+        static let pricing = AnchorStrings.value("tour.pricing", default: "Pricing page")
+        static let pricingRequest = AnchorStrings.value("tour.pricing.request", default: "Build the pricing page: Free and Pro tiers, Pro at $9 a month, with a yearly toggle")
+        static let webhook = AnchorStrings.value("tour.webhook", default: "Stripe webhook")
+        static let webhookRequest = AnchorStrings.value("tour.webhook.request", default: "Handle Stripe’s payment webhook: turn on Pro when a payment succeeds")
+        static let thesis = AnchorStrings.value("tour.thesis", default: "Thesis data analysis")
+        static let thesisSteps = [
+            AnchorStrings.value("tour.thesis.step1", default: "Clean the survey data"),
+            AnchorStrings.value("tour.thesis.step2", default: "Run the regression"),
+            AnchorStrings.value("tour.thesis.step3", default: "Write chapter 4"),
         ]
         static let survey = AnchorStrings.value("tour.survey", default: "Clean survey")
         static let surveyRequest = AnchorStrings.value("tour.survey.request", default: "Handle the empty values and duplicate rows in survey.csv")
-        static let charts = AnchorStrings.value("tour.charts", default: "Chart script")
-        static let chartsRequest = AnchorStrings.value("tour.charts.request", default: "Plot the satisfaction scores with matplotlib")
-        static let ownTitle = AnchorStrings.value("tour.script.title", default: "Add dark mode to the app")
-        static let ownPlan = AnchorStrings.value("tour.script.plan", default: "First list the color variables, then replace the hard-coded colors, then add a dark value for each color, and finally check contrast on a real phone")
-        static let palette = AnchorStrings.value("tour.palette", default: "Color variables")
-        static let paletteRequest = AnchorStrings.value("tour.palette.request", default: "List every hard-coded color in the project as a table of color variables")
+        static let refs = AnchorStrings.value("tour.refs", default: "References")
+        static let refsRequest = AnchorStrings.value("tour.refs.request", default: "Format the 32 entries in refs.bib in APA 7th style")
+        static let ownTitle = AnchorStrings.value("tour.script.title", default: "Fix the login screen crash")
+        static let ownPlan = AnchorStrings.value("tour.script.plan", default: "First read the crash logs to find the cause, then fix it and add a unit test, then run the regression tests, and finally ship the fix")
+        static let crash = AnchorStrings.value("tour.crash", default: "Find the crash")
+        static let crashRequest = AnchorStrings.value("tour.crash.request", default: "Read crash.log and find out why the login screen crashes")
     }
 }
 

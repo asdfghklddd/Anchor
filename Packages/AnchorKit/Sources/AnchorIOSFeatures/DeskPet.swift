@@ -51,7 +51,7 @@ struct DeskPet: View {
     @AnchorReducedMotion private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.colorScheme) private var colorScheme
-    /// The tour waits for the pet to be greeted.
+    /// The tour asks for the pet; its coach takes the touches, VoiceOver comes through here.
     @Environment(\.anchorTour) private var tour
     @State private var life = DeskPetLife.shared
     @State private var columns = 0
@@ -71,7 +71,6 @@ struct DeskPet: View {
         .onLongPressGesture(minimumDuration: 0.5) {
             touches += 1
             life.press()
-            tour?.pettedPet()
         }
         .gesture(SpatialTapGesture().onEnded { touch(at: $0.location) })
         .sensoryFeedback(.impact(weight: .light, intensity: 0.5), trigger: touches)
@@ -126,8 +125,6 @@ struct DeskPet: View {
         let cell = CGPoint(x: location.x / Self.pixel, y: location.y / Self.pixel)
         let pet = CGRect(x: petLeft(brain), y: DeskScene.floor - look.height - 3, width: look.width, height: look.height + 3)
         touches += 1
-        // In the tour, any touch in the nook greets the pet.
-        tour?.pettedPet()
         if pet.contains(cell) {
             life.tap()
         } else if let thing = DeskScene.thing(at: cell, for: kind) {

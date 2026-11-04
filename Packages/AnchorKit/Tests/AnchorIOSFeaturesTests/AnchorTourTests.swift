@@ -172,7 +172,7 @@ struct AnchorTourTests {
         tour.turnedDial(to: 2)
         #expect(tour.awayMinutes == 3)
         tour.turnedDial(to: 20)
-        #expect(tour.landed.map(\.title) == [TourCopy.palette, TourCopy.replace, TourCopy.seo])
+        #expect(tour.landed.map(\.title) == [TourCopy.crash, TourCopy.fix, TourCopy.e2e])
         tour.turnedDial(to: AnchorTour.dialMinutes)
         #expect(tour.stage == .back)
         try await waitFor(.returned, in: tour, seconds: 4)

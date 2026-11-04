@@ -41,7 +41,7 @@ final class AnchorTour {
         case glance
         /// Today's anchoring is the clear part: its clock counts up and its bars rise.
         case clock
-        /// The sample cards float up under a ring; the ring moves on by itself.
+        /// The sample cards float up under a ring, and a line says what the library holds; the ring moves on by itself.
         case hello
         /// The anchor button is lit and waits for its tap.
         case anchorButton
@@ -55,7 +55,7 @@ final class AnchorTour {
         case desk
         /// The pet's nook is the clear part, waiting for a tap on the pet.
         case pet
-        /// The question waiting on the homework is lit as it comes to the front.
+        /// The question waiting on the thesis is lit as it comes to the front.
         case waiting
         /// The question's recall card is open, asking for the swipe in `asks`.
         case reading
@@ -120,7 +120,7 @@ final class AnchorTour {
     @ObservationIgnored private var petted = false
 
     /// The task whose question the desk lights.
-    var waitingTaskID: UUID { mac.homeworkID }
+    var waitingTaskID: UUID { mac.thesisID }
 
     /// How long the dial runs, and the minutes on it that matter.
     static let dialMinutes = 30
@@ -236,7 +236,7 @@ final class AnchorTour {
     /// The ring's walk over the folders, and a moment on the person's own.
     static let deskLook: TimeInterval = 6.4
 
-    /// The ring settles on the homework first, then its question arrives under it.
+    /// The ring settles on the thesis first, then its question arrives under it.
     private func ask() {
         guard stage == .desk || stage == .pet else { return }
         stage = .waiting
@@ -440,67 +440,67 @@ struct TourMac {
         let done: Bool
     }
 
-    private let homepage = UUID()
-    private let deploy = UUID()
+    private let pricing = UUID()
+    private let webhook = UUID()
     private let survey = UUID()
-    private let charts = UUID()
-    private let seo = UUID()
-    private let palette = UUID()
-    private let replace = UUID()
-    private let portfolioID = UUID()
-    let homeworkID = UUID()
+    private let refs = UUID()
+    private let e2e = UUID()
+    private let crash = UUID()
+    private let fix = UUID()
+    private let proID = UUID()
+    let thesisID = UUID()
 
     func seed(now: Date) -> [AnchorSession] {
-        let portfolio = AnchorSession(
-            id: portfolioID,
-            goal: AnchorGoal(title: TourCopy.portfolio, completionCriteria: "",
-                             userPlan: AnchorUserPlan(steps: TourCopy.portfolioSteps, completedSteps: [0], reviewedAt: now - 1_200)),
+        let pro = AnchorSession(
+            id: proID,
+            goal: AnchorGoal(title: TourCopy.pro, completionCriteria: "",
+                             userPlan: AnchorUserPlan(steps: TourCopy.proSteps, completedSteps: [0], reviewedAt: now - 1_200)),
             startedAt: now - 9_000,
             processes: [
-                conversation(homepage, in: portfolioID, agent: .claude, title: TourCopy.homepage,
-                             request: TourCopy.homepageRequest, status: .running, worked: 1_260, at: now - 200),
-                conversation(deploy, in: portfolioID, agent: .codex, title: TourCopy.deploy,
-                             request: TourCopy.deployRequest, reply: TourCopy.deployReply,
+                conversation(pricing, in: proID, agent: .claude, title: TourCopy.pricing,
+                             request: TourCopy.pricingRequest, status: .running, worked: 1_260, at: now - 200),
+                conversation(webhook, in: proID, agent: .codex, title: TourCopy.webhook,
+                             request: TourCopy.webhookRequest, reply: TourCopy.webhookReply,
                              status: .completed, worked: 540, at: now - 1_500),
             ],
             taskColorIndex: 0)
-        let homework = AnchorSession(
-            id: homeworkID,
-            goal: AnchorGoal(title: TourCopy.homework, completionCriteria: "",
-                             userPlan: AnchorUserPlan(steps: TourCopy.homeworkSteps, reviewedAt: now - 3_000)),
+        let thesis = AnchorSession(
+            id: thesisID,
+            goal: AnchorGoal(title: TourCopy.thesis, completionCriteria: "",
+                             userPlan: AnchorUserPlan(steps: TourCopy.thesisSteps, reviewedAt: now - 3_000)),
             startedAt: now - 6_000,
             processes: [
                 // The survey is still cleaning; its question arrives on the desk.
-                conversation(survey, in: homeworkID, agent: .codex, title: TourCopy.survey,
+                conversation(survey, in: thesisID, agent: .codex, title: TourCopy.survey,
                              request: TourCopy.surveyRequest, status: .running, worked: 380, at: now - 2_400),
-                conversation(charts, in: homeworkID, agent: .claude, title: TourCopy.charts,
-                             request: TourCopy.chartsRequest, reply: TourCopy.chartsReply,
+                conversation(refs, in: thesisID, agent: .claude, title: TourCopy.refs,
+                             request: TourCopy.refsRequest, reply: TourCopy.refsReply,
                              status: .completed, worked: 720, at: now - 420),
             ],
             taskColorIndex: 1)
-        return [portfolio, homework]
+        return [pro, thesis]
     }
 
     /// The person's own task gets its first conversation.
     func firstConversation(of taskID: UUID, now: Date) -> AnchorProcess {
-        conversation(palette, in: taskID, agent: .claude, title: TourCopy.palette,
-                     request: TourCopy.paletteRequest, status: .running, worked: 0, at: now)
+        conversation(crash, in: taskID, agent: .claude, title: TourCopy.crash,
+                     request: TourCopy.crashRequest, status: .running, worked: 0, at: now)
     }
 
-    /// News while the desk is up: the home layout's reply lands, and the
-    /// page titles start.
+    /// News while the desk is up: the pricing page's reply lands, and the
+    /// billing tests start.
     func deskNews() -> [Beat] {
         [
             Beat(after: 4) { now in
-                .forSession(portfolioID, .updateProcess(conversation(
-                    homepage, in: portfolioID, agent: .claude, title: TourCopy.homepage,
-                    request: TourCopy.homepageRequest, reply: TourCopy.homepageReply,
+                .forSession(proID, .updateProcess(conversation(
+                    pricing, in: proID, agent: .claude, title: TourCopy.pricing,
+                    request: TourCopy.pricingRequest, reply: TourCopy.pricingReply,
                     status: .completed, worked: 1_470, at: now)))
             },
             Beat(after: 8) { now in
-                .forSession(portfolioID, .addProcess(conversation(
-                    seo, in: portfolioID, agent: .codex, title: TourCopy.seo,
-                    request: TourCopy.seoRequest, status: .running, worked: 0, at: now)))
+                .forSession(proID, .addProcess(conversation(
+                    e2e, in: proID, agent: .codex, title: TourCopy.e2e,
+                    request: TourCopy.e2eRequest, status: .running, worked: 0, at: now)))
             },
         ]
     }
@@ -510,38 +510,38 @@ struct TourMac {
     /// Its card, opened, reads what the Mac took from the conversation.
     func question(now: Date) -> SessionCommand {
         var process = conversation(
-            survey, in: homeworkID, agent: .codex, title: TourCopy.survey,
+            survey, in: thesisID, agent: .codex, title: TourCopy.survey,
             request: TourCopy.surveyRequest, reply: TourCopy.surveyReply,
             status: .needsDecision, worked: 410, at: now)
         process.digest = ConversationDigest(
             path: TourCopy.surveyPath,
             waiting: .init(kind: .answer, text: TourCopy.surveyReply),
             latestRequest: TourCopy.surveyRequest)
-        return .forSession(homeworkID, .updateProcess(process))
+        return .forSession(thesisID, .updateProcess(process))
     }
 
     /// News while the person is away, by the minute on the dial: their own
-    /// colors are done and the next step starts, and the page titles finish.
+    /// crash is found and the fix starts, and the billing tests finish.
     /// The survey's question stays unanswered.
     func awayNews(ownTask: UUID?) -> [Beat] {
         var beats: [Beat] = []
         if let ownTask {
-            beats.append(Beat(after: 8, note: Note(title: TourCopy.palette, done: true)) { now in
+            beats.append(Beat(after: 8, note: Note(title: TourCopy.crash, done: true)) { now in
                 .forSession(ownTask, .updateProcess(conversation(
-                    palette, in: ownTask, agent: .claude, title: TourCopy.palette,
-                    request: TourCopy.paletteRequest, reply: TourCopy.paletteReply,
+                    crash, in: ownTask, agent: .claude, title: TourCopy.crash,
+                    request: TourCopy.crashRequest, reply: TourCopy.crashReply,
                     status: .completed, worked: 640, at: now)))
             })
-            beats.append(Beat(after: 12, note: Note(title: TourCopy.replace, done: false)) { now in
+            beats.append(Beat(after: 12, note: Note(title: TourCopy.fix, done: false)) { now in
                 .forSession(ownTask, .addProcess(conversation(
-                    replace, in: ownTask, agent: .claude, title: TourCopy.replace,
-                    request: TourCopy.replaceRequest, status: .running, worked: 0, at: now)))
+                    fix, in: ownTask, agent: .claude, title: TourCopy.fix,
+                    request: TourCopy.fixRequest, status: .running, worked: 0, at: now)))
             })
         }
-        beats.append(Beat(after: 19, note: Note(title: TourCopy.seo, done: true)) { now in
-            .forSession(portfolioID, .updateProcess(conversation(
-                seo, in: portfolioID, agent: .codex, title: TourCopy.seo,
-                request: TourCopy.seoRequest, reply: TourCopy.seoReply,
+        beats.append(Beat(after: 19, note: Note(title: TourCopy.e2e, done: true)) { now in
+            .forSession(proID, .updateProcess(conversation(
+                e2e, in: proID, agent: .codex, title: TourCopy.e2e,
+                request: TourCopy.e2eRequest, reply: TourCopy.e2eReply,
                 status: .completed, worked: 310, at: now)))
         })
         return beats
@@ -556,15 +556,15 @@ struct TourMac {
             })
         }
         var recaps = [
-            (portfolioID, recap([(seo, TourCopy.seo, TourCopy.seoRecap),
-                                 (homepage, TourCopy.homepage, TourCopy.homepageRecap),
-                                 (deploy, TourCopy.deploy, TourCopy.deployRecap)])),
-            (homeworkID, recap([(survey, TourCopy.survey, TourCopy.surveyRecap),
-                                (charts, TourCopy.charts, TourCopy.chartsRecap)])),
+            (proID, recap([(e2e, TourCopy.e2e, TourCopy.e2eRecap),
+                                 (pricing, TourCopy.pricing, TourCopy.pricingRecap),
+                                 (webhook, TourCopy.webhook, TourCopy.webhookRecap)])),
+            (thesisID, recap([(survey, TourCopy.survey, TourCopy.surveyRecap),
+                                (refs, TourCopy.refs, TourCopy.refsRecap)])),
         ]
         if let ownTask {
-            recaps.insert((ownTask, recap([(replace, TourCopy.replace, TourCopy.replaceRecap),
-                                           (palette, TourCopy.palette, TourCopy.paletteRecap)])), at: 0)
+            recaps.insert((ownTask, recap([(fix, TourCopy.fix, TourCopy.fixRecap),
+                                           (crash, TourCopy.crash, TourCopy.crashRecap)])), at: 0)
         }
         return recaps
     }
@@ -598,6 +598,7 @@ enum TourCopy {
     static let replay = AnchorStrings.value("tour.replay", default: "Replay the tour")
     static let folders = AnchorStrings.value("tour.folders", default: "Each folder is a task.")
     static let clock = AnchorStrings.value("tour.clock", default: "Your time linked to the Mac adds up here.")
+    static let library = AnchorStrings.value("tour.library", default: "Your anchored tasks live here, three at most.")
     static let pet = AnchorStrings.value("tour.pet", default: "It lives on your desk. Say hi.")
     static let waiting = AnchorStrings.value("tour.anchor.waiting", default: "The anchor means an AI is waiting on you. Tap it.")
     static let ownTask = AnchorStrings.value("tour.own", default: "Your task: an AI is already on it.")
@@ -618,30 +619,30 @@ enum TourCopy {
     static let skip = AnchorStrings.value("tour.skip", default: "Skip")
 
     // The task the person reads aloud.
-    static let spokenTitle = AnchorStrings.value("tour.script.title", default: "Add dark mode to the app")
-    static let spokenPlan = AnchorStrings.value("tour.script.plan", default: "First list the color variables, then replace the hard-coded colors, then add a dark value for each color, and finally check contrast on a real phone")
+    static let spokenTitle = AnchorStrings.value("tour.script.title", default: "Fix the login screen crash")
+    static let spokenPlan = AnchorStrings.value("tour.script.plan", default: "First read the crash logs to find the cause, then fix it and add a unit test, then run the regression tests, and finally ship the fix")
 
     // The two tasks already anchored, and their conversations.
-    static let portfolio = AnchorStrings.value("tour.portfolio", default: "Launch the portfolio site")
-    static let portfolioSteps = [
-        AnchorStrings.value("tour.portfolio.step1", default: "Gather project screenshots"),
-        AnchorStrings.value("tour.portfolio.step2", default: "Write the home page copy"),
-        AnchorStrings.value("tour.portfolio.step3", default: "Deploy to Vercel"),
+    static let pro = AnchorStrings.value("tour.pro", default: "Ship Pro subscriptions")
+    static let proSteps = [
+        AnchorStrings.value("tour.pro.step1", default: "Hook up Stripe billing"),
+        AnchorStrings.value("tour.pro.step2", default: "Build the pricing page"),
+        AnchorStrings.value("tour.pro.step3", default: "Ship to production"),
     ]
-    static let homepage = AnchorStrings.value("tour.homepage", default: "Home layout")
-    static let homepageRequest = AnchorStrings.value("tour.homepage.request", default: "Make the home page two columns: an intro on the left, three featured project cards on the right")
-    static let homepageReply = AnchorStrings.value("tour.homepage.reply", default: "The two-column layout is in. On narrow screens it stacks. Preview at localhost:5173.")
-    static let deploy = AnchorStrings.value("tour.deploy", default: "Deploy script")
-    static let deployRequest = AnchorStrings.value("tour.deploy.request", default: "Write a GitHub Action that deploys to Vercel")
-    static let deployReply = AnchorStrings.value("tour.deploy.reply", default: "Added .github/workflows/deploy.yml. Pushing to main deploys. Add VERCEL_TOKEN in the repository settings.")
-    static let seo = AnchorStrings.value("tour.seo", default: "Page titles")
-    static let seoRequest = AnchorStrings.value("tour.seo.request", default: "Give every page a title and a description")
-    static let seoReply = AnchorStrings.value("tour.seo.reply", default: "Five pages now have titles and descriptions; the project pages use each project's summary.")
-    static let homework = AnchorStrings.value("tour.homework", default: "Data analysis homework")
-    static let homeworkSteps = [
-        AnchorStrings.value("tour.homework.step1", default: "Clean the survey data"),
-        AnchorStrings.value("tour.homework.step2", default: "Draw three charts"),
-        AnchorStrings.value("tour.homework.step3", default: "Write the conclusion"),
+    static let pricing = AnchorStrings.value("tour.pricing", default: "Pricing page")
+    static let pricingRequest = AnchorStrings.value("tour.pricing.request", default: "Build the pricing page: Free and Pro tiers, Pro at $9 a month, with a yearly toggle")
+    static let pricingReply = AnchorStrings.value("tour.pricing.reply", default: "The pricing page is in, with a monthly/yearly toggle. On narrow screens it stacks. Preview at localhost:5173.")
+    static let webhook = AnchorStrings.value("tour.webhook", default: "Stripe webhook")
+    static let webhookRequest = AnchorStrings.value("tour.webhook.request", default: "Handle Stripe’s payment webhook: turn on Pro when a payment succeeds")
+    static let webhookReply = AnchorStrings.value("tour.webhook.reply", default: "Added /api/webhooks/stripe with signature checks and idempotency. Set STRIPE_WEBHOOK_SECRET before going live.")
+    static let e2e = AnchorStrings.value("tour.e2e", default: "Billing tests")
+    static let e2eRequest = AnchorStrings.value("tour.e2e.request", default: "Write end-to-end tests for the subscription flow with Playwright")
+    static let e2eReply = AnchorStrings.value("tour.e2e.reply", default: "Wrote 6 tests covering upgrade, renewal, cancellation and failed payments. All pass.")
+    static let thesis = AnchorStrings.value("tour.thesis", default: "Thesis data analysis")
+    static let thesisSteps = [
+        AnchorStrings.value("tour.thesis.step1", default: "Clean the survey data"),
+        AnchorStrings.value("tour.thesis.step2", default: "Run the regression"),
+        AnchorStrings.value("tour.thesis.step3", default: "Write chapter 4"),
     ]
     static let survey = AnchorStrings.value("tour.survey", default: "Clean survey")
     static let surveyRequest = AnchorStrings.value("tour.survey.request", default: "Handle the empty values and duplicate rows in survey.csv")
@@ -650,22 +651,22 @@ enum TourCopy {
         AnchorStrings.value("tour.survey.path1", default: "Read survey.csv: 412 rows"),
         AnchorStrings.value("tour.survey.path2", default: "Removed 9 duplicate rows"),
     ]
-    static let charts = AnchorStrings.value("tour.charts", default: "Chart script")
-    static let chartsRequest = AnchorStrings.value("tour.charts.request", default: "Plot the satisfaction scores with matplotlib")
-    static let chartsReply = AnchorStrings.value("tour.charts.reply", default: "Saved figures/satisfaction.png: scores 1–5 across, people up the side.")
-    static let palette = AnchorStrings.value("tour.palette", default: "Color variables")
-    static let paletteRequest = AnchorStrings.value("tour.palette.request", default: "List every hard-coded color in the project as a table of color variables")
-    static let paletteReply = AnchorStrings.value("tour.palette.reply", default: "Found 42 hard-coded colors and folded them into 18 variables in Colors.swift.")
-    static let replace = AnchorStrings.value("tour.replace", default: "Replace colors")
-    static let replaceRequest = AnchorStrings.value("tour.replace.request", default: "Replace every hard-coded color with the new variables")
+    static let refs = AnchorStrings.value("tour.refs", default: "References")
+    static let refsRequest = AnchorStrings.value("tour.refs.request", default: "Format the 32 entries in refs.bib in APA 7th style")
+    static let refsReply = AnchorStrings.value("tour.refs.reply", default: "All 32 are formatted in references.docx. 2 are missing page numbers and are marked.")
+    static let crash = AnchorStrings.value("tour.crash", default: "Find the crash")
+    static let crashRequest = AnchorStrings.value("tour.crash.request", default: "Read crash.log and find out why the login screen crashes")
+    static let crashReply = AnchorStrings.value("tour.crash.reply", default: "Found it: when the login expires, the refresh callback force-unwraps nil at AuthSession.swift line 142.")
+    static let fix = AnchorStrings.value("tour.fix", default: "Fix the crash")
+    static let fixRequest = AnchorStrings.value("tour.fix.request", default: "Remove the force-unwrap and add a unit test for an expired login")
 
     // What the Mac writes for the return page.
-    static let paletteRecap = AnchorStrings.value("tour.palette.recap", default: "Done: scanned 26 files and folded 42 hard-coded colors into 18 color variables in Colors.swift, each named for what it's for.")
-    static let replaceRecap = AnchorStrings.value("tour.replace.recap", default: "In progress: swapping hard-coded colors for the new variables. 9 of 18 files are done, mostly home and settings; the lists should follow within 10 minutes.")
-    static let seoRecap = AnchorStrings.value("tour.seo.recap", default: "Finished while you were away: all five pages now have titles and descriptions. Project pages use each project's summary; the home title keeps your name and focus.")
-    static let homepageRecap = AnchorStrings.value("tour.homepage.recap", default: "The two-column home layout is in: an intro on the left, three featured project cards on the right. Narrow screens stack them; preview at localhost:5173.")
-    static let deployRecap = AnchorStrings.value("tour.deploy.recap", default: "The deploy workflow is ready: pushing to main deploys to Vercel. One step is left for you: add VERCEL_TOKEN in the repository settings.")
+    static let crashRecap = AnchorStrings.value("tour.crash.recap", default: "Done: crash.log points to the cause. When the login expires, the refresh callback force-unwraps nil at AuthSession.swift line 142.")
+    static let fixRecap = AnchorStrings.value("tour.fix.recap", default: "In progress: AuthSession.swift is fixed and 3 new unit tests pass. The full regression suite should finish within 10 minutes.")
+    static let e2eRecap = AnchorStrings.value("tour.e2e.recap", default: "Finished while you were away: 6 end-to-end tests cover upgrade, renewal, cancellation and failed payments. All pass.")
+    static let pricingRecap = AnchorStrings.value("tour.pricing.recap", default: "The pricing page is in: Free and Pro tiers, Pro at $9 a month with a yearly toggle. Narrow screens stack them; preview at localhost:5173.")
+    static let webhookRecap = AnchorStrings.value("tour.webhook.recap", default: "The webhook is ready: a successful payment turns on Pro. One step is left for you: set STRIPE_WEBHOOK_SECRET in production.")
     static let surveyRecap = AnchorStrings.value("tour.survey.recap", default: "Still waiting for you: 37 rows, about 8% of the survey, have no age. Drop them, or fill in the median of 24?")
-    static let chartsRecap = AnchorStrings.value("tour.charts.recap", default: "The satisfaction chart is saved to figures/satisfaction.png: scores 1–5 across, people up the side. 4 is the most common, about 40%, so it leans satisfied.")
+    static let refsRecap = AnchorStrings.value("tour.refs.recap", default: "The references are done: all 32 are in references.docx in APA 7th style. 2 are missing page numbers, so those need you.")
 }
 #endif

@@ -445,7 +445,8 @@ struct TourSkip: View {
 /// The tour's layer over the real portrait home. First the home is left
 /// whole for a moment; then one pane of frost lies over it from step to
 /// step, clear only where the step is: today's anchoring as its day counts
-/// up, the sample cards as they float up, then the anchor button by itself, with the line
+/// up, the sample cards as they float up under a line on what the library holds,
+/// then the anchor button by itself, with the line
 /// asking for a tap in the middle of the glass. After the first drop the
 /// new card is left clear under its line; for the turn the whole home
 /// frosts over; at the very end, the closing line and Start.
@@ -467,7 +468,7 @@ struct TourCoach: View {
     @Environment(\.launchSplashShowing) private var covered
 
     /// The cards float in under the clear patch before it moves on.
-    static let helloLength: TimeInterval = 3.2
+    static let helloLength: TimeInterval = 4.2
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -574,18 +575,25 @@ struct TourCoach: View {
                     .transition(.opacity)
             }
             if tour.stage == .clock, let clock = spots[.clock] {
-                TourCaption(text: TourCopy.clock, centered: true)
-                    .frame(maxWidth: 340)
-                    .padding(.horizontal, 24)
-                    .frame(width: size.width)
-                    .position(x: size.width / 2, y: clock.maxY + 70)
-                    .transition(.opacity)
+                spotLine(TourCopy.clock, y: clock.maxY + 70)
+            }
+            if tour.stage == .hello, let library = spots[.tasks] {
+                spotLine(TourCopy.library, y: library.minY - 62)
             }
         }
     }
 
-    /// In the middle of the frost, over the dome: the cards say what they are
-    /// by themselves; only the tap is asked for.
+    /// A line beside the clear part, on the frost.
+    private func spotLine(_ text: String, y: CGFloat) -> some View {
+        TourCaption(text: text, centered: true)
+            .frame(maxWidth: 340)
+            .padding(.horizontal, 24)
+            .frame(width: size.width)
+            .position(x: size.width / 2, y: y)
+            .transition(.opacity)
+    }
+
+    /// In the middle of the frost, over the dome: only the tap is asked for.
     private var caption: some View {
         TourCaption(text: TourCopy.anchorButton, centered: true)
             .frame(maxWidth: 340)
@@ -967,7 +975,7 @@ extension View {
 /// passes over each folder while the line says what they are, then rests on
 /// the folder of the task the person just dropped, where an agent has
 /// started; then on the pet's nook until the pet is greeted. Then the
-/// homework's question arrives, its anchor dropping onto the card, and the
+/// thesis's question arrives, its anchor dropping onto the card, and the
 /// patch settles on that card, the one part that answers a tap; opened, the
 /// recall card is the clear part. It is swiped down, then opened again and
 /// swiped up, when a small Mac in the frost beside it catches the card and
@@ -987,6 +995,7 @@ private struct TourDeskCoach: View {
     /// Where the open card last was, for its flight to the Mac once it has gone.
     @State private var lastCard: CGRect?
     @State private var sentAt: Date?
+    @State private var greetings = 0
 
     private struct Hole: Equatable {
         let rect: CGRect
@@ -1015,6 +1024,17 @@ private struct TourDeskCoach: View {
                 }
             case .pet:
                 TourBlocker(hole: hole?.rect, radius: hole?.radius ?? 0) { nudges += 1 }
+                if let hole {
+                    // Anywhere in the clear part greets the pet, and it answers at once:
+                    // square corners and a little past the edge, so a near miss still counts.
+                    let zone = hole.rect.insetBy(dx: -10, dy: -10)
+                    Color.clear
+                        .frame(width: zone.width, height: zone.height)
+                        .contentShape(.rect)
+                        .gesture(DragGesture(minimumDistance: 0).onEnded { _ in greetPet() })
+                        .offset(x: zone.minX, y: zone.minY)
+                        .accessibilityHidden(true)
+                }
                 column(atTop: true) {
                     TourCaption(text: TourCopy.pet)
                 }
@@ -1060,6 +1080,7 @@ private struct TourDeskCoach: View {
             }
         }
         .frame(width: size.width, height: size.height, alignment: .topLeading)
+        .sensoryFeedback(.impact(weight: .light, intensity: 0.5), trigger: greetings)
         .animation(AnchorMotion.panel, value: tour.stage)
         .animation(AnchorMotion.panel, value: showsMac)
         .onChange(of: spots[.recallCard]) { _, card in
@@ -1081,6 +1102,12 @@ private struct TourDeskCoach: View {
                 lit = step
             }
         }
+    }
+
+    private func greetPet() {
+        greetings += 1
+        DeskPetLife.shared.tap()
+        tour.pettedPet()
     }
 
     private var folders: [CGRect] {
