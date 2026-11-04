@@ -136,7 +136,8 @@ struct DeskTaskLibrary: View {
         return ZStack(alignment: .topLeading) {
             DeskFolderShape(tabWidth: tabWidths[task.id] ?? 72, tabHeight: Metrics.tab, radius: Metrics.radius)
                 .fill(palette.folder)
-                .shadow(color: palette.glow.opacity(0.12), radius: 20, y: 2)
+                // The folder's one glow: clean and in its own color.
+                .shadow(color: palette.glow.opacity(0.22), radius: 14, y: 2)
             tab(task, palette: palette)
 
             Group {
@@ -148,6 +149,9 @@ struct DeskTaskLibrary: View {
             }
             .padding(.horizontal, Metrics.cardInset)
             .padding(.top, Metrics.tab)
+            .frame(width: Metrics.folder.width, height: Metrics.folder.height, alignment: .topLeading)
+            // The cards cast onto each other; their shadows never muddy the water outside.
+            .clipShape(DeskFolderShape(tabWidth: tabWidths[task.id] ?? 72, tabHeight: Metrics.tab, radius: Metrics.radius))
         }
         .frame(width: Metrics.folder.width, height: Metrics.folder.height, alignment: .topLeading)
         .accessibilityElement(children: .contain)
@@ -212,33 +216,37 @@ struct DeskTaskLibrary: View {
             if isFront { openRecall(process, of: task) } else { bringToFront(process, of: task) }
         } label: {
             VStack(alignment: .leading, spacing: 0) {
-                // The title gets the whole row, so ten characters always fit.
+                // Ten characters always fit: the whole row, or beside the anchor a little smaller.
                 Text(process.title)
                     .font(.system(size: 14))
                     .foregroundStyle(DeskStyle.text)
                     .lineLimit(1)
+                    .minimumScaleFactor(isRed ? 0.78 : 1)
+                    .padding(.trailing, isRed ? 31 : 0)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .frame(height: 20)
-                HStack(alignment: .center, spacing: 4) {
-                    Text(worked)
-                        .font(.system(size: 11))
-                        .foregroundStyle(palette.ink)
-                        .lineLimit(1)
-                    Spacer(minLength: 0)
-                    if isRed {
-                        HarborAnchorGlyph(color: palette.ink, lineWidth: 1.8)
-                            .frame(width: 15, height: 15)
-                            .modifier(TourAnchorCall(calling: isFront && tourCalls, tint: palette.ink))
-                            .accessibilityHidden(true)
-                    }
-                }
-                .padding(.top, -2)
+                Text(worked)
+                    .font(.system(size: 11))
+                    .foregroundStyle(palette.ink)
+                    .lineLimit(1)
+                    .padding(.top, -2)
                 if isFront { exchange(process) }
             }
             .padding(.leading, 12)
             .padding(.trailing, 4)
             .padding(.top, 10)
             .frame(width: Metrics.card.width, height: Metrics.card.height, alignment: .topLeading)
+            .overlay(alignment: .topTrailing) {
+                if isRed {
+                    DeskCardAnchor()
+                        .fill(palette.ink)
+                        .frame(width: 20, height: 20)
+                        .modifier(TourAnchorCall(calling: isFront && tourCalls, tint: palette.ink))
+                        .padding(.top, 10)
+                        .padding(.trailing, 11)
+                        .accessibilityHidden(true)
+                }
+            }
             .background(isRed ? palette.front : DeskStyle.card, in: shape)
             .contentShape(shape)
         }
@@ -247,7 +255,7 @@ struct DeskTaskLibrary: View {
         .background {
             shape.fill(DeskStyle.card)
                 .shadow(color: palette.glow.opacity(0.2), radius: 20, y: 2)
-                .shadow(color: .black.opacity(0.25), radius: 11, y: -2)
+                .shadow(color: palette.cast.opacity(0.3), radius: 11, y: -2)
         }
         .overlay {
             ResultSwell(trigger: swells[process.id, default: 0], tone: swellTone,
@@ -522,6 +530,37 @@ struct DeskTaskLibrary: View {
     }
 }
 
+/// The anchor on a card that needs the person, from the owner's mockup: a ring
+/// with a small eye, a straight shank and no stock, and a round bowl whose two
+/// short flukes turn inward. Measured on a unit square.
+struct DeskCardAnchor: Shape {
+    func path(in rect: CGRect) -> Path {
+        let side = min(rect.width, rect.height)
+        let origin = CGPoint(x: rect.midX - side / 2, y: rect.midY - side / 2)
+        func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: origin.x + x * side, y: origin.y + y * side) }
+
+        let ringCenter = point(0.5, 0.164)
+        var ring = Path()
+        ring.addArc(center: ringCenter, radius: 0.108 * side, startAngle: .zero, endAngle: .degrees(360), clockwise: false)
+
+        var shank = Path()
+        shank.move(to: point(0.5, 0.272))
+        shank.addLine(to: point(0.5, 0.945))
+
+        var bowl = Path()
+        bowl.move(to: point(0.18, 0.5))
+        bowl.addLine(to: point(0.055, 0.5))
+        bowl.addArc(center: point(0.5, 0.5), radius: 0.445 * side, startAngle: .degrees(180), endAngle: .zero, clockwise: true)
+        bowl.addLine(to: point(0.82, 0.5))
+
+        var anchor = Path()
+        anchor.addPath(ring.strokedPath(StrokeStyle(lineWidth: 0.112 * side)))
+        anchor.addPath(shank.strokedPath(StrokeStyle(lineWidth: 0.092 * side)))
+        anchor.addPath(bowl.strokedPath(StrokeStyle(lineWidth: 0.115 * side, lineCap: .round, lineJoin: .round)))
+        return anchor
+    }
+}
+
 /// A folder with its tab as one outline: the tab's rounded top rises from
 /// the folder's left edge, and its right side curves into the folder's top,
 /// so the two never meet at a notch.
@@ -568,12 +607,15 @@ struct DeskFolderPalette {
     let ink: Color
     /// The card in front.
     let front: Color
+    /// The shade a card casts on the one behind, a deeper tone of the folder so it never turns brown.
+    let cast: Color
 
     static let replyInk = DeskStyle.adaptive(0xA3A3A3, dark: 0x8597A1)
 
     private static let glows: [UInt32] = [0xFFB400, 0x49C8FF, 0xFF64DB]
     private static let inks: [(UInt32, UInt32)] = [(0xFF7F00, 0xFFA040), (0x0095FF, 0x5CBBFF), (0xFF3ED2, 0xFF7AE0)]
     private static let fronts: [(UInt32, UInt32)] = [(0xFFF6E1, 0x3B3122), (0xD4F6FF, 0x173E4C), (0xFFEFFB, 0x3E2439)]
+    private static let casts: [UInt32] = [0xC27A00, 0x0A78C2, 0xC232A0]
 
     init(_ task: AnchorSession) {
         let index = max(0, task.taskColorIndex ?? 0) % Self.inks.count
@@ -581,6 +623,7 @@ struct DeskFolderPalette {
         glow = Color(anchorHex: Self.glows[index])
         ink = DeskStyle.adaptive(Self.inks[index].0, dark: Self.inks[index].1)
         front = DeskStyle.adaptive(Self.fronts[index].0, dark: Self.fronts[index].1)
+        cast = DeskStyle.adaptive(Self.casts[index], dark: 0x000000)
     }
 }
 
