@@ -35,13 +35,35 @@ struct HarborLaunchChoreographyTests {
         #expect(!scene.bubbles(at: Scene.impactTime + 0.3).isEmpty)
     }
 
-    @Test func sloganRevealsAfterTheWordmarkAndLeavesWithTheTide() {
+    @Test func threadsMergeIntoTheAnchorAndBecomeTheMainLine() {
         let scene = scene()
+        #expect(scene.threads(at: 0.2).count >= 3)
+        #expect(scene.mainLine(at: Scene.mergeTime - 0.01) == nil)
+        // Every thread has reached the merge point by the time the anchor forms there.
+        for thread in scene.threads(at: Scene.mergeTime) {
+            let end = thread.points.last ?? .zero
+            #expect(abs(end.x - scene.mergePoint.x) < 1 && abs(end.y - scene.mergePoint.y) < 1)
+        }
+        #expect(scene.logo(at: Scene.mergeTime).center == scene.mergePoint)
+        #expect(scene.threads(at: Scene.threadsEnd).isEmpty)
+        #expect(Scene.threadsEnd < Scene.impactTime)
+        // After the impact the line is tied up under the words and runs down to the anchor.
+        let line = scene.mainLine(at: Scene.exitStart)
+        #expect(line?.top.y == scene.textBottomY + 8)
+        #expect((line?.bottom.y ?? 0) > scene.restingWaterline)
+        // Blue in the air, white under the water.
+        #expect(scene.submersion(at: Scene.impactTime) == 0 && scene.submersion(at: Scene.exitStart) == 1)
+    }
+
+    @Test func eachHalfOfTheSloganArrivesWithWhatItDescribes() {
+        let scene = scene()
+        #expect(scene.threadsLine(at: Scene.threadsLineStart).opacity == 0)
+        #expect(scene.mainLineText(at: Scene.impactTime).opacity == 0)
+        #expect(Scene.threadsLineStart < Scene.mergeTime && Scene.mainLineTextStart > Scene.impactTime)
         #expect(scene.wordmark(at: Scene.wordmarkStart).opacity == 0)
-        #expect(scene.slogan(at: Scene.wordmarkStart + 0.1).opacity == 0)
-        let shown = scene.slogan(at: Scene.sloganStart + Scene.textReveal)
+        let shown = scene.mainLineText(at: Scene.mainLineTextStart + Scene.textReveal)
         #expect(shown.opacity == 1 && shown.blur == 0)
-        #expect(scene.slogan(at: Scene.exitStart + Scene.exitDuration * 0.5).opacity == 0)
+        #expect(scene.mainLineText(at: Scene.exitStart + Scene.exitDuration * 0.5).opacity == 0)
     }
 
     @Test func tideRisesPastTheTopAndTheSceneEndsTransparent() {
@@ -68,7 +90,8 @@ struct HarborLaunchChoreographyTests {
         let pose = scene.logo(at: 0)
         #expect(pose.opacity == 1 && pose.center.y == scene.restY && pose.rotationDegrees == 0)
         #expect(scene.droplets(at: 0.7).isEmpty && scene.ripples(at: 0.7).isEmpty && scene.bubbles(at: 0.7).isEmpty)
-        #expect(scene.slogan(at: 0).opacity == 1)
+        #expect(scene.threadsLine(at: 0).opacity == 1 && scene.mainLineText(at: 0).opacity == 1)
+        #expect(scene.threads(at: 0.4).isEmpty && scene.mainLine(at: 0) != nil)
         #expect(scene.surfaceOffset(x: 100, at: 0) == scene.surfaceOffset(x: 100, at: 0.5))
         #expect(scene.timing.total == Scene.reducedHold + Scene.reducedFade)
     }
@@ -77,5 +100,6 @@ struct HarborLaunchChoreographyTests {
         let scene = Scene(size: CGSize(width: 874, height: 402), timing: .init(reduceMotion: false))
         #expect(scene.restY + scene.logoSide / 2 <= 402)
         #expect(scene.restY - scene.logoSide / 2 > scene.restingWaterline)
+        #expect(scene.impactY > scene.mergePoint.y)
     }
 }

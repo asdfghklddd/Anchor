@@ -37,6 +37,9 @@
     "%lld decisions" : {
 
     },
+    "%lld files changed" : {
+
+    },
     "%lld from Mac" : {
 
     },
@@ -785,6 +788,12 @@
     "Collapse navigation" : {
 
     },
+    "Committed" : {
+
+    },
+    "Committed %@" : {
+
+    },
     "Compact" : {
 
     },
@@ -847,7 +856,7 @@
     "Connect" : {
 
     },
-    "Connect Codex and Claude folders once…" : {
+    "Connect agent folders once…" : {
 
     },
     "Connect local agent sessions" : {
@@ -2590,6 +2599,9 @@
         }
       }
     },
+    "Every step is done" : {
+
+    },
     "Execution" : {
 
     },
@@ -3652,7 +3664,7 @@
     "is waiting for input" : {
 
     },
-    "Just click Connect. Anchor only reads the Codex and Claude Code conversation folders, remembers access, and finds new conversations automatically." : {
+    "Just click Connect. Anchor only reads the Codex, Claude Code and DeepSeek Harness conversation folders, remembers access, and finds new conversations automatically." : {
 
     },
     "just now" : {
@@ -3698,18 +3710,34 @@
     "LATEST PROGRESS" : {
 
     },
-    "launch.slogan" : {
+    "launch.slogan.mainline" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Let your thinking come ashore"
+            "value" : "Your work keeps a main thread."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "让思路靠岸"
+            "value" : "工作有主线"
+          }
+        }
+      }
+    },
+    "launch.slogan.threads" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI runs multithreaded."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI多线程"
           }
         }
       }
@@ -3729,9 +3757,6 @@
           }
         }
       }
-    },
-    "Let your thinking come ashore" : {
-
     },
     "Listening" : {
 
@@ -6063,10 +6088,16 @@
     "Needs your judgment" : {
 
     },
+    "New" : {
+
+    },
     "New work" : {
 
     },
     "Next" : {
+
+    },
+    "Next: %@" : {
 
     },
     "No action needed" : {
@@ -6078,7 +6109,7 @@
     "No changes received yet. This summary updates as records arrive." : {
 
     },
-    "No Codex or Claude Code conversations were found. Open your home folder and click Connect." : {
+    "No Codex, Claude Code or DeepSeek Harness conversations were found. Open your home folder and click Connect." : {
 
     },
     "No events yet" : {
@@ -6117,10 +6148,16 @@
     "Not done" : {
 
     },
+    "Not pushed" : {
+
+    },
     "Not sent yet: %lld" : {
 
     },
     "Not tested" : {
+
+    },
+    "Not tried on a device" : {
 
     },
     "Not yet" : {
@@ -6325,6 +6362,9 @@
     "Nothing running" : {
 
     },
+    "Nothing waits on you" : {
+
+    },
     "notifications" : {
       "localizations" : {
         "en" : {
@@ -6463,6 +6503,9 @@
     "Open on Mac" : {
 
     },
+    "Open on the Mac" : {
+
+    },
     "Open Safari settings…" : {
 
     },
@@ -6470,6 +6513,9 @@
 
     },
     "Open System Settings" : {
+
+    },
+    "Opened on the Mac" : {
 
     },
     "Orientation lock is on. Turn it off in Control Center, then turn your phone." : {
@@ -8699,6 +8745,9 @@
       }
     },
     "Public workspace events show which apps are open, active, or closed." : {
+
+    },
+    "Pushed" : {
 
     },
     "Queued" : {
@@ -13550,10 +13599,16 @@
     "Still running" : {
 
     },
+    "Still working" : {
+
+    },
     "Stop listening" : {
 
     },
     "stopped" : {
+
+    },
+    "Stopped by an error" : {
 
     },
     "summary" : {
@@ -13571,6 +13626,9 @@
           }
         }
       }
+    },
+    "Swipe up to open it on the Mac, down to close" : {
+
     },
     "sync.fresh.just-now" : {
       "extractionState" : "manual",
@@ -13993,7 +14051,13 @@
     "Tests failed" : {
 
     },
+    "Tests mostly passed" : {
+
+    },
     "Tests passed" : {
+
+    },
+    "Tests ran" : {
 
     },
     "tests.failed" : {
@@ -14071,6 +14135,9 @@
 
     },
     "The Mac is offline. Work already synced remains available." : {
+
+    },
+    "The Mac isn't connected" : {
 
     },
     "The work moved forward %lld%%" : {
@@ -15554,6 +15621,12 @@
     "Waiting for you" : {
 
     },
+    "Waiting for you to do" : {
+
+    },
+    "Waiting for your answer" : {
+
+    },
     "Waiting in background" : {
 
     },
@@ -15708,6 +15781,12 @@
 
     },
     "You" : {
+
+    },
+    "You decided: %@" : {
+
+    },
+    "You stopped it" : {
 
     },
     "Your agent was working when you left. Meanwhile: %@" : {

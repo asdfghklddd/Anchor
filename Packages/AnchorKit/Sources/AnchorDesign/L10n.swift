@@ -582,7 +582,8 @@ public enum L10n {
         "system.settings.open",
         default: "Open System Settings"
     )
-    public static let launchSlogan = AnchorStrings.value("launch.slogan", default: "Let your thinking come ashore")
+    public static let launchSloganThreads = AnchorStrings.value("launch.slogan.threads", default: "AI runs multithreaded.")
+    public static let launchSloganMainLine = AnchorStrings.value("launch.slogan.mainline", default: "Your work keeps a main thread.")
 
     public static func processCount(_ count: Int) -> String {
         String.localizedStringWithFormat(AnchorStrings.value("process.count", default: "%lld processes"), count)

@@ -1,25 +1,33 @@
 import CoreGraphics
 import Foundation
 
-/// The launch scene: the logo lifts, falls into the harbor, splashes, sinks and settles,
-/// then the wordmark and slogan surface and the tide rises into the workspace.
+/// The launch scene says the slogan: many colored threads run in from the edges
+/// ("AI runs multithreaded") and merge into one point, the anchor forms there and
+/// drops, trailing the main line behind it ("your work keeps a main thread"). It
+/// splashes into the harbor and settles, the line tied up under the words, and
+/// the tide rises into the workspace.
 ///
 /// Every frame is a pure function of elapsed time, so the sequence is deterministic,
 /// display-synced when driven by a `TimelineView`, and can be cut short at any moment.
 public struct HarborLaunchChoreography: Sendable {
     // MARK: Beats (seconds)
 
-    public static let appearEnd = 0.20
-    /// The harbor rises out of the blank system launch screen while the logo lifts.
-    public static let waterIntro = 0.34
-    public static let impactTime = 0.58
-    public static let wordmarkStart = 0.88
-    public static let sloganStart = 1.02
+    /// The harbor rises out of the blank system launch screen under the threads.
+    public static let waterIntro = 0.46
+    public static let threadsLineStart = 0.18
+    /// The last thread reaches the merge point and the anchor starts to form.
+    public static let mergeTime = 0.72
+    public static let appearEnd = 0.86
+    public static let impactTime = 1.14
+    /// The threads have all run into the merge point by now.
+    public static let threadsEnd = 1.08
+    public static let mainLineTextStart = 1.16
+    public static let wordmarkStart = 1.30
     public static let textReveal = 0.42
-    public static let exitStart = 1.78
+    public static let exitStart = 2.25
     public static let exitDuration = 0.42
     public static let skipExitDuration = 0.26
-    public static let reducedHold = 0.55
+    public static let reducedHold = 0.9
     public static let reducedFade = 0.18
 
     /// When the tide begins and how long it takes, including an early tap-to-skip.
@@ -69,6 +77,22 @@ public struct HarborLaunchChoreography: Sendable {
         public var offset: CGFloat
     }
 
+    /// One of the many threads: the part of it drawn so far, and the bead running at its head.
+    public struct ThreadStroke: Sendable, Equatable {
+        /// Which of the task colors it wears.
+        public var hue: Int
+        public var points: [CGPoint]
+        public var bead: CGPoint?
+    }
+
+    /// The one line the threads became: from under the words down to the anchor.
+    public struct MainLine: Sendable, Equatable {
+        public var top: CGPoint
+        public var bottom: CGPoint
+        /// How far its middle swings sideways after the impact.
+        public var sway: CGFloat
+    }
+
     public let size: CGSize
     public let timing: Timing
 
@@ -79,12 +103,13 @@ public struct HarborLaunchChoreography: Sendable {
 
     // MARK: Layout
 
-    public var logoSide: CGFloat { min(150, min(size.width, size.height) * 0.34) }
-    public var restingWaterline: CGFloat { size.height * 0.56 }
-    public var textCenterY: CGFloat { size.height * 0.30 }
+    public var logoSide: CGFloat { min(150, min(size.width * 0.34, size.height * 0.2)) }
+    public var restingWaterline: CGFloat { size.height * 0.58 }
+    /// The foot of the wordmark and slogan; the main line is tied just under it.
+    public var textBottomY: CGFloat { size.height * 0.22 }
+    /// Where the threads meet and the anchor forms.
+    public var mergePoint: CGPoint { CGPoint(x: centerX, y: size.height * 0.37) }
     var centerX: CGFloat { size.width / 2 }
-    var startY: CGFloat { size.height * 0.27 }
-    var liftedY: CGFloat { startY - 12 }
     /// The logo's lowest point touches the surface.
     public var impactY: CGFloat { restingWaterline - logoSide * 0.48 }
     /// Fully submerged, while staying on screen in landscape.
@@ -92,7 +117,7 @@ public struct HarborLaunchChoreography: Sendable {
         restingWaterline + min(logoSide * 0.95, size.height - restingWaterline - logoSide * 0.6)
     }
     var fallVelocity: CGFloat {
-        2 * (impactY - liftedY) / CGFloat(Self.impactTime - Self.appearEnd)
+        2 * (impactY - mergePoint.y) / CGFloat(Self.impactTime - Self.appearEnd)
     }
 
     // MARK: Scene
@@ -132,26 +157,115 @@ public struct HarborLaunchChoreography: Sendable {
         return y
     }
 
+    // MARK: The threads
+
+    private struct ThreadPlan {
+        /// -1 runs in from the left edge, 1 from the right.
+        let side: CGFloat
+        /// Where it starts between the words and just below the merge point.
+        let band: CGFloat
+        let hue: Int
+        let phase: Double
+    }
+
+    private static let threadPlans = [
+        ThreadPlan(side: -1, band: 0.08, hue: 0, phase: 0.4),
+        ThreadPlan(side: 1, band: 0.30, hue: 1, phase: 2.1),
+        ThreadPlan(side: -1, band: 0.60, hue: 2, phase: 4.0),
+        ThreadPlan(side: 1, band: 0.82, hue: 0, phase: 5.2),
+        ThreadPlan(side: -1, band: 1.00, hue: 1, phase: 1.2),
+    ]
+    private static let threadSamples = 32
+    private static let threadStagger = 0.05
+    private static let threadRun = mergeTime - threadStagger * Double(threadPlans.count - 1)
+
+    /// The threads run in one after another, each wavering on its own. As the last
+    /// arrives they straighten and their tails follow them into the merge point.
+    public func threads(at t: Double) -> [ThreadStroke] {
+        guard !timing.reduceMotion, t >= 0, t < Self.threadsEnd else { return [] }
+        let merge = mergePoint
+        let bandTop = textBottomY + 14
+        let bandBottom = merge.y + size.height * 0.03
+        let amplitude = min((bandBottom - bandTop) * 0.2, 24)
+        let straighten = smoothstep(Self.mergeTime - 0.2, Self.mergeTime + 0.12, t)
+
+        return Self.threadPlans.enumerated().compactMap { index, plan in
+            let head = easeInOutCubic(clamp((t - Self.threadStagger * Double(index)) / Self.threadRun))
+            let retract = (Self.threadsEnd - 0.5) + 0.02 * Double(index)
+            let tail = easeInCubic(clamp((t - retract) / (Self.threadsEnd - retract)))
+            guard head > 0, tail < 1 else { return nil }
+            let startX = centerX + plan.side * (size.width / 2 + 12)
+            let startY = bandTop + (bandBottom - bandTop) * plan.band
+            let at: (Double) -> CGPoint = { s in
+                let wave = sin(s * 2 * .pi * 1.6 + plan.phase + t * 4.2) * (1 - s) * (1 - straighten)
+                return CGPoint(
+                    x: startX + (merge.x - startX) * CGFloat(s),
+                    y: startY + (merge.y - startY) * CGFloat(smoothstep(0, 1, s)) + amplitude * CGFloat(wave)
+                )
+            }
+            let points = (0...Self.threadSamples).map { step in
+                at(tail + (head - tail) * Double(step) / Double(Self.threadSamples))
+            }
+            return ThreadStroke(hue: plan.hue, points: points, bead: head < 1 ? at(head) : nil)
+        }
+    }
+
+    /// A soft ring where the threads meet, as the anchor forms.
+    public func mergePulse(at t: Double) -> Ripple? {
+        guard !timing.reduceMotion else { return nil }
+        let p = (t - Self.mergeTime) / 0.42
+        guard p >= 0, p < 1 else { return nil }
+        return Ripple(
+            center: mergePoint,
+            radius: logoSide * (0.24 + 0.46 * CGFloat(easeOutCubic(p))),
+            opacity: 0.6 * (1 - p)
+        )
+    }
+
+    /// Nothing before the merge. The line pays out behind the falling anchor, and
+    /// after the impact its top climbs to tie up just under the words.
+    public func mainLine(at t: Double) -> MainLine? {
+        guard timing.reduceMotion || t >= Self.mergeTime else { return nil }
+        let pose = logo(at: t)
+        // The apex of the A, where the line goes in. The logo scales from its foot.
+        let reach = logoSide * pose.scaleY * 0.9 - logoSide / 2
+        let radians = pose.rotationDegrees * .pi / 180
+        let bottom = CGPoint(
+            x: pose.center.x + CGFloat(sin(radians)) * reach,
+            y: pose.center.y - CGFloat(cos(radians)) * reach
+        )
+        let tied = CGPoint(x: centerX, y: textBottomY + 8)
+        guard !timing.reduceMotion else { return MainLine(top: tied, bottom: bottom, sway: 0) }
+        let climb = CGFloat(easeInOutCubic(clamp((t - Self.impactTime) / 0.4)))
+        let merge = mergePoint
+        let top = CGPoint(x: centerX, y: merge.y + (tied.y - merge.y) * climb)
+        guard bottom.y > top.y else { return nil }
+        let tau = max(0, t - Self.impactTime)
+        return MainLine(top: top, bottom: bottom, sway: t < Self.impactTime ? 0 : 7 * CGFloat(exp(-2.4 * tau) * sin(tau * 8.5)))
+    }
+
+    // MARK: The anchor
+
     public func logo(at t: Double) -> LogoPose {
         guard !timing.reduceMotion else {
             return LogoPose(center: CGPoint(x: centerX, y: restY), scaleX: 1, scaleY: 1, rotationDegrees: 0, opacity: 1)
         }
+        let merge = mergePoint
         if t < Self.appearEnd {
-            // Anticipation: fade in and lift slightly with a small crouch and tilt.
-            let e = CGFloat(easeOutCubic(clamp(t / Self.appearEnd)))
+            // Formed where the threads meet: it swells out of the point with a small overshoot.
+            let p = clamp((t - Self.mergeTime) / (Self.appearEnd - Self.mergeTime))
+            let scale = CGFloat(0.5 + 0.5 * easeOutBack(p))
             return LogoPose(
-                center: CGPoint(x: centerX, y: startY - 12 * e),
-                scaleX: (0.92 + 0.08 * e) * (1 + 0.03 * e),
-                scaleY: (0.92 + 0.08 * e) * (1 - 0.04 * e),
-                rotationDegrees: -5 * Double(e),
-                opacity: clamp(t / 0.14)
+                center: merge, scaleX: scale, scaleY: scale,
+                rotationDegrees: -5 * p,
+                opacity: clamp(p / 0.5)
             )
         }
         if t < Self.impactTime {
             // Gravity: accelerate toward the surface and stretch along the fall.
             let u = CGFloat((t - Self.appearEnd) / (Self.impactTime - Self.appearEnd))
             return LogoPose(
-                center: CGPoint(x: centerX, y: liftedY + (impactY - liftedY) * u * u),
+                center: CGPoint(x: centerX, y: merge.y + (impactY - merge.y) * u * u),
                 scaleX: 1.03 - 0.07 * u,
                 scaleY: 0.96 + 0.11 * u,
                 rotationDegrees: -5 + 8 * Double(u),
@@ -160,7 +274,7 @@ public struct HarborLaunchChoreography: Sendable {
         }
         // Water: an underdamped spring carries the remaining momentum to the resting depth.
         let tau = t - Self.impactTime
-        let omega = 6.5, zeta = 0.62
+        let omega = 7.5, zeta = 0.66
         let omegaD = omega * (1 - zeta * zeta).squareRoot()
         let x0 = Double(impactY - restY)
         let v0 = Double(fallVelocity) * 0.3
@@ -174,6 +288,12 @@ public struct HarborLaunchChoreography: Sendable {
             rotationDegrees: 3 * exp(-3 * tau) * cos(2 * .pi * 1.1 * tau),
             opacity: 1
         )
+    }
+
+    /// How far the anchor has turned to white: blue in the air, white once under
+    /// water, where blue on blue would disappear.
+    public func submersion(at t: Double) -> Double {
+        timing.reduceMotion ? 1 : smoothstep(Self.impactTime + 0.04, Self.impactTime + 0.34, t)
     }
 
     /// Spray thrown up by the impact; each drop falls back into the water.
@@ -232,8 +352,13 @@ public struct HarborLaunchChoreography: Sendable {
         }
     }
 
+    // MARK: The words
+
     public func wordmark(at t: Double) -> Reveal { reveal(startingAt: Self.wordmarkStart, at: t) }
-    public func slogan(at t: Double) -> Reveal { reveal(startingAt: Self.sloganStart, at: t) }
+    /// "AI runs multithreaded" arrives with the threads.
+    public func threadsLine(at t: Double) -> Reveal { reveal(startingAt: Self.threadsLineStart, at: t) }
+    /// "Your work keeps a main thread" arrives as the anchor lands.
+    public func mainLineText(at t: Double) -> Reveal { reveal(startingAt: Self.mainLineTextStart, at: t) }
 
     private func reveal(startingAt start: Double, at t: Double) -> Reveal {
         guard !timing.reduceMotion else { return Reveal(opacity: 1, blur: 0, offset: 0) }
@@ -252,8 +377,13 @@ public struct HarborLaunchChoreography: Sendable {
 
 private func clamp(_ value: Double) -> Double { min(1, max(0, value)) }
 private func easeOutCubic(_ p: Double) -> Double { 1 - pow(1 - p, 3) }
+private func easeInCubic(_ p: Double) -> Double { p * p * p }
 private func easeInOutCubic(_ p: Double) -> Double {
     p < 0.5 ? 4 * p * p * p : 1 - pow(-2 * p + 2, 3) / 2
+}
+private func easeOutBack(_ p: Double) -> Double {
+    let overshoot = 1.70158
+    return 1 + (overshoot + 1) * pow(p - 1, 3) + overshoot * pow(p - 1, 2)
 }
 private func smoothstep(_ edge0: Double, _ edge1: Double, _ x: Double) -> Double {
     let p = clamp((x - edge0) / (edge1 - edge0))
