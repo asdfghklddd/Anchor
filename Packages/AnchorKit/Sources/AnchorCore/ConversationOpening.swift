@@ -57,6 +57,9 @@ public struct ConversationLink: Hashable, Sendable {
             // The harness opens no single conversation by link; it comes to the front.
             guard let url = URL(string: "dsh://open") else { return nil }
             self.init(url: url)
+        } else if metadata.originator == WorkBuddyLog.originator {
+            guard let url = URL(string: "workbuddy://chat/\(id)") else { return nil }
+            self.init(url: url)
         } else if metadata.originator == CodexSessionMetadata.claudeCodeOriginator {
             guard let url = URL(string: "claude://code") else { return nil }
             self.init(url: url, resumeCommand: "claude --resume \(metadata.id)")

@@ -65,6 +65,7 @@ public enum CodexAutoAssociation {
             let lines = data.split(separator: 10)
             for line in (latest ? Array(lines.reversed()) : Array(lines)) {
                 guard let object = try? JSONSerialization.jsonObject(with: Data(line)) as? [String: Any] else { continue }
+                if let request = WorkBuddyLog.request(in: object) { return String(request.prefix(8_000)) }
                 // Claude Code: a prompt the person typed, never meta, sub-agent or tool text.
                 if object["type"] as? String == "user", object["isMeta"] as? Bool != true,
                    object["isSidechain"] as? Bool != true, let message = object["message"] as? [String: Any] {

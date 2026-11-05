@@ -25,6 +25,7 @@ public struct CodexSessionMetadata: Hashable, Sendable {
     public var sourceName: String {
         if originator == Self.claudeCodeOriginator { return Self.claudeCodeOriginator }
         if originator == HarnessSessionStatus.originator { return HarnessSessionStatus.sourceName }
+        if originator == WorkBuddyLog.originator { return WorkBuddyLog.originator }
         return originator?.localizedCaseInsensitiveContains("desktop") == true ? "ChatGPT" : "Codex"
     }
 
@@ -46,7 +47,29 @@ public struct CodexSessionMetadata: Hashable, Sendable {
               let newline = data.firstIndex(of: 10) else {
             return nil
         }
+        if WorkBuddyLog.isLog(head: data) { return workBuddy(url: url, head: data) }
         return CodexSessionMetadata(firstLine: data[..<newline]) ?? claudeCode(url: url, head: data)
+    }
+
+    /// A WorkBuddy session: its ID, folder and start from its first entries.
+    /// Sub-agents write their own logs in a `subagents` folder.
+    static func workBuddy(url: URL, head: Data) -> CodexSessionMetadata? {
+        var id: String?
+        var cwd: String?
+        var createdAt: Date?
+        for line in head.split(separator: 10, omittingEmptySubsequences: true).prefix(20) {
+            guard let entry = try? JSONSerialization.jsonObject(with: Data(line)) as? [String: Any] else { continue }
+            id = id ?? entry["sessionId"] as? String
+            cwd = cwd ?? entry["cwd"] as? String
+            createdAt = createdAt ?? WorkBuddyLog.date(of: entry)
+            if id != nil, cwd != nil, createdAt != nil { break }
+        }
+        guard let id, !id.isEmpty else { return nil }
+        return CodexSessionMetadata(
+            id: id, createdAt: createdAt, workspaceName: cwd.flatMap(WorkBuddyLog.workspaceName(cwd:)),
+            originator: WorkBuddyLog.originator, threadSource: nil,
+            isSubagent: url.pathComponents.contains("subagents")
+        )
     }
 
     /// A Claude Code session: its ID, folder and start from its first entries.

@@ -1,7 +1,7 @@
 import Foundation
 
-/// Tokens agents used per half hour, read from Codex and Claude Code logs and
-/// DeepSeek Harness status files.
+/// Tokens agents used per half hour, read from Codex, Claude Code and WorkBuddy
+/// logs and DeepSeek Harness status files.
 /// Counts fresh input plus output; cached reads are left out, since they
 /// repeat context the agent already paid for. Only counts leave the logs.
 public actor TokenTally {
@@ -74,8 +74,14 @@ public actor TokenTally {
         for line in data.split(separator: UInt8(ascii: "\n")) {
             let isCodex = line.firstRange(of: Self.codexMarker) != nil
             guard isCodex || line.firstRange(of: Self.claudeMarker) != nil,
-                  let object = try? JSONSerialization.jsonObject(with: line) as? [String: Any],
-                  let stamp = object["timestamp"] as? String, let at = Self.date(stamp) else { continue }
+                  let object = try? JSONSerialization.jsonObject(with: line) as? [String: Any] else { continue }
+            // Only WorkBuddy stamps its lines with a number. Each model step reports its usage once.
+            if let at = WorkBuddyLog.date(of: object) {
+                let tokens = WorkBuddyLog.tokens(in: object)
+                if tokens > 0 { slots[DayActivity.slotStart(of: at), default: 0] += tokens }
+                continue
+            }
+            guard let stamp = object["timestamp"] as? String, let at = Self.date(stamp) else { continue }
             var tokens = 0
             if isCodex {
                 // Codex reports a running total; its rise is what this moment used.

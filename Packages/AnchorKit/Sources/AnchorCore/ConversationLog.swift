@@ -9,8 +9,10 @@ public enum ConversationDialect: String, Codable, Hashable, Sendable {
     case claudeCode
     /// DeepSeek Harness, read from its status files rather than a log (`HarnessSessionStatus`).
     case deepseekHarness
+    /// WorkBuddy (`~/.workbuddy/projects/<project>/<session>.jsonl`).
+    case workBuddy
 
-    /// Codex opens with `session_meta`; Claude Code entries carry a `sessionId`.
+    /// Codex opens with `session_meta`, WorkBuddy with `session-meta`; Claude Code entries carry a `sessionId`.
     public static func of(_ url: URL) -> ConversationDialect {
         if HarnessSessionStatus.isStatusFile(url) { return .deepseekHarness }
         guard let handle = try? FileHandle(forReadingFrom: url) else { return .codex }
@@ -18,6 +20,7 @@ public enum ConversationDialect: String, Codable, Hashable, Sendable {
         guard let data = try? handle.read(upToCount: 16 * 1_024) else { return .codex }
         let head = String(decoding: data, as: UTF8.self)
         if head.contains(#""type":"session_meta""#) { return .codex }
+        if WorkBuddyLog.isLog(head: data) { return .workBuddy }
         return head.contains(#""sessionId""#) ? .claudeCode : .codex
     }
 }
@@ -36,11 +39,22 @@ struct TurnLogRecord: Sendable {
 struct ConversationLogReader: Sendable {
     let dialect: ConversationDialect
     private var codex = CodexTurnFacts()
-    private(set) var claude: ClaudeCodeTurnReader
+    private var claude: ClaudeCodeTurnReader
+    private var workBuddy: WorkBuddyTurnReader
 
     init(dialect: ConversationDialect, resuming checkpoint: ClaudeCodeTurnReader.Checkpoint? = nil) {
         self.dialect = dialect
-        claude = ClaudeCodeTurnReader(resuming: checkpoint)
+        claude = ClaudeCodeTurnReader(resuming: dialect == .claudeCode ? checkpoint : nil)
+        workBuddy = WorkBuddyTurnReader(resuming: dialect == .workBuddy ? checkpoint : nil)
+    }
+
+    /// The turn still open, for a checkpoint.
+    var openTurn: ClaudeCodeTurnReader.Checkpoint? {
+        switch dialect {
+        case .claudeCode: claude.openTurn
+        case .workBuddy: workBuddy.openTurn
+        case .codex, .deepseekHarness: nil
+        }
     }
 
     private static let codexMarkers = CodexLifecycleRecord.CodexLifecycle.allCases.map { Data($0.rawValue.utf8) }
@@ -51,6 +65,8 @@ struct ConversationLogReader: Sendable {
             return []
         case .claudeCode:
             return claude.read(line)
+        case .workBuddy:
+            return workBuddy.read(line)
         case .codex:
             // Most lines are tool output; only a line naming a lifecycle is decoded as one.
             guard Self.codexMarkers.contains(where: { line.range(of: $0) != nil }),
@@ -79,16 +95,30 @@ struct ConversationLogReader: Sendable {
 
     /// For a turn still running: its test results so far.
     var testsSoFar: TestOutcome? {
-        dialect == .claudeCode ? claude.testsSoFar : codex.tests(duration: nil)
+        switch dialect {
+        case .claudeCode: claude.testsSoFar
+        case .workBuddy: workBuddy.testsSoFar
+        case .codex, .deepseekHarness: codex.tests(duration: nil)
+        }
     }
 
     /// For a turn still running: a question that holds it until answered.
     var isHeldByQuestion: Bool {
-        dialect == .claudeCode ? claude.isHeldByQuestion : codex.isWaitingForReply(turnEnded: false)
+        switch dialect {
+        case .claudeCode: claude.isHeldByQuestion
+        case .workBuddy: workBuddy.isHeldByQuestion
+        case .codex, .deepseekHarness: codex.isWaitingForReply(turnEnded: false)
+        }
     }
 
     /// The conversation's own name, when the log records one.
-    var title: String? { dialect == .claudeCode ? claude.title : nil }
+    var title: String? {
+        switch dialect {
+        case .claudeCode: claude.title
+        case .workBuddy: workBuddy.title
+        case .codex, .deepseekHarness: nil
+        }
+    }
 }
 
 /// Turns of a Claude Code session. A prompt the person typed opens a turn; the
