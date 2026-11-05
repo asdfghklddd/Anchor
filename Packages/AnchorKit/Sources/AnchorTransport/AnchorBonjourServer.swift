@@ -1,3 +1,6 @@
+// Role: Mac side of the local network link: advertises over Bonjour, accepts the phone, handles
+// pairing requests and encrypted frames. Holds one authenticated peer at a time.
+
 import AnchorCore
 import CryptoKit
 import Foundation
@@ -294,6 +297,7 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
         }
     }
 
+    /// Validates the phone's proof against the code or secret, then saves the shared key.
     private func handlePairRequest(_ frame: LinkFrame, from peer: LineConnection) {
         let peerObjectID = ObjectIdentifier(peer)
         guard let publicKey = frame.publicKey,
@@ -374,6 +378,7 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
         }
     }
 
+    /// Opens a frame with the peer's key, rejects replays, and routes events, snapshots and heartbeats.
     private func handleEncrypted(_ frame: LinkFrame, from peer: LineConnection) {
         let peerObjectID = ObjectIdentifier(peer)
         peerIDs[peerObjectID] = frame.senderID
@@ -555,6 +560,7 @@ public final class AnchorBonjourServer: @unchecked Sendable, LocalLinkControllin
         }
     }
 
+    /// The short code shown on the Mac for manual pairing.
     private static func makePairingCode() -> String {
         var value: UInt32 = 0
         let status = withUnsafeMutableBytes(of: &value) { bytes in

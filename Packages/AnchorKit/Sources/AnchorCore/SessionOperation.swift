@@ -1,3 +1,7 @@
+// Role: the stored, synced form of a change: deterministic and replayable on either device.
+// Compatibility: never rename or remove a case; decoding old history depends on them. Bump
+// `latestEnvelopeSchemaVersion` only when older peers must refuse a new case.
+
 import Foundation
 
 /// A versioned, deterministic mutation that can be persisted and replayed on
@@ -273,6 +277,7 @@ public enum SessionOperation: Codable, Hashable, Sendable {
     }
 }
 
+/// A source's report about a process, as stored in event history.
 public struct ProcessObservation: Codable, Hashable, Sendable {
     public let process: AnchorProcess
     public let event: ProcessEvent?

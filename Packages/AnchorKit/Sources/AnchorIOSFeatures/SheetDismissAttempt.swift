@@ -1,3 +1,5 @@
+// Role: bridges UIKit's `presentationControllerDidAttemptToDismiss`, so a swipe on a dirty sheet can ask first.
+
 #if os(iOS)
 import SwiftUI
 import UIKit

@@ -1,5 +1,11 @@
+// Role: the unit stored and sent between devices. `type` says what `payload` holds. Types in use:
+// `anchor.operation.v1` (a `SessionOperation`, the event history), `anchor.reset.v1`, `anchor.history.v1`,
+// `anchor.open.v1`, `anchor.activity.v1`. Legacy `session.projection.v1` is still accepted on input.
+// Note: the last four are acted on directly and are never replayed into the projection.
+
 import Foundation
 
+/// Wire and storage record. `sourceID` + `sequence` order events per device; `deduplicationKey` drops repeats.
 public struct EventEnvelope: Identifiable, Codable, Hashable, Sendable {
     public static let operationType = "anchor.operation.v1"
 

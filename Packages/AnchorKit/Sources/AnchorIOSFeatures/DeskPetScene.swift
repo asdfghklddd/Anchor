@@ -1,3 +1,6 @@
+// Role: the pet's pixel room: window, desk, lamp, plant, computer and each pet's own things.
+// Note: `DeskSceneArt.dusk` is the dark-mode palette, and the lights keep their glow in it.
+
 #if os(iOS)
 import AnchorDesign
 import SwiftUI

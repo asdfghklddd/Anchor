@@ -1,8 +1,14 @@
+// Role: iPhone side of the local network link: finds the Mac, pairs, sends and receives encrypted
+// frames, and publishes the effective connection state across TCP and Bluetooth.
+// Concurrency: all mutable state is confined to its private serial queue. That is what `@unchecked Sendable` relies on.
+// Pairing order: iCloud secret (only when enabled), then Bluetooth, then a verification code as the visible fallback.
+
 import AnchorCore
 import CryptoKit
 import Foundation
 import Network
 
+/// The phone's end of the TCP link. It is also where the phone's presence signals come from.
 public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProviding, LocalLinkControlling, AnchorEventTransport, CurrentProcessProviding {
     private typealias OperationContinuation = CheckedContinuation<Void, any Error>
     private typealias SnapshotContinuation = CheckedContinuation<CurrentProcessSnapshot, any Error>
@@ -495,6 +501,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         }
     }
 
+    /// Tries the no-typing methods first; the code only appears once they have failed.
     private func beginAutomaticPairing() {
         cancelAutomaticPairingWork()
         attemptedAutomaticMethods.removeAll()
@@ -575,6 +582,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         exposeVerificationCodeFallback()
     }
 
+    /// Automatic pairing failed, so ask the person for the code the Mac shows.
     private func exposeVerificationCodeFallback() {
         #if DEBUG
         let attempted = attemptedAutomaticMethods.map(\.rawValue).sorted().joined(separator: ",")
@@ -667,6 +675,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         }
     }
 
+    /// Opens a frame with the shared key, rejects replays, and handles events, acknowledgements and heartbeats.
     private func handleEncrypted(_ frame: LinkFrame) {
         guard frame.senderID == peerID,
               let encrypted = frame.encryptedPayload,
@@ -726,6 +735,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         }
     }
 
+    /// Proves the link is alive. Missed answers mark it down even when TCP has not noticed yet.
     private func sendHeartbeat() {
         heartbeatSendWorkItem?.cancel()
         heartbeatSendWorkItem = nil
@@ -891,6 +901,7 @@ public final class AnchorBonjourClient: @unchecked Sendable, PresenceSignalProvi
         return connectionState
     }
 
+    /// Combines TCP and Bluetooth into the single state the UI and presence use.
     private func publishEffectiveConnection() {
         let state = effectiveConnectionState
         guard publishedConnectionState != state else {

@@ -1,3 +1,7 @@
+// Role: optional cloud copy of events in the person's private database.
+// Status: built but off. It needs a paid developer account and the CloudKit configs in Configuration/.
+// See Documentation/CLOUDKIT_MVP.md.
+
 import AnchorCore
 import Foundation
 
@@ -7,6 +11,7 @@ import Foundation
 // actor; only immutable EventEnvelope values cross the public boundary.
 @preconcurrency import CloudKit
 
+/// Which container and record types to use.
 public struct CloudKitEventStoreConfiguration: Sendable, Hashable {
     public let containerIdentifier: String
     public let recordType: String
@@ -224,6 +229,7 @@ public actor CloudKitEventStore: DurableEventStore {
     private static let syncStateRecordID = CKRecord.ID(recordName: "anchor-current-session-v1")
 }
 
+/// Failures talking to CloudKit or decoding its records.
 public enum CloudKitEventStoreError: LocalizedError, Sendable, Hashable {
     case malformedRecord(String)
     case conflictingRecord(String)

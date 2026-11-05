@@ -1,3 +1,6 @@
+// Role: "what you can do while the agent works", plus `DeskHold`, the reason to come back to the desk.
+// Used by the pick-up card and the leave reminder.
+
 import Foundation
 
 /// What the person can do while an agent works on the task they're on: the

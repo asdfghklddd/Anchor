@@ -1,3 +1,5 @@
+// Role: draws what `HarborLaunchChoreography` computes.
+
 #if os(iOS)
 import SwiftUI
 

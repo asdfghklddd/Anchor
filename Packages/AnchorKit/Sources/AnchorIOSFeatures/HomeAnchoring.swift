@@ -1,3 +1,6 @@
+// Role: the home's water background and the "Today's Anchoring" panel: clock, goal and token bars.
+// Note: colors and layout were measured from the owner's mockup. Do not nudge them by eye.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

@@ -1,3 +1,6 @@
+// Role: iPhone Settings. Every choice applies at once, so the only button is Close.
+// Rule: no footers or slogans; show status at the end of a row; follow system settings instead of copying them.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
@@ -101,6 +104,7 @@ struct SettingsView<Destination: View>: View {
     }
 }
 
+/// A label with a trailing value.
 private struct SettingsRow: View {
     let title: String
     let symbol: String
@@ -174,6 +178,7 @@ private struct SettingsReminderRow: View {
     }
 }
 
+/// Words for this page.
 enum SettingsCopy {
     static let goal = AnchorStrings.value("settings.goal", default: "Daily goal")
     static let reminder = AnchorStrings.value("settings.reminder", default: "Reminder when you leave")

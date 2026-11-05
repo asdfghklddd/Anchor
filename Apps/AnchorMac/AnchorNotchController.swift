@@ -1,3 +1,9 @@
+// Role: AppKit shell around `NotchIslandView`: the non-activating panel above the menu bar, global pointer
+// monitors, ⌃⌥A, click-away, news queue, and the actions the view asks for.
+// Rule: it never activates Anchor. A copied step must paste straight into the person's own app.
+// Note: the panel ignores mouse events except while the pointer is over the island; see `pointerMoved`.
+// Testing: the Mac UI tests drive the real pointer.
+
 import AnchorCore
 import AnchorDesign
 import AnchorMacFeatures
@@ -75,6 +81,7 @@ final class AnchorNotchController {
         configurePanel()
     }
 
+    /// Builds the panel, starts monitors and observation, and registers the hot keys. Demo keys only in demo mode.
     func start() {
         guard !isStarted else { return }
         isStarted = true
@@ -366,6 +373,7 @@ final class AnchorNotchController {
         }
     }
 
+    /// Rebuilds `NotchIslandContent` from the projection and setup model, and diffs it for news peeks.
     private func refreshContent() {
         let status = AnchorStatusMenu(
             projection: model.projection,
@@ -392,6 +400,7 @@ final class AnchorNotchController {
         receive(detector.peeks(in: model.projection, link: status.link, now: .now))
     }
 
+    /// Carries out what a click in the island asked for.
     private func perform(_ action: NotchIslandAction) {
         switch action {
         case .copyNextStep:
@@ -432,6 +441,7 @@ final class AnchorNotchController {
 
     // MARK: Panel
 
+    /// A panel that floats over the menu bar on every Space, and never steals focus.
     private func configurePanel() {
         panel.backgroundColor = .clear
         panel.isOpaque = false

@@ -1,3 +1,6 @@
+// Role: separates real observed work from older records (planned rows, ambient state), and adds
+// helpers such as `taskProcesses` and `requiresAttention` that the UI uses instead of raw `processes`.
+
 import Foundation
 
 /// Separates user-owned task structure from observed runs and ambient app state.

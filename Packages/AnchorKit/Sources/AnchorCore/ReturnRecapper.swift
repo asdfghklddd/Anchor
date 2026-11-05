@@ -1,3 +1,7 @@
+// Role: when the phone reports a return, reads the latest rounds of each open task's newest
+// conversations and writes recaps. Mac only, because the logs are there.
+// Note: the trigger is the presence rule (see `PresenceReducer`). Caches by transcript to save model calls.
+
 import Foundation
 
 /// What a conversation's recap is written from.

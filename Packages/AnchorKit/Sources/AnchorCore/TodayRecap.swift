@@ -1,3 +1,6 @@
+// Role: the day so far: steps finished, tasks completed, and so on.
+// Note: only `TodayRecapCard` reads this, and no screen shows that card now.
+
 import Foundation
 
 /// The day so far (I10): the steps the person finished today, the tasks they

@@ -1,8 +1,11 @@
+// Role: a conversation's card, used in history detail.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
 import SwiftUI
 
+/// Shows source, title, state and last event.
 struct ProcessCard: View {
     let process: AnchorProcess
     let isRemote: Bool

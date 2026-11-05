@@ -1,3 +1,5 @@
+// Role: the plan edit list. Kept steps keep their IDs, so checkmarks survive reordering.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

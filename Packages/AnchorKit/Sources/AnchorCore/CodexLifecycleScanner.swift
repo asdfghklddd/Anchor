@@ -1,5 +1,9 @@
+// Role: incremental line scanner over a growing log. Only complete lines count; the offset
+// in a checkpoint always sits on a line boundary.
+
 import Foundation
 
+/// One-shot scan of a whole buffer, for callers that do not resume.
 public enum CodexLifecycleScanner {
     public static func scan(data: Data) -> [CodexLifecycleRecord] {
         var scanner = CodexIncrementalScanner()
@@ -7,6 +11,7 @@ public enum CodexLifecycleScanner {
     }
 }
 
+/// A lifecycle record with the byte offset it ended at and what its end reported.
 struct CodexLifecycleScannedRecord: Sendable {
     let record: CodexLifecycleRecord
     let committedOffset: UInt64

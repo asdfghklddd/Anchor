@@ -1,3 +1,6 @@
+// Role: the Me page: name, week chart, streak, finished tasks, agents, returns.
+// Rule: the pet stays off this page, by the owner's choice.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
@@ -432,6 +435,7 @@ private extension Text {
     }
 }
 
+/// Number and duration formats for this page.
 enum ProfileFormat {
     /// Hours and minutes: "18h 40m".
     static func time(_ seconds: TimeInterval) -> String {
@@ -446,6 +450,7 @@ enum ProfileFormat {
     }
 }
 
+/// Words for this page.
 enum ProfileCopy {
     static let thisWeek = AnchorStrings.value("profile.week.total", default: "Anchored this week")
     static let finished = AnchorStrings.value("profile.tasks.finished", default: "Tasks finished")

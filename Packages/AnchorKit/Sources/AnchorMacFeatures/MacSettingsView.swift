@@ -1,3 +1,6 @@
+// Role: the settings window. One screen, no captions: extra detail hides behind `MacInfoTip`.
+// Rule: follow the project's "layout explains" rule. Do not add footers or explanatory lines.
+
 #if os(macOS)
 import AnchorCore
 import AnchorDesign
@@ -127,6 +130,7 @@ struct MacSettingsView: View {
         }
     }
 
+    /// Runs the one fix the link status offers: reconnect, or open the System Settings pane.
     private func perform(_ fix: AnchorStatusMenu.Fix) {
         if let url = fix.settingsURL {
             NSWorkspace.shared.open(url)

@@ -1,5 +1,12 @@
+// Role: the core value types that sync and persist: goal, process, note, snapshot, session.
+// Glossary: `AnchorSession` = a task/anchor the person created. `AnchorProcess` = one agent conversation
+// or command row on it. `ProcessEvent` = one thing that happened to a process.
+// Compatibility: these are Codable on disk and on the wire. New fields must be optional or defaulted.
+// Note: `Decision*` types are retired from the product and stay only so old data decodes.
+
 import Foundation
 
+/// What the person wants from a task: its title, optional criteria and note, and their plan.
 public struct AnchorGoal: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public var title: String
@@ -25,6 +32,7 @@ public struct AnchorGoal: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// One moment in a process's history. Tide charts and records are derived from these.
 public struct ProcessEvent: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public let sessionID: UUID?
@@ -77,6 +85,8 @@ public struct ProcessEvent: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// One observed piece of work on a task, usually an agent conversation. Display fields come from
+/// its source; status belongs to the source and is never guessed by the app.
 public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public var sessionID: UUID?
@@ -162,6 +172,7 @@ public struct AnchorProcess: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// Retired: readable for stored data only. There is no decision UI in the product.
 public struct DecisionOption: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public let title: String
@@ -174,6 +185,7 @@ public struct DecisionOption: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// Retired: readable for stored data only. There is no decision UI in the product.
 public struct Decision: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public let processID: UUID
@@ -212,6 +224,7 @@ public struct Decision: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// A note the person left on a task.
 public struct AnchorNote: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public let sessionID: UUID?
@@ -240,6 +253,7 @@ public struct AnchorNote: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// The task's state captured when the person left, used to work out what changed on return.
 public struct ContextSnapshot: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public let createdAt: Date
@@ -304,6 +318,7 @@ public struct ContextSnapshot: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// One change that happened while the person was away.
 public struct ReturnChange: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public let occurredAt: Date
@@ -326,6 +341,7 @@ public struct ReturnChange: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// The changes grouped for a return.
 public struct ReturnSummary: Codable, Hashable, Sendable {
     public var awaySince: Date
     public var generatedAt: Date
@@ -364,6 +380,7 @@ public struct ReturnSummary: Codable, Hashable, Sendable {
 
 }
 
+/// Value type for a notification the app may present.
 public struct AnchorNotification: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public let processID: UUID?
@@ -392,6 +409,7 @@ public struct AnchorNotification: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// A task the person anchored. Holds its goal and plan, its conversations (`processes`), and its history.
 public struct AnchorSession: Identifiable, Codable, Hashable, Sendable {
     /// Immutable joining order keeps the main conversation stable after visual reordering.
     public var processJoinOrder: [UUID]?

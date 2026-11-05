@@ -1,3 +1,5 @@
+// Role: draws `TaskTide` segments as a time lane. Only `HomeTideCard` uses it now.
+
 import AnchorCore
 import SwiftUI
 
@@ -118,6 +120,7 @@ private struct RunningBeacon: View {
     }
 }
 
+/// Marks a terminal moment on a lane.
 private struct TideMarker: View {
     let state: TideState
     let tint: Color
@@ -135,6 +138,7 @@ private struct TideMarker: View {
     }
 }
 
+/// Colors per `TideState`.
 public enum TideStyle {
     public static func fill(_ state: TideState, tint: Color) -> Color {
         switch state {

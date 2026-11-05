@@ -1,3 +1,5 @@
+// Role: one reading of a task's reported state, so the home, desk and cards all say the same thing.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
@@ -27,6 +29,7 @@ struct HostedTaskStatus {
         }
     }
 
+    /// The one line the task leads with.
     enum Primary { case done, awaiting, failed, attention, interrupted, running, quiet }
 
     var primary: Primary {

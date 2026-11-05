@@ -1,3 +1,7 @@
+// Role: older keyword matching plus the helpers that read the person's request out of a Codex log.
+// Note: new placement decisions live in `TaskMatcher`; the request readers here are still shared.
+// Privacy: conversation text is read transiently and never kept.
+
 import Foundation
 
 /// Local keyword matching. Conversation text is read transiently and is never

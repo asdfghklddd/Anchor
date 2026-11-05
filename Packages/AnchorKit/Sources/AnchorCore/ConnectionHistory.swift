@@ -1,3 +1,5 @@
+// Role: this device's own connect/disconnect list for the connection screens. Local only, never synced.
+
 import Foundation
 
 /// One moment the link to the other device came or went.

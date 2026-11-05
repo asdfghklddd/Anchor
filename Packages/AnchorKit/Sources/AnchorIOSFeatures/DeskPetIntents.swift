@@ -1,3 +1,6 @@
+// Role: the "small things" a pet does about every 10 min, as multi-step plans chosen by utility scores.
+// To add one: add an intent and its plan here, and score it in `DeskPetPlanner`. Keep behavior in the brain/planner/memory split.
+
 #if os(iOS)
 import Foundation
 
@@ -28,6 +31,7 @@ enum DeskPetStep: Equatable, Sendable {
     case effect(DeskPetEffect)
 }
 
+/// How the pet travels to a target.
 enum DeskPetGait: Sendable {
     case walk, carry, dash
 }
@@ -83,6 +87,7 @@ struct DeskPetSituation {
     var ownSpot: Int { min(DeskScene.own(kind).standAt, room ?? 0) }
 }
 
+/// Picks the next small thing from the situation, with some randomness.
 enum DeskPetPlanner {
     /// How much each small thing makes sense now; zero means not now.
     static func score(_ intent: DeskPetIntent, in s: DeskPetSituation) -> Double {

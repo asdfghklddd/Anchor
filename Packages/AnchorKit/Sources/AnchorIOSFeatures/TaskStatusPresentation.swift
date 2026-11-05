@@ -1,7 +1,10 @@
+// Role: maps a task's status to its display words and tone.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
 
+/// Used by history and detail pages.
 enum TaskStatusPresentation {
     static func text(
         for session: AnchorSession?,

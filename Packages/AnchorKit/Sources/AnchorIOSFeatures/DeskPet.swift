@@ -1,3 +1,8 @@
+// Role: the pet's SwiftUI host on the desk and picker. Pet system map:
+// DeskPetLife (the one shared life) -> DeskPetBrain (per-tick behavior) -> DeskPetIntents (plans, utility scores) ->
+// DeskPetMemory (saved per pet) -> DeskPetRenderer + DeskPetLooks (drawing) -> DeskPetScene (the nook).
+// Rule: the pet is a quiet easter egg. No notifications, no numbers, no copy. Personalities are never shown.
+
 #if os(iOS)
 import AnchorDesign
 import SwiftUI

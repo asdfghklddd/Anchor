@@ -1,3 +1,5 @@
+// Role: the round anchor button on the portrait home, and the timing of one drop (`AnchorDrop`).
+
 #if os(iOS)
 import AnchorDesign
 import SwiftUI

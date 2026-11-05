@@ -1,3 +1,5 @@
+// Role: `fluoriteSurface()`, the card surface used by `AnchorCard` and older pages.
+
 import SwiftUI
 
 /// A solid information surface with one light-catching edge and one ambient shadow.

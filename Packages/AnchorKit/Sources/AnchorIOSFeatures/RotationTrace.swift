@@ -1,3 +1,6 @@
+// Role: DEBUG-only rotation logging and a main-thread watchdog (subsystem `com.andywang.anchor`, category `rotation`).
+// Rule: never trace or profile the owner's real iPhone without asking them first. Simulators are fine.
+
 #if os(iOS)
 import Foundation
 import os

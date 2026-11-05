@@ -1,8 +1,11 @@
+// Role: the sheet listing current tasks, reached through `AnchorSheet.hostedTasks`.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
 import SwiftUI
 
+/// Lists open tasks with add, edit, note and finish actions.
 struct HostedTasksView: View {
     let model: AnchorSessionModel
     let onCreate: () -> Void

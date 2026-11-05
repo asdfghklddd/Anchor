@@ -1,3 +1,5 @@
+// Role: answers "is what's on screen current?" so a stale copy is never presented as live.
+
 import Foundation
 
 /// Describes whether the foreground projection can be presented as current.

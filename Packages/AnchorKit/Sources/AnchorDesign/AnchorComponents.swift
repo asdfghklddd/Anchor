@@ -1,3 +1,5 @@
+// Role: older shared components (card, marks, status badge, progress, button style) used by secondary pages.
+
 import AnchorCore
 import SwiftUI
 
@@ -21,6 +23,7 @@ public struct AnchorCard<Content: View>: View {
     }
 }
 
+/// Small anchor mark.
 public struct AnchorMark: View {
     private let size: CGFloat
 
@@ -109,6 +112,7 @@ public struct SourceMark: View {
     }
 }
 
+/// A process status as a colored label.
 public struct StatusBadge: View {
     private let status: ProcessStatus
     private let text: String
@@ -230,6 +234,7 @@ public struct StatusBadge: View {
     }
 }
 
+/// Thin progress bar.
 public struct AnchorProgress: View {
     private let value: Double
     private let tint: Color
@@ -264,6 +269,7 @@ public struct AnchorProgress: View {
     }
 }
 
+/// Decorative stripes, drawn inside `AnchorProgress`.
 private struct StripePattern: View {
     var body: some View {
         Canvas { context, size in
@@ -278,6 +284,7 @@ private struct StripePattern: View {
     }
 }
 
+/// Shared primary button.
 public struct AnchorPrimaryButtonStyle: ButtonStyle {
     @AnchorReducedMotion private var reduceMotion
 

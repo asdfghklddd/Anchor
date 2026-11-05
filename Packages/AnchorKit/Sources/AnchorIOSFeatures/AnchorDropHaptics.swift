@@ -1,3 +1,5 @@
+// Role: the Core Haptics pattern of an anchor drop. Timed with `AnchorDrop`.
+
 #if os(iOS)
 import CoreHaptics
 

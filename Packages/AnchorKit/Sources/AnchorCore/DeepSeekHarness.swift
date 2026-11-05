@@ -1,3 +1,7 @@
+// Role: support for DeepSeek Harness, whose real log is a zstd stream Anchor cannot read. Reads its
+// plain JSON status file instead and reports turns in the same shape as Codex.
+// Pitfall: poll with `FileManager.attributesOfItem`; `URL.resourceValues` caches modification dates.
+
 import Foundation
 
 /// A DeepSeek Harness session as its status file tells it. The harness keeps

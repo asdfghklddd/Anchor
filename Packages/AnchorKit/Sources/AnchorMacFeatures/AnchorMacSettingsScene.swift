@@ -1,7 +1,10 @@
+// Role: SwiftUI wrapper exposing `MacSettingsView` to the app target.
+
 #if os(macOS)
 import AnchorCore
 import SwiftUI
 
+/// What the settings window hosts.
 public struct AnchorMacSettingsScene: View {
     private let model: AnchorSessionModel
     private let controller: (any LocalLinkControlling)?

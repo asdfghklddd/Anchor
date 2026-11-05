@@ -1,3 +1,8 @@
+// Role: the landscape desk's library: a folder per task, up to 3 conversation cards in each, front card readable.
+// Rules: a conversation that failed, is stuck or waits for a reply takes the task color and an anchor and jumps
+// to the front. A normal card never gets color or an anchor, even in front. Tab opens the task; a card opens recall.
+// Measures: `Metrics` come from the owner's Figma desk (874 × 402). Keep them unless the design changes.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

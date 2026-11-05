@@ -1,3 +1,7 @@
+// Role: the recall card's content, written on the Mac with no model at all: what waits on the
+// person, last reply openings, a decision, keywords and files. Sent to the phone on the latest turn.
+// Note: `ConversationTranscript.Follower` keeps repeat reads incremental; the first read of a big log is the slow one.
+
 import Foundation
 import NaturalLanguage
 

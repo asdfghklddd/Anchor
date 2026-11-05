@@ -1,8 +1,11 @@
+// Role: full task detail sheet. On the desk it is reached only at accessibility text sizes; `DeskTaskCard` replaced it otherwise.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
 import SwiftUI
 
+/// Shows the session, the return memory or a context snapshot, by `ProfileDetailKind`.
 struct ProfileDetailSheet: View {
     let projection: SessionProjection
     let kind: ProfileDetailKind

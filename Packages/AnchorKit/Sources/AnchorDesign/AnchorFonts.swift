@@ -1,3 +1,5 @@
+// Role: registers bundled Poppins. Used only for "Hi! name" and the clock; everything else uses the system font.
+
 import CoreText
 import SwiftUI
 

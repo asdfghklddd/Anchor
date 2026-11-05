@@ -1,11 +1,20 @@
+// Role: the source of truth on each device. `LocalSessionRepository` is an event log plus replay:
+// a command becomes a `SessionOperation` in an `EventEnvelope`, is written to disk, then the
+// projection is rebuilt by replaying events over a base projection. The outbox holds what the peer
+// has not acknowledged. Crash-safe by design: state is on disk before anyone sees it.
+// Pitfall: `LocalSessionRepository()` with no `storageURL` writes to the REAL app data.
+// Tests and demos must always pass a temporary path.
+
 import Foundation
 
+/// What a model needs: read the projection, watch it, send commands.
 public protocol SessionRepository: Sendable {
     func currentProjection() async -> SessionProjection
     func projections() async -> AsyncStream<SessionProjection>
     func send(_ command: SessionCommand) async throws
 }
 
+/// Adds what the link needs: the outbox, full history, applying remote events, acknowledgements.
 /// A repository that can durably retain mutations until a peer acknowledges
 /// them and can apply the same mutations received from another device.
 public protocol EventBackedSessionRepository: SessionRepository {
@@ -15,10 +24,12 @@ public protocol EventBackedSessionRepository: SessionRepository {
     func markDelivered(_ eventID: UUID) async throws
 }
 
+/// Implemented by the link layer to report connection and proximity.
 public protocol PresenceSignalProviding: Sendable {
     func presenceSignals() async -> AsyncStream<PresenceSignals>
 }
 
+/// No persistence, no events. For tests and previews only.
 public actor InMemorySessionRepository: SessionRepository {
     private var projection: SessionProjection
     private var continuations: [UUID: AsyncStream<SessionProjection>.Continuation] = [:]
@@ -72,6 +83,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
         var awaitsPeerCopy: Bool?
     }
 
+    /// The pre-event-log file format, still accepted on launch.
     private struct LegacyPersistedState: Codable, Sendable {
         let schemaVersion: Int
         let projection: SessionProjection
@@ -223,6 +235,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
         }
     }
 
+    /// Local change: make the operation, append it, replay, write to disk, publish. Disk comes before publish.
     public func send(_ command: SessionCommand) throws {
         let now = Date.now
         noteSignals(command)
@@ -316,6 +329,8 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
         return events.sorted(by: Self.eventSort)
     }
 
+    /// Peer change: drop what must not apply (forgotten tasks, retired data, a pending peer copy), then
+    /// deduplicate, append and replay. Throwing means the peer will retry; returning acknowledges it.
     public func applyRemote(_ envelope: EventEnvelope) throws {
         notePeerContact()
         // Whatever the peer sends before its full copy is consumed, not kept.
@@ -468,6 +483,7 @@ public actor LocalSessionRepository: EventBackedSessionRepository, DataResetting
         broadcast()
     }
 
+    /// The peer acknowledged this event, so it leaves the outbox.
     public func markDelivered(_ eventID: UUID) throws {
         notePeerContact()
         let previousCount = outbox.count

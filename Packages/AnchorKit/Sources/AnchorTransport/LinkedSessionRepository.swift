@@ -1,10 +1,16 @@
+// Role: wraps the local repository and adds delivery: local save first, then a background flush
+// of the outbox to the peer, plus history reconciliation after a reconnect.
+// Rule: the UI never waits for the radio. A command is done once it is safe on disk.
+
 import AnchorCore
 import Foundation
 
+/// Anything that can carry an event to the peer: TCP, Bluetooth, or the adaptive pair.
 public protocol AnchorEventTransport: Sendable {
     func send(_ event: EventEnvelope) async throws
 }
 
+/// This is the repository the apps actually use. Delivery is at-least-once; receivers deduplicate.
 public actor LinkedSessionRepository: SessionRepository, DataResetting, PeerCopying {
     private struct ActiveFlush {
         let id: UUID
@@ -220,6 +226,7 @@ public actor LinkedSessionRepository: SessionRepository, DataResetting, PeerCopy
     }
 }
 
+/// Reads the legacy `session.projection.v1` payload into a session.
 public enum LinkedSessionDecoder {
     public static func session(from envelope: EventEnvelope) -> AnchorSession? {
         guard envelope.type == "session.projection.v1" else { return nil }

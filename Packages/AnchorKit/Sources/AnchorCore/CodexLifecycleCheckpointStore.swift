@@ -1,3 +1,6 @@
+// Role: durable read positions for agent logs, so a relaunch resumes instead of replaying a log.
+// Note: a corrupt file throws instead of being overwritten, so positions are never silently lost.
+
 import Foundation
 
 /// Stable metadata for the selected JSONL file. It intentionally excludes
@@ -12,6 +15,7 @@ public struct CodexLifecycleFileIdentity: Codable, Equatable, Sendable {
     }
 }
 
+/// A log's identity plus the scanner state to resume from.
 public struct CodexLifecycleCheckpoint: Codable, Equatable, Sendable {
     public let identity: CodexLifecycleFileIdentity
     public let scannerCheckpoint: Data

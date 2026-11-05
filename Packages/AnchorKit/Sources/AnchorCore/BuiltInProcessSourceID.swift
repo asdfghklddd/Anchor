@@ -1,3 +1,6 @@
+// Role: fixed UUIDs of the built-in sources. `web` and `macWorkspace` are retired and only
+// kept so `TaskDashboardPolicy` can filter old stored records out.
+
 import Foundation
 
 /// Stable identities shared by ingestion and presentation across platforms.

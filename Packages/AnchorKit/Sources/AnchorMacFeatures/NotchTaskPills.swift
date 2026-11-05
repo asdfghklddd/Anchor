@@ -1,3 +1,7 @@
+// Role: the closed island's left ear and plan ring: one 12×4 pt pill per task, sweep = running,
+// ripple = waiting, dim = idle.
+// Performance: `NotchPillMotion` and `NotchLayerMotion` are Core Animation layers, which keep idle CPU near zero. Keep it that way.
+
 #if os(macOS)
 import AnchorDesign
 import SwiftUI

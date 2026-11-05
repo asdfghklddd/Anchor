@@ -1,7 +1,10 @@
+// Role: the one-time secret the Mac offers over its Bluetooth pairing characteristic.
+
 import Foundation
 import Security
 import Synchronization
 
+/// What the phone reads from the Mac to start Bluetooth pairing.
 struct BluetoothPairingCredential: Codable, Equatable, Sendable {
     let deviceID: UUID
     let secret: Data
@@ -14,6 +17,7 @@ struct BluetoothPairingCredential: Codable, Equatable, Sendable {
     }
 }
 
+/// Holds the current secret; `rotate` replaces it so an old read stops working.
 public final class AnchorBluetoothPairingToken: Sendable {
     private let secret: Mutex<Data>
 

@@ -1,3 +1,5 @@
+// Role: "Your agents" on the Me page: conversations grouped by agent, read from what the phone holds.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
@@ -72,6 +74,7 @@ struct SourceConversationsView: View {
     }
 }
 
+/// One agent's tile on the Me page.
 struct SourceTile: View {
     let process: AnchorProcess
 

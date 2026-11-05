@@ -1,3 +1,6 @@
+// Role: the "任务锚定库" panel on the home: at most 3 task cards, swipe left to complete, and the cap note.
+// Rule: home cards are deliberately not tappable. Portrait stays simple; work happens in landscape.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

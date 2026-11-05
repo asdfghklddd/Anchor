@@ -1,3 +1,5 @@
+// Role: the island outline: flat top, flared shoulders, soft bottom corners. Radii animate.
+
 #if os(macOS)
 import SwiftUI
 

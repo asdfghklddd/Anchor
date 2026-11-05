@@ -1,3 +1,5 @@
+// Role: shared spring and duration values, and the reduced-motion check.
+
 import SwiftUI
 
 /// Shared motion values keep feedback crisp and spatial transitions consistent.

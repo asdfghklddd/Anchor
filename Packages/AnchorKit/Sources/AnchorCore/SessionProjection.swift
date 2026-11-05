@@ -1,5 +1,9 @@
+// Role: the immutable picture of a device's state that every view reads, rebuilt by replay.
+// Note: fields marked "Never sent" are local bookkeeping and stay out of events.
+
 import Foundation
 
+/// Current tasks (`session` + `additionalSessions`), finished ones (`archivedSessions`) and link state.
 public struct SessionProjection: Codable, Hashable, Sendable {
     public var session: AnchorSession?
     /// Completed user-owned tasks retained independently from the single

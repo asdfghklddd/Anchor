@@ -1,3 +1,6 @@
+// Role: one-time migration that removes fixture tasks written by old recording builds. Backs the file up first.
+// Note: holds identifiers only, no seed content. Do not add new data here.
+
 import Foundation
 
 /// Migration identifiers for retired recording builds. Contains no seed content.

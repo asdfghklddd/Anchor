@@ -1,3 +1,5 @@
+// Role: path data for the clock digits, traced from the owner's digit sheet. Do not edit by hand.
+
 #if os(iOS)
 // Generated from the owner's Figma digit sheet (LogoSC Unbounded Sans); do not edit by hand.
 // Units are source pixels: the cap band is 48 tall and starts at y = 0.

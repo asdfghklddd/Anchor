@@ -1,3 +1,6 @@
+// Role: a local notification after leaving Anchor with the phone upright while work runs. Time is set in Settings.
+// Performance: add and remove on a serial queue. These are synchronous XPC calls, and on main they have frozen launch.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

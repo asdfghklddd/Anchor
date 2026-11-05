@@ -1,3 +1,5 @@
+// Role: where the local name and photo are stored. UI tests get their own defaults suite.
+
 #if os(iOS)
 import Foundation
 

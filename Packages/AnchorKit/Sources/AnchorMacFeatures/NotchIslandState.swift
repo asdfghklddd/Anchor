@@ -1,8 +1,12 @@
+// Role: the hover state machine and the observable state the view reads. Timers are started by the controller,
+// so `NotchHoverMachine` stays pure and testable.
+
 #if os(macOS)
 import CoreGraphics
 import Foundation
 import Observation
 
+/// The island's visual states.
 public enum NotchIslandPhase: Equatable, Sendable {
     /// Hugging the housing: a dot per task, the phone link.
     case compact
@@ -18,6 +22,7 @@ public enum NotchIslandPhase: Equatable, Sendable {
 /// may slip out briefly without closing it. Opened from the keyboard, it
 /// stays until dismissed.
 public struct NotchHoverMachine: Equatable, Sendable {
+    /// Which timer the controller should run next.
     public enum Timer: Equatable, Sendable {
         case dwell
         case grace

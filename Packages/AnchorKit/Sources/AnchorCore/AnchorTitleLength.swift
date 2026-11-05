@@ -1,3 +1,5 @@
+// Role: measures and cuts task titles by display width so they fit the desk and home cards.
+
 import Foundation
 
 /// How much room a task title takes on the boards (D05): a small landscape card

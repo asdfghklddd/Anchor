@@ -1,3 +1,5 @@
+// Role: keeps the screen on while the desk is up and the phone charges.
+
 #if os(iOS)
 import UIKit
 

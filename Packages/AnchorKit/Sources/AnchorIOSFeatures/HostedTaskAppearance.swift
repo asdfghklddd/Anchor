@@ -1,3 +1,5 @@
+// Role: maps a task to its identity and landscape tab colors, which stay the same on every screen.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

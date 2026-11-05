@@ -1,3 +1,5 @@
+// Role: the DeepSeek API key in the Mac's Keychain. Entered in Mac Settings. Never in code or defaults.
+
 import Foundation
 import Security
 

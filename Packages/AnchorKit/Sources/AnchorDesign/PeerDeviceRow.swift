@@ -1,3 +1,5 @@
+// Role: one paired device row, used by the phone's and the Mac's connection screens.
+
 import AnchorCore
 import SwiftUI
 
@@ -48,6 +50,7 @@ public struct PeerDeviceRow: View {
     }
 }
 
+/// Words for the device row.
 public enum PeerDeviceCopy {
     public static let connected = AnchorStrings.value("pair.device.connected", default: "Connected")
     public static let notConnected = AnchorStrings.value("pair.device.not-connected", default: "Not Connected")

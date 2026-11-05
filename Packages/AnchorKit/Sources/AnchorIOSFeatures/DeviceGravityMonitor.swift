@@ -1,3 +1,5 @@
+// Role: real gravity for water and motion effects, through one shared `CMMotionManager`, started off main.
+
 #if os(iOS)
 import CoreMotion
 import Foundation

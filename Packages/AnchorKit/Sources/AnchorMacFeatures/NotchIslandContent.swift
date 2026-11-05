@@ -1,3 +1,6 @@
+// Role: what the island shows, as a plain testable value built from the projection and status.
+// Note: tasks use the same color index as the iPhone.
+
 #if os(macOS)
 import AnchorCore
 import AnchorDesign

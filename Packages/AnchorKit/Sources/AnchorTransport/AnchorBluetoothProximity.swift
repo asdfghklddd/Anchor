@@ -1,8 +1,15 @@
+// Role: the Bluetooth half of the link. Three jobs on one BLE service: proximity (RSSI), a pairing
+// credential, and an encrypted event channel using the same frames as TCP.
+// Mac = peripheral (`AnchorProximityAdvertiser`). iPhone = central (`AnchorProximityScanner`).
+// Why it matters: presence depends on this link. Away and return both come from its state.
+// Note: the iPhone holds a pending connection while the Mac is out of range, so iOS wakes Anchor on return.
+
 import AnchorCore
 @preconcurrency import CoreBluetooth
 import CryptoKit
 import Foundation
 
+/// The service and characteristic UUIDs. Both apps must agree, so do not change them casually.
 public enum AnchorBluetoothService {
     public static var uuid: CBUUID { CBUUID(string: "A11C0001-4E43-484F-5220-414E43484F52") }
     public static var pairingCredentialUUID: CBUUID {
@@ -14,6 +21,7 @@ public enum AnchorBluetoothService {
 }
 
 #if os(macOS)
+/// Mac side: advertises, answers pairing and takes encrypted events from the paired phone.
 public final class AnchorProximityAdvertiser: NSObject, CBPeripheralManagerDelegate, AnchorEventTransport, @unchecked Sendable {
     private typealias OperationContinuation = CheckedContinuation<Void, any Error>
 
@@ -278,6 +286,7 @@ public final class AnchorProximityAdvertiser: NSObject, CBPeripheralManagerDeleg
         throw AnchorLinkError.notPaired
     }
 
+    /// Reassembles a write from the phone and routes the resulting frame.
     private func handleTransfer(_ data: Data, from central: CBCentral) {
         guard let frame = try? JSONDecoder.anchor.decode(LinkFrame.self, from: data) else { return }
         if frame.kind == .pairRequest {
@@ -341,6 +350,7 @@ public final class AnchorProximityAdvertiser: NSObject, CBPeripheralManagerDeleg
         }
     }
 
+    /// Verifies the phone's pairing proof, stores the shared key and replies.
     private func handlePairRequest(_ frame: LinkFrame, from central: CBCentral) {
         guard frame.pairingMethod == .bluetooth,
               frame.challenge == pairingChallenge,
@@ -486,6 +496,7 @@ public final class AnchorProximityAdvertiser: NSObject, CBPeripheralManagerDeleg
 #endif
 
 #if os(iOS)
+/// iPhone side: finds the Mac, keeps the connection, samples RSSI and exchanges encrypted events.
 public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, AnchorEventTransport, CurrentProcessProviding, @unchecked Sendable {
     private typealias OperationContinuation = CheckedContinuation<Void, any Error>
     private typealias SnapshotContinuation = CheckedContinuation<CurrentProcessSnapshot, any Error>
@@ -610,6 +621,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         manager = nil
     }
 
+    /// Drops and rebuilds the data link, for example when the person retries or pairing changed.
     public func refreshDataLink(cancelPendingPairing: Bool = true) {
         DispatchQueue.main.async { [weak self] in
             guard let self,
@@ -1066,6 +1078,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         }
     }
 
+    /// Pairs over Bluetooth using the credential just read from the Mac.
     private func scheduleDirectPairing(peerID: UUID, secret: Data, challenge: Data) {
         pairingWorkItem?.cancel()
         guard dataLinkState != .connected else { return }
@@ -1242,6 +1255,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         scheduleStaleSignalFallback()
     }
 
+    /// Samples RSSI for `BluetoothProximityFilter`.
     private func readProximity(from peripheral: CBPeripheral) {
         rssiReadWorkItem?.cancel()
         guard candidatePeripheral === peripheral,
@@ -1286,6 +1300,7 @@ public final class AnchorProximityScanner: NSObject, CBCentralManagerDelegate, C
         }
     }
 
+    /// Marks proximity unknown when readings stop, so an old value is never shown as current.
     private func scheduleStaleSignalFallback() {
         staleSignalWorkItem?.cancel()
         let workItem = DispatchWorkItem { [weak self] in

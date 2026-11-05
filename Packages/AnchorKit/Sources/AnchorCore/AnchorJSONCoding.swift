@@ -1,3 +1,6 @@
+// Role: the one JSON coding strategy for events, storage and the CLI contract.
+// Note: changing a date or key strategy here breaks stored state and older peers.
+
 import Foundation
 
 /// The canonical wire/storage coding strategy shared by Core and Transport.

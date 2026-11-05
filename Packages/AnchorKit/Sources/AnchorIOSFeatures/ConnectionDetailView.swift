@@ -1,3 +1,5 @@
+// Role: the Connections page: which Mac, how close, how to reach it, and the link's history.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
@@ -128,6 +130,7 @@ private struct ConnectionHistoryRow: View {
     }
 }
 
+/// Words for the connection screens.
 enum ConnectionCopy {
     static let history = AnchorStrings.value("connection.history", default: "History")
     static let disconnected = AnchorStrings.value("connection.history.disconnected", default: "Disconnected")

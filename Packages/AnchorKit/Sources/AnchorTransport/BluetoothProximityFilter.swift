@@ -1,3 +1,5 @@
+// Role: smooths RSSI into near/far with hysteresis. Thresholds are guesses until calibrated on real devices.
+
 import AnchorCore
 import Foundation
 

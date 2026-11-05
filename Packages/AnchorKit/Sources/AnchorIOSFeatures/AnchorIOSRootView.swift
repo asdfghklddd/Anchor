@@ -1,3 +1,9 @@
+// Role: top of the iPhone UI. `AnchorIOSRootView` picks tour or workspace. `AnchorWorkspaceView` holds all
+// navigation: portrait home, landscape desk, sheets (`AnchorSheet`), routes (`AnchorRoute`), the return page.
+// Rule: portrait is normal mode, landscape is work mode. Deeper layers (recall card, task card) belong in
+// landscape and on the Mac. Do not add new layers or taps to the portrait home cards.
+// Note: the tour runs this same workspace on its own temporary repository, so tour bugs can be real bugs.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

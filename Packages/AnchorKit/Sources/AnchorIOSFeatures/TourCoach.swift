@@ -1,3 +1,10 @@
+// Role: everything the tour draws over the real screens: the frost with its clean cut around the target (`TourFrost`),
+// captions, hint rings, tap blockers, and scene pieces such as the dial, turn prompt and first drop.
+// Note: real views publish where they are through `TourSpot` preferences, and the frost cuts around them.
+// `TourBlocker` swallows taps outside the opening. Give any button that must work during a step an opening too.
+// Design: whole screen under frost with only the key area clear. No dimming, one line of copy, no Next buttons.
+// Performance: animated strokes must wrap phases; see the note in `AnchorDropSlider.swift`.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
@@ -29,6 +36,7 @@ enum TourSpot: Hashable {
     case pet
 }
 
+/// Collects target frames from the real views.
 struct TourSpotKey: PreferenceKey {
     static let defaultValue: [TourSpot: Anchor<CGRect>] = [:]
 
@@ -529,6 +537,7 @@ struct TourCoach: View {
 
     private var isButton: Bool { tour.stage == .anchorButton }
 
+    /// One timed step of the home's hello.
     private struct TourBeat: Hashable {
         let stage: AnchorTour.Stage
         let covered: Bool
@@ -850,6 +859,7 @@ private struct TourPhoneTurn: View {
     private var from: Double { upright ? -90 : 0 }
     private var to: Double { upright ? 0 : -90 }
 
+    /// One leg of the phone's tip-over animation.
     private struct Turn {
         var angle = 0.0
         var opacity = 0.0
@@ -1002,6 +1012,7 @@ private struct TourDeskCoach: View {
     @State private var sentAt: Date?
     @State private var greetings = 0
 
+    /// The desk's clear patch.
     private struct Hole: Equatable {
         let rect: CGRect
         let radius: CGFloat
@@ -1335,6 +1346,7 @@ struct TourAnchorCall: ViewModifier {
     @AnchorReducedMotion private var reduceMotion
     @State private var drops = 0
 
+    /// Timing of the anchor's swing onto a waiting card.
     private struct Drop {
         var y: CGFloat = 0
         var scale: CGFloat = 1

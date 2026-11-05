@@ -1,3 +1,6 @@
+// Role: one decoded turn start/end, and its conversion to the shared `ExternalProcessEvent` shape.
+// Note: other dialects produce these too, so everything downstream is dialect-free.
+
 import Foundation
 
 /// Decodes only lifecycle metadata from Codex JSONL; message bodies are ignored.

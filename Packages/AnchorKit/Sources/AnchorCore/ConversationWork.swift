@@ -1,3 +1,6 @@
+// Role: an agent's cumulative working time in one conversation, shown on desk cards.
+// Note: summed per turn from the log; it is agent time, not the person's focus time.
+
 import Foundation
 
 /// How long the agent has worked in one conversation: the sum of its turns,

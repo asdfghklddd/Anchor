@@ -1,3 +1,7 @@
+// Role: the contract every observation adapter implements, plus source identity and health.
+// To add a source: implement `ProcessSource`, emit `ExternalProcessEvent`s, register with the coordinator.
+// Rule: an adapter reports facts about work. It never answers, decides or resumes anything.
+
 import Foundation
 
 /// The kind of external producer that supplied a process observation.
@@ -8,12 +12,14 @@ public enum ProcessSourceKind: String, Codable, CaseIterable, Sendable {
     case integration
 }
 
+/// What a source is able to report.
 public enum SourceCapability: String, Codable, CaseIterable, Sendable {
     case observe
     case open
     case resolveDecision
 }
 
+/// Whether the person has granted what the source needs.
 public enum SourcePermissionState: String, Codable, CaseIterable, Sendable {
     case notRequired
     case requested
@@ -22,6 +28,7 @@ public enum SourcePermissionState: String, Codable, CaseIterable, Sendable {
     case restricted
 }
 
+/// How a source is doing right now.
 public enum SourceHealthStatus: String, Codable, CaseIterable, Sendable {
     case idle
     case waitingForSession
@@ -31,6 +38,7 @@ public enum SourceHealthStatus: String, Codable, CaseIterable, Sendable {
     case permissionDenied
 }
 
+/// A source's stable identity and what it says about itself.
 public struct SourceDescriptor: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public let name: String
@@ -59,6 +67,7 @@ public struct SourceDescriptor: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// Operational state. Shown in the UI but never part of the event history.
 public struct SourceHealth: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public let descriptor: SourceDescriptor
@@ -206,6 +215,7 @@ public struct ExternalProcessEvent: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// Reasons a source or its events are rejected.
 public enum ProcessSourceError: LocalizedError, Codable, Hashable, Sendable {
     case sessionMismatch
     case sourceMismatch
@@ -232,6 +242,7 @@ public enum ProcessSourceError: LocalizedError, Codable, Hashable, Sendable {
     }
 }
 
+/// Adapter contract. Call `acknowledge` once an event is safely committed, `retry` when it was not.
 public protocol ProcessSource: Sendable {
     var descriptor: SourceDescriptor { get }
     func events() -> AsyncThrowingStream<ExternalProcessEvent, Error>
@@ -239,6 +250,7 @@ public protocol ProcessSource: Sendable {
     func retry(_ event: ExternalProcessEvent) async throws
 }
 
+/// Publishes source health to the model.
 public protocol SourceHealthProviding: Sendable {
     func healthChanges() async -> AsyncStream<[SourceHealth]>
 }

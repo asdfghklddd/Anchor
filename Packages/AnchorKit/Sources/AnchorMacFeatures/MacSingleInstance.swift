@@ -1,3 +1,7 @@
+// Role: makes sure one Anchor runs at a time, using a distributed notification.
+// Why: the reset relaunches itself, and AppKit can refuse to quit behind a modal sheet, so
+// each relaunch once left another copy running.
+
 #if os(macOS)
 import AppKit
 import Foundation

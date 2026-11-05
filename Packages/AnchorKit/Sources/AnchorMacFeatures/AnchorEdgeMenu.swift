@@ -1,3 +1,6 @@
+// Role: reads the projection into the island's task rows and copyable next step.
+// Note: the "Edge" name is left over from the retired edge boat; the data is still current.
+
 #if os(macOS)
 import AnchorCore
 import AnchorDesign
@@ -54,6 +57,7 @@ public struct AnchorEdgeMenu: Sendable {
     }
 }
 
+/// Words for the task rows.
 public enum EdgeMenuCopy {
     static let copyNextStep = AnchorStrings.value("mac.edge.copy", default: "Copy next step")
     static let copied = AnchorStrings.value("mac.edge.copied", default: "Copied")

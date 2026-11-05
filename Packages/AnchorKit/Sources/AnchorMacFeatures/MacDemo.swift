@@ -1,3 +1,8 @@
+// Role: the Mac's guided replay, started from Settings › 重新体验引导. Real island, pretend phone and agents.
+// Keys: ⌃⌥→ next scene, ⌃⌥← restart. Runs on its own temp folder and defaults suite with no server,
+// sources, recaps or sync, and the person's own data stays untouched.
+// Rule: only show what the island really does, and keep the words in step with the iPhone tour.
+
 #if os(macOS)
 import AnchorCore
 import AnchorDesign
@@ -269,6 +274,7 @@ public enum MacDemoLaunch {
     }
 }
 
+/// Words the demo shares with the iPhone tour.
 enum MacDemoCopy {
     static let next = AnchorStrings.value("mac.demo.next", default: "Continue")
     /// The iPhone's words for the same thing.

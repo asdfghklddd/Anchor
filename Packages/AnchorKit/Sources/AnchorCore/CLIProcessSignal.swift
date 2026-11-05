@@ -1,5 +1,10 @@
+// Role: the terminal side of observation. Turns one `anchor` CLI start/finish signal into an
+// `ExternalProcessEvent`. See Documentation/CLI_EVENT_CONTRACT.md.
+// Privacy: arguments are never stored and working directories shrink to a basename.
+
 import Foundation
 
+/// Whether a CLI signal reports a command starting or finishing.
 public enum CLICommandPhase: String, Codable, CaseIterable, Sendable {
     case started
     case finished
@@ -66,6 +71,7 @@ public struct CLIProcessSignal: Identifiable, Codable, Hashable, Sendable {
         exitCode = try values.decodeIfPresent(Int.self, forKey: .exitCode)
     }
 
+    /// Converts the signal into the normalized event the coordinator accepts. Throws when a field is invalid.
     public func externalEvent(sessionID: UUID, sourceID: UUID) throws -> ExternalProcessEvent {
         guard schema == Self.schemaIdentifier else {
             throw CLIProcessSignalError.unsupportedSchema(schema)
@@ -206,6 +212,7 @@ public struct CLIProcessSignal: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// Reasons a CLI signal is rejected before it reaches the repository.
 public enum CLIProcessSignalError: LocalizedError, Hashable, Sendable {
     case missingExitCode
     case unsupportedSchema(String)
@@ -220,6 +227,7 @@ public enum CLIProcessSignalError: LocalizedError, Hashable, Sendable {
     }
 }
 
+/// Localized titles and details for CLI command rows.
 private enum CLIProcessStrings {
     static let terminal = value("cli.source.terminal", default: "Terminal")
     static let running = value("cli.state.running", default: "Running")

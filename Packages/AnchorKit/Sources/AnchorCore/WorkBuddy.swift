@@ -1,3 +1,8 @@
+// Role: reads WorkBuddy logs (`~/.workbuddy/projects`). Plain JSONL, but with its own turn rules:
+// no end-of-turn record, so an assistant message carrying `providerData.usage` ends the turn.
+// Pitfall: a Bash result says `status: completed` even for exit 137, so read `Exit Code:` from the output.
+// Untested live: interruption and mid-turn questions were inferred from WorkBuddy's CLI code.
+
 import Foundation
 
 /// How WorkBuddy's conversation logs read

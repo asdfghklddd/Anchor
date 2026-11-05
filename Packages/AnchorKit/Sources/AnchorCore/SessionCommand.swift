@@ -1,5 +1,10 @@
+// Role: what the UI and adapters can ask for. Commands are UI-friendly and not stored; the repository
+// turns each into a `SessionOperation` or handles it as local state.
+// To add a mutation: add the command, map it in `SessionOperation.make`, then handle it in `SessionReducer`.
+
 import Foundation
 
+/// Everything that can change a session. `forSession` targets a task other than the selected one.
 public enum SessionCommand: Sendable {
     indirect case forSession(UUID, SessionCommand)
     case hostSession(AnchorSession)
@@ -36,6 +41,7 @@ public enum SessionCommand: Sendable {
     case clearError
 }
 
+/// Pairing and retry controls of the Mac-iPhone link, as the UI sees them.
 public protocol LocalLinkControlling: Sendable {
     func currentPairingCode() async -> String?
     func pairingStatusUpdates() -> AsyncStream<DevicePairingStatus>
@@ -43,6 +49,7 @@ public protocol LocalLinkControlling: Sendable {
     func retryConnection() async
 }
 
+/// Why a command or a remote event was refused.
 public enum SessionRepositoryError: LocalizedError, Sendable {
     case noActiveSession
     case processNotFound

@@ -1,3 +1,5 @@
+// Role: the offline `AnchorSummarizer`: conversation names drawn from facts, with no network.
+
 import AnchorCore
 import Foundation
 

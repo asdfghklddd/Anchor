@@ -1,3 +1,6 @@
+// Role: Settings › Local Data: clear anchors, clear everything, 从 Mac 重新同步, and pet memory reset.
+// Note for 重新同步: tap the phone first, then restore the Mac, or a reconnect pushes changes back.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
@@ -8,6 +11,7 @@ import SwiftUI
 struct LocalDataSettingsView: View {
     let model: AnchorSessionModel
 
+    /// Which destructive action is being confirmed.
     private enum Reset: Identifiable {
         case anchors, everything, fromMac, petMemory
         var id: Self { self }
@@ -163,6 +167,7 @@ struct LocalDataSettingsView: View {
     }
 }
 
+/// Words for the pet settings.
 enum DeskPetCopy {
     static let reset = AnchorStrings.value("settings.deskPet.reset", default: "Reset Pet Memory")
     static let resetDetail = AnchorStrings.value("settings.deskPet.reset.detail", default: "Trust, habits, what it found, and the plant")
@@ -174,6 +179,7 @@ enum DeskPetCopy {
     static let resetAction = AnchorStrings.value("settings.deskPet.reset.action", default: "Reset")
 }
 
+/// Words for this page.
 enum LocalDataCopy {
     static let title = AnchorStrings.value("settings.data", default: "Local Data")
     static let clearAnchors = AnchorStrings.value("settings.data.clear-anchors", default: "Clear Anchors")

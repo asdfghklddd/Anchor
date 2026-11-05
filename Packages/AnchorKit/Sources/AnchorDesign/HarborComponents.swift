@@ -1,3 +1,5 @@
+// Role: backgrounds, avatar, button styles and input surfaces shared by iPhone and Mac.
+
 import SwiftUI
 
 /// Keeps the iPhone and Mac content canvas consistent while navigation remains platform-native.
@@ -39,6 +41,7 @@ public struct LandscapeHarborBackground: View {
     }
 }
 
+/// Large soft surface for a page's main content.
 public struct HarborHeroSurface<Content: View>: View {
     private let content: Content
     private let cornerRadius: CGFloat
@@ -98,6 +101,7 @@ public struct HarborHeroSurface<Content: View>: View {
     }
 }
 
+/// The Anchor mark with its background.
 public struct HarborBrandMark: View {
     private let size: CGFloat
 
@@ -136,6 +140,7 @@ public struct HarborBrandMark: View {
     }
 }
 
+/// A generic person figure in a soft disc.
 public struct HarborClayAvatar: View {
     public init() {}
 
@@ -207,6 +212,7 @@ public struct HarborClayAvatar: View {
     }
 }
 
+/// A round anchor control.
 public struct HarborAnchorControl: View {
     @AnchorReducedMotion private var reduceMotion
 
@@ -286,6 +292,7 @@ public struct HarborAnchorControl: View {
     }
 }
 
+/// Large filled button.
 public struct HarborPrimaryButtonStyle: ButtonStyle {
     @AnchorReducedMotion private var reduceMotion
     @Environment(\.isEnabled) private var isEnabled
@@ -329,6 +336,7 @@ public struct HarborPrimaryButtonStyle: ButtonStyle {
     }
 }
 
+/// Wavy separator.
 public struct HarborWaveDivider: View {
     public init() {}
 
@@ -345,6 +353,7 @@ public struct HarborWaveDivider: View {
     }
 }
 
+/// Background for text inputs.
 public struct HarborInputSurface: ViewModifier {
     @Environment(\.colorSchemeContrast) private var contrast
 
@@ -365,6 +374,7 @@ public struct HarborInputSurface: ViewModifier {
     }
 }
 
+/// Press response of the anchor button.
 private struct HarborAnchorButtonStyle: ButtonStyle {
     @AnchorReducedMotion private var reduceMotion
 

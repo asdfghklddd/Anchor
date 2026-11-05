@@ -1,3 +1,5 @@
+// Role: newline-delimited frames over one `NWConnection`. Lowest layer of the TCP link.
+
 import Foundation
 import Network
 

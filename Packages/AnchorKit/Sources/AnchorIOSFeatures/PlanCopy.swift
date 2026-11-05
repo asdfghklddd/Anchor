@@ -1,3 +1,5 @@
+// Role: the iPhone's styling for a next action. The words live in `PlanText`.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

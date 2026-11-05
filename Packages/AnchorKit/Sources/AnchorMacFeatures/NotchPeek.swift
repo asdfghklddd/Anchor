@@ -1,3 +1,7 @@
+// Role: news the closed island briefly shows. `NotchPeekDetector` diffs each task's conversations from the
+// projection: the first look is only a baseline, and anything over 10 minutes old is ignored.
+// `NotchPeekQueue` keeps order: pairing first, and a newer peek for the same task replaces the older one.
+
 #if os(macOS)
 import AnchorCore
 import AnchorDesign

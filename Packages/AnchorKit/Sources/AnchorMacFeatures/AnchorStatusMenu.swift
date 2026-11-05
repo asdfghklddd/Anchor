@@ -1,3 +1,6 @@
+// Role: turns link and folder state into one status and one fix. Shared by island and settings.
+// Note: the "Menu" name is left over from the retired menu bar item.
+
 #if os(macOS)
 import AnchorCore
 import AnchorDesign
@@ -13,6 +16,7 @@ public enum MacBluetoothRadio: Sendable, Equatable {
     case notAllowed
 }
 
+/// Observable copy of the radio state, set by the Bluetooth advertiser's callback.
 @MainActor
 @Observable
 public final class MacBluetoothRadioState {
@@ -24,6 +28,7 @@ public final class MacBluetoothRadioState {
 /// Where the phone link stands, the one thing that moves it forward when
 /// it is down, and whether Anchor can read the agents' folders.
 public struct AnchorStatusMenu: Sendable, Equatable {
+    /// Where the phone link stands, as the person reads it.
     public enum Link: Sendable, Equatable {
         case connected(viaBluetooth: Bool)
         case searching
@@ -33,6 +38,7 @@ public struct AnchorStatusMenu: Sendable, Equatable {
         case failed
     }
 
+    /// The single next action for a link that is down.
     public enum Fix: Sendable, Equatable {
         case reconnect
         case openBluetoothSettings
@@ -98,6 +104,7 @@ public struct AnchorStatusMenu: Sendable, Equatable {
     }
 }
 
+/// Words for link states and fixes.
 public enum StatusMenuCopy {
     public static func link(_ link: AnchorStatusMenu.Link) -> String {
         switch link {

@@ -1,3 +1,6 @@
+// Role: writes return-page recaps through DeepSeek's chat API. The only network call to a model.
+// Rule: the key lives in the Keychain and the model name is exactly `deepseek-flash`.
+
 import Foundation
 
 /// Writes conversation recaps with DeepSeek's chat API. The key is read from
@@ -21,6 +24,7 @@ public struct DeepSeekRecapWriter: ConversationRecapWriting {
         case emptyAnswer
     }
 
+    /// Asks the model for one recap and holds the answer to `SummaryLimit.recap`.
     public func recap(_ facts: ConversationRecapFacts) async throws -> String {
         guard let key = await apiKey(), !key.isEmpty else { throw Failure.noKey }
         var request = URLRequest(url: Self.endpoint, timeoutInterval: 30)
@@ -60,6 +64,7 @@ public struct DeepSeekRecapWriter: ConversationRecapWriting {
     只输出摘要本身。
     """
 
+    /// The instruction and transcript sent to the model.
     static func prompt(for facts: ConversationRecapFacts) -> String {
         var lines = [
             "任务：\(facts.taskTitle)",

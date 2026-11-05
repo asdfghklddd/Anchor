@@ -1,3 +1,5 @@
+// Role: converts observed source events into `TaskRunStore` events once their task owner is known.
+
 import Foundation
 
 /// Keeps source events independent from task ownership until association is known.
@@ -13,6 +15,7 @@ public struct AnchorEventAssociation: Codable, Hashable, Sendable {
     }
 }
 
+/// A confirmed "this source belongs to this task".
 public struct AnchorSessionAssociation: Identifiable, Codable, Hashable, Sendable {
     public let sessionID: UUID
     public let sourceID: UUID?

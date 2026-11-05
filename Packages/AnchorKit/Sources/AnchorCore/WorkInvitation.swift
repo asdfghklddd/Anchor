@@ -1,3 +1,7 @@
+// Role: small state machine for the portrait/landscape turn. Fires the haptic events
+// and decides when a new desk session begins.
+// Note: the tour still uses `.offered`; the person's own home shows nothing for it.
+
 import Foundation
 
 /// When the iPhone invites the person to turn it into the landscape work desk.

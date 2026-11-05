@@ -1,3 +1,6 @@
+// Role: tokens per half hour and Bluetooth link intervals, sent as `anchor.activity.v1`. Each snapshot
+// replaces the last, so it stays out of event history. Drives the home's clock and token bars.
+
 import Foundation
 
 /// What the Mac saw of the person's working day: tokens agents used per half

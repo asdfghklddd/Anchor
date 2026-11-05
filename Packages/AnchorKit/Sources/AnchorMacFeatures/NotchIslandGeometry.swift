@@ -1,3 +1,6 @@
+// Role: all island measures and how the housing is read from `NSScreen`. Screens without a notch get a handle.
+// Note: sizes were tuned on a real 14" MacBook Pro. Change them only after looking at the hardware.
+
 #if os(macOS)
 import AppKit
 import CoreGraphics

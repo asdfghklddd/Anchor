@@ -1,8 +1,12 @@
+// Role: the portrait home: top bar, greeting, anchoring panel, task library and anchor button.
+// Rule: this is the normal mode and it matches the owner's mockup. Do not add controls or layers here.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
 import SwiftUI
 
+/// Lays the home out. Each part reads the model and tour from its parent.
 struct PortraitDashboard: View {
     let projection: SessionProjection
     let auxiliaryToolbarLabel: String?

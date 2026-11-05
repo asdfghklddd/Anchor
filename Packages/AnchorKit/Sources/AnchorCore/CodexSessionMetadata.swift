@@ -1,3 +1,6 @@
+// Role: routing facts from the head of a log: id, start time, workspace name, who started it.
+// Supports Codex, Claude Code and WorkBuddy heads. Machine-started threads and sub-agents are excluded.
+
 import Foundation
 
 /// Routing facts from the first `session_meta` line of a Codex session log:

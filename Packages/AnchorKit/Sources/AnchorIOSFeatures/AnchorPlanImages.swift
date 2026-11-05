@@ -1,3 +1,5 @@
+// Role: plan photos on disk, by goal ID. They never enter events or the link.
+
 #if os(iOS)
 import Foundation
 import ImageIO

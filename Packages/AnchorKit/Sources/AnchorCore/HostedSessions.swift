@@ -1,3 +1,6 @@
+// Role: "hosted" tasks, the open ones (up to 3). `session` is the selected one and
+// `additionalSessions` holds the rest; prefer `hostedSessions` when you mean all of them.
+
 import Foundation
 
 public extension SessionProjection {

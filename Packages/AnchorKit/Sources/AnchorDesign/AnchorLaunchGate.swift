@@ -1,3 +1,5 @@
+// Role: holds content behind the launch splash until it has played. Exposes `launchSplashShowing` to the environment.
+
 #if os(iOS)
 import SwiftUI
 
@@ -6,6 +8,7 @@ extension EnvironmentValues {
     @Entry public var launchSplashShowing = false
 }
 
+/// Wrap the app's root in this. The tour's first line waits for the splash through the environment value.
 public struct AnchorLaunchGate<Content: View>: View {
     @AnchorReducedMotion private var reduceMotion
 

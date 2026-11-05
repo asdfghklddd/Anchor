@@ -1,3 +1,5 @@
+// Role: the local profile photo. Never synced.
+
 #if os(iOS)
 import AnchorDesign
 import PhotosUI

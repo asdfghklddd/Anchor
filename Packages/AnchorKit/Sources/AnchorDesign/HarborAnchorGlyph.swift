@@ -1,5 +1,8 @@
+// Role: the anchor glyph used by the anchor button.
+
 import SwiftUI
 
+/// Drawn at any size. The desk cards use their own `DeskCardAnchor` instead.
 public struct HarborAnchorGlyph: View {
     private let color: Color
     private let lineWidth: CGFloat

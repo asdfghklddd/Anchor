@@ -1,3 +1,7 @@
+// Role: reads one turn's tool calls to get the test verdict and whether a question is still open.
+// Note: verdicts only come from commands that look like tests (`runsTests`) and their exit status.
+// Commands and output are read one line at a time and never kept.
+
 import Foundation
 
 /// Whether a turn ran tests and how they ended. Only this verdict leaves the

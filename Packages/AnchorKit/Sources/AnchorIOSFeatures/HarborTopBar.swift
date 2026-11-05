@@ -1,8 +1,11 @@
+// Role: the home's top bar: link pill, sync note and settings gear.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
 import SwiftUI
 
+/// Colors and sizes come from the home mockup via `HomeStyle`.
 struct HarborTopBar: View {
     let connection: ConnectionState
     let auxiliaryLabel: String?

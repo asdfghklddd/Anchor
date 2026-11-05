@@ -1,5 +1,9 @@
+// Role: Mac-side durable task history (`task-runs.json` by default). Supplies aggregate task state.
+// Note: separate from `LocalSessionRepository`. Does not sync; the phone gets state through events.
+
 import Foundation
 
+/// Why a write to the task history was refused. These protect ownership and task boundaries.
 public enum TaskRunStoreError: Error, Equatable, Sendable {
     case taskNotFound, taskArchived, ownershipMismatch, invalidArchive, confirmationRequired, sourceIdentityRequired
     case activeTaskConflict, eventIdentityConflict, eventOutsideTaskBoundary

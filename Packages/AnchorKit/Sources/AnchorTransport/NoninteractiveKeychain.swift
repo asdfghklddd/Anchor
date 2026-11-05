@@ -1,3 +1,5 @@
+// Role: Keychain calls that can never show a password dialog, because they run in the background.
+
 import Foundation
 import LocalAuthentication
 import Security

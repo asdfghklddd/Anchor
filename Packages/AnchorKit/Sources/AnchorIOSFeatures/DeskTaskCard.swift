@@ -1,3 +1,8 @@
+// Role: the task card opened from a folder tab: plan on the left, conversations and finish on the right,
+// with in-place editing. An open edit saves on close.
+// Note: `ProfileDetailSheet` still opens instead at accessibility text sizes. `KeyboardTopReader` uses
+// `keyboardLayoutGuide` because keyboard notifications did not shrink the card here.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
@@ -39,6 +44,7 @@ struct DeskTaskCard: View {
     @State private var keyboardTop: CGFloat?
     @State private var cardTop: CGFloat = 0
 
+    /// Which editable field has focus.
     private enum Field: Hashable {
         case title, step(UUID), new
     }

@@ -1,3 +1,9 @@
+// Role: the iPhone app's composition root. `init()` builds identity, Bonjour client, Bluetooth scanner, local +
+// linked repository and the model, then wires events from both transports into the repository.
+// Launch modes: normal; UI test (`ANCHOR_UI_TESTING=1`, temp storage, no live link); DEBUG `ANCHOR_TOUR=1` forces the tour.
+// Note: on a first run Bluetooth and sync wait for the tour to end (`LinkLauncher`), so the system
+// prompt appears over the connection card and not over the tour.
+
 import AnchorCore
 import AnchorIOSFeatures
 import AnchorTransport
@@ -5,6 +11,7 @@ import CoreBluetooth
 import SwiftUI
 import UIKit
 
+/// Owns the long-lived link objects for the app's lifetime; SwiftUI only sees the model and root view.
 @main
 struct AnchorIOSApp: App {
     private let model: AnchorSessionModel
@@ -130,6 +137,7 @@ struct AnchorIOSApp: App {
                 return false
             }
         }
+        // Everything the Mac sends arrives here, over either transport.
         let applyEvent: @Sendable (EventEnvelope) async throws -> Void = { [weak repository] event in
             // The Mac's day so far is a snapshot for the home, not history.
             if AnchoringLog.receive(event) { return }

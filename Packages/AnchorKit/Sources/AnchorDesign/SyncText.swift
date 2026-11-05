@@ -1,3 +1,5 @@
+// Role: words for how current a device's copy is.
+
 import AnchorCore
 import Foundation
 

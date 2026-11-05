@@ -1,3 +1,5 @@
+// Role: the Settings tiles for choosing a pet, or none.
+
 #if os(iOS)
 import AnchorDesign
 import SwiftUI

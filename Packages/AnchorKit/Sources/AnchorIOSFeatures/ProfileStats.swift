@@ -1,3 +1,5 @@
+// Role: the Me page's numbers, counted only from what the phone really holds. No estimates.
+
 #if os(iOS)
 import AnchorCore
 import Foundation

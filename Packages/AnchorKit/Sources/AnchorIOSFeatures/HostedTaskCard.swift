@@ -1,3 +1,5 @@
+// Role: older library card. No screen shows it now. The shared logic moved to `HostedTaskStatus`.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

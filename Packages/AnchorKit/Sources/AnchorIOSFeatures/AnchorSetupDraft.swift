@@ -1,3 +1,5 @@
+// Role: unsent setup text. Survives rotation; closing asks first and then discards it.
+
 #if os(iOS)
 import AnchorCore
 import Foundation

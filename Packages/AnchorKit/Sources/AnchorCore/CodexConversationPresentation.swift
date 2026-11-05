@@ -1,3 +1,5 @@
+// Role: folds one-process-per-turn Codex data into one row per conversation for display.
+
 import Foundation
 
 public extension AnchorProcess {

@@ -1,3 +1,9 @@
+// Role: the Mac app's composition root. `init()` builds everything and wires it: identity, Bonjour server,
+// Bluetooth advertiser, repository, sources, binder, recapper, setup model, then hands them to the delegate.
+// Launch modes: normal; demo (`MacDemoLaunch`, replay from Settings, own temp storage); UI test
+// (`ANCHOR_UI_TESTING=1`); local validation (`ANCHOR_LOCAL_VALIDATION_ROOT`). Only normal touches real data.
+// Order matters: `MacSingleInstance.claim()` and the pending reset run before any store loads.
+
 import AnchorCore
 import AnchorDesign
 import AnchorMacFeatures
@@ -6,6 +12,7 @@ import AppKit
 import CoreBluetooth
 import SwiftUI
 
+/// No visible scene of its own: the UI is the notch island and one settings window, both AppKit-owned.
 @main
 struct AnchorMacApp: App {
     @NSApplicationDelegateAdaptor(AnchorMacApplicationDelegate.self)
@@ -217,6 +224,8 @@ struct AnchorMacApp: App {
         let summaryBook = SummaryBook(local: LocalSummarizer())
         let codexBinder = CodexSessionBinder(repository: repository, coordinator: sourceCoordinator,
             taskRunStore: taskRunStore, checkpointStore: codexCheckpointStore, names: summaryBook)
+        // Everything the phone sends arrives here. Requests that act once are handled and dropped; only the
+        // rest enters the repository's event history.
         let applyInboundEvent: @Sendable (EventEnvelope) async throws -> Void = { envelope in
             // The phone asks to open a conversation here: now or not at all, never history.
             if let open = ConversationOpenRequest(envelope: envelope) {
@@ -327,6 +336,8 @@ struct AnchorMacApp: App {
             defaults: validationDefaults,
             demo: demo
         )
+        // Runs after launch, in order: lifecycle bridge, sources, restore folders and bound conversations,
+        // first-run prompt, day activity, cloud.
         let startup: @MainActor @Sendable () async -> Void = {
             // The demo reads no agents, writes no recaps and syncs nothing.
             if isDemo { return }

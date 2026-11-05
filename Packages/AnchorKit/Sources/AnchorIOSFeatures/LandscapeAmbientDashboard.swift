@@ -1,3 +1,7 @@
+// Role: the landscape desk: clock and pet nook on the left, library on the right.
+// Layout: `islandGutter` keeps 58 pt clear because the Dynamic Island reaches about 50 pt in on either edge.
+// At accessibility text sizes the desk becomes a plain list.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
@@ -46,6 +50,7 @@ struct LandscapeAmbientDashboard: View {
 
     private var tasks: [AnchorSession] { projection.hostedSessions }
 
+    /// Identifies one result, so each one swells and sounds once.
     private struct ResultKey: Hashable {
         let task: UUID
         let process: UUID

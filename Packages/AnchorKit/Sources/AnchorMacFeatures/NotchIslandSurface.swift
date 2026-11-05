@@ -1,3 +1,5 @@
+// Role: the island's material: deep frosted glass, near-black while closed so it blends with the hardware.
+
 #if os(macOS)
 import AppKit
 import SwiftUI

@@ -1,8 +1,15 @@
+// Role: the island's whole SwiftUI view. Closed: task pills left, plan ring or link warning right.
+// Open: current task with its next step and copy button, up to two other tasks, unsorted row, link and gear.
+// Rule: filing lives here; checking off steps stays on the iPhone. The island never answers an agent.
+// Performance: closed-state motion belongs in Core Animation (`NotchPillMotion`, `NotchLayerMotion`), never SwiftUI repeating
+// animations; those lay the window out every frame and once cost ~25% of the main thread.
+
 #if os(macOS)
 import AnchorCore
 import AnchorDesign
 import SwiftUI
 
+/// Everything a click in the island can ask for; the controller carries it out.
 public enum NotchIslandAction: Sendable {
     case copyNextStep
     case selectTask(UUID)
@@ -615,6 +622,7 @@ enum NotchIslandInk {
     }
 }
 
+/// The island's words.
 enum NotchIslandCopy {
     static let switchHint = AnchorStrings.value("mac.notch.switch.hint", default: "Make this the task you're on")
     static let sourcesPrivacy = AnchorStrings.value(
@@ -636,6 +644,7 @@ enum NotchIslandCopy {
     }
 }
 
+/// Drives the staged arrival in `reveal(order:)`.
 private struct NotchReveal: ViewModifier {
     let progress: Double
 

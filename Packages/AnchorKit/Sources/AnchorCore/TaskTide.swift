@@ -1,3 +1,6 @@
+// Role: state-over-time segments per conversation, and `WorkGlance`, the one-line answer across all tasks.
+// Note: derived only from reported moments. Gaps stay gaps; nothing is interpolated.
+
 import Foundation
 
 /// What a conversation was doing during a stretch of time. Derived only from
@@ -26,6 +29,7 @@ public enum TideState: String, Hashable, Sendable {
     }
 }
 
+/// One stretch of one state, or a single marker when the state is terminal.
 public struct TideSegment: Hashable, Sendable {
     public let start: Date
     public let end: Date

@@ -1,3 +1,5 @@
+// Role: the AirPods-like pairing card: title = status, 3D anchor in the middle, actions at the bottom.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
@@ -108,6 +110,7 @@ extension View {
     }
 }
 
+/// Presents the card over any screen.
 private struct ConnectionCardPresentation: ViewModifier {
     let hasCaption: Bool
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize

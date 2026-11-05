@@ -1,7 +1,12 @@
+// Role: the wire format and crypto shared by TCP and Bluetooth: frames, payloads, sealing, key
+// derivation and pairing proofs. CryptoKit does the actual crypto; nothing is hand-rolled.
+// Compatibility: both apps must speak the same format. Add fields as optional, and test with AnchorLinkCodecTests.
+
 import AnchorCore
 import CryptoKit
 import Foundation
 
+/// Link failures, worded for the connection screens.
 public enum AnchorLinkError: LocalizedError, Sendable {
     case invalidPairingCode
     case invalidPeerKey
@@ -87,6 +92,7 @@ public enum AnchorLinkError: LocalizedError, Sendable {
     }
 }
 
+/// Outer frame types. Only `encrypted` carries real data, after pairing.
 enum LinkFrameKind: String, Codable, Sendable {
     case hello
     case pairRequest
@@ -95,6 +101,7 @@ enum LinkFrameKind: String, Codable, Sendable {
     case encrypted
 }
 
+/// How the two devices got a shared secret to start from.
 enum PairingBootstrapMethod: String, Codable, CaseIterable, Hashable, Sendable {
     case iCloud
     case bluetooth
@@ -109,6 +116,7 @@ enum PairingBootstrapMethod: String, Codable, CaseIterable, Hashable, Sendable {
     }
 }
 
+/// The outer unit on the wire, in the clear apart from its sealed body.
 struct LinkFrame: Codable, Sendable {
     let version: Int
     let kind: LinkFrameKind
@@ -142,6 +150,7 @@ struct LinkFrame: Codable, Sendable {
     }
 }
 
+/// What an opened encrypted frame holds.
 enum LinkPayloadKind: String, Codable, Sendable {
     case heartbeat
     case event
@@ -150,6 +159,7 @@ enum LinkPayloadKind: String, Codable, Sendable {
     case processSnapshotResponse
 }
 
+/// The inner message, sealed with the shared key.
 struct LinkPayload: Codable, Sendable {
     let messageID: UUID
     let sequence: UInt64
@@ -225,6 +235,7 @@ struct LinkPayload: Codable, Sendable {
     }
 }
 
+/// Remembers recent message IDs, so a recorded frame cannot be replayed.
 struct LinkReplayWindow: Sendable {
     private static let maximumEntries = 2_048
     private var seenMessageIDs: Set<UUID> = []
@@ -239,6 +250,7 @@ struct LinkReplayWindow: Sendable {
     }
 }
 
+/// Seal/open, key derivation, and the proofs that show each side holds the bootstrap secret.
 enum AnchorLinkCodec {
     static func seal(_ payload: LinkPayload, using keyData: Data) throws -> Data {
         let data = try JSONEncoder.anchor.encode(payload)

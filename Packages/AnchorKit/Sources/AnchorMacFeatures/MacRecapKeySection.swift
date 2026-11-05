@@ -1,3 +1,5 @@
+// Role: the settings row for the DeepSeek key behind return-page recaps.
+
 #if os(macOS)
 import AnchorCore
 import AnchorDesign
@@ -68,6 +70,7 @@ struct MacRecapKeySection: View {
     }
 }
 
+/// Words for the key row.
 enum MacRecapCopy {
     static let title = AnchorStrings.value("mac.recap.title", default: "Return recaps")
     static let state = AnchorStrings.value("mac.recap.state", default: "DeepSeek key")

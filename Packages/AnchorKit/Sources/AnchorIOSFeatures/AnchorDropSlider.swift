@@ -1,3 +1,7 @@
+// Role: "slide to drop anchor", the setup page's one action. The tour's first-drop moment builds on it.
+// Performance: dash phases must wrap within one dash length. Never feed the raw clock into a
+// renderer parameter; huge values froze the whole display on real phones.
+
 #if os(iOS)
 import AnchorDesign
 import SwiftUI

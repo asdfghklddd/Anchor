@@ -1,3 +1,5 @@
+// Role: handles the phone's "open on Mac" swipe (`anchor.open.v1`). Links are built by `ConversationLink`.
+
 import AnchorCore
 import AppKit
 

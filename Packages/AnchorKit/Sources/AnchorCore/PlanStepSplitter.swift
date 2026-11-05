@@ -1,3 +1,7 @@
+// Role: splits typed or dictated text into plan steps, using line breaks and sequence words plus NLTagger.
+// Pitfall: a piece with no verb is dropped. Chinese containing 崩溃 can tag badly, and the iOS
+// simulator's tagger has no English, so test this in AnchorCoreTests (macOS), not in the simulator.
+
 import Foundation
 import NaturalLanguage
 

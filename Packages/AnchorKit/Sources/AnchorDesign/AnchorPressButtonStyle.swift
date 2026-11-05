@@ -1,8 +1,11 @@
+// Role: press feel. `.card` (0.98, no haptic, since scrolls start on cards) and `.control` (0.9, light tap on touch-down).
+
 import SwiftUI
 
 /// A physical response to a press, without delaying navigation: it gives quickly
 /// under the finger and springs back when let go.
 public struct AnchorPressButtonStyle: ButtonStyle {
+    /// Which physical response a press gets.
     public enum Feel: Sendable {
         /// Cards and rows: a slight give and nothing to feel, since scrolls often start on them.
         case card

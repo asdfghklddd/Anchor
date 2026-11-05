@@ -1,3 +1,5 @@
+// Role: per-task identity colors shared across devices.
+
 import AnchorCore
 import SwiftUI
 #if os(iOS)

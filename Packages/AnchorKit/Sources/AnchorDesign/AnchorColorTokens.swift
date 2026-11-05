@@ -1,3 +1,6 @@
+// Role: the single source of colors for iPhone and Mac. Add new colors here as light/dark tokens.
+// Note: `home*` tokens were measured from the owner's home mockup. Tasks use amber, cyan, pink in that order on both devices.
+
 import AnchorCore
 import SwiftUI
 #if os(iOS)

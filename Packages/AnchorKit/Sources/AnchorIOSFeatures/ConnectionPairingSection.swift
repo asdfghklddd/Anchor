@@ -1,3 +1,5 @@
+// Role: the pairing card's lower half: code entry, retry and the device row.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

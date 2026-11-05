@@ -1,3 +1,5 @@
+// Role: the solid anchor silhouette, shape only, reused at any size.
+
 import SwiftUI
 
 /// Anchor's own anchor: a solid, weighted silhouette (ring, a stock with round

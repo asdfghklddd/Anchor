@@ -1,3 +1,7 @@
+// Role: connects one conversation log to one task. Registers a `CodexLifecycleFileSource` for it with
+// the coordinator and records the association, so its turns land on the right task.
+// Used by: `MacSourceSetupModel` when `TaskMatcher` or the person places a conversation.
+
 import Foundation
 
 /// Shared production binding boundary: each file keeps an explicit task owner.
@@ -22,6 +26,7 @@ public actor CodexSessionBinder {
         self.names = names
     }
 
+    /// Starts observing this log for this task. Binding the same pair again is harmless.
     public func bind(fileURL: URL, sessionID: UUID, automaticallyMatched: Bool, stepID: UUID? = nil) async throws {
         let projection = await repository.currentProjection()
         guard let session = projection.hostedSessions.first(where: { $0.id == sessionID }) else {
@@ -104,6 +109,7 @@ public actor CodexSessionBinder {
         }
     }
 
+    /// A stable source identity for one log + task pair, so relaunches keep the same conversation rows.
     static func sourceID(fileURL: URL, sessionID: UUID) -> UUID {
         StableProcessIdentity.id(
             namespace: "anchor.source.codex-session",

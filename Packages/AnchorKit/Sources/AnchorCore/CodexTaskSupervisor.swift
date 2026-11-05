@@ -1,5 +1,10 @@
+// Role: Mac-side discovery of recent conversations in one agent folder. Produces privacy-minimal
+// candidates for matching and in-memory summaries for the island.
+// Note: it only reads and lists. `MacSourceSetupModel` decides placement and `CodexSessionBinder` binds.
+
 import Foundation
 
+/// Coarse state of a conversation's latest turn, as discovery sees it.
 public enum CodexTaskActivity: String, Codable, Hashable, Sendable {
     case running
     case completed

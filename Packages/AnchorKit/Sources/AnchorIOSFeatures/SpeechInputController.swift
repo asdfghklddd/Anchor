@@ -1,3 +1,6 @@
+// Role: live dictation with `SFSpeechRecognizer`, used for setup and notes.
+// Note: `speechLocale()` follows the interface language, not the region. Real speech cannot run in the simulator.
+
 #if os(iOS)
 import AnchorDesign
 import AVFAudio
@@ -5,9 +8,11 @@ import Observation
 import OSLog
 import Speech
 
+/// Owns the audio engine and the recognition request. Cleanup must only touch the request it belongs to.
 @MainActor
 @Observable
 final class SpeechInputController {
+    /// Why recording could not start.
     private enum RecordingSetupError: Error {
         case invalidInputFormat
     }

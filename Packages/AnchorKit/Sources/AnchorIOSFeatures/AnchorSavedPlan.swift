@@ -1,3 +1,5 @@
+// Role: read-only and checkable display of a plan, shared by task and history pages.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

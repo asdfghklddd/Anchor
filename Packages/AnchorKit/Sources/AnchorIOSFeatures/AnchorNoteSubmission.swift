@@ -1,3 +1,5 @@
+// Role: submit-state helper for the note sheet. Success is shown only once the note is saved locally.
+
 import Foundation
 import Observation
 

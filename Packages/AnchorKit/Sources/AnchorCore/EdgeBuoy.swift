@@ -1,3 +1,6 @@
+// Role: leftover from the retired Mac edge boat. No app code uses it now; only its tests still do.
+// Safe to delete together with those tests when cleaning up.
+
 import Foundation
 
 /// The one thing the Mac edge says beyond "anchored or not": something

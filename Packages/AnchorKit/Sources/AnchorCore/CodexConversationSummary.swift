@@ -1,3 +1,7 @@
+// Role: Mac-only glance data for one conversation (title, state, reply opening, suggested steps).
+// Privacy: summaries stay in Mac memory. They are never stored, attached to a task or sent to the phone.
+// Note: also holds `CodexGlanceText`, the Markdown-to-plain-text helper used for reply previews.
+
 import Foundation
 
 /// One Codex conversation as a person glances at it: its name, whether its

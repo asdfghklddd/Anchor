@@ -1,6 +1,11 @@
+// Role: where the iCloud bootstrap secret comes from. The Mac creates it if missing and the phone only reads.
+// Note: both apps use `manualOnly` by default. iCloud pairing needs `ANCHOR_ENABLE_ICLOUD_PAIRING=1` in a DEBUG build;
+// Release builds never query it. Daily pairing goes through Bluetooth or a code.
+
 import Foundation
 import Synchronization
 
+/// Caches the secret off the main path, because Keychain reads can block.
 private final class AutomaticPairingSecretCache: Sendable {
     private struct State: Sendable {
         var value: Data?
@@ -53,6 +58,7 @@ private final class AutomaticPairingSecretCache: Sendable {
     }
 }
 
+/// `manualOnly` is for tests and validation launches.
 public struct AutomaticPairingConfiguration: Sendable {
     let iCloudSecretProvider: @Sendable () -> Data?
 

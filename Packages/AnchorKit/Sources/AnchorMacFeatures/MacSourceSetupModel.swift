@@ -1,3 +1,11 @@
+// Role: the Mac's brain for agents. Holds folder access (security-scoped bookmarks), runs one discovery loop
+// across every granted agent, places conversations with `TaskMatcher`, and handles filing from the island.
+// Flow: scan every 2 s -> `publish` summaries -> `performPlacement` -> bind through `CodexSessionBinder`.
+// Privacy: summaries and request text stay in memory. Only read-only bookmarks persist, for log folders only.
+// Performance: runs for the app's lifetime on the main actor. Assign state only on real change and
+// skip passes whose `PlacementInputs` did not change, or the island re-lays out every 2 s.
+// To add an agent: add its root, bookmark key, `observeAuthorized…`, `restore…Root`, and the row in settings.
+
 #if os(macOS)
 import AnchorCore
 import AnchorDesign
@@ -5,6 +13,7 @@ import AppKit
 import Foundation
 import Observation
 
+/// One instance for the app's lifetime. Older method names say "Codex" but cover every agent.
 @MainActor
 @Observable
 public final class MacSourceSetupModel {
@@ -272,6 +281,7 @@ public final class MacSourceSetupModel {
         trackedCodexSessionIDs.insert(resolvedID)
     }
 
+    /// On launch: restores folder access and bound conversations, then starts discovery.
     public func restoreCodexSession() async {
         guard !isRestoringCodexSession else { return }
         isRestoringCodexSession = true
@@ -461,6 +471,7 @@ public final class MacSourceSetupModel {
         trackedCodexSessionIDs.contains(candidate.id)
     }
 
+    /// Copies the bundled `anchor` CLI to a folder the person picks.
     public func installCommand() async {
         guard isCommandBundled else {
             errorMessage = L10n.sourceSetupCommandMissing
@@ -530,6 +541,7 @@ public final class MacSourceSetupModel {
         if codexCandidates != candidates { codexCandidates = candidates }
     }
 
+    /// Resolves the saved Codex folder bookmark and starts observing it. The other agents have matching functions below.
     private func restoreCodexSessionsRoot() async {
         guard codexSessionsRootSecurityScopedURL == nil,
               let url = resolveBookmarkedURL(for: Self.codexRootBookmarkKey),
@@ -700,6 +712,7 @@ public final class MacSourceSetupModel {
         await serially { await self.performPlacement(conversations) }
     }
 
+    /// One placement pass. Off-main word segmentation and caching keep this cheap; see `PlacementInputs`.
     private func performPlacement(_ conversations: [CodexConversationSummary]) async {
         guard hasConversationSource, let autoAssociationSessions else { return }
         await refreshTaskState()
@@ -860,6 +873,7 @@ public final class MacSourceSetupModel {
         return FileManager.default.homeDirectoryForCurrentUser
     }
 
+    /// Saves a read-only security-scoped bookmark for a granted folder.
     private func storeBookmark(for url: URL, key: String) throws {
         let data = try url.bookmarkData(
             options: .withSecurityScope,
@@ -942,18 +956,21 @@ public final class MacSourceSetupModel {
     private static let workBuddyRootBookmarkKey = "anchor.mac.source-setup.workbuddy-root.v1"
 }
 
+/// Display name and lost-access message for this agent.
 enum MacWorkBuddyCopy {
     static let title = AnchorStrings.value("mac.sources.workbuddy", default: "WorkBuddy")
     static let lostAccess = AnchorStrings.value(
         "mac.sources.workbuddy.lost-access", default: "The WorkBuddy folder can no longer be read. Allow it again.")
 }
 
+/// Display name and lost-access message for this agent.
 enum MacDeepSeekHarnessCopy {
     static let title = AnchorStrings.value("mac.sources.deepseek", default: "DeepSeek Harness")
     static let lostAccess = AnchorStrings.value(
         "mac.sources.deepseek.lost-access", default: "The DeepSeek Harness folder can no longer be read. Allow it again.")
 }
 
+/// Display name and lost-access message for this agent.
 enum MacClaudeCodeCopy {
     static let title = AnchorStrings.value("mac.sources.claude", default: "Claude Code")
     static let detail = AnchorStrings.value(

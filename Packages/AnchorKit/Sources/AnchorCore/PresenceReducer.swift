@@ -1,5 +1,10 @@
+// Role: decides at desk / away / returned from signals.
+// Rule: away means the Bluetooth link to the Mac has been down for 5 minutes. Return means it came back.
+// Nothing else triggers a return; there is no manual return.
+
 import Foundation
 
+/// Raw inputs: the phone's posture plus the link and proximity state.
 public struct PresenceSignals: Codable, Hashable, Sendable {
     public var posture: DevicePosture
     public var connection: ConnectionState
@@ -23,6 +28,7 @@ public struct PresenceSignals: Codable, Hashable, Sendable {
     }
 }
 
+/// The timings behind the away rule.
 public struct PresencePolicy: Codable, Hashable, Sendable {
     public var absenceConfirmation: TimeInterval
     public var handoffDuration: TimeInterval

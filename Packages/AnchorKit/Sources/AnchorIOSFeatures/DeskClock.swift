@@ -1,3 +1,5 @@
+// Role: the landscape desk's clock, drawn from traced glyphs so no font file ships.
+
 #if os(iOS)
 import SwiftUI
 

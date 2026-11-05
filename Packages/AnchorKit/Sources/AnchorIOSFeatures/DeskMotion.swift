@@ -1,3 +1,5 @@
+// Role: `ResultSwell`, one tinted swell over a folder when a result arrives, then stillness.
+
 #if os(iOS)
 import AnchorDesign
 import SwiftUI

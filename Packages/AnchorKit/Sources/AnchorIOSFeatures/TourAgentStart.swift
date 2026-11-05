@@ -1,3 +1,6 @@
+// Role: the tour step between first drop and turn. It shows that work starts from an agent opened on the Mac,
+// because dropping an anchor alone brings no conversations. Opens by itself within 5 s; a unit test guards the timing.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

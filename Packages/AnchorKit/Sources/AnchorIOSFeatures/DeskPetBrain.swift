@@ -1,3 +1,6 @@
+// Role: a pet's life, one step per 8 fps tick. Layers, strongest first: desk events > touch > small things > idle.
+// Note: all randomness goes through `DeskPetRandom`, so tests can replay a pet's day with a seed.
+
 #if os(iOS)
 import Foundation
 

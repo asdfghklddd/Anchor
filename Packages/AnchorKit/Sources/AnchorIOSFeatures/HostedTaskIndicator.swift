@@ -1,3 +1,5 @@
+// Role: small presentation helper for a task's state indicator. Never infers anything from elapsed time.
+
 import AnchorCore
 
 /// Presentation only: never infers a stalled task from elapsed time or changes

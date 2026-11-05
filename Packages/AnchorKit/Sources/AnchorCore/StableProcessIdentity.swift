@@ -1,6 +1,9 @@
+// Role: derives a repeatable process UUID from a source's own id, so a re-read log maps to the same row.
+
 import CryptoKit
 import Foundation
 
+/// Same inputs give the same UUID on any device.
 public enum StableProcessIdentity {
     public static func id(namespace: String, sessionID: UUID, externalID: String) -> UUID {
         let value = [

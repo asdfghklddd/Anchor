@@ -1,3 +1,5 @@
+// Role: older home glance card. No screen shows it now, since the home redesign replaced it.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

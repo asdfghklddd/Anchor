@@ -1,7 +1,10 @@
+// Role: the setup sheet's photo row.
+
 #if os(iOS)
 import AnchorDesign
 import SwiftUI
 
+/// Thumbnails with add and remove. Photos stay on this phone.
 struct AnchorSetupPhotos: View {
     let images: [Data]
     var remove: ((Int) -> Void)?

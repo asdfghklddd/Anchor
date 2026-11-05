@@ -1,3 +1,6 @@
+// Role: picks the person's next move on a task. The heart of "always show what's next".
+// Rule: it reads the person's own plan and never marks anything done or follows agent suggestions.
+
 import Foundation
 
 /// The person's next move on one task, read from their own plan and from what

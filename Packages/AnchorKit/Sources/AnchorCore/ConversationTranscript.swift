@@ -1,3 +1,6 @@
+// Role: reads the last rounds of a conversation for digests and recaps, in every dialect.
+// Privacy: this text is transient. Only the digest or recap written from it may leave the Mac.
+
 import Foundation
 
 /// The latest rounds of a conversation, read from its log on the Mac only to

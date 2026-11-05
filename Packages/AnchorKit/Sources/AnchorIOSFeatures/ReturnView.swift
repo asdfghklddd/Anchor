@@ -1,3 +1,8 @@
+// Role: the return page, shown when the Bluetooth link was down 5+ minutes and came back (see `PresenceReducer`),
+// once a task has a matched conversation. One page per task, swiped sideways; recaps come from the Mac.
+// Fallback: after 20 s without recaps it shows the latest requests. Recaps stay on the task, in history.
+// Note: this is different from `DeskPickUpCard`, even if both get called 回归页面.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
@@ -187,6 +192,7 @@ private struct ReturnTaskPage: View {
         .animation(reduceMotion ? nil : .easeOut(duration: 0.35), value: phase)
     }
 
+    /// Waiting for recaps, showing cards, or nothing to show.
     private enum Phase: Equatable { case waiting, cards, empty }
 
     private var phase: Phase {
@@ -278,6 +284,7 @@ private struct ReturnConversationCard: View {
     }
 }
 
+/// Press feedback only (blue border); the cards just inform.
 private struct ReturnCardStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -295,6 +302,7 @@ private struct ReturnCardStyle: ButtonStyle {
     }
 }
 
+/// Which task page is showing.
 private struct ReturnPageDots: View {
     let count: Int
     let current: Int
@@ -356,6 +364,7 @@ private struct ReturnPetLoader: View {
     }
 }
 
+/// Waiting indicator beside the typing pet.
 private struct ReturnLoadingDots: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 0.45)) { context in
@@ -368,6 +377,7 @@ private struct ReturnLoadingDots: View {
 
 // MARK: - Look
 
+/// The page's water.
 private struct ReturnBackground: View {
     var body: some View {
         ZStack {
@@ -384,6 +394,7 @@ private struct ReturnBackground: View {
     }
 }
 
+/// Colors from the owner's mockup.
 enum ReturnStyle {
     static let canvas = Color(red: 0.976, green: 0.988, blue: 0.996)
     static let haze = Color(red: 0.70, green: 0.93, blue: 0.98)
@@ -399,6 +410,7 @@ enum ReturnStyle {
     static let dotIdle = Color(red: 0.84, green: 0.85, blue: 0.86)
 }
 
+/// Words for this page.
 enum ReturnCopy {
     static let subtitle = AnchorStrings.value("return.page.subtitle", default: "Here’s what happened in Anchor")
     static let backToHome = AnchorStrings.value("return.page.home", default: "Back to Home")

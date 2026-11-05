@@ -1,3 +1,5 @@
+// Role: decides how much of a line has been read aloud. Takes the shortest prefix holding the best match, so an early word never lights the whole line.
+
 #if os(iOS)
 import Foundation
 

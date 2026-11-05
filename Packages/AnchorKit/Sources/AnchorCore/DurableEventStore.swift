@@ -1,3 +1,6 @@
+// Role: optional cloud path (protocols plus sync loop). `CloudKitEventStore` is the only real store and
+// ships disabled, since it needs a paid developer account. Daily use is the local link only.
+
 import Foundation
 
 /// A durable remote event store. CloudKit is one implementation; a fake store
@@ -8,6 +11,7 @@ public protocol DurableEventStore: Sendable {
     func events(for sessionID: UUID, onOrAfter date: Date?) async throws -> [EventEnvelope]
 }
 
+/// What one sync pass uploaded and downloaded.
 public struct DurableSyncReport: Codable, Hashable, Sendable {
     public let uploadedCount: Int
     public let downloadedCount: Int
@@ -27,6 +31,7 @@ public struct DurableSyncReport: Codable, Hashable, Sendable {
     }
 }
 
+/// Lets the model show an honest cloud state.
 public protocol DurableSyncStatusProviding: Sendable {
     func statusChanges() async -> AsyncStream<DurableSyncState>
 }

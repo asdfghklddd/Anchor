@@ -1,3 +1,5 @@
+// Role: the mic button for dictating a title or plan. Drives `SpeechInputController`.
+
 #if os(iOS)
 import AnchorDesign
 import SwiftUI

@@ -1,3 +1,6 @@
+// Role: the product boundary as code. Filters retired sources out of what the UI sees and rejects
+// decision commands. Old records stay readable underneath.
+
 import Foundation
 
 /// The production apps observe task state. Legacy records remain readable by

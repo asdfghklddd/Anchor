@@ -1,3 +1,6 @@
+// Role: data for correcting where a conversation is filed, from the island: move it, mark it as not part of
+// a task, or file an unsorted one. This is the Mac's only way to change task contents.
+
 #if os(macOS)
 import AnchorCore
 import AnchorDesign

@@ -1,7 +1,11 @@
+// Role: owns the island controller and settings window, and starts them once `configure` has run.
+// Note: reopening Anchor (Dock, Finder) opens Settings, since there is no main window.
+
 import AnchorCore
 import AnchorMacFeatures
 import AppKit
 
+/// AppKit side of the app. `AnchorMacApp.init` calls `configure` with what it built.
 @MainActor
 final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     private var model: AnchorSessionModel?
@@ -14,6 +18,7 @@ final class AnchorMacApplicationDelegate: NSObject, NSApplicationDelegate {
     private var demo: MacDemoDirector?
     private var didFinishLaunching = false
 
+    /// Takes the app's objects. The interface starts when both this and launch have happened.
     func configure(
         model: AnchorSessionModel,
         linkController: any LocalLinkControlling,

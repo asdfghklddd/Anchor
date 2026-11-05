@@ -1,5 +1,9 @@
+// Role: small status enums shared across the app, and the peer device info used on connection screens.
+// Compatibility: raw values are stored and sent; do not rename them.
+
 import Foundation
 
+/// Lifecycle of a task.
 public enum SessionStatus: String, Codable, CaseIterable, Sendable {
     case draft
     case active
@@ -7,6 +11,7 @@ public enum SessionStatus: String, Codable, CaseIterable, Sendable {
     case archived
 }
 
+/// State of one conversation or command, as reported by its source.
 public enum ProcessStatus: String, Codable, CaseIterable, Sendable {
     case queued
     case running
@@ -17,6 +22,7 @@ public enum ProcessStatus: String, Codable, CaseIterable, Sendable {
     case disconnected
 }
 
+/// Retired with `Decision`; kept for decoding.
 public enum DecisionStatus: String, Codable, CaseIterable, Sendable {
     case open
     case resolved
@@ -24,6 +30,7 @@ public enum DecisionStatus: String, Codable, CaseIterable, Sendable {
     case cancelled
 }
 
+/// Where the person is, as `PresenceReducer` decided.
 public enum PresenceStatus: String, Codable, CaseIterable, Sendable {
     case atDesk
     case handingOff
@@ -32,6 +39,7 @@ public enum PresenceStatus: String, Codable, CaseIterable, Sendable {
     case unknown
 }
 
+/// State of the link to the other device.
 public enum ConnectionState: String, Codable, CaseIterable, Sendable {
     case connected
     case pairing
@@ -51,6 +59,7 @@ public enum ConnectionState: String, Codable, CaseIterable, Sendable {
     }
 }
 
+/// Which path pairing or the link uses.
 public enum DevicePairingRoute: String, Codable, CaseIterable, Sendable {
     case trustedDevice
     case iCloud
@@ -58,6 +67,7 @@ public enum DevicePairingRoute: String, Codable, CaseIterable, Sendable {
     case verificationCode
 }
 
+/// Where pairing currently stands.
 public enum DevicePairingPhase: String, Codable, CaseIterable, Sendable {
     case automatic
     case verificationCodeRequired
@@ -140,6 +150,7 @@ public enum PeerDeviceMemory {
     }
 }
 
+/// Pairing state for the UI.
 public struct DevicePairingStatus: Codable, Hashable, Sendable {
     public let phase: DevicePairingPhase
     public let route: DevicePairingRoute?
@@ -162,6 +173,7 @@ public struct DevicePairingStatus: Codable, Hashable, Sendable {
     )
 }
 
+/// How near the other device is, from Bluetooth RSSI.
 public enum ProximityState: String, Codable, CaseIterable, Sendable {
     case near
     case far
@@ -179,6 +191,7 @@ public enum ProximityState: String, Codable, CaseIterable, Sendable {
     }
 }
 
+/// State of the optional cloud path.
 public enum DurableSyncState: String, Codable, CaseIterable, Sendable {
     case notConfigured
     case idle
@@ -188,12 +201,14 @@ public enum DurableSyncState: String, Codable, CaseIterable, Sendable {
     case failed
 }
 
+/// How the phone is being held.
 public enum DevicePosture: String, Codable, CaseIterable, Sendable {
     case portrait
     case landscape
     case unknown
 }
 
+/// Stored display size of a process tile; part of older stored data.
 public enum ProcessTileSize: String, Codable, CaseIterable, Sendable {
     case compact
     case standard
@@ -201,6 +216,7 @@ public enum ProcessTileSize: String, Codable, CaseIterable, Sendable {
     case large
 }
 
+/// What sort of thing a `ProcessEvent` records.
 public enum ProcessEventKind: String, Codable, CaseIterable, Sendable {
     case created
     case progress

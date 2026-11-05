@@ -1,3 +1,6 @@
+// Role: picks and orders the conversations in a desk folder. Rule: one that waits, failed or is stuck
+// jumps to the front in the red-light style. A normal card never gets color or an anchor.
+
 import Foundation
 
 /// A task's conversations as the desk's task library stacks them: the three

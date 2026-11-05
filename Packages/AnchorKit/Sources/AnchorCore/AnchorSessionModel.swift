@@ -1,6 +1,13 @@
+// Role: the observable model SwiftUI reads on both apps. Wraps a `SessionRepository`,
+// republishes its projections on the main actor, and turns presence signals into
+// presence commands through `PresenceReducer`.
+// Flow: view -> `send(SessionCommand)` -> repository -> new projection -> `projection` -> view.
+// Note: views never mutate state directly; every change goes through `send` or a helper here.
+
 import Foundation
 import Observation
 
+/// Main-actor facade over a repository. One instance per app, created at launch.
 @MainActor
 @Observable
 public final class AnchorSessionModel {
@@ -54,6 +61,7 @@ public final class AnchorSessionModel {
         }
     }
 
+    /// Subscribes to the repository, presence, source health and durable sync streams. Safe to call twice.
     public func start() {
         guard projectionTask == nil else { return }
         isLoading = true
@@ -135,6 +143,7 @@ public final class AnchorSessionModel {
         _ = await send(.clearError)
     }
 
+    /// Sends a command and reports success; a failure is kept in `lastError` for the UI to show.
     @discardableResult
     public func send(_ command: SessionCommand) async -> Bool {
         do {
@@ -292,6 +301,7 @@ public final class AnchorSessionModel {
         await consume(signals)
     }
 
+    /// Feeds new link/posture signals to `PresenceReducer` and publishes any status change it decides on.
     private func consume(_ incomingSignals: PresenceSignals) async {
         var signals = incomingSignals
         if currentPosture == .unknown {

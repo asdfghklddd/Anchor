@@ -1,3 +1,5 @@
+// Role: older day recap card. No screen shows it now.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

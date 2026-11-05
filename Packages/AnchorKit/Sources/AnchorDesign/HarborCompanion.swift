@@ -1,3 +1,5 @@
+// Role: older companion figure. No screen uses it now.
+
 import SwiftUI
 
 /// The small, expressive Anchor companion used by the ambient clear state.

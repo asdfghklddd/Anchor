@@ -1,7 +1,11 @@
+// Role: this device's ID and the shared key per peer. Production uses the Data Protection keychain.
+// Note: ad-hoc Debug builds use legacy storage and can lose keys after a rebuild, which forces re-pairing.
+
 import Foundation
 import Security
 import Synchronization
 
+/// Caches lookups for the process. Test and validation launches use `inMemory()`.
 public struct PairingIdentityStore: Sendable {
     public enum Keychain: Sendable, Hashable {
         /// App-owned credentials are authorized by stable signing entitlements.
@@ -97,12 +101,14 @@ public struct PairingIdentityStore: Sendable {
     }
 }
 
+/// Found, missing, or present but not readable. The last case must not be treated as missing.
 enum PairingIdentityLookup: Sendable {
     case value(Data)
     case missing
     case unavailable(OSStatus)
 }
 
+/// Seam so tests avoid the real Keychain.
 protocol PairingIdentityPersistence: Sendable {
     func load(account: String) -> PairingIdentityLookup
     func save(_ data: Data, account: String) -> OSStatus
@@ -110,6 +116,7 @@ protocol PairingIdentityPersistence: Sendable {
     func saveDeviceID(_ id: UUID)
 }
 
+/// The real persistence: shared keys in the Keychain, device ID in defaults.
 struct KeychainPairingIdentityPersistence: PairingIdentityPersistence {
     let service: String
     let keychain: PairingIdentityStore.Keychain
@@ -159,6 +166,7 @@ struct KeychainPairingIdentityPersistence: PairingIdentityPersistence {
     }
 }
 
+/// Seam over the Security framework calls.
 protocol PairingKeychainClient: Sendable {
     func load(service: String, account: String, keychain: PairingIdentityStore.Keychain) -> PairingIdentityLookup
     func save(_ data: Data, service: String, account: String, keychain: PairingIdentityStore.Keychain) -> OSStatus

@@ -1,3 +1,10 @@
+// Role: the first-run tour's brain ("fake it, then make it"). Real home, setup, desk and return page run on a
+// temporary repository fed by `TourMac`, a pretend Mac. `Stage` is the script; views read it from the environment.
+// Rules: every step moves on by a real action or a visible change, with no "Next" buttons. Nothing is invented
+// for the tour; it reuses real views and gestures. There are no "sample" labels. Chinese copy says 投锚/投下, never 抛.
+// To change a step: edit `Stage`, its transition here, its frost target in `TourCoach`, and the walk in
+// Apps/AnchorIOSUITests (recording script: scripts/record-onboarding.sh).
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
@@ -36,6 +43,7 @@ public enum AnchorTourGate {
 @MainActor
 @Observable
 final class AnchorTour {
+    /// The tour's order. `Comparable`, so views can ask "from this step on".
     enum Stage: Int, Comparable {
         /// The whole home, clear, for a moment before the frost comes in.
         case glance
@@ -602,6 +610,7 @@ struct TourMac {
         return recaps
     }
 
+    /// The agents the tour's small Mac offers.
     enum Agent {
         case codex, claude
         var name: String { self == .codex ? "Codex" : "Claude Code" }
@@ -619,6 +628,7 @@ struct TourMac {
 
 // MARK: Copy
 
+/// Every line the tour says. Keep each one short: one line on the frost.
 enum TourCopy {
     static let anchorButton = AnchorStrings.value("tour.anchor", default: "Tap the anchor to drop one of your own.")
     static let readTitle = AnchorStrings.value("tour.voice.title", default: "Tap the mic and say the task.")

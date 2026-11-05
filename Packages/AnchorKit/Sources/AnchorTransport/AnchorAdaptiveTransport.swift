@@ -1,3 +1,6 @@
+// Role: chooses the path for each send (Bonjour/TCP first, Bluetooth when that fails), and the framing
+// that splits a payload into BLE-sized chunks and puts it back together.
+
 import AnchorCore
 import Foundation
 
@@ -51,11 +54,13 @@ public struct AnchorAdaptiveCurrentProcessProvider: CurrentProcessProviding, Sen
     }
 }
 
+/// Why a Bluetooth transfer could not be framed or reassembled.
 enum AnchorBluetoothTransferError: Error, Equatable {
     case invalidChunk
     case payloadTooLarge
 }
 
+/// One numbered piece of a payload, sized for a single BLE characteristic write.
 struct AnchorBluetoothTransferChunk: Equatable, Sendable {
     static let headerSize = 21
     static let maximumPayloadSize = 256 * 1_024
@@ -117,6 +122,7 @@ struct AnchorBluetoothTransferChunk: Equatable, Sendable {
     }
 }
 
+/// Splits a payload into chunks that fit the negotiated value length.
 enum AnchorBluetoothTransferFramer {
     static func chunks(for payload: Data, maximumValueLength: Int) throws -> [Data] {
         guard payload.count <= AnchorBluetoothTransferChunk.maximumPayloadSize else {
@@ -142,6 +148,7 @@ enum AnchorBluetoothTransferFramer {
     }
 }
 
+/// Collects chunks and returns the full payload once the last one arrives.
 struct AnchorBluetoothTransferAssembler: Sendable {
     private struct Transfer: Sendable {
         let count: Int

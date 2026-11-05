@@ -1,3 +1,6 @@
+// Role: the setup sheet: title + optional plan + slide to drop. The anchor button opens it, zooming from the button.
+// Tour: mic taps play a scripted line instead of listening, and `SetupSink` plays only on the tour's first drop.
+
 #if os(iOS)
   import AnchorCore
   import AnchorDesign

@@ -1,3 +1,5 @@
+// Role: words for the day's recap.
+
 import AnchorCore
 import Foundation
 

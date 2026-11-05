@@ -1,3 +1,6 @@
+// Role: the phone's "open this on the Mac" request (`anchor.open.v1`) and how each agent's link is built.
+// Note: travels outside the event history and expires quickly, so a late delivery never surprises anyone.
+
 import Foundation
 
 /// The person's request, from the phone, to open a conversation on the Mac.

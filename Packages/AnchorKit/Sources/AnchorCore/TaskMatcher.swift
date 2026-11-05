@@ -1,3 +1,8 @@
+// Role: decides which task a new conversation belongs to. Conservative on purpose: when unsure it
+// leaves the work unsorted for one click in the island instead of filing it wrongly.
+// Pitfall: short titles segment to few words and may fall below the threshold.
+// Performance: runs for every unplaced conversation, so callers cache word lists. Keep it cheap.
+
 import Foundation
 import NaturalLanguage
 import Synchronization
@@ -11,6 +16,7 @@ import Synchronization
 /// Anything else waits, unsorted, for one click. Request text is read here
 /// transiently and is never stored.
 public enum TaskMatcher {
+    /// The facts about a conversation that placement looks at.
     public struct Work: Sendable, Hashable {
         public let id: String
         /// The folder name the work runs in, never its full path.
@@ -56,10 +62,12 @@ public enum TaskMatcher {
         }
     }
 
+    /// Which evidence placed the work.
     public enum Reason: String, Sendable, Hashable {
         case corrected, folder, words, current
     }
 
+    /// The outcome: placed on a task, left unsorted with candidates, or ignored.
     public enum Placement: Hashable, Sendable {
         case task(UUID, step: UUID?, reason: Reason)
         case unsorted(candidates: [UUID])

@@ -1,3 +1,5 @@
+// Role: draws one peek inside the stretched closed island.
+
 #if os(macOS)
 import AnchorDesign
 import SwiftUI

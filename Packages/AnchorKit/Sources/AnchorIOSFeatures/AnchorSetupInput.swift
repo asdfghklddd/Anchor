@@ -1,8 +1,11 @@
+// Role: the setup sheet's fields: title with length meter, plan text, photos and voice.
+
 #if os(iOS)
   import AnchorCore
   import AnchorDesign
   import SwiftUI
 
+  /// Which field has focus.
   enum AnchorSetupField: Hashable {
     case title, plan
   }

@@ -1,3 +1,5 @@
+// Role: words for each `TaskNextAction` and the plan. Shared so both devices say the same thing.
+
 import AnchorCore
 import Foundation
 

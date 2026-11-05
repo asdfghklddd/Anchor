@@ -1,3 +1,5 @@
+// Role: derives work item and task state from stored events, deterministically.
+
 import Foundation
 
 /// Current state for one semantic work item, deterministically derived from
@@ -28,6 +30,7 @@ public struct AnchorTaskState: Codable, Equatable, Sendable {
     public let latestActivityAt: Date?
 }
 
+/// Replays a work item's events into its state.
 public enum AnchorWorkItemStateProjector {
     public static func project(
         workItem: AnchorWorkItem,
@@ -123,6 +126,7 @@ public enum AnchorWorkItemStateProjector {
     }
 }
 
+/// Rolls work item states up into one task state.
 public enum AnchorTaskStateProjector {
     public static func project(
         task: AnchorTask,

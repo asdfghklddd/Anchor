@@ -1,3 +1,7 @@
+// Role: the person's own plan of steps for a task.
+// Rule: only the person marks a step done. Agent results never complete a step.
+// Note: images stay on the device; `Step.id` is what keeps checkmarks stable across edits and devices.
+
 import Foundation
 
 /// User-authored steps. Image files are stored locally by goal ID, outside sync payloads.

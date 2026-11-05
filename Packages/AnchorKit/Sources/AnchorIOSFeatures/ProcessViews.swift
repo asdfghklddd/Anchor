@@ -1,8 +1,11 @@
+// Role: process detail, the note sheet, and the goal editor.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
 import SwiftUI
 
+/// One conversation's detail and events, through the `process` route.
 struct ProcessDetailView: View {
     let process: AnchorProcess
 
@@ -80,6 +83,7 @@ struct ProcessDetailView: View {
     }
 }
 
+/// The note sheet.
 struct AnchorNoteView: View {
     let model: AnchorSessionModel
     private let taskID: UUID?
@@ -258,6 +262,7 @@ struct AnchorNoteView: View {
     }
 }
 
+/// Edits a task's title, criteria and note.
 struct GoalEditorView: View {
     let model: AnchorSessionModel
     let goal: AnchorGoal
@@ -332,6 +337,7 @@ struct GoalEditorView: View {
     }
 }
 
+/// One line in a list of events.
 struct EventRow: View {
     let event: ProcessEvent
 

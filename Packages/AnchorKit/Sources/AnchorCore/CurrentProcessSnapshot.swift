@@ -1,3 +1,5 @@
+// Role: process names the phone can ask the Mac for when seeding a new task. Names only.
+
 import Foundation
 
 /// A small, privacy-conscious snapshot used to seed a new Anchor session.

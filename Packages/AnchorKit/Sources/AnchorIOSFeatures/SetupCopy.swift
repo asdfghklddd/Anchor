@@ -1,3 +1,5 @@
+// Role: words for the setup sheet.
+
 #if os(iOS)
 import AnchorDesign
 

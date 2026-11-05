@@ -1,3 +1,6 @@
+// Role: reads the CLI inbox in the App Group container (`~/Library/Group Containers/.../Anchor/Inbox`).
+// Each file is one event. Files are moved out before use, so a crash cannot replay them.
+
 import Foundation
 
 /// A small, sandbox-friendly handoff boundary for the supported Anchor CLI.
@@ -260,6 +263,7 @@ public struct FileProcessSource: ProcessSource, Sendable {
     }
 }
 
+/// Failures reading the inbox, reported through source health.
 public enum FileProcessSourceError: LocalizedError, Sendable, Hashable {
     case notRegularFile(URL)
     case fileTooLarge(URL)

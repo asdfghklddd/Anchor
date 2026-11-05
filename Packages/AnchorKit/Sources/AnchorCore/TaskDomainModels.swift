@@ -1,3 +1,6 @@
+// Role: the Mac's task/work item/run hierarchy behind `TaskRunStore`, kept apart from the session
+// projection for durable per-task history.
+
 import Foundation
 
 /// Task-centric contract shared by the iPhone history and macOS observers.
@@ -7,6 +10,7 @@ public enum AnchorTaskLifecycle: String, Codable, Hashable, Sendable {
     case archived
 }
 
+/// Whether a run is going.
 public enum AnchorRunExecution: String, Codable, Hashable, Sendable {
     case queued
     case running
@@ -14,6 +18,7 @@ public enum AnchorRunExecution: String, Codable, Hashable, Sendable {
     case idle
 }
 
+/// How a run ended, when known.
 public enum AnchorRunOutcome: String, Codable, Hashable, Sendable {
     case none
     case completed
@@ -29,6 +34,7 @@ public enum AnchorRunAttention: String, Codable, Hashable, Sendable {
     case stale
 }
 
+/// What sort of fact a task event records.
 public enum AnchorTaskEventKind: String, Codable, Hashable, Sendable {
     case queued
     case started
@@ -40,6 +46,7 @@ public enum AnchorTaskEventKind: String, Codable, Hashable, Sendable {
     case stale
 }
 
+/// A stored event could not be decoded.
 public enum AnchorTaskEventCodingError: Error, Equatable, Sendable {
     case unsupportedVersion(Int)
 }
@@ -111,6 +118,7 @@ public struct AnchorTaskEvent: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// The task as `TaskRunStore` tracks it.
 public struct AnchorTask: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public var title: String
@@ -126,6 +134,7 @@ public struct AnchorTask: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// One semantic piece of work inside a task, such as a conversation.
 public struct AnchorWorkItem: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public let taskID: UUID
@@ -138,6 +147,7 @@ public struct AnchorWorkItem: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+/// One execution of a work item, such as a turn.
 public struct AnchorRun: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public let taskID: UUID

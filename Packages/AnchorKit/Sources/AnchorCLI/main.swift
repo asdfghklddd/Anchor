@@ -1,3 +1,8 @@
+// Role: the `anchor` command line tool. Atomically writes one event file per signal into the App Group inbox,
+// where `FileProcessSource` picks it up. Contract: Documentation/CLI_EVENT_CONTRACT.md.
+// Commands: `command` (start/finish lifecycle), `emit` (a ready event), `schema`, `shell zsh` (prints shell hooks), `help`.
+// Rule: it never edits shell profiles by itself; the person adds what `shell` prints.
+
 import AnchorCore
 import Foundation
 
@@ -213,6 +218,7 @@ struct AnchorCLI {
     }
 }
 
+/// Parsed arguments of `anchor command`.
 private struct CommandLifecycleOptions {
     let phase: CLICommandPhase
     let commandID: UUID?
@@ -295,6 +301,7 @@ private struct CommandLifecycleOptions {
     }
 }
 
+/// Parsed arguments of `anchor emit`.
 private struct CLIOptions {
     let inputFile: String?
     let inboxURL: URL?
@@ -325,6 +332,7 @@ private struct CLIOptions {
     }
 }
 
+/// Usage errors, printed to stderr.
 private enum CLIError: LocalizedError {
     case helpRequested
     case invalidValue(String, String)

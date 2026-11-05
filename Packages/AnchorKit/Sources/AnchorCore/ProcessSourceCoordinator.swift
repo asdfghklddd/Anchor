@@ -1,3 +1,7 @@
+// Role: owns running sources and funnels their events into the repository one at a time.
+// A failure in one source is recorded on that source and never stops the others.
+// Note: events without a confirmed task owner are not stored; `setAssociation` establishes the owner.
+
 import Foundation
 
 /// Owns source lifetimes and serializes normalized observations into the

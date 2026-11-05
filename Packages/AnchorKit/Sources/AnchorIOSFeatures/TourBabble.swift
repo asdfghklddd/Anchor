@@ -1,3 +1,5 @@
+// Role: leftover syllable generator from the removed pet voice. It is kept but not part of the tour's sound now.
+
 #if os(iOS)
 import Foundation
 
@@ -8,6 +10,7 @@ import Foundation
 /// One chirp of the pet's voice: a vowel, the sound before it, and the way
 /// its pitch moves.
 struct TourSyllable: Equatable, Sendable {
+    /// The sound before the vowel.
     enum Onset: Sendable { case none, stop, hiss, soft }
     /// How the pitch moves across the syllable, in semitones.
     enum Contour: Sendable {
@@ -36,6 +39,7 @@ struct TourSyllable: Equatable, Sendable {
     var pause: Double
 }
 
+/// Turns text into syllables.
 enum TourBabble {
     /// Long lines are cut short; the bubble still shows every word.
     static let most = 44

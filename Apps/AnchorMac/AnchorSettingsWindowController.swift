@@ -1,3 +1,5 @@
+// Role: hosts `MacSettingsView` in Anchor's only ordinary window.
+
 import AnchorCore
 import AnchorDesign
 import AnchorMacFeatures

@@ -1,8 +1,11 @@
+// Role: smaller pages: insights, history and its detail, task management, finish.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
 import SwiftUI
 
+/// The `insights` route.
 struct InsightsView: View {
     let projection: SessionProjection
 
@@ -48,6 +51,7 @@ struct InsightsView: View {
     }
 }
 
+/// A small number and label.
 private struct MetricTile: View {
     let value: String
     let label: String
@@ -69,6 +73,7 @@ private struct MetricTile: View {
     }
 }
 
+/// Finished tasks, newest first. Reached from Me.
 struct HistoryView: View {
     let projection: SessionProjection
     let onOpen: (UUID) -> Void
@@ -114,6 +119,7 @@ struct HistoryView: View {
     }
 }
 
+/// One finished task.
 private struct HistoryRow: View {
     let session: AnchorSession
 
@@ -138,6 +144,7 @@ private struct HistoryRow: View {
     }
 }
 
+/// A finished task's plan, records and return recaps.
 struct HistoryDetailView: View {
     let projection: SessionProjection
     let sessionID: UUID
@@ -227,10 +234,12 @@ private struct ReturnRecapHistoryCard: View {
     }
 }
 
+/// Words for recaps in history.
 enum ReturnHistoryCopy {
     static let title = AnchorStrings.value("history.return.recaps", default: "When you came back")
 }
 
+/// Manages the current task's conversations: order, tile size, removal.
 struct TaskManagementView: View {
     let model: AnchorSessionModel
     private let taskID: UUID?
@@ -304,6 +313,7 @@ struct TaskManagementView: View {
 
 }
 
+/// The final confirmation before a task moves to history. Only this and archive end a task.
 struct FinishSessionView: View {
     let model: AnchorSessionModel
     private let taskID: UUID?

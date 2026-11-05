@@ -1,3 +1,6 @@
+// Role: "Today's Anchoring": time the Bluetooth link to the Mac is up, per day, plus the Mac's token slots.
+// Note: phone-side record first, and the Mac's `DayActivity` fills the gaps. Local only; receives `anchor.activity.v1`.
+
 #if os(iOS)
 import AnchorCore
 import Foundation

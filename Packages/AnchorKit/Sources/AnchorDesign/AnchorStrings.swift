@@ -1,5 +1,9 @@
+// Role: the one way to fetch a localized string (from this module's Localizable.xcstrings).
+// Note: the Mac interface is pinned to Chinese even on an English host; the iPhone follows the system.
+
 import Foundation
 
+/// Use `value(_:default:)` with a stable key; English goes in `default`, Chinese in the catalog.
 public enum AnchorStrings {
     private static let interfaceBundle: Bundle = {
 #if os(macOS)

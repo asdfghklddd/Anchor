@@ -1,3 +1,5 @@
+// Role: the pairing card's 3D anchor (SceneKit), plus the check mark that replaces it.
+
 #if os(iOS)
 import AnchorDesign
 import SceneKit
@@ -160,6 +162,7 @@ private struct ConnectionCheckMark: View {
     }
 }
 
+/// Hosts the SceneKit view. A flat copy holds the place while the scene prepares.
 private struct ConnectionAnchorView: UIViewRepresentable {
     let stage: ConnectionAnchorStage
     func makeUIView(context: Context) -> SCNView { stage.view }

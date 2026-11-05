@@ -1,3 +1,5 @@
+// Role: Settings › Reset Mac Data. A flag now, the wipe on next launch before stores load. Folder access stays.
+
 #if os(macOS)
 import AnchorDesign
 import AppKit
@@ -34,6 +36,7 @@ public enum MacLocalReset {
     }
 }
 
+/// Words for the reset row and its confirmation.
 enum MacLocalResetCopy {
     static let title = AnchorStrings.value("mac.reset.title", default: "Reset Mac Data…")
     static let detail = AnchorStrings.value(

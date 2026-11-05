@@ -1,3 +1,6 @@
+// Role: each pet's pixel grid and palette. Harbor/pastel only; never red, amber or green bodies.
+// After art changes: run scripts/export-pets.sh before any printing; merch must match the app pixel for pixel.
+
 #if os(iOS)
 import AnchorDesign
 import SwiftUI

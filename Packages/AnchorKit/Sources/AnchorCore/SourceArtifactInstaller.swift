@@ -1,3 +1,5 @@
+// Role: copies the bundled `anchor` CLI to a location the person picked. Never edits shell profiles.
+
 import Foundation
 
 /// Installs the explicit observation artifacts shipped by the production app.
@@ -36,6 +38,7 @@ public struct SourceArtifactInstaller: Sendable {
     }
 }
 
+/// Why the CLI could not be installed.
 public enum SourceArtifactInstallerError: LocalizedError, Equatable, Sendable {
     case invalidCommandSource
 

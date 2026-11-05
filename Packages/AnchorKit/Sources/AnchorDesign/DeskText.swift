@@ -1,3 +1,5 @@
+// Role: words for the pick-up card, the reminder and the desk's reasons to come back.
+
 import AnchorCore
 import Foundation
 

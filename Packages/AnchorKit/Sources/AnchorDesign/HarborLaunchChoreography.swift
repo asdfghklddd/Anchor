@@ -1,3 +1,6 @@
+// Role: the launch animation's timeline, as pure values: five threads in task colors merge, the logo forms and drops.
+// Slogan: 「AI多线程」「工作有主线」. Total 2.67 s; a tap skips it. Testable without rendering.
+
 import CoreGraphics
 import Foundation
 
@@ -51,6 +54,7 @@ public struct HarborLaunchChoreography: Sendable {
         public var total: Double { exitBegins + exitDuration }
     }
 
+    /// Where the logo is at a given time.
     public struct LogoPose: Sendable, Equatable {
         public var center: CGPoint
         public var scaleX: CGFloat
@@ -59,18 +63,21 @@ public struct HarborLaunchChoreography: Sendable {
         public var opacity: Double
     }
 
+    /// One droplet.
     public struct Particle: Sendable, Equatable {
         public var center: CGPoint
         public var radius: CGFloat
         public var opacity: Double
     }
 
+    /// One ring in the water.
     public struct Ripple: Sendable, Equatable {
         public var center: CGPoint
         public var radius: CGFloat
         public var opacity: Double
     }
 
+    /// How the slogan text appears: opacity, blur and offset.
     public struct Reveal: Sendable, Equatable {
         public var opacity: Double
         public var blur: CGFloat
@@ -159,6 +166,7 @@ public struct HarborLaunchChoreography: Sendable {
 
     // MARK: The threads
 
+    /// The fixed path and timing of one thread.
     private struct ThreadPlan {
         /// -1 runs in from the left edge, 1 from the right.
         let side: CGFloat

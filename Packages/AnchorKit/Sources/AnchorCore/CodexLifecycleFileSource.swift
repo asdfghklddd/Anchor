@@ -1,5 +1,12 @@
+// Role: the live `ProcessSource` for one bound agent conversation. Tails its log and emits lifecycle
+// events for every dialect (Codex, Claude Code, WorkBuddy) through `CodexIncrementalScanner`.
+// Performance: a quiet log drops from `pollInterval` to `restingPollInterval` after `restingAfter`.
+// Note: the checkpoint only advances after the repository has acknowledged the event.
+
 import Foundation
 
+/// Tracks events handed to the coordinator until they are acknowledged or sent for retry, so the
+/// checkpoint never moves past an event that was not committed.
 private actor CodexLifecycleDeliveryState {
     enum Resolution: Sendable {
         case acknowledged
@@ -89,6 +96,7 @@ public struct CodexLifecycleFileSource: ProcessSource, Sendable {
         "codex.lifecycle." + sourceID.uuidString.lowercased()
     }
 
+    /// Polls the file, resets when its identity changes or it shrinks, and yields one event per lifecycle record.
     public func events() -> AsyncThrowingStream<ExternalProcessEvent, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {

@@ -1,3 +1,5 @@
+// Role: reads and creates the bootstrap secret in iCloud Keychain.
+
 import Foundation
 import Security
 

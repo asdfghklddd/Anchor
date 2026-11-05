@@ -1,3 +1,5 @@
+// Role: the name this phone gives itself on the Mac. iOS hides the real one, so it is built from the person's Anchor name.
+
 #if os(iOS)
 import AnchorDesign
 import Foundation

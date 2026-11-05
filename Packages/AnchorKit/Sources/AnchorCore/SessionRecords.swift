@@ -1,3 +1,5 @@
+// Role: filters a task's history down to what the person reads as records.
+
 import Foundation
 
 public extension ProcessEvent {

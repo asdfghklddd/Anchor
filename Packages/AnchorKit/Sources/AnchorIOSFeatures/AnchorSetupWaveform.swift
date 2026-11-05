@@ -1,3 +1,5 @@
+// Role: the live microphone level shown while dictating.
+
 #if os(iOS)
 import AnchorDesign
 import SwiftUI

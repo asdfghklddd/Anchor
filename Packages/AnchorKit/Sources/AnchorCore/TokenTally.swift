@@ -1,3 +1,7 @@
+// Role: counts tokens per half hour from agent logs and reports the day to the phone.
+// Note: counts fresh input + output and excludes cached reads. Dialects differ here: WorkBuddy's
+// `input_tokens` includes cached reads, Claude Code's does not.
+
 import Foundation
 
 /// Tokens agents used per half hour, read from Codex, Claude Code and WorkBuddy

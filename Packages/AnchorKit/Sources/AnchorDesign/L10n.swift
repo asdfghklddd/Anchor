@@ -1,6 +1,9 @@
+// Role: shared UI strings as named constants. Add new shared words here or in a small `…Copy` enum beside the view.
+
 import AnchorCore
 import Foundation
 
+/// Every value goes through `AnchorStrings`, so its key lands in the String Catalog.
 public enum L10n {
     public static let appName = AnchorStrings.value("app.name", default: "Anchor")
     public static let actionFailed = AnchorStrings.value(

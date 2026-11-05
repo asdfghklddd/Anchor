@@ -1,3 +1,5 @@
+// Role: the setup sheet's water line. It leans with real gravity through `WaveSlosh`.
+
 #if os(iOS)
 import AnchorDesign
 import SwiftUI

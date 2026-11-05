@@ -1,3 +1,6 @@
+// Role: draws a pet frame in a Canvas from its look, pose and props.
+// Note: the merch export uses this renderer too. Do not copy it elsewhere.
+
 #if os(iOS)
 import AnchorDesign
 import SwiftUI

@@ -1,3 +1,7 @@
+// Role: the dialect switch. `ConversationDialect` says who wrote a log and `ConversationLogReader`
+// turns its lines into `TurnLogRecord`s. Claude Code's turn rules live here too.
+// To add an agent: add a dialect, a turn reader and a metadata reader; downstream code stays shared.
+
 import Foundation
 
 /// Which agent wrote a conversation log. Everything downstream (matching,

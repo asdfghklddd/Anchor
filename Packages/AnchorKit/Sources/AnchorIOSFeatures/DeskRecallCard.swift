@@ -1,3 +1,7 @@
+// Role: the conversation card over the desk library, filled from `ConversationDigest`.
+// Gestures: swipe down or tap beside = close. Swipe up = open on the Mac (`anchor.open.v1`) and close, with a swoosh.
+// Note: opening is silent. `.compositingGroup()` before the shadow stops its glow bleeding into the content.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

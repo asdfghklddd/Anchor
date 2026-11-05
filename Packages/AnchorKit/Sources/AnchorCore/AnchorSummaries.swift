@@ -1,3 +1,6 @@
+// Role: short glance texts the Mac writes for the phone: conversation names and their length limits.
+// Note: `SummaryBook` must answer at once. A model-backed writer only ever replaces a local draft later.
+
 import Foundation
 
 /// How long the glance texts may be: a conversation's name on a desk card

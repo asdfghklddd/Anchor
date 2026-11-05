@@ -1,3 +1,5 @@
+// Role: older iOS measures from the first Figma homepage. Secondary pages use them; the home has `HomeStyle`.
+
 #if os(iOS)
 import AnchorCore
 import SwiftUI

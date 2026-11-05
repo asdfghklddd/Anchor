@@ -1,3 +1,5 @@
+// Role: the setup sheet's top bar. Closing with input shows a small menu from the X.
+
 #if os(iOS)
 import AnchorDesign
 import SwiftUI

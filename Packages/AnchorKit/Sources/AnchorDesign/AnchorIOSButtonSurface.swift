@@ -1,3 +1,5 @@
+// Role: background of iOS primary buttons, reading the environment from inside the installed view.
+
 #if os(iOS)
 import SwiftUI
 

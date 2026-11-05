@@ -1,6 +1,9 @@
+// Role: a tiny state visual inside `ProcessCard`.
+
 #if os(iOS)
 import SwiftUI
 
+/// Drawn from the process's status.
 struct ProcessMiniVisual: View {
     let tone: String
     let tint: Color

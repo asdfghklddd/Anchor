@@ -1,9 +1,12 @@
+// Role: small system wrappers: launch at login, notification settings, clearing old notifications.
+
 #if os(macOS)
 import AppKit
 import Foundation
 import ServiceManagement
 import UserNotifications
 
+/// Wraps `SMAppService` for the settings switch.
 public enum MacLaunchAtLogin {
     public static var isEnabled: Bool {
         SMAppService.mainApp.status == .enabled
@@ -18,6 +21,7 @@ public enum MacLaunchAtLogin {
     }
 }
 
+/// Anchor posts no banners of its own now; the island's peek is the reminder.
 @MainActor
 public enum MacNotificationSettings {
     public static func authorizationStatus() async -> UNAuthorizationStatus {

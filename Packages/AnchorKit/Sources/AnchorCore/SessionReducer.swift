@@ -1,5 +1,12 @@
+// Role: pure state transitions, with no I/O. Same operations in the same order give the same result
+// on both devices, which is what makes replay and sync safe.
+// Note: the `command:` overload is for repositories without an event log; the `operation:` one is
+// what replay uses. Keep the two in step when you add a mutation.
+
 import Foundation
 
+/// Pure functions from (projection, command or operation) to a new projection. Do not read the clock
+/// or other state in the `operation:` path; use the dates carried by the operation.
 public enum SessionReducer {
     public static func reduce(
         _ projection: SessionProjection,
@@ -650,6 +657,7 @@ private extension SessionProjection {
 }
 
 private extension SessionReducer {
+    /// Appends to the timeline once per event ID.
     static func append(_ event: ProcessEvent, to session: inout AnchorSession) {
         guard !session.processedEventIDs.contains(event.id) else { return }
         guard !session.timeline.contains(where: { $0.id == event.id }) else {
@@ -691,6 +699,7 @@ private extension SessionReducer {
 }
 
 private extension AnchorSession {
+    /// Captures the task as it stands, for comparison when the person returns.
     func makeSnapshot(at date: Date) -> ContextSnapshot {
         ContextSnapshot(
             createdAt: date,

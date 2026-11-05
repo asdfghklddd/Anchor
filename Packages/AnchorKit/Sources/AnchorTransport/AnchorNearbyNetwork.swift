@@ -1,3 +1,5 @@
+// Role: one place for TCP parameters, so the link works on Wi-Fi and on peer-to-peer Wi-Fi alike.
+
 import Foundation
 import Network
 

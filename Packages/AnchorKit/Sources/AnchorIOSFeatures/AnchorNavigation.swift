@@ -1,7 +1,10 @@
+// Role: every route, sheet and full-screen cover in the iPhone app. Start here to find how a page is reached.
+
 #if os(iOS)
 import AnchorCore
 import Foundation
 
+/// Pushed pages in the navigation stack.
 public enum AnchorRoute: Hashable {
     case process(UUID)
     case insights
@@ -13,12 +16,14 @@ public enum AnchorRoute: Hashable {
     case localData
 }
 
+/// What `ProfileDetailSheet` can show.
 enum ProfileDetailKind: Hashable {
     case session
     case returnMemory
     case contextSnapshot
 }
 
+/// Sheets over the workspace.
 enum AnchorSheet: Hashable, Identifiable {
     case connections
     case hostedTasks
@@ -34,6 +39,7 @@ enum AnchorSheet: Hashable, Identifiable {
     var id: Self { self }
 }
 
+/// Full-screen covers. The return page is the only one.
 enum AnchorFullScreen: Hashable, Identifiable {
     case returning
 

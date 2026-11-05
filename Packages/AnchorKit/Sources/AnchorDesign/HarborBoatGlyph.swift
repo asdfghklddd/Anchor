@@ -1,3 +1,5 @@
+// Role: leftover from the retired Mac edge boat. No screen uses it now.
+
 import SwiftUI
 
 /// Anchor's harbor boat, drawn in the app icon's language: an azure hull shaped like

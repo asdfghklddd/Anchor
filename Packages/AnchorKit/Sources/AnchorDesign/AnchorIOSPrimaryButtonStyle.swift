@@ -1,3 +1,5 @@
+// Role: the iOS primary button.
+
 #if os(iOS)
 import SwiftUI
 

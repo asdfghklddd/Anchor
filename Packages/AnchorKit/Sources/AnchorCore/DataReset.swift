@@ -1,3 +1,7 @@
+// Role: "start over" across both devices: `anchor.reset.v1` (forget tasks or clear conversations)
+// and `anchor.history.v1` (phone asks the Mac to resend everything).
+// Note: resets are sent before newer events, and each side keeps tombstones so nothing comes back.
+
 import Foundation
 
 /// The person's request to start over. It travels to the paired device like

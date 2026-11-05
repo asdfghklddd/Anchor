@@ -1,3 +1,5 @@
+// Role: what a pet remembers, saved under `anchor.desk.pet.memory.<kind>`. Reset in Settings › Local Data.
+
 #if os(iOS)
 import AnchorCore
 import Foundation

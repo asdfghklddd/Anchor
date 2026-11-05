@@ -1,3 +1,5 @@
+// Role: words for `WorkGlance`.
+
 import AnchorCore
 import Foundation
 

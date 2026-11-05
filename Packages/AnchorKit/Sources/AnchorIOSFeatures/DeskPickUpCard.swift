@@ -1,3 +1,6 @@
+// Role: what appears when the phone is lifted off the desk while work runs ("把手机横放，回到桌前").
+// Note: the owner may call this 回归页面, but it is different from `ReturnView`. It only appears on a landscape-to-portrait turn.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
@@ -170,6 +173,7 @@ struct DeskPickUpCard: View {
         .padding(.top, 22)
     }
 
+    /// What the card brings the person back to: a task, or getting ready for one.
     private enum Target {
         case task(id: UUID, header: String, title: String, line: String)
         case prepare(String)
@@ -328,6 +332,7 @@ private struct DeskTurnHint: View {
 
     @AnchorReducedMotion private var reduceMotion
 
+    /// Steps of the turning-phone animation.
     private enum Beat: CaseIterable {
         case upright, turned, desk
 
@@ -359,6 +364,7 @@ private struct DeskTurnHint: View {
     }
 }
 
+/// The small phone drawn inside the hint.
 private struct DeskTurnPhone: View {
     let tasks: [AnchorSession]
     let isTurned: Bool

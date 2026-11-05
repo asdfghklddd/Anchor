@@ -1,3 +1,6 @@
+// Role: keeps `TaskRunStore` in step with the person's sessions.
+// Rule: a source finishing never archives a task. Only the person's explicit action does.
+
 import Foundation
 
 /// Keeps the task history boundary aligned with the current user-owned session.

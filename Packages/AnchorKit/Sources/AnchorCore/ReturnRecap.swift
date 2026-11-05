@@ -1,3 +1,5 @@
+// Role: what the return page shows per task, written by the Mac and kept on the task as history.
+
 import Foundation
 
 /// One conversation as the return page shows it: its short name and what it

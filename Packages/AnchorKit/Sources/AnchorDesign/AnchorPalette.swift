@@ -1,3 +1,5 @@
+// Role: semantic color names that resolve through `AnchorColorTokens`.
+
 import SwiftUI
 
 /// Names the iPhone and Mac screens already use. Every name now resolves through
@@ -80,6 +82,7 @@ public enum AnchorPalette {
     }
 }
 
+/// Shared spacing steps.
 public enum AnchorSpacing {
     public static let xSmall: CGFloat = 6
     public static let small: CGFloat = 10

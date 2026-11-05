@@ -1,3 +1,5 @@
+// Role: asks about a task untouched for over a day (`needsRecoveryReview`): resume it or preserve it.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign

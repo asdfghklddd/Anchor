@@ -1,5 +1,8 @@
+// Role: finds recent `.jsonl` logs under a root folder from file metadata only; contents are not opened.
+
 import Foundation
 
+/// A log's path, modification date and size, as seen during discovery.
 public struct CodexSessionFileMetadata: Hashable, Sendable {
     public let fileURL: URL
     public let contentModificationDate: Date
@@ -12,6 +15,7 @@ public struct CodexSessionFileMetadata: Hashable, Sendable {
     }
 }
 
+/// Walks one root folder. Each agent folder the person granted gets its own locator.
 public struct CodexSessionFileLocator: Sendable {
     public let rootURL: URL
 

@@ -1,7 +1,10 @@
+// Role: older stale/offline notice. No screen shows it now.
+
 #if os(iOS)
 import AnchorDesign
 import SwiftUI
 
+/// Says how current this device's copy is.
 struct ProjectionStatusNotice: View {
     @Environment(\.openConnectionCard) private var openConnectionCard
     let title: String

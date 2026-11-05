@@ -1,3 +1,7 @@
+// Role: the Anchor mark as a path, for extruding into the 3D pairing model.
+// Pitfall: keep this path cubic. `SCNShape` on iOS extrudes nothing from quad segments, and macOS
+// tests hide the problem because macOS converts them.
+
 #if os(iOS)
 import SwiftUI
 

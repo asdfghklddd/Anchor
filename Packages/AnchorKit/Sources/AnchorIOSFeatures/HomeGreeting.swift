@@ -1,3 +1,6 @@
+// Role: "Hi! name", the greeting line and the home pet.
+// Note: "Hi!", the greeting and "Today's Anchoring" stay English even in Chinese. That is on purpose, not a missing translation.
+
 #if os(iOS)
 import AnchorCore
 import AnchorDesign
@@ -7,6 +10,7 @@ import SwiftUI
 /// voice, picked from what is true right now; a line holds for a few hours so
 /// the home doesn't flicker between them.
 enum HomeGreetingLine {
+    /// Which set of lines fits the time and state.
     enum Moment: CaseIterable {
         case goalReached, needsYou, allDone, justLinked, weekend
         case earlyMorning, morning, afternoon, evening, lateNight

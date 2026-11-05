@@ -1,3 +1,6 @@
+// Role: the singleton life behind both screens. Home shows it small and still; the desk shows it in its nook.
+// Note: run only one loop. `HomePet(lives: false)` draws without ticking, or the pet would move at double speed.
+
 #if os(iOS)
 import Foundation
 import Observation

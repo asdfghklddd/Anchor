@@ -1,3 +1,10 @@
+// Role: every app sound, synthesized in code. There are no audio files.
+// Rule: a sound marks a real state change; a press is felt and seen, never heard. No sound toggle in Settings:
+// sounds follow the Ring/Silent switch and mix with other audio.
+// Note: the engine stops 4 s after the last sound, because the desk stays up for hours.
+// Audio session work runs on `AnchorAudioOutput`'s own queue, never on the main thread.
+// Export for listening: `ANCHOR_SOUND_EXPORT=<folder> swift test --filter AnchorSoundTests`.
+
 import Foundation
 #if os(iOS)
 import AVFAudio
@@ -203,6 +210,7 @@ private final class AnchorAudioOutput: @unchecked Sendable {
 
 // MARK: The synth
 
+/// Pure synthesis helpers, so sounds render the same way each time and tests can measure them.
 enum AnchorSynth {
     nonisolated static let rate = 44_100.0
 

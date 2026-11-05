@@ -1,3 +1,5 @@
+// Role: fixed measures for the setup sheet, from the design frame.
+
 #if os(iOS)
 import SwiftUI
 import UIKit
