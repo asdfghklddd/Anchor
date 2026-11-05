@@ -3,13 +3,13 @@ import AnchorCore
 import AnchorDesign
 import SwiftUI
 
-/// Starting over: clears tasks here and on the paired Mac, or takes the
-/// Mac's copy instead. The name, pet, reminders and pairing stay.
+/// Starting over: clears tasks here and on the paired Mac, takes the Mac's
+/// copy instead, or lets the pets forget. The name, reminders and pairing stay.
 struct LocalDataSettingsView: View {
     let model: AnchorSessionModel
 
     private enum Reset: Identifiable {
-        case anchors, everything, fromMac
+        case anchors, everything, fromMac, petMemory
         var id: Self { self }
 
         var action: String {
@@ -17,6 +17,7 @@ struct LocalDataSettingsView: View {
             case .anchors: LocalDataCopy.clearAnchors
             case .everything: LocalDataCopy.clearEverything
             case .fromMac: LocalDataCopy.fromMac
+            case .petMemory: DeskPetCopy.resetAction
             }
         }
 
@@ -25,6 +26,7 @@ struct LocalDataSettingsView: View {
             case .anchors: LocalDataCopy.confirmAnchorsTitle
             case .everything: LocalDataCopy.confirmEverythingTitle
             case .fromMac: LocalDataCopy.confirmFromMacTitle
+            case .petMemory: DeskPetCopy.resetTitle
             }
         }
 
@@ -33,6 +35,7 @@ struct LocalDataSettingsView: View {
             case .anchors: LocalDataCopy.confirmAnchorsMessage
             case .everything: LocalDataCopy.confirmEverythingMessage
             case .fromMac: LocalDataCopy.confirmFromMacMessage
+            case .petMemory: DeskPetCopy.resetMessage
             }
         }
     }
@@ -78,12 +81,20 @@ struct LocalDataSettingsView: View {
             }
             .listRowBackground(AnchorIOSStyle.surface)
 
-            if let finished, finished != .fromMac {
+            Section {
+                Button(role: .destructive) { pending = .petMemory } label: {
+                    row(DeskPetCopy.reset, detail: DeskPetCopy.resetDetail, symbol: "pawprint")
+                }
+                .disabled(isWorking)
+                .accessibilityIdentifier("settings.deskPet.reset")
+            }
+            .listRowBackground(AnchorIOSStyle.surface)
+
+            if let finished, let message = doneMessage(finished) {
                 Section {
-                    Label(finished == .anchors ? LocalDataCopy.anchorsCleared : LocalDataCopy.everythingCleared,
-                          systemImage: "checkmark.circle.fill")
+                    Label(message, systemImage: "checkmark.circle.fill")
                         .foregroundStyle(AnchorPalette.mintInk)
-                    if !projection.connection.isAuthenticatedAndHealthy {
+                    if finished != .petMemory, !projection.connection.isAuthenticatedAndHealthy {
                         Text(LocalDataCopy.macLater)
                             .font(.footnote)
                             .foregroundStyle(AnchorIOSStyle.secondaryText)
@@ -95,6 +106,7 @@ struct LocalDataSettingsView: View {
         }
         .anchorIOSListSurface()
         .navigationTitle(LocalDataCopy.title)
+        .sensoryFeedback(.success, trigger: finished)
         .confirmationDialog(
             pending?.confirmTitle ?? "",
             isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }),
@@ -105,6 +117,15 @@ struct LocalDataSettingsView: View {
             Button(L10n.cancel, role: .cancel) {}
         } message: { reset in
             Text(reset.confirmMessage)
+        }
+    }
+
+    private func doneMessage(_ reset: Reset) -> String? {
+        switch reset {
+        case .anchors: LocalDataCopy.anchorsCleared
+        case .everything: LocalDataCopy.everythingCleared
+        case .petMemory: DeskPetCopy.resetDone
+        case .fromMac: nil
         }
     }
 
@@ -125,6 +146,11 @@ struct LocalDataSettingsView: View {
         isWorking = true
         Task {
             defer { isWorking = false }
+            if reset == .petMemory {
+                DeskPetLife.shared.forgetAll()
+                finished = reset
+                return
+            }
             if reset == .fromMac {
                 // The tasks come back from the Mac with their plan images; the row says it waits.
                 if await model.awaitPeerCopy() { finished = reset }
@@ -135,6 +161,17 @@ struct LocalDataSettingsView: View {
             finished = reset
         }
     }
+}
+
+enum DeskPetCopy {
+    static let reset = AnchorStrings.value("settings.deskPet.reset", default: "Reset Pet Memory")
+    static let resetDetail = AnchorStrings.value("settings.deskPet.reset.detail", default: "Trust, habits, what it found, and the plant")
+    static let resetDone = AnchorStrings.value("settings.deskPet.reset.done", default: "Pet memory reset")
+    static let resetTitle = AnchorStrings.value("settings.deskPet.reset.title", default: "Reset pet memory?")
+    static let resetMessage = AnchorStrings.value(
+        "settings.deskPet.reset.message",
+        default: "Every pet forgets its time with you: trust, habits, the things it found and the plant all start over. This can't be undone.")
+    static let resetAction = AnchorStrings.value("settings.deskPet.reset.action", default: "Reset")
 }
 
 enum LocalDataCopy {

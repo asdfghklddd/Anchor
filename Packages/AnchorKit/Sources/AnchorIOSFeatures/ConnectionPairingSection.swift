@@ -4,98 +4,49 @@ import AnchorDesign
 import SwiftUI
 import UIKit
 
+/// The card's lower half: which Mac, and what the person can do about it.
 struct ConnectionPairingSection: View {
     let controller: any LocalLinkControlling
     let connection: ConnectionState
-    let proximity: ProximityState
+    /// Whether the card shows the link as up, which follows the hero's check.
+    let isConnected: Bool
+    let isDenied: Bool
+    let entersCode: Bool
+    @Binding var pairingStatus: DevicePairingStatus
+    @Binding var showsManualCode: Bool
+
     @AnchorReducedMotion private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @State private var isSubmitting = false
     @State private var pairingCode = ""
-    @State private var pairingStatus = DevicePairingStatus.automatic
-    @State private var isShowingManualCode = false
     @State private var errorMessage: String?
     /// The Mac last seen, so a dropped link still names which one it means.
     @State private var lastDevice = PeerDeviceMemory.last()
 
     var body: some View {
-        VStack(spacing: 10) {
-            if connection == .connected, let device = pairingStatus.peerDeviceInfo ?? lastDevice {
-                deviceRow(PeerDeviceRow(info: device, route: pairingStatus.route, isConnected: true))
-                    .accessibilityIdentifier("connections.pairing.connected")
-            } else if connection == .connected {
-                Label(connectedLabel, systemImage: "checkmark.circle.fill")
-                    .accessibilityIdentifier("connections.pairing.connected")
-            } else if connection == .permissionDenied || proximity == .permissionDenied {
-                Label(L10n.permissionDenied, systemImage: "hand.raised.fill")
+        VStack(spacing: 12) {
+            if let device = pairingStatus.peerDeviceInfo ?? lastDevice, !entersCode {
+                deviceLine(device)
+            }
+            if isDenied, !isConnected {
                 Text(L10n.permissionDeniedDetail).font(.caption)
-            } else if pairingStatus.phase == .verificationCodeRequired || isShowingManualCode {
+            }
+            if entersCode {
                 Text(L10n.pairingFallbackDetail).font(.caption)
-                TextField(L10n.pairingCode, text: $pairingCode)
-                    .keyboardType(.numberPad).textContentType(.oneTimeCode)
-                    .multilineTextAlignment(.center).textFieldStyle(.roundedBorder)
-                    .accessibilityIdentifier("connections.pairing.code")
-                    .onChange(of: pairingCode) { _, value in
-                        pairingCode = String(value.filter { $0.isASCII && $0.isNumber }.prefix(6))
-                    }
-            } else {
-                if let lastDevice {
-                    deviceRow(PeerDeviceRow(info: lastDevice, route: nil, isConnected: false))
-                }
-                Label(connection == .failed ? L10n.actionFailed : L10n.pairingAutomatically,
-                      systemImage: connection == .failed ? "exclamationmark.triangle" : "macbook.and.iphone")
-                    .accessibilityIdentifier("connections.pairing.automatic")
-                Text(L10n.pairingAutomaticDetail).font(.caption)
-                Button(L10n.pairingCode, systemImage: "number") {
-                    isShowingManualCode = true
-                }
-                .accessibilityIdentifier("connections.pairing.show.code")
+                codeField
             }
             if let errorMessage {
                 Text(errorMessage).font(.caption).foregroundStyle(.red)
                     .accessibilityIdentifier("connections.pairing.error")
             }
-            // Keep diagnostics available without a separate settings page.
-            Text(L10n.bluetoothProximity + " · " + proximityLabel)
-                .font(.caption2).foregroundStyle(AnchorIOSStyle.secondaryText)
-            HStack(spacing: 10) {
-                if connection != .connected,
-                   pairingStatus.phase == .verificationCodeRequired || isShowingManualCode {
-                    Button(action: submitPairingCode) {
-                        Text(L10n.pairDevice).frame(maxWidth: .infinity)
-                            .foregroundStyle(AnchorIOSStyle.onAction)
-                    }
-                        .disabled(pairingCode.count != 6 || isSubmitting)
-                        .accessibilityIdentifier("connections.pairing.submit")
-                        .buttonStyle(.borderedProminent)
-                }
-                if connection == .connected {
-                    Button(action: retryConnection) {
-                        Text(L10n.retry).frame(maxWidth: .infinity)
-                            .foregroundStyle(AnchorIOSStyle.action)
-                    }
-                        .buttonStyle(.bordered)
-                        .accessibilityIdentifier("connections.retry")
-                }
-                Button {
-                    if connection == .connected { dismiss() } else { retryConnection() }
-                } label: {
-                    Text(connection == .connected ? L10n.done : L10n.retry)
-                        .frame(maxWidth: .infinity).foregroundStyle(AnchorIOSStyle.action)
-                }
-                .accessibilityIdentifier("connections.primary")
-                .buttonStyle(.bordered)
-                .disabled(isSubmitting)
-            }
-            .controlSize(.large).buttonBorderShape(.capsule)
-            .frame(maxWidth: .infinity)
+            buttons
         }
         .font(.subheadline).multilineTextAlignment(.center)
         .foregroundStyle(AnchorIOSStyle.secondaryText)
         .tint(AnchorIOSStyle.action)
         // Animate only discrete status changes, never text entry or repeated discovery updates.
-        .animation(reduceMotion ? nil : AnchorMotion.micro, value: connection)
-        .animation(reduceMotion ? nil : AnchorMotion.micro, value: pairingStatus.phase)
+        .animation(reduceMotion ? nil : AnchorMotion.panel, value: isConnected)
+        .animation(reduceMotion ? nil : AnchorMotion.micro, value: entersCode)
         .animation(reduceMotion ? nil : AnchorMotion.micro, value: errorMessage)
         .task {
             for await status in controller.pairingStatusUpdates() {
@@ -104,20 +55,76 @@ struct ConnectionPairingSection: View {
         }
     }
 
-    private func deviceRow(_ row: PeerDeviceRow) -> some View {
-        row
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .background(AnchorIOSStyle.surface, in: .rect(cornerRadius: 14, style: .continuous))
+    private func deviceLine(_ device: PeerDeviceInfo) -> some View {
+        let route = isConnected ? pairingStatus.route.map(PeerDeviceCopy.route) : nil
+        return HStack(spacing: 8) {
+            Image(systemName: device.symbolName)
+                .foregroundStyle(isConnected ? AnchorPalette.mintInk : AnchorIOSStyle.secondaryText)
+                .accessibilityHidden(true)
+            Text([device.displayName, route].compactMap { $0 }.joined(separator: " · "))
+                .lineLimit(1)
+                .foregroundStyle(isConnected ? AnchorPalette.ink : AnchorIOSStyle.secondaryText)
+                .contentTransition(.opacity)
+        }
+        .font(.subheadline.weight(.medium))
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("pairing.peer-device")
     }
 
-    private var proximityLabel: String {
-        switch proximity {
-        case .near: L10n.nearby
-        case .far: L10n.away
-        case .permissionDenied: L10n.permissionDenied
-        case .unknown, .unavailable: L10n.unknown
+    private var codeField: some View {
+        TextField(L10n.pairingCode, text: $pairingCode, prompt: Text(verbatim: "000000"))
+            .keyboardType(.numberPad).textContentType(.oneTimeCode)
+            .font(.title3.weight(.semibold).monospacedDigit())
+            .kerning(6)
+            .multilineTextAlignment(.center)
+            .foregroundStyle(AnchorPalette.ink)
+            .padding(.vertical, 11)
+            .background(AnchorIOSStyle.border.opacity(0.32), in: .capsule)
+            .accessibilityIdentifier("connections.pairing.code")
+            .onChange(of: pairingCode) { _, value in
+                pairingCode = String(value.filter { $0.isASCII && $0.isNumber }.prefix(6))
+            }
+    }
+
+    @ViewBuilder private var buttons: some View {
+        HStack(spacing: 10) {
+            if isConnected {
+                Button(action: dismiss.callAsFunction) {
+                    Text(L10n.done).frame(maxWidth: .infinity)
+                        .foregroundStyle(AnchorIOSStyle.onAction)
+                }
+                .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("connections.primary")
+                .transition(reduceMotion ? AnyTransition.opacity : AnyTransition(.blurReplace))
+            } else {
+                if !entersCode, !isDenied {
+                    Button(L10n.pairingCode, systemImage: "number") {
+                        showsManualCode = true
+                    }
+                    .frame(maxWidth: .infinity)
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("connections.pairing.show.code")
+                }
+                Button(action: retryConnection) {
+                    Text(L10n.retry).frame(maxWidth: .infinity)
+                        .foregroundStyle(AnchorIOSStyle.action)
+                }
+                .buttonStyle(.bordered)
+                .disabled(isSubmitting)
+                .accessibilityIdentifier("connections.primary")
+                if entersCode {
+                    Button(action: submitPairingCode) {
+                        Text(L10n.pairDevice).frame(maxWidth: .infinity)
+                            .foregroundStyle(pairingCode.count == 6 ? AnchorIOSStyle.onAction : AnchorIOSStyle.secondaryText)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(pairingCode.count != 6 || isSubmitting)
+                    .accessibilityIdentifier("connections.pairing.submit")
+                }
+            }
         }
+        .controlSize(.large).buttonBorderShape(.capsule)
+        .frame(maxWidth: .infinity)
     }
 
     private var connectedLabel: String {
@@ -146,7 +153,7 @@ struct ConnectionPairingSection: View {
     private func retryConnection() {
         errorMessage = nil
         pairingCode = ""
-        isShowingManualCode = false
+        showsManualCode = false
         Task { await controller.retryConnection() }
     }
 
@@ -157,7 +164,7 @@ struct ConnectionPairingSection: View {
         if status.phase == .connected {
             errorMessage = nil
             pairingCode = ""
-            isShowingManualCode = false
+            showsManualCode = false
         }
         announce(status)
     }

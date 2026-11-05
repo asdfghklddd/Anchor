@@ -9,14 +9,11 @@ public enum AnchorRoute: Hashable {
     case history
     case historyDetail(UUID)
     case connections
-    case sources
+    case source(String)
     case localData
 }
 
 enum ProfileDetailKind: Hashable {
-    case focus
-    case contexts
-    case anchors
     case session
     case returnMemory
     case contextSnapshot

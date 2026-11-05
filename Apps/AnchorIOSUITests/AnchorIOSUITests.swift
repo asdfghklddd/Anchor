@@ -475,12 +475,14 @@ final class AnchorIOSUITests: XCTestCase {
             XCTAssertTrue(app.buttons[title].waitForExistence(timeout: 5))
         }
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "hosted.task.")).count, 2)
-        app.buttons["topbar.settings.button"].tap()
+        app.buttons["topbar.profile.button"].tap()
+        let nameButton = app.buttons["profile.name.button"]
+        XCTAssertTrue(nameButton.waitForExistence(timeout: 3))
+        nameButton.tap()
         let name = app.textFields["profile.name.field"]
         XCTAssertTrue(name.waitForExistence(timeout: 3))
-        name.tap()
-        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 4) + "ANDY TEST")
-        app.buttons["profile.save.button"].tap()
+        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 4) + "ANDY TEST\n")
+        XCTAssertTrue(nameButton.waitForExistence(timeout: 3))
         app.terminate()
         app.launch()
         XCTAssertTrue(app.buttons["workspace.connection.action"].waitForExistence(timeout: 8))

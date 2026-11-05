@@ -1,36 +1,73 @@
 #if os(iOS)
 import SwiftUI
 
-/// Vector rendition of Anchor's existing A-and-anchor mark.
+/// Anchor's mark, traced from the launch logo so the 3D model and the app's own
+/// logo are one shape. Fill it even-odd: the later contours are its holes.
 struct ConnectionBrandGlyph: Shape {
+    /// The traced box, in the units of `contours`.
+    private static let box = CGSize(width: 1000, height: 988)
+    static let aspect = box.width / box.height
+
+    /// Corners round off this far along each edge. A dense curve stays a curve;
+    /// a long straight edge keeps its line and turns only at the end.
+    private static let cornerReach: CGFloat = 14
+
     func path(in rect: CGRect) -> Path {
-        var p = Path()
-        p.move(to: CGPoint(x: 43, y: 2)); p.addLine(to: CGPoint(x: 55, y: 2))
-        p.addLine(to: CGPoint(x: 80, y: 68))
-        p.addCurve(to: CGPoint(x: 70, y: 73), control1: CGPoint(x: 76, y: 73), control2: CGPoint(x: 71, y: 78))
-        p.addLine(to: CGPoint(x: 62, y: 51)); p.addLine(to: CGPoint(x: 36, y: 51))
-        p.addLine(to: CGPoint(x: 28, y: 73)); p.addLine(to: CGPoint(x: 17, y: 72)); p.closeSubpath()
-        p.move(to: CGPoint(x: 49, y: 17)); p.addLine(to: CGPoint(x: 39, y: 44))
-        p.addLine(to: CGPoint(x: 59, y: 44)); p.closeSubpath()
-        p.move(to: CGPoint(x: 2, y: 53))
-        p.addCurve(to: CGPoint(x: 16, y: 64), control1: CGPoint(x: 1, y: 48), control2: CGPoint(x: 12, y: 61))
-        p.addLine(to: CGPoint(x: 12, y: 65))
-        p.addCurve(to: CGPoint(x: 51, y: 65), control1: CGPoint(x: 22, y: 83), control2: CGPoint(x: 43, y: 76))
-        p.addCurve(to: CGPoint(x: 57, y: 65), control1: CGPoint(x: 56, y: 57), control2: CGPoint(x: 56, y: 61))
-        p.addCurve(to: CGPoint(x: 75, y: 76), control1: CGPoint(x: 56, y: 79), control2: CGPoint(x: 66, y: 86))
-        p.addLine(to: CGPoint(x: 80, y: 64))
-        p.addCurve(to: CGPoint(x: 84, y: 71), control1: CGPoint(x: 83, y: 60), control2: CGPoint(x: 83, y: 69))
-        p.addLine(to: CGPoint(x: 97, y: 53))
-        p.addCurve(to: CGPoint(x: 92, y: 76), control1: CGPoint(x: 103, y: 43), control2: CGPoint(x: 98, y: 71))
-        p.addLine(to: CGPoint(x: 90, y: 72))
-        p.addCurve(to: CGPoint(x: 50, y: 100), control1: CGPoint(x: 79, y: 88), control2: CGPoint(x: 62, y: 90))
-        p.addCurve(to: CGPoint(x: 7, y: 72), control1: CGPoint(x: 32, y: 88), control2: CGPoint(x: 16, y: 89))
-        p.addLine(to: CGPoint(x: 5, y: 76))
-        p.addCurve(to: CGPoint(x: 2, y: 53), control1: CGPoint(x: 1, y: 73), control2: CGPoint(x: 0, y: 60)); p.closeSubpath()
-        p.move(to: CGPoint(x: 25, y: 82))
-        p.addCurve(to: CGPoint(x: 88, y: 73), control1: CGPoint(x: 51, y: 93), control2: CGPoint(x: 70, y: 89))
-        p.addCurve(to: CGPoint(x: 25, y: 82), control1: CGPoint(x: 76, y: 93), control2: CGPoint(x: 47, y: 96)); p.closeSubpath()
-        return p.applying(CGAffineTransform(scaleX: rect.width / 100, y: rect.height / 102).translatedBy(x: rect.minX, y: rect.minY))
+        var path = Path()
+        for flat in Self.contours {
+            let points = stride(from: 0, to: flat.count - 1, by: 2).map {
+                CGPoint(x: CGFloat(flat[$0]), y: CGFloat(flat[$0 + 1]))
+            }
+            for index in points.indices {
+                let corner = points[index]
+                let before = Self.step(from: corner, toward: points[(index + points.count - 1) % points.count])
+                let after = Self.step(from: corner, toward: points[(index + 1) % points.count])
+                if index == 0 { path.move(to: before) } else { path.addLine(to: before) }
+                // Cubic, not quadratic: SCNShape on iOS extrudes nothing from a path with quad segments.
+                path.addCurve(to: after, control1: Self.lerp(before, corner), control2: Self.lerp(after, corner))
+            }
+            path.closeSubpath()
+        }
+        return path.applying(CGAffineTransform(scaleX: rect.width / Self.box.width, y: rect.height / Self.box.height)
+            .concatenating(CGAffineTransform(translationX: rect.minX, y: rect.minY)))
     }
+
+    /// Two thirds of the way to the corner, where a quad's corner sits as a cubic's handle.
+    private static func lerp(_ point: CGPoint, _ corner: CGPoint) -> CGPoint {
+        CGPoint(x: point.x + (corner.x - point.x) * 2 / 3, y: point.y + (corner.y - point.y) * 2 / 3)
+    }
+
+    private static func step(from corner: CGPoint, toward other: CGPoint) -> CGPoint {
+        let dx = other.x - corner.x, dy = other.y - corner.y
+        let length = max((dx * dx + dy * dy).squareRoot(), 0.001)
+        let reach = min(cornerReach, length / 2) / length
+        return CGPoint(x: corner.x + dx * reach, y: corner.y + dy * reach)
+    }
+
+    /// x, y pairs, one array per contour.
+    private static let contours: [[Int16]] = [
+        [833, 610, 864, 575, 874, 556, 874, 544, 872, 539, 864, 532, 846, 532, 833, 541, 827, 553, 827, 
+         607],
+        [504, 987, 515, 984, 571, 938, 611, 913, 637, 899, 674, 885, 730, 858, 769, 835, 810, 806, 849, 
+         773, 887, 734, 909, 705, 936, 658, 940, 659, 947, 674, 953, 677, 958, 676, 963, 672, 973, 648, 
+         992, 580, 1000, 525, 1000, 495, 993, 487, 985, 487, 976, 493, 929, 537, 845, 625, 818, 647, 
+         794, 598, 734, 459, 621, 181, 555, 12, 549, 4, 542, 0, 458, 0, 454, 2, 447, 9, 441, 21, 439, 
+         31, 369, 206, 181, 665, 176, 664, 153, 645, 138, 631, 122, 609, 124, 606, 155, 605, 162, 602, 
+         165, 598, 165, 589, 158, 581, 100, 544, 20, 485, 9, 485, 2, 492, 0, 513, 4, 554, 10, 587, 25, 
+         641, 35, 668, 42, 671, 46, 670, 52, 664, 56, 650, 59, 645, 87, 696, 113, 734, 138, 762, 182, 
+         802, 207, 821, 256, 852, 367, 905, 396, 922, 438, 951, 481, 984, 494, 988, 503, 988],
+        [659, 726, 640, 726, 613, 722, 592, 713, 574, 701, 561, 686, 553, 670, 546, 647, 546, 620, 544, 
+         613, 539, 608, 532, 608, 528, 612, 513, 636, 481, 670, 466, 682, 433, 701, 400, 713, 360, 722, 
+         314, 722, 291, 718, 291, 715, 303, 701, 313, 678, 326, 640, 381, 491, 384, 489, 618, 491, 680, 
+         661, 687, 674, 692, 680, 706, 686, 713, 685, 722, 678, 730, 659, 734, 632, 745, 621, 757, 621, 
+         763, 626, 767, 634, 768, 648, 765, 659, 753, 679, 737, 695, 719, 707, 698, 718, 677, 724, 660, 
+         725],
+        [597, 418, 403, 418, 402, 416, 474, 220, 498, 151, 501, 153, 526, 222, 528, 224, 551, 290, 559, 
+         308, 579, 368, 598, 414],
+        [521, 836, 444, 833, 380, 821, 334, 806, 310, 796, 271, 775, 265, 771, 263, 767, 265, 766, 308, 
+         781, 361, 796, 437, 808, 460, 810, 529, 810, 596, 802, 648, 790, 693, 773, 723, 759, 783, 720, 
+         860, 658, 875, 649, 883, 649, 885, 653, 882, 657, 872, 671, 831, 715, 792, 746, 744, 777, 697, 
+         800, 634, 821, 570, 833, 522, 836],
+    ]
 }
 #endif

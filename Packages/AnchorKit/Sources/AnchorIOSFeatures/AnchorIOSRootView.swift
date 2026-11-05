@@ -572,8 +572,7 @@ struct AnchorWorkspaceView: View {
         case .profile:
             ProfileView(
                 projection: model.projection,
-                onRoute: { path.append($0) },
-                onSheet: { sheet = $0 }
+                onRoute: { path.append($0) }
             )
         case .history:
             HistoryView(projection: model.projection) { path.append(.historyDetail($0)) }
@@ -581,8 +580,12 @@ struct AnchorWorkspaceView: View {
             HistoryDetailView(projection: model.projection, sessionID: id)
         case .connections:
             ConnectionDetailView(projection: model.projection, controller: linkController)
-        case .sources:
-            SourceSettingsView(projection: model.projection)
+        case let .source(name):
+            if let group = SourceGroup.all(in: model.projection).first(where: { $0.name == name }) {
+                SourceConversationsView(group: group)
+            } else {
+                ContentUnavailableView(L10n.emptyTitle, systemImage: "square.dashed")
+            }
         case .localData:
             LocalDataSettingsView(model: model)
         }
@@ -602,16 +605,13 @@ struct AnchorWorkspaceView: View {
                             .padding(.top, 22)
                     }
                 }
-                .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large]
-                                     : [.height(verticalSizeClass == .compact ? (welcomesConnection ? 340 : 260) : (welcomesConnection ? 490 : 400))])
-                .presentationDragIndicator(.hidden)
-                .presentationCompactAdaptation(.none)
+                .connectionCardPresentation(hasCaption: welcomesConnection)
         case .hostedTasks:
             HostedTasksView(model: model, onCreate: {
                 if atTaskLimit { sheet = nil; showsCapNote = true } else { sheet = .setup }
             }, onEdit: { sheet = .goal }, onNote: { sheet = .note }, onFinish: { sheet = .finish })
         case .account:
-            ProfileEditorView(projection: model.projection) { destination(for: $0) }
+            SettingsView(projection: model.projection) { destination(for: $0) }
                 .presentationDetents([.large])
         case let .profileDetail(kind):
             ProfileDetailSheet(

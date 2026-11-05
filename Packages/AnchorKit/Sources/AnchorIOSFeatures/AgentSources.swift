@@ -3,34 +3,8 @@ import AnchorCore
 import AnchorDesign
 import SwiftUI
 
-/// Settings › Sources: every agent the Mac has heard from, across all the
-/// tasks on this phone, newest first.
-struct SourceSettingsView: View {
-    let projection: SessionProjection
-
-    var body: some View {
-        let groups = SourceGroup.all(in: projection)
-        List {
-            if groups.isEmpty {
-                ContentUnavailableView(SourceCopy.empty, systemImage: "point.3.connected.trianglepath.dotted")
-                    .listRowBackground(Color.clear)
-            }
-            ForEach(groups) { group in
-                NavigationLink {
-                    SourceConversationsView(group: group)
-                } label: {
-                    SourceGroupRow(group: group)
-                }
-            }
-            .listRowBackground(AnchorIOSStyle.surface)
-        }
-        .anchorIOSListSurface()
-        .navigationTitle(L10n.sources)
-        .accessibilityIdentifier("sources.screen")
-    }
-}
-
-/// One agent (Codex, Claude Code, a terminal) and its conversations, newest first.
+/// One agent (Codex, Claude Code, a terminal) and its conversations across
+/// every task on this phone, finished ones included, newest first.
 struct SourceGroup: Identifiable {
     struct Conversation: Identifiable {
         let process: AnchorProcess
@@ -43,46 +17,29 @@ struct SourceGroup: Identifiable {
 
     var id: String { name }
     var latest: AnchorProcess { conversations[0].process }
-    var runningCount: Int { conversations.filter { $0.process.status == .running }.count }
+    var isRunning: Bool { conversations.contains { $0.process.status == .running } }
+    /// The agent's working time so far, as far as the Mac has reported it.
+    var workedSeconds: TimeInterval { conversations.reduce(0) { $0 + ($1.process.workedSeconds ?? 0) } }
 
+    /// The hardest-working agent first; agents with no reported time by how recently they ran.
     static func all(in projection: SessionProjection) -> [SourceGroup] {
-        let conversations = projection.hostedSessions.flatMap { task in
+        let conversations = (projection.hostedSessions + projection.archivedSessions).flatMap { task in
             task.taskProcesses.map { Conversation(process: $0, taskTitle: task.goal.title) }
         }
         return Dictionary(grouping: conversations, by: \.process.sourceName)
             .map { name, items in
                 SourceGroup(name: name, conversations: items.sorted { $0.process.updatedAt > $1.process.updatedAt })
             }
-            .sorted { $0.latest.updatedAt > $1.latest.updatedAt }
+            .sorted {
+                $0.workedSeconds == $1.workedSeconds
+                    ? $0.latest.updatedAt > $1.latest.updatedAt
+                    : $0.workedSeconds > $1.workedSeconds
+            }
     }
 }
 
-private struct SourceGroupRow: View {
-    let group: SourceGroup
-
-    var body: some View {
-        HStack(spacing: 12) {
-            SourceTile(process: group.latest)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(group.name).font(.headline).foregroundStyle(AnchorPalette.ink)
-                Text(DeskText.conversationCount(group.conversations.count)
-                     + " · " + group.latest.updatedAt.formatted(.relative(presentation: .named)))
-                    .font(.caption)
-                    .foregroundStyle(AnchorIOSStyle.secondaryText)
-            }
-            Spacer(minLength: 8)
-            if group.runningCount > 0 {
-                Text(L10n.status(.running))
-                    .font(.caption.bold())
-                    .foregroundStyle(AnchorPalette.interaction)
-            }
-        }
-        .frame(minHeight: 52)
-        .accessibilityElement(children: .combine)
-    }
-}
-
-private struct SourceConversationsView: View {
+/// One agent's conversations, opened from "Your agents" on the Me page.
+struct SourceConversationsView: View {
     let group: SourceGroup
 
     var body: some View {
@@ -115,7 +72,7 @@ private struct SourceConversationsView: View {
     }
 }
 
-private struct SourceTile: View {
+struct SourceTile: View {
     let process: AnchorProcess
 
     var body: some View {
@@ -126,9 +83,4 @@ private struct SourceTile: View {
             .accessibilityHidden(true)
     }
 }
-
-enum SourceCopy {
-    static let empty = AnchorStrings.value("settings.sources.empty", default: "No sources yet")
-}
-
 #endif

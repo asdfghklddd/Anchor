@@ -4,7 +4,7 @@ import AnchorDesign
 import SwiftUI
 
 /// Settings › Connections: which Mac, how close it is, how to reach it again,
-/// and when the link came and went.
+/// and when the link came and went. Pairing opens the same card as the home.
 struct ConnectionDetailView: View {
     let projection: SessionProjection
     let controller: (any LocalLinkControlling)?
@@ -12,9 +12,7 @@ struct ConnectionDetailView: View {
     @State private var pairingStatus = DevicePairingStatus.automatic
     @State private var lastDevice = PeerDeviceMemory.last()
     @State private var history = ConnectionHistory.entries()
-    @State private var pairingCode = ""
-    @State private var isSubmitting = false
-    @State private var errorMessage: String?
+    @State private var entersCode = false
 
     private var isConnected: Bool { projection.connection == .connected }
     private var isDenied: Bool { projection.connection == .permissionDenied || projection.proximity == .permissionDenied }
@@ -35,8 +33,17 @@ struct ConnectionDetailView: View {
             }
             .listRowBackground(AnchorIOSStyle.surface)
 
-            if !isConnected, controller != nil {
-                pairingSection
+            if controller != nil {
+                Section {
+                    Button(ConnectionCopy.reconnect, systemImage: "arrow.clockwise", action: reconnect)
+                        .accessibilityIdentifier("connections.retry")
+                    if !isConnected {
+                        Button(L10n.pairingCode, systemImage: "number") { entersCode = true }
+                            .accessibilityIdentifier("connections.pairing.show.code")
+                    }
+                }
+                .listRowBackground(AnchorIOSStyle.surface)
+                .tint(AnchorIOSStyle.action)
             }
 
             if !history.isEmpty {
@@ -58,37 +65,11 @@ struct ConnectionDetailView: View {
                 history = ConnectionHistory.entries()
             }
         }
-    }
-
-    private var pairingSection: some View {
-        Section {
-            HStack {
-                TextField(L10n.pairingCode, text: $pairingCode)
-                    .keyboardType(.numberPad)
-                    .textContentType(.oneTimeCode)
-                    .accessibilityIdentifier("connections.pairing.code")
-                    .onChange(of: pairingCode) { _, value in
-                        pairingCode = String(value.filter { $0.isASCII && $0.isNumber }.prefix(6))
-                    }
-                if pairingCode.count == 6 {
-                    Button(L10n.pairDevice, action: submitPairingCode)
-                        .buttonStyle(.borderless)
-                        .disabled(isSubmitting)
-                        .accessibilityIdentifier("connections.pairing.submit")
-                }
-            }
-            .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
-            Button(ConnectionCopy.reconnect, systemImage: "arrow.clockwise", action: reconnect)
-                .disabled(isSubmitting)
-                .accessibilityIdentifier("connections.retry")
-        } footer: {
-            if let errorMessage {
-                Text(errorMessage).foregroundStyle(.red)
-                    .accessibilityIdentifier("connections.pairing.error")
-            }
+        .sheet(isPresented: $entersCode) {
+            ConnectionSettingsView(projection: projection, controller: controller, startsWithCode: true)
+                .tint(AnchorIOSStyle.action)
+                .connectionCardPresentation()
         }
-        .listRowBackground(AnchorIOSStyle.surface)
-        .tint(AnchorIOSStyle.action)
     }
 
     private var proximityLabel: String {
@@ -100,24 +81,7 @@ struct ConnectionDetailView: View {
         }
     }
 
-    private func submitPairingCode() {
-        guard let controller else { return }
-        let code = pairingCode
-        isSubmitting = true
-        Task {
-            defer { isSubmitting = false }
-            do {
-                try await controller.pair(using: code)
-                errorMessage = nil
-                pairingCode = ""
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
-
     private func reconnect() {
-        errorMessage = nil
         Task { await controller?.retryConnection() }
     }
 }

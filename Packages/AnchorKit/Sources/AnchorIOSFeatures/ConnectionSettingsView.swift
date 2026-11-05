@@ -3,23 +3,59 @@ import AnchorCore
 import AnchorDesign
 import SwiftUI
 
-/// A compact presentation of the existing local-link controller, without owning transport state.
+/// The pairing card, laid out like the iPhone's AirPods card: what is happening
+/// on top, the anchor in the middle, what to do at the bottom.
 struct ConnectionSettingsView: View {
     let projection: SessionProjection
     let controller: (any LocalLinkControlling)?
+
     @AnchorReducedMotion private var reduceMotion
-    @State private var logoRevealed = false
+    /// Follows the hero: the words change as the check lands, not when the turn starts.
+    @State private var revealedConnected: Bool
+    @State private var pairingStatus = DevicePairingStatus.automatic
+    @State private var showsManualCode = false
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.dismiss) private var dismiss
 
+    init(projection: SessionProjection, controller: (any LocalLinkControlling)?, startsWithCode: Bool = false) {
+        self.projection = projection
+        self.controller = controller
+        _showsManualCode = State(initialValue: startsWithCode)
+        _revealedConnected = State(initialValue: projection.connection == .connected)
+    }
+
+    private var isCompact: Bool { verticalSizeClass == .compact }
+    private var isDenied: Bool { projection.connection == .permissionDenied || projection.proximity == .permissionDenied }
+    private var entersCode: Bool {
+        !revealedConnected && !isDenied && (showsManualCode || pairingStatus.phase == .verificationCodeRequired)
+    }
+
+    private var title: String {
+        if revealedConnected { return PeerDeviceCopy.connected }
+        if controller == nil { return L10n.disconnected }
+        if isDenied { return L10n.permissionDenied }
+        if entersCode { return L10n.pairingCode }
+        return projection.connection == .failed ? L10n.actionFailed : L10n.pairingAutomatically
+    }
+
     var body: some View {
-        let layout = verticalSizeClass == .compact
-            ? AnyLayout(HStackLayout(spacing: 20)) : AnyLayout(VStackLayout(spacing: 12))
+        let layout = isCompact
+            ? AnyLayout(HStackLayout(spacing: 20)) : AnyLayout(VStackLayout(spacing: 14))
+        let heroSize: CGFloat = isCompact ? 118 : 176
+        let heroScale: CGFloat = entersCode ? 0.58 : 1
         ScrollView {
-            VStack(spacing: 12) {
-                Text("Anchor")
-                    .font(.title2.bold()).foregroundStyle(.primary)
+            VStack(spacing: isCompact ? 4 : 10) {
+                Text(title)
+                    .font(.title2.bold())
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 44)
+                    // One title dissolves into the next, rather than two overlapping.
+                    .id(title)
+                    .transition(reduceMotion ? AnyTransition.opacity : AnyTransition(.blurReplace))
                     .frame(maxWidth: .infinity, minHeight: 44)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier(revealedConnected ? "connections.pairing.connected" : "connections.pairing.automatic")
                     .overlay(alignment: .trailing) {
                         Button(action: dismiss.callAsFunction) {
                             Image(systemName: "xmark").font(.caption.bold())
@@ -31,43 +67,60 @@ struct ConnectionSettingsView: View {
                         .accessibilityIdentifier("connections.close")
                     }
                 layout {
-                    ConnectionBrandGlyph()
-                        .fill(LinearGradient(colors: [Color(red: 0, green: 0.82, blue: 0.94), Color(red: 0, green: 0.60, blue: 0.98)], startPoint: .top, endPoint: .bottom), style: FillStyle(eoFill: true))
-                        .frame(width: verticalSizeClass == .compact ? 110 : 158, height: verticalSizeClass == .compact ? 110 : 158)
-                        .accessibilityHidden(true)
-                        .scaleEffect(reduceMotion || logoRevealed ? 1 : 0.96)
-                        .opacity(reduceMotion || logoRevealed ? 1 : 0)
-                        .padding(.vertical, 4)
+                    ConnectionHero(isConnected: projection.connection == .connected,
+                                   size: heroSize,
+                                   revealed: $revealedConnected)
+                        .scaleEffect(heroScale)
+                        .frame(width: isCompact ? heroSize * heroScale : nil, height: heroSize * heroScale)
                     if let controller {
-                        ConnectionPairingSection(controller: controller, connection: projection.connection, proximity: projection.proximity)
+                        ConnectionPairingSection(controller: controller,
+                                                 connection: projection.connection,
+                                                 isConnected: revealedConnected,
+                                                 isDenied: isDenied,
+                                                 entersCode: entersCode,
+                                                 pairingStatus: $pairingStatus,
+                                                 showsManualCode: $showsManualCode)
                     } else {
-                        Label(L10n.disconnected, systemImage: "wifi.slash")
-                            .font(.subheadline).foregroundStyle(AnchorIOSStyle.secondaryText)
-                        Text(L10n.connectionUnknownDetail).font(.caption)
+                        Text(L10n.connectionUnknownDetail)
+                            .font(.caption)
+                            .foregroundStyle(AnchorIOSStyle.secondaryText)
                     }
                 }
             }
             .padding(.horizontal, 24).padding(.top, 12).padding(.bottom, 16)
             .frame(maxWidth: 500).frame(maxWidth: .infinity)
+            .animation(reduceMotion ? nil : AnchorMotion.panel, value: entersCode)
+            .animation(reduceMotion ? nil : AnchorMotion.panel, value: title)
         }
         .scrollIndicators(.hidden)
+        .scrollClipDisabled()
         .scrollDismissesKeyboard(.interactively)
         .background(AnchorIOSStyle.surface)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("connections.screen")
-        .task(id: reduceMotion) {
-            guard !reduceMotion else {
-                logoRevealed = true
-                return
-            }
-            guard !logoRevealed else { return }
-            // Let the native sheet start moving before revealing its decorative mark.
-            // Cancellation prevents a dismissed card from finishing a delayed entrance.
-            do { try await Task.sleep(for: .milliseconds(80)) }
-            catch { return }
-            guard !Task.isCancelled else { return }
-            withAnimation(AnchorMotion.panel) { logoRevealed = true }
-        }
+    }
+}
+
+extension View {
+    /// The card's size and surface, wherever it opens from. A caption above it needs a little more room.
+    func connectionCardPresentation(hasCaption: Bool = false) -> some View {
+        modifier(ConnectionCardPresentation(hasCaption: hasCaption))
+    }
+}
+
+private struct ConnectionCardPresentation: ViewModifier {
+    let hasCaption: Bool
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    func body(content: Content) -> some View {
+        let height: CGFloat = verticalSizeClass == .compact ? (hasCaption ? 340 : 260) : (hasCaption ? 440 : 350)
+        content
+            .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.height(height)])
+            .presentationDragIndicator(.hidden)
+            .presentationCompactAdaptation(.none)
+            .presentationBackground(AnchorIOSStyle.surface)
+            .presentationCornerRadius(32)
     }
 }
 #endif

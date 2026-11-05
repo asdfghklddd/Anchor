@@ -93,6 +93,11 @@ public final class AnchoringLog {
         return AnchoringTime.total(intervals(now: now), on: now)
     }
 
+    /// Seconds anchored on any day, without touching what the log has saved.
+    func seconds(on day: Date, now: Date, calendar: Calendar = .current) -> TimeInterval {
+        AnchoringTime.total(intervals(now: now), on: day, calendar: calendar)
+    }
+
     /// Earlier days with time anchored, newest first.
     func history(now: Date, calendar: Calendar = .current) -> [(day: Date, seconds: TimeInterval)] {
         let today = calendar.startOfDay(for: now)

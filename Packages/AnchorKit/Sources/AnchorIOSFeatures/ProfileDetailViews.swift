@@ -296,9 +296,6 @@ struct ProfileDetailSheet: View {
 private extension ProfileDetailKind {
     var title: String {
         switch self {
-        case .focus: L10n.history
-        case .contexts: L10n.savedContexts
-        case .anchors: L10n.completedAnchors
         case .session: AnchorStrings.value("task.detail.title", default: "Task details")
         case .returnMemory: L10n.returning
         case .contextSnapshot: L10n.contextNote
@@ -307,9 +304,6 @@ private extension ProfileDetailKind {
 
     var symbol: String {
         switch self {
-        case .focus: "timer"
-        case .contexts: "square.stack.3d.up"
-        case .anchors: "scope"
         case .session: "waveform.path.ecg"
         case .returnMemory: "arrow.uturn.left.circle"
         case .contextSnapshot: "square.stack.3d.up"
@@ -318,17 +312,13 @@ private extension ProfileDetailKind {
 
     var tint: Color {
         switch self {
-        case .focus: AnchorPalette.coral
-        case .contexts, .contextSnapshot: AnchorPalette.periwinkle
-        case .anchors, .session, .returnMemory: AnchorPalette.seafoam
+        case .contextSnapshot: AnchorPalette.periwinkle
+        case .session, .returnMemory: AnchorPalette.seafoam
         }
     }
 
     func value(projection: SessionProjection) -> String {
         switch self {
-        case .focus: L10n.minuteCount(max(0, Int(Date.now.timeIntervalSince(projection.session?.startedAt ?? .now) / 60)))
-        case .contexts: "\((projection.session?.notes.count ?? 0) + (projection.session?.snapshots.count ?? 0))"
-        case .anchors: "\(projection.session?.taskProcesses.filter { $0.status == .completed }.count ?? 0)"
         case .session, .returnMemory: TaskStatusPresentation.text(for: projection.session)
         case .contextSnapshot: "\(projection.session?.snapshots.count ?? 0)"
         }
