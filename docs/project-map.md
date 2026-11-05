@@ -16,6 +16,7 @@ Generic app/browser tracking and decision execution have been retired.
 
 ## Documentation entry points
 
+- [Project manual](../Documentation/PROJECT_MANUAL.md) and [change guide](../Documentation/CHANGE_GUIDE.md): read these before changing code.
 - [Public product atlas](https://asdfghklddd.github.io/Anchor/): interactive page maps, screenshots, functional structure, and design changes. [Maintenance](MAINTAINING.md).
 
 - [README](../README.md): setup and source submission.

@@ -7,6 +7,13 @@ shows your next action, so you can switch projects or step away and pick up wher
 you were. The Mac is an observation companion; it does not answer questions, make
 decisions, or resume external tools on the user’s behalf.
 
+## 接手这个项目 · Start here
+
+改代码之前（人或 agent），先读这两份：
+
+- [项目说明书](Documentation/PROJECT_MANUAL.md)：产品、架构、数据流、页面地图、存储位置、运行和测试。
+- [修改指南](Documentation/CHANGE_GUIDE.md)：不能破坏的规则、改什么看哪里、常见修改步骤、踩过的坑、验证清单。
+
 ## 页面与交互地图 · Product atlas
 
 **[打开 Anchor 公开交互地图 →](https://asdfghklddd.github.io/Anchor/)**
@@ -20,6 +27,9 @@ decisions, or resume external tools on the user’s behalf.
 - [页面目录](https://asdfghklddd.github.io/Anchor/#pages) · [设计与版本](https://asdfghklddd.github.io/Anchor/#design)
 - [地图源码与维护说明](docs/MAINTAINING.md)
 
+The atlas is a snapshot from 2026-10-02, older than the Mac notch island and the home
+redesign, so read it as history rather than the current UI.
+
 The public atlas is a versioned, static product reference. Screenshots use isolated
 validation data; the site does not connect to personal Anchor tasks or cloud data.
 GitHub Pages publishes the `docs/` directory on `main`.
@@ -32,28 +42,26 @@ GitHub Pages publishes the `docs/` directory on `main`.
   contracts, presence inference, return summaries, and event deduplication.
 - `AnchorDesign`: adaptive iOS colors from the approved Figma homepage,
   platform-aware components, and an English/Simplified Chinese String Catalog.
-- `AnchorIOSFeatures`: setup (goal and steps; criteria optional), a live plan
-  you check off and edit, portrait dashboard with each task's next action, a
-  landscape desk board centered on the step you're on (kept awake while
-  charging), anchor notes, handoff/away/return across every changed task, a
-  today recap, history, management, and settings.
+- `AnchorIOSFeatures`: setup (a title and an optional plan), a live plan you
+  check off and edit, a portrait home with each task's next action, a landscape
+  desk with a task library, recall and task cards (kept awake while charging),
+  a return page, a first-run tour, a desk pet, history, and settings.
 - The production iPhone loop has an explicit final confirmation boundary:
   completing a task retains its detailed history across relaunches. Concurrent
   hosted tasks keep independent conversations and histories; completing one task
   preserves the others. The homepage uses the main conversation for its progress
   capsule and shows individual conversation progress in the anchor chart.
-- `AnchorMacFeatures`: a menu bar item (open, tasks needing you, settings,
-  quit), a task-centric native detail window using `NavigationStack` and an
-  expandable sidebar, and the edge boat with a needs-you buoy and a
-  welcome-back card after time away.
+- `AnchorMacFeatures`: a frosted notch island (tasks, next step to copy, filing
+  conversations, short news peeks) and one small settings window. There is no
+  menu bar item and no main window.
 - `AnchorTransport`: Bonjour discovery, one-time-code key agreement, Keychain
   trust, authenticated event envelopes and acknowledgements, BLE RSSI proximity
   advertising/scanning, and an optional CloudKit private event store.
 - `AnchorCore`: a versioned external source contract, actor-based source
   ingestion, a durable CLI inbox, deterministic event replay, and a retryable
   durable-sync coordinator.
-- Production observation uses Codex conversation lifecycle, Claude Code session
-  lifecycle and generic CLI command lifecycle, including whether a turn tested
+- Production observation uses the conversation lifecycle of Codex, Claude Code,
+  DeepSeek Harness and WorkBuddy, and generic CLI command lifecycle, including whether a turn tested
   and whether the agent waits for your reply. General Mac application observation, the Safari extension and its
   inbox adapter have been removed. Legacy stored events remain readable; the
   current dashboard filters retired sources and decision records.
@@ -80,7 +88,7 @@ See [the project map](docs/project-map.md) for source and documentation entry po
 Anchor.xcodeproj
 Apps/
 ├── AnchorIOS/             production iPhone launcher
-├── AnchorMac/             production menu bar app
+├── AnchorMac/             production notch island app
 ├── AnchorIOSUITests/      isolated production iPhone journeys
 ├── AnchorMacUITests/      isolated production Mac journeys
 └── Shared/                app icon and accent assets
