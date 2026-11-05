@@ -106,7 +106,8 @@ final class AnchorTour {
     private(set) var ownTask: UUID?
     /// The Mac has matched the opened agent to the person's task.
     private(set) var agentFiled = false
-    @ObservationIgnored private var agentPicked = false
+    /// The agent opened on the Mac, by the person's tap or on its own.
+    private(set) var pickedAgent: TourMac.Agent?
     /// Desk news not yet sent; leaving early sends the rest at once.
     @ObservationIgnored private var deskNews: [TourMac.Beat] = []
     /// News while away, by the minute it lands on the dial.
@@ -135,8 +136,10 @@ final class AnchorTour {
     /// The first drop's moment on the home, before the phone is asked to turn.
     static let dropLength: TimeInterval = 3.0
     /// From picking an agent to the Mac matching it to the card, and to the turn.
-    static let agentFiles: TimeInterval = 2.3
-    static let agentLength: TimeInterval = 5.4
+    static let agentFiles: TimeInterval = 1.9
+    /// How long the Mac waits for a tap before the first agent opens by itself.
+    static let agentWait: TimeInterval = 1.5
+    static let agentLength: TimeInterval = 3.4
 
     init(hasPet: Bool = DeskPetKind(rawValue: ProfilePreferences.store.string(forKey: DeskPetKind.defaultsKey) ?? "") != .off) {
         self.hasPet = hasPet
@@ -206,15 +209,17 @@ final class AnchorTour {
         stage = .anchored
         ownTask = taskID
         later(Self.dropLength) { [weak self] in
-            if self?.stage == .anchored { self?.stage = .agent }
+            guard let self, self.stage == .anchored else { return }
+            self.stage = .agent
+            self.later(Self.agentWait) { [weak self] in self?.pickAgent(.claude) }
         }
     }
 
     /// An agent was opened on the Mac. It works a moment, the Mac matches it
     /// to the person's task, and then the phone is asked to turn.
     func pickAgent(_ agent: TourMac.Agent) {
-        guard stage == .agent, !agentPicked else { return }
-        agentPicked = true
+        guard stage == .agent, pickedAgent == nil else { return }
+        pickedAgent = agent
         mac.ownAgent = agent
         later(Self.agentFiles) { [weak self] in await self?.fileAgent() }
         later(Self.agentLength) { [weak self] in
@@ -627,8 +632,8 @@ enum TourCopy {
     static let backUpright = AnchorStrings.value("tour.lock.back", default: "Back to the home")
     static let replay = AnchorStrings.value("tour.replay", default: "Replay the tour")
     static let folders = AnchorStrings.value("tour.folders", default: "Each folder is a task.")
-    static let clock = AnchorStrings.value("tour.clock", default: "Your time linked to the Mac adds up here.")
-    static let library = AnchorStrings.value("tour.library", default: "Your anchored tasks live here, three at most.")
+    static let clock = AnchorStrings.value("tour.clock", default: "Your work time and tokens are recorded here.")
+    static let library = AnchorStrings.value("tour.library", default: "Your anchored tasks live here.")
     static let pet = AnchorStrings.value("tour.pet", default: "It lives on your desk. Say hi.")
     static let waiting = AnchorStrings.value("tour.anchor.waiting", default: "The anchor means an AI is waiting on you. Tap it.")
     static let ownTask = AnchorStrings.value("tour.own", default: "Your task: an AI is already on it.")

@@ -5,9 +5,10 @@ import SwiftUI
 
 /// Between the first drop and the turn: an anchor brings no work by itself.
 /// A small Mac stands in the frost over the new card, with Claude Code and
-/// Codex on its screen. Picked, the agent's window opens and the request is
-/// typed; the Mac's island gains the task's pill, and a light runs down a
-/// thread into the real card, which now shows who is working on it.
+/// Codex on its screen. Picked, or by itself after a moment, the agent's
+/// window opens and the request is typed; the Mac's island gains the task's
+/// pill, and a light runs down a thread into the real card, which now shows
+/// who is working on it.
 struct TourAgentStart: View {
     let tour: AnchorTour
     let size: CGSize
@@ -18,7 +19,6 @@ struct TourAgentStart: View {
     let onMiss: () -> Void
 
     @AnchorReducedMotion private var reduceMotion
-    @State private var picked: TourMac.Agent?
     @State private var opened = false
     @State private var typed = 0
     /// How many of the agent's lines have come up under the request.
@@ -34,6 +34,7 @@ struct TourAgentStart: View {
     /// What a terminal shows of the work; the same words in any language.
     private static let toolCalls = ["Read crash.log", "Search AuthSession.swift"]
 
+    private var picked: TourMac.Agent? { tour.pickedAgent }
     private var filed: Bool { tour.agentFiled }
     private var request: String { TourCopy.crashRequest }
     private var ownTask: AnchorSession? {
@@ -90,23 +91,23 @@ struct TourAgentStart: View {
             islandLit = true
             return
         }
-        guard (try? await Task.sleep(for: .seconds(0.4))) != nil else { return }
-        // The same time for any language, about as long as a short request takes to type.
-        let step = 0.8 / Double(max(request.count, 1))
-        for count in 1...max(request.count, 1) {
-            typed = count
-            guard (try? await Task.sleep(for: .seconds(step))) != nil else { return }
+        guard (try? await Task.sleep(for: .seconds(0.3))) != nil else { return }
+        // The same time for any language, in steady ticks.
+        let ticks = 18
+        for tick in 1...ticks {
+            typed = request.count * tick / ticks
+            guard (try? await Task.sleep(for: .seconds(0.03))) != nil else { return }
         }
-        guard (try? await Task.sleep(for: .seconds(0.1))) != nil else { return }
+        guard (try? await Task.sleep(for: .seconds(0.05))) != nil else { return }
         withAnimation(.spring(duration: 0.45, bounce: 0.3)) {
             islandLit = true
             worked = 1
         }
-        guard (try? await Task.sleep(for: .seconds(0.35))) != nil else { return }
+        guard (try? await Task.sleep(for: .seconds(0.3))) != nil else { return }
         threaded = true
         withAnimation(.easeOut(duration: 0.2)) { worked = 2 }
-        withAnimation(.easeIn(duration: AnchorTour.agentFiles - 1.65)) { pulse = 1 }
-        guard (try? await Task.sleep(for: .seconds(0.3))) != nil else { return }
+        withAnimation(.easeIn(duration: AnchorTour.agentFiles - 1.2)) { pulse = 1 }
+        guard (try? await Task.sleep(for: .seconds(0.25))) != nil else { return }
         withAnimation(.easeOut(duration: 0.2)) { worked = 3 }
     }
 
@@ -179,7 +180,6 @@ struct TourAgentStart: View {
         Button {
             guard picked == nil else { return }
             AnchorSound.shared.play(.cardTap)
-            picked = agent
             tour.pickAgent(agent)
         } label: {
             VStack(spacing: 8) {

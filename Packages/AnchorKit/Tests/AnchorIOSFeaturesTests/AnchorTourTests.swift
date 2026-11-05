@@ -83,6 +83,43 @@ struct AnchorTourTests {
         try await waitFor(.turn, in: tour, seconds: AnchorTour.agentLength + 2)
     }
 
+    @Test func theAgentStepAsksForTheTurnWithinFiveSecondsUntouched() async throws {
+        #expect(AnchorTour.agentWait + AnchorTour.agentLength <= 5)
+        let tour = AnchorTour(hasPet: false)
+        defer { tour.end() }
+        tour.greeted()
+        tour.setupOpened()
+        tour.dropped(UUID())
+        try await waitFor(.agent, in: tour, seconds: AnchorTour.dropLength + 2)
+        let appeared = Date.now
+        try await waitFor(.turn, in: tour, seconds: 8)
+        #expect(Date.now.timeIntervalSince(appeared) < 5.5)
+    }
+
+    @Test func theAgentOpensByItselfIfNobodyTaps() async throws {
+        let tour = AnchorTour(hasPet: false)
+        defer { tour.end() }
+        tour.greeted()
+        tour.setupOpened()
+        tour.dropped(UUID())
+        try await waitFor(.agent, in: tour, seconds: AnchorTour.dropLength + 2)
+        #expect(tour.pickedAgent == nil)
+        try await waitUntil(seconds: AnchorTour.agentWait + 2) { tour.pickedAgent == .claude }
+        try await waitFor(.turn, in: tour, seconds: AnchorTour.agentLength + 2)
+    }
+
+    @Test func aTapBeforeTheWaitEndsKeepsThePersonsChoice() async throws {
+        let tour = AnchorTour(hasPet: false)
+        defer { tour.end() }
+        tour.greeted()
+        tour.setupOpened()
+        tour.dropped(UUID())
+        try await waitFor(.agent, in: tour, seconds: AnchorTour.dropLength + 2)
+        tour.pickAgent(.codex)
+        try await Task.sleep(for: .seconds(AnchorTour.agentWait + 0.3))
+        #expect(tour.pickedAgent == .codex)
+    }
+
     @Test func turningEarlyStillGivesTheFolderItsAgent() async throws {
         let tour = AnchorTour(hasPet: false)
         defer { tour.end() }

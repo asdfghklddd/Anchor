@@ -14840,13 +14840,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your time linked to the Mac adds up here."
+            "value" : "Your work time and tokens are recorded here."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "连着 Mac 的时间，都记在这里。"
+            "value" : "工作的时间和 token，\n都记录在这里。"
           }
         }
       }
@@ -15146,13 +15146,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your anchored tasks live here, three at most."
+            "value" : "Your anchored tasks live here."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "锚定的任务都在这里，\n最多三件。"
+            "value" : "锚定的任务都在这里。"
           }
         }
       }
