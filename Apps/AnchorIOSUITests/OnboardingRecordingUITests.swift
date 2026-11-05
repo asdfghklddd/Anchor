@@ -54,8 +54,13 @@ final class OnboardingRecordingUITests: XCTestCase {
         let track = slider.frame
         drag(from: CGPoint(x: track.minX + track.height / 2, y: track.midY),
              to: CGPoint(x: track.maxX - 4, y: track.midY), velocity: 260)
-        // The water takes it, the first drop, then the turn prompt.
-        pause(6)
+        // The water takes it, then the first drop.
+        let agent = app.buttons["tour.agent.claude"]
+        XCTAssertTrue(agent.waitForExistence(timeout: 12))
+        pause(3)
+        // An agent opened on the small Mac, matched to the card, then the turn prompt.
+        tap(agent)
+        pause(7.5)
 
         // The desk: the ring walks the folders, then the question arrives.
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -64,7 +69,8 @@ final class OnboardingRecordingUITests: XCTestCase {
         // The ring walks the folders, then waits on the pet for a hello.
         let pet = app.descendants(matching: .any)["desk.pet"]
         XCTAssertTrue(pet.waitForExistence(timeout: 12))
-        pause(2.5)
+        // It exists before its step does; the ring's walk takes 6.4 s.
+        pause(9)
         tap(pet)
         // The question arrives, its anchor dropping onto the card.
         pause(4.5)

@@ -14664,6 +14664,40 @@
         }
       }
     },
+    "tour.agent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now open your agent tool on your Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回到电脑，打开你的 agent 工具。"
+          }
+        }
+      }
+    },
+    "tour.agent.filed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your Mac files it under this task."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 自动归到这个任务。"
+          }
+        }
+      }
+    },
     "tour.anchor" : {
       "extractionState" : "manual",
       "localizations" : {

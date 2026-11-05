@@ -49,6 +49,9 @@ final class AnchorTour {
         case setup
         /// The anchor is down, and the real drop plays out on the home.
         case anchored
+        /// An anchor brings no work by itself: on a small Mac the person opens
+        /// an agent, and the Mac matches it to the new card.
+        case agent
         /// The phone is asked to turn.
         case turn
         /// The landscape desk: the ring walks the folders and rests on the person's own.
@@ -96,11 +99,14 @@ final class AnchorTour {
     @ObservationIgnored private let repository: LocalSessionRepository
     @ObservationIgnored private let storageURL: URL
     @ObservationIgnored private var work: [Task<Void, Never>] = []
-    @ObservationIgnored private let mac: TourMac
+    @ObservationIgnored private var mac: TourMac
     /// Answers the store like a paired Mac, so nothing on screen waits to be sent.
     @ObservationIgnored private var listener: Task<Void, Never>?
     /// The task the person dropped during the tour.
     private(set) var ownTask: UUID?
+    /// The Mac has matched the opened agent to the person's task.
+    private(set) var agentFiled = false
+    @ObservationIgnored private var agentPicked = false
     /// Desk news not yet sent; leaving early sends the rest at once.
     @ObservationIgnored private var deskNews: [TourMac.Beat] = []
     /// News while away, by the minute it lands on the dial.
@@ -128,6 +134,9 @@ final class AnchorTour {
     static let awayAt = 5
     /// The first drop's moment on the home, before the phone is asked to turn.
     static let dropLength: TimeInterval = 3.0
+    /// From picking an agent to the Mac matching it to the card, and to the turn.
+    static let agentFiles: TimeInterval = 2.3
+    static let agentLength: TimeInterval = 5.4
 
     init(hasPet: Bool = DeskPetKind(rawValue: ProfilePreferences.store.string(forKey: DeskPetKind.defaultsKey) ?? "") != .off) {
         self.hasPet = hasPet
@@ -191,26 +200,43 @@ final class AnchorTour {
     }
 
     /// The third anchor is down. The drop plays out as it always does, then
-    /// the tour asks the phone to turn; its agent starts a moment later, as
-    /// if the person had opened Claude Code on the Mac.
+    /// the tour shows where the work comes from: an agent opened on the Mac.
     func dropped(_ taskID: UUID) {
         guard stage < .anchored else { return }
         stage = .anchored
         ownTask = taskID
         later(Self.dropLength) { [weak self] in
-            if self?.stage == .anchored { self?.stage = .turn }
+            if self?.stage == .anchored { self?.stage = .agent }
         }
-        later(2.6) { [mac, model] in
-            _ = await model.send(.forSession(taskID, .addProcess(mac.firstConversation(of: taskID, now: .now))))
+    }
+
+    /// An agent was opened on the Mac. It works a moment, the Mac matches it
+    /// to the person's task, and then the phone is asked to turn.
+    func pickAgent(_ agent: TourMac.Agent) {
+        guard stage == .agent, !agentPicked else { return }
+        agentPicked = true
+        mac.ownAgent = agent
+        later(Self.agentFiles) { [weak self] in await self?.fileAgent() }
+        later(Self.agentLength) { [weak self] in
+            if self?.stage == .agent { self?.stage = .turn }
         }
+    }
+
+    /// The person's task gets its first conversation, once.
+    private func fileAgent() async {
+        guard !agentFiled, let ownTask else { return }
+        agentFiled = true
+        _ = await model.send(.forSession(ownTask, .addProcess(mac.firstConversation(of: ownTask, now: .now))))
     }
 
     /// The desk is up, on a turned phone or drawn sideways under the lock.
     /// The ring walks the folders and rests on the person's own, then moves
     /// to the pet; once it has been greeted, a question arrives on its own.
     func reachedDesk() {
-        guard stage == .turn || stage == .anchored else { return }
+        guard stage == .turn || stage == .agent || stage == .anchored else { return }
         stage = .desk
+        // Turned before the Mac had matched anything: the folder still has its agent.
+        later(0) { [weak self] in await self?.fileAgent() }
         deskNews = mac.deskNews()
         for beat in deskNews {
             later(beat.after) { [weak self] in await self?.send(beat) }
@@ -445,6 +471,8 @@ struct TourMac {
     private let survey = UUID()
     private let refs = UUID()
     private let e2e = UUID()
+    /// The agent the person opened for their own task.
+    var ownAgent = Agent.claude
     private let crash = UUID()
     private let fix = UUID()
     private let proID = UUID()
@@ -483,7 +511,7 @@ struct TourMac {
 
     /// The person's own task gets its first conversation.
     func firstConversation(of taskID: UUID, now: Date) -> AnchorProcess {
-        conversation(crash, in: taskID, agent: .claude, title: TourCopy.crash,
+        conversation(crash, in: taskID, agent: ownAgent, title: TourCopy.crash,
                      request: TourCopy.crashRequest, status: .running, worked: 0, at: now)
     }
 
@@ -528,13 +556,13 @@ struct TourMac {
         if let ownTask {
             beats.append(Beat(after: 8, note: Note(title: TourCopy.crash, done: true)) { now in
                 .forSession(ownTask, .updateProcess(conversation(
-                    crash, in: ownTask, agent: .claude, title: TourCopy.crash,
+                    crash, in: ownTask, agent: ownAgent, title: TourCopy.crash,
                     request: TourCopy.crashRequest, reply: TourCopy.crashReply,
                     status: .completed, worked: 640, at: now)))
             })
             beats.append(Beat(after: 12, note: Note(title: TourCopy.fix, done: false)) { now in
                 .forSession(ownTask, .addProcess(conversation(
-                    fix, in: ownTask, agent: .claude, title: TourCopy.fix,
+                    fix, in: ownTask, agent: ownAgent, title: TourCopy.fix,
                     request: TourCopy.fixRequest, status: .running, worked: 0, at: now)))
             })
         }
@@ -569,7 +597,7 @@ struct TourMac {
         return recaps
     }
 
-    private enum Agent {
+    enum Agent {
         case codex, claude
         var name: String { self == .codex ? "Codex" : "Claude Code" }
     }
@@ -591,6 +619,8 @@ enum TourCopy {
     static let readTitle = AnchorStrings.value("tour.voice.title", default: "Tap the mic and say the task.")
     static let readPlan = AnchorStrings.value("tour.voice.plan", default: "Once more for the plan.")
     static let slide = AnchorStrings.value("tour.slide", default: "Slide the anchor all the way.")
+    static let agentOpen = AnchorStrings.value("tour.agent", default: "Now open your agent tool on your Mac.")
+    static let agentFiled = AnchorStrings.value("tour.agent.filed", default: "Your Mac files it under this task.")
     static let turn = AnchorStrings.value("tour.turn", default: "Turn sideways into the workbench.")
     static let lockQuestion = AnchorStrings.value("tour.lock", default: "Portrait Orientation Lock on?")
     static let openHere = AnchorStrings.value("tour.lock.open", default: "Open the desk here")

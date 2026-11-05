@@ -448,8 +448,9 @@ struct TourSkip: View {
 /// up, the sample cards as they float up under a line on what the library holds,
 /// then the anchor button by itself, with the line
 /// asking for a tap in the middle of the glass. After the first drop the
-/// new card is left clear under its line; for the turn the whole home
-/// frosts over; at the very end, the closing line and Start.
+/// new card is left clear under its line, then under a small Mac where the
+/// person opens an agent; for the turn the whole home frosts over; at the
+/// very end, the closing line and Start.
 struct TourCoach: View {
     let tour: AnchorTour
     let spots: [TourSpot: CGRect]
@@ -487,6 +488,10 @@ struct TourCoach: View {
                                   card: ownCard?.rect, onLanded: { dropLanded = true })
                     .transition(.opacity)
                 }
+            case .agent:
+                TourAgentStart(tour: tour, size: size, card: tour.ownTask.flatMap { spots[.homeTask($0)] },
+                               skip: spots[.skip]) { nudges += 1 }
+                    .transition(.opacity)
             case .ending:
                 TourEnding(tour: tour)
                     .transition(.opacity)
@@ -533,7 +538,7 @@ struct TourCoach: View {
     /// the dial bring their own.
     private var frosted: Bool {
         switch tour.stage {
-        case .clock, .hello, .anchorButton, .turn, .ending: true
+        case .clock, .hello, .anchorButton, .agent, .turn, .ending: true
         case .anchored: dropLanded
         default: false
         }
@@ -544,7 +549,7 @@ struct TourCoach: View {
         case .clock: spots[.clock].map { ($0.insetBy(dx: -14, dy: -8), 28) }
         case .hello: spots[.tasks].map { ($0.insetBy(dx: -6, dy: -6), 24) }
         case .anchorButton: button
-        case .anchored: ownCard
+        case .anchored, .agent: ownCard
         default: nil
         }
     }

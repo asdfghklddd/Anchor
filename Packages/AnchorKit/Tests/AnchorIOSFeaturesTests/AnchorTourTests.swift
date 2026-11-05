@@ -65,6 +65,36 @@ struct AnchorTourTests {
         try await waitFor(.waiting, in: tour, seconds: AnchorTour.deskLook + 2)
     }
 
+    @Test func theWorkComesFromAnAgentOpenedOnTheMac() async throws {
+        let tour = AnchorTour(hasPet: false)
+        defer { tour.end() }
+        tour.greeted()
+        tour.setupOpened()
+        tour.dropped(UUID())
+        // The anchor alone brings no conversation, and picking before the step does nothing.
+        tour.pickAgent(.codex)
+        try await waitFor(.agent, in: tour, seconds: AnchorTour.dropLength + 2)
+        #expect(!tour.agentFiled)
+        #expect(tour.stage == .agent)
+        tour.pickAgent(.codex)
+        // The Mac matches it to the card, and only then is the phone asked to turn.
+        try await waitUntil(seconds: AnchorTour.agentFiles + 2) { tour.agentFiled }
+        #expect(tour.stage == .agent)
+        try await waitFor(.turn, in: tour, seconds: AnchorTour.agentLength + 2)
+    }
+
+    @Test func turningEarlyStillGivesTheFolderItsAgent() async throws {
+        let tour = AnchorTour(hasPet: false)
+        defer { tour.end() }
+        tour.greeted()
+        tour.setupOpened()
+        tour.dropped(UUID())
+        try await waitFor(.agent, in: tour, seconds: AnchorTour.dropLength + 2)
+        tour.reachedDesk()
+        #expect(tour.stage == .desk)
+        try await waitUntil(seconds: 2) { tour.agentFiled }
+    }
+
     @Test func skipLeavesFromAnyStepButNotOnceLeaving() async throws {
         let tour = AnchorTour(hasPet: false)
         defer { tour.end() }
