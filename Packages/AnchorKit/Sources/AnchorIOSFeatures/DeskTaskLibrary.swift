@@ -22,7 +22,7 @@ struct DeskTaskLibrary: View {
     var swellTone: Color = AnchorStateTone.attention.ink
     /// False while the anchor falls on arrival; the columns settle in after it sets.
     var settled = true
-    /// Opens a task's details.
+    /// Opens a task's full page, where the text is too large for its card.
     let onTask: (UUID) -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -52,6 +52,15 @@ struct DeskTaskLibrary: View {
     }
 
     @State private var recall: Recall?
+    /// The task opened over the library, and the folder it grew from.
+    @State private var openTask: OpenTask?
+    /// How far the open task's card is being swiped down.
+    @State private var taskSwipe: CGFloat = 0
+    private struct OpenTask: Equatable {
+        let task: UUID
+        let folder: Int
+    }
+
     /// How far the open card is being swiped: down closes it, up sends it to the Mac.
     @State private var recallSwipe: CGFloat = 0
     /// The card is on its way to the Mac: it flies off the top before it goes.
@@ -126,8 +135,9 @@ struct DeskTaskLibrary: View {
                 .scrollClipDisabled(tasks.count <= Metrics.slots)
                 .scrollIndicators(.hidden)
                 .frame(width: Metrics.width, height: Metrics.folder.height, alignment: .topLeading)
-                .opacity(recall == nil || recallFlying ? 1 : 0.35)
+                .opacity((recall == nil || recallFlying) && openTask == nil ? 1 : 0.35)
                 .overlay { recallLayer }
+                .overlay { taskLayer }
             }
         }
         .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: landings)
@@ -172,7 +182,9 @@ struct DeskTaskLibrary: View {
     /// On the desk the folder's outline draws the tab; standing alone (the
     /// accessibility list) it draws its own.
     private func tab(_ task: AnchorSession, palette: DeskFolderPalette, standalone: Bool = false) -> some View {
-        Button { onTask(task.id) } label: {
+        Button {
+            if dynamicTypeSize.isAccessibilitySize { onTask(task.id) } else { openTaskCard(task) }
+        } label: {
             Text(task.goal.title)
                 .font(.system(size: 14, weight: .bold))
                 .foregroundStyle(.white)
@@ -417,7 +429,7 @@ struct DeskTaskLibrary: View {
                 DeskRecallCard(process: process, task: task, palette: DeskFolderPalette(task),
                                worked: DeskDuration.text(workedTime(process, in: task)),
                                fallbackReply: reply(for: process), seenPath: recall.seen,
-                               onTask: { onTask(task.id) })
+                               onTask: { openTaskCard(task) })
                     .tourSpot(.recallCard)
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("desk.recall")
@@ -536,6 +548,74 @@ struct DeskTaskLibrary: View {
               let path = TaskConversationStack.conversations(of: task)
                 .first(where: { $0.conversationKey == recall.conversation })?.digest?.path else { return }
         DeskRecallMemory.remember(path, for: recall.conversation)
+    }
+
+    // MARK: The open task
+
+    /// The task's card over the library, in the place the open conversation
+    /// takes; tapping beside it closes it.
+    @ViewBuilder
+    private var taskLayer: some View {
+        if let openTask, let task = tasks.first(where: { $0.id == openTask.task }) {
+            ZStack(alignment: .top) {
+                Color.clear
+                    .overlay {
+                        Color.clear
+                            .frame(width: Self.besideCard, height: Self.besideCard)
+                            .contentShape(.rect)
+                            .onTapGesture { closeTaskCard() }
+                    }
+                    .accessibilityHidden(true)
+                DeskTaskCard(task: task, palette: DeskFolderPalette(task), maxHeight: Metrics.folder.height,
+                             onConversation: { process in
+                                 closeTaskCard()
+                                 openRecall(process, of: task)
+                             },
+                             onClosed: closeTaskCard)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("desk.task")
+                    .offset(y: taskSwipe)
+                    .gesture(taskSwipeGesture)
+                    .accessibilityAction(.escape) { closeTaskCard() }
+                    .transition(reduceMotion ? .opacity
+                        : .scale(scale: 0.3, anchor: UnitPoint(x: widths.middleFraction(ofFolder: openTask.folder), y: 0.1))
+                            .combined(with: .opacity))
+            }
+            .id(openTask.task)
+        }
+    }
+
+    private var taskSwipeGesture: some Gesture {
+        DragGesture(minimumDistance: 10)
+            .onChanged { value in taskSwipe = max(0, value.translation.height) }
+            .onEnded { value in
+                if value.translation.height > Self.recallSwipeDistance
+                    || value.predictedEndTranslation.height > Self.recallFling {
+                    closeTaskCard()
+                } else {
+                    withAnimation(reduceMotion ? .easeOut(duration: 0.16) : Self.slide) { taskSwipe = 0 }
+                }
+            }
+    }
+
+    /// The tour keeps to its own steps, so its tasks stay shut.
+    private func openTaskCard(_ task: AnchorSession) {
+        guard tour == nil else { return }
+        let folder = tasks.firstIndex { $0.id == task.id } ?? 0
+        if let recall { rememberSeen(recall) }
+        taskSwipe = 0
+        withAnimation(reduceMotion ? .easeOut(duration: 0.16) : Self.recallPop) {
+            recall = nil
+            openTask = OpenTask(task: task.id, folder: min(folder, Metrics.slots - 1))
+        }
+        landings += 1
+    }
+
+    private func closeTaskCard() {
+        withAnimation(reduceMotion ? .easeOut(duration: 0.16) : Self.slide) {
+            openTask = nil
+            taskSwipe = 0
+        }
     }
 
     // MARK: Accessibility sizes

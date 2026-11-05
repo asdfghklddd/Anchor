@@ -176,6 +176,9 @@ struct AnchorWorkspaceView: View {
                         onManage: { sheet = .hostedTasks }
                     )
                     .tourDeskCoach(tour)
+                    .environment(\.sendTaskCommand, { [model] command in await model.send(command) })
+                    // The task card rises above the keyboard by itself; the desk stays put.
+                    .ignoresSafeArea(.keyboard)
                 } else {
                     PortraitDashboard(
                         projection: model.projection,

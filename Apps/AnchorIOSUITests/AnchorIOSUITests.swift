@@ -361,6 +361,65 @@ final class AnchorIOSUITests: XCTestCase {
     }
 
     @MainActor
+    /// A folder's tab opens the task as a card over the desk: steps check off
+    /// in place, Edit renames and adds right there, and beside the card closes it.
+    func testDeskTabOpensTheTaskCardAndEditsInPlace() throws {
+        XCUIDevice.shared.orientation = .portrait
+        let app = isolatedApplication()
+        defer { app.terminate(); XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+
+        let anchorButton = app.buttons["anchor.note.button"]
+        XCTAssertTrue(anchorButton.waitForExistence(timeout: 8))
+        anchorButton.tap()
+        dropAnchor("Card task", plan: "Read the logs and find out where the login crash starts, then write down what you learn so the next step has it\nFix the crash", in: app)
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        let tab = app.buttons.matching(NSPredicate(
+            format: "identifier BEGINSWITH 'hosted.task.' AND label == %@", "Card task"
+        )).firstMatch
+        XCTAssertTrue(tab.waitForExistence(timeout: 8))
+        tab.tap()
+        XCTAssertTrue(element("desk.task", in: app).waitForExistence(timeout: 3))
+        XCTAssertFalse(element("profile.detail.session", in: app).exists)
+
+        let firstStep = app.buttons["desk.task.step.0"]
+        XCTAssertTrue(firstStep.exists)
+        firstStep.tap()
+
+        app.buttons["desk.task.edit"].tap()
+        let newStep = app.textFields["desk.task.step.new"]
+        XCTAssertTrue(newStep.waitForExistence(timeout: 2))
+        newStep.tap()
+        newStep.typeText("Ship the fix")
+        app.buttons["desk.task.edit"].tap()
+        XCTAssertTrue(app.buttons["desk.task.step.2"].waitForExistence(timeout: 3))
+
+        // Beside the card closes it; the folder is back.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.5)).tap()
+        let closed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: element("desk.task", in: app))
+        wait(for: [closed], timeout: 3)
+
+        // A swipe down closes it too.
+        tab.tap()
+        let card = element("desk.task", in: app)
+        XCTAssertTrue(card.waitForExistence(timeout: 3))
+        card.swipeDown()
+        let swiped = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: card)
+        wait(for: [swiped], timeout: 3)
+
+        // Finishing asks first, right over the card, and the folder goes.
+        tab.tap()
+        XCTAssertTrue(card.waitForExistence(timeout: 3))
+        app.buttons["desk.task.finish"].tap()
+        let confirm = app.buttons.matching(identifier: "desk.task.finish.confirm").firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 3))
+        confirm.tap()
+        let finished = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: tab)
+        wait(for: [finished], timeout: 5)
+    }
+
+    @MainActor
     func testFinalConfirmationClearsCurrentWorkAndRestoresDetailedHistory() throws {
         XCUIDevice.shared.orientation = .portrait
         let app = isolatedApplication()
