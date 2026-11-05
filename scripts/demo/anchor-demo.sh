@@ -1,206 +1,142 @@
 #!/usr/bin/env bash
-# Puts the live demo back where it starts, in the demo macOS account only.
+# Keeps the live demo's three project copies in ~/AnchorDemo.
 #
-#   anchor-demo.sh save      Take the starting point (asks before replacing one)
-#   anchor-demo.sh restore   Go back to it; on the iPhone, tap 从 Mac 重新同步 first
-#   anchor-demo.sh status    Show what the starting point holds
-#   anchor-demo.sh remove    Delete the starting point and the repos' demo tags
+#   anchor-demo.sh setup    Make the copies and mark where they start
+#   anchor-demo.sh reset    Put every copy back where it started
+#   anchor-demo.sh status   Show how far each copy has moved
 #
-# The starting point holds every git repository in ~/AnchorDemo (its branch
-# and commit, as the tag anchor-demo-start), the agents' conversations
-# (~/.codex without sign-in files; Claude Code's sessions, also the Claude
-# app's Code list; DeepSeek Harness's sessions and their status files) and
-# Anchor's Mac data and settings. Codex, Claude, DeepSeek Harness and Anchor
-# quit while it is copied and open again after.
-#
-# Runs only as the account named by ANCHOR_DEMO_USER (default: andy).
+# It only ever changes repositories that setup made: ones with no remote and
+# the anchor-demo.branch setting. Agent conversations, Anchor's data and the
+# original projects are never touched.
 set -euo pipefail
 
-DEMO_USER="${ANCHOR_DEMO_USER:-andy}"
 DEMO_ROOT="$HOME/AnchorDemo"
-SNAPSHOT="$DEMO_ROOT/.snapshot"
 TAG="anchor-demo-start"
-PREFS_DOMAIN="${ANCHOR_DEMO_PREFS:-com.andywang.anchor}"
-# Apps to quit and reopen, by bundle ID. Empty skips quitting entirely.
-APPS="${ANCHOR_DEMO_APPS-com.andywang.anchor com.openai.codex com.anthropic.claudefordesktop com.deepseek.dsh}"
+BRANCH_KEY="anchor-demo.branch"
 
-# Conversation data, relative to home. Paths missing from the starting point
-# are removed on restore, except ~/.codex, which also holds sign-in.
-MANAGED=(
-  ".codex"
-  ".claude/projects"
-  ".claude/file-history"
-  ".claude/todos"
-  ".claude/session-env"
-  ".claude/sessions"
-  ".claude/shell-snapshots"
-  ".claude/plans"
-  ".claude/history.jsonl"
-  "Library/Application Support/Claude/claude-code-sessions"
-  ".dsh/sessions"
-  ".dsh/storages"
-  "Library/Application Support/Anchor"
-)
-# Never copied, never deleted: sign-in, locks and scratch.
-EXCLUDES=(--exclude "auth*.json" --exclude "*.lock" --exclude "tmp/" --exclude "cache/" --exclude "*.bak")
+# The last Anchor before the real folder-picker, CPU and rotation fixes.
+OLD_ANCHOR_COMMIT="4990ba5"
+ANCHOR_SOURCE="${ANCHOR_DEMO_ANCHOR_SOURCE:-$HOME/Desktop/Anchor/Anchor}"
+PHASE_SOURCE="${ANCHOR_DEMO_PHASE_SOURCE:-$HOME/Desktop/phase-ios-app}"
+SITE_SOURCE="${ANCHOR_DEMO_SITE_SOURCE:-$HOME/Desktop/Qihua_Wang_Personal_Site}"
 
 say() { printf '%s\n' "$*"; }
 fail() { printf 'anchor-demo: %s\n' "$*" >&2; exit 1; }
 
-if [[ "$(id -un)" != "$DEMO_USER" ]]; then
-  fail "this is the '$(id -un)' account. Run it in the demo account '$DEMO_USER' only."
-fi
-
-repos() {
+demo_repos() {
   local dir
   for dir in "$DEMO_ROOT"/*/; do
-    [[ -d "$dir/.git" ]] && printf '%s\n' "${dir%/}"
+    [[ -d "$dir/.git" ]] || continue
+    git -C "$dir" config --get "$BRANCH_KEY" >/dev/null || continue
+    printf '%s\n' "${dir%/}"
   done
   return 0
 }
 
-RUNNING=()
-
-quit_apps() {
-  [[ -z "$APPS" ]] && return 0
-  local id
-  for id in $APPS; do
-    if [[ "$(osascript -e "application id \"$id\" is running" 2>/dev/null)" == "true" ]]; then
-      RUNNING+=("$id")
-      osascript -e "tell application id \"$id\" to quit" >/dev/null 2>&1 || true
-    fi
-  done
-  for _ in $(seq 1 30); do
-    local busy=0
-    for id in $APPS; do
-      [[ "$(osascript -e "application id \"$id\" is running" 2>/dev/null)" == "true" ]] && busy=1
-    done
-    [[ $busy == 0 ]] && break
-    sleep 0.5
-  done
-  # Agents running in Terminal write to the same folders.
-  pkill -x claude 2>/dev/null || true
-  pkill -x codex 2>/dev/null || true
-  sleep 1
+# Marks a finished copy as a demo repository and moves it into place.
+finish_copy() { # finish_copy <building folder> <name>
+  local repo="$1" name="$2"
+  git -C "$repo" config user.name "Anchor Demo"
+  git -C "$repo" config user.email "demo@anchor.invalid"
+  git -C "$repo" config "$BRANCH_KEY" "$(git -C "$repo" symbolic-ref --short HEAD)"
+  git -C "$repo" tag -f "$TAG" >/dev/null
+  mv "$repo" "$DEMO_ROOT/$name"
+  say "Made $name."
 }
 
-reopen_apps() {
-  [[ -z "$APPS" ]] && return 0
-  local id
-  # Anchor last, so it reads the agents' folders once they are back.
-  for id in "${RUNNING[@]:-}"; do
-    [[ -n "$id" && "$id" != "com.andywang.anchor" ]] && open -g -b "$id" || true
+setup_old_anchor() {
+  local repo="$DEMO_ROOT/.new-anchor-old"
+  rm -rf "$repo"
+  git clone -q --no-hardlinks --no-tags "$ANCHOR_SOURCE" "$repo"
+  git -C "$repo" checkout -q -B demo "$OLD_ANCHOR_COMMIT"
+  git -C "$repo" remote remove origin
+  # No later branch: the agent must not find the real fixes in its history.
+  git -C "$repo" for-each-ref --format='%(refname:short)' refs/heads | while IFS= read -r branch; do
+    [[ "$branch" == "demo" ]] || git -C "$repo" branch -q -D "$branch"
   done
-  open -b com.andywang.anchor 2>/dev/null || say "Open Anchor yourself; macOS could not find it."
+  finish_copy "$repo" anchor-old
 }
 
-copy_in() { # copy_in <from> <to>
-  if [[ -d "$1" ]]; then
-    mkdir -p "$2"
-    rsync -a --delete --ignore-times "${EXCLUDES[@]}" "$1/" "$2/"
-  else
-    mkdir -p "$(dirname "$2")"
-    cp -p "$1" "$2"
-  fi
+setup_phase() {
+  local repo="$DEMO_ROOT/.new-phase-ios"
+  rm -rf "$repo"
+  git clone -q --no-hardlinks --no-tags "$PHASE_SOURCE" "$repo"
+  git -C "$repo" remote remove origin
+  finish_copy "$repo" phase-ios
 }
 
-save() {
-  [[ -d "$DEMO_ROOT" ]] || fail "make $DEMO_ROOT and put the demo's git repositories in it first."
-  local repo
-  local list
-  list="$(repos)"
-  [[ -n "$list" ]] || fail "no git repositories in $DEMO_ROOT."
+setup_site() {
+  local repo="$DEMO_ROOT/.new-personal-site"
+  rm -rf "$repo"
+  mkdir -p "$repo"
+  # Leaves private materials and bulky build output behind. Dependencies come
+  # along, ignored by git, so the build works offline.
+  rsync -a --exclude /dist --exclude /output \
+    --exclude /private_materials --exclude /verification_screenshots \
+    --exclude /_template_unused --exclude /preview_screenshot.png --exclude '*.bak' \
+    "$SITE_SOURCE/" "$repo/"
+  git -C "$repo" init -q -b main
+  git -C "$repo" config user.name "Anchor Demo"
+  git -C "$repo" config user.email "demo@anchor.invalid"
+  git -C "$repo" add -A
+  git -C "$repo" commit -qm "Demo starting point"
+  finish_copy "$repo" personal-site
+}
+
+setup() {
+  mkdir -p "$DEMO_ROOT"
+  [[ -e "$DEMO_ROOT/anchor-old" ]] && say "Skipped anchor-old: it already exists." || setup_old_anchor
+  [[ -e "$DEMO_ROOT/phase-ios" ]] && say "Skipped phase-ios: it already exists." || setup_phase
+  [[ -e "$DEMO_ROOT/personal-site" ]] && say "Skipped personal-site: it already exists." || setup_site
+  say "Ready in $DEMO_ROOT."
+}
+
+reset_repo() { # reset_repo <repository>
+  local repo="$1" branch path other
+  branch="$(git -C "$repo" config --get "$BRANCH_KEY")"
+  [[ -z "$(git -C "$repo" remote)" ]] || fail "$(basename "$repo") has a remote, so it was left alone."
+  git -C "$repo" rev-parse -q --verify "refs/tags/$TAG" >/dev/null \
+    || fail "$(basename "$repo") has lost its $TAG tag, so it was left alone."
+  # Worktrees an agent made hold their branches until they are gone.
+  git -C "$repo" worktree list --porcelain | sed -n 's/^worktree //p' | tail -n +2 | while IFS= read -r path; do
+    git -C "$repo" worktree remove --force "$path"
+  done
+  git -C "$repo" worktree prune
+  git -C "$repo" checkout -q -f "$branch"
+  git -C "$repo" reset -q --hard "$TAG"
+  # Ignored files stay, so dependencies and build caches need no rebuild.
+  git -C "$repo" clean -q -ffd
+  git -C "$repo" stash clear
+  git -C "$repo" for-each-ref --format='%(refname:short)' refs/heads | while IFS= read -r other; do
+    [[ "$other" == "$branch" ]] || git -C "$repo" branch -q -D "$other"
+  done
+  say "Reset $(basename "$repo")."
+}
+
+reset() {
+  local list repo
+  list="$(demo_repos)"
+  [[ -n "$list" ]] || fail "no demo copies in $DEMO_ROOT. Run: anchor-demo.sh setup"
   while IFS= read -r repo; do
-    [[ -z "$(git -C "$repo" status --porcelain)" ]] \
-      || fail "$(basename "$repo") has uncommitted changes. Commit or discard them, then save."
-    git -C "$repo" symbolic-ref -q --short HEAD >/dev/null \
-      || fail "$(basename "$repo") is not on a branch."
+    reset_repo "$repo"
   done <<< "$list"
-  if [[ -e "$SNAPSHOT" && "${1:-}" != "-y" ]]; then
-    read -r -p "Replace the saved starting point? [y/N] " answer
-    [[ "$answer" == [yY] ]] || exit 0
-  fi
-
-  quit_apps
-  rm -rf "$SNAPSHOT.new"
-  mkdir -p "$SNAPSHOT.new/home"
-  while IFS= read -r repo; do
-    git -C "$repo" tag -f "$TAG" >/dev/null
-    printf '%s\t%s\t%s\n' "$(basename "$repo")" "$(git -C "$repo" symbolic-ref --short HEAD)" \
-      "$(git -C "$repo" for-each-ref --format='%(refname:short)' refs/heads | tr '\n' ' ')" \
-      >> "$SNAPSHOT.new/repos.tsv"
-  done <<< "$list"
-  local path
-  for path in "${MANAGED[@]}"; do
-    [[ -e "$HOME/$path" ]] && copy_in "$HOME/$path" "$SNAPSHOT.new/home/$path"
-  done
-  defaults export "$PREFS_DOMAIN" "$SNAPSHOT.new/anchor-prefs.plist" 2>/dev/null || true
-  date '+%Y-%m-%d %H:%M' > "$SNAPSHOT.new/saved-at"
-  rm -rf "$SNAPSHOT"
-  mv "$SNAPSHOT.new" "$SNAPSHOT"
-  reopen_apps
-  say "Saved the starting point ($(wc -l < "$SNAPSHOT/repos.tsv" | tr -d ' ') repositories)."
-}
-
-restore() {
-  [[ -f "$SNAPSHOT/saved-at" ]] || fail "nothing saved yet. Run: anchor-demo.sh save"
-  quit_apps
-
-  local name branch branches repo
-  while IFS=$'\t' read -r name branch branches; do
-    repo="$DEMO_ROOT/$name"
-    [[ -d "$repo/.git" ]] || { say "Skipped $name: it is gone."; continue; }
-    git -C "$repo" checkout -q -f "$branch"
-    git -C "$repo" reset -q --hard "$TAG"
-    git -C "$repo" clean -q -fd
-    # Branches an agent made on stage go; the saved ones stay.
-    local current
-    for current in $(git -C "$repo" for-each-ref --format='%(refname:short)' refs/heads); do
-      [[ " $branches " == *" $current "* ]] || git -C "$repo" branch -q -D "$current"
-    done
-    git -C "$repo" worktree prune
-  done < "$SNAPSHOT/repos.tsv"
-
-  local path
-  for path in "${MANAGED[@]}"; do
-    if [[ -e "$SNAPSHOT/home/$path" ]]; then
-      copy_in "$SNAPSHOT/home/$path" "$HOME/$path"
-    elif [[ "$path" != ".codex" && -e "$HOME/$path" ]]; then
-      rm -rf "${HOME:?}/$path"
-    fi
-  done
-  if [[ -f "$SNAPSHOT/anchor-prefs.plist" ]]; then
-    defaults delete "$PREFS_DOMAIN" >/dev/null 2>&1 || true
-    defaults import "$PREFS_DOMAIN" "$SNAPSHOT/anchor-prefs.plist"
-  fi
-  reopen_apps
-  say "Back to the starting point saved $(cat "$SNAPSHOT/saved-at")."
+  say "Every copy is back at its start. Conversations and Anchor were not touched."
 }
 
 status() {
-  [[ -f "$SNAPSHOT/saved-at" ]] || { say "Nothing saved yet."; return; }
-  say "Saved $(cat "$SNAPSHOT/saved-at"), $(du -sh "$SNAPSHOT" | cut -f1):"
-  local name branch _
-  while IFS=$'\t' read -r name branch _; do
-    say "  $name  ($branch)"
-  done < "$SNAPSHOT/repos.tsv"
-}
-
-remove() {
-  read -r -p "Delete the saved starting point and the repos' $TAG tags? [y/N] " answer
-  [[ "$answer" == [yY] ]] || exit 0
-  local repo
+  local list repo ahead changed
+  list="$(demo_repos)"
+  [[ -n "$list" ]] || { say "No demo copies yet."; return; }
   while IFS= read -r repo; do
-    [[ -n "$repo" ]] && git -C "$repo" tag -d "$TAG" >/dev/null 2>&1 || true
-  done <<< "$(repos)"
-  rm -rf "$SNAPSHOT" "$SNAPSHOT.new"
-  say "Removed. To remove everything else, delete the '$DEMO_USER' account in System Settings › Users & Groups."
+    ahead="$(git -C "$repo" rev-list --count "$TAG..HEAD")"
+    changed="$(git -C "$repo" status --porcelain | wc -l | tr -d ' ')"
+    say "$(basename "$repo"): $(git -C "$repo" branch --show-current), $ahead new commits, $changed changed files"
+  done <<< "$list"
 }
 
 case "${1:-}" in
-  save) save "${2:-}" ;;
-  restore) restore ;;
+  setup) setup ;;
+  reset) reset ;;
   status) status ;;
-  remove) remove ;;
-  *) sed -n '2,15p' "$0"; exit 2 ;;
+  *) sed -n '2,10p' "$0"; exit 2 ;;
 esac
