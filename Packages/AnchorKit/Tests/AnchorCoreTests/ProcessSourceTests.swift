@@ -43,7 +43,9 @@ struct ProcessSourceTests {
         )
         let coordinator = ProcessSourceCoordinator(repository: repository, sources: [source])
         await coordinator.start()
-        try await Task.sleep(for: .milliseconds(50))
+        // The rejection is the last thing the coordinator does with this event,
+        // so the session below is checked only after it had the chance to change.
+        try await waitUntil { await coordinator.healthSnapshot().first?.consecutiveFailures == 1 }
 
         let session = try #require(await repository.currentProjection().session)
         #expect(session.id == currentSessionID)
@@ -81,7 +83,7 @@ struct ProcessSourceTests {
         let coordinator = ProcessSourceCoordinator(repository: repository, sources: [])
         await coordinator.start()
         await coordinator.register(source)
-        try await Task.sleep(for: .milliseconds(50))
+        try await waitUntil { await repository.currentProjection().session?.processes.count == 1 }
         #expect(await repository.currentProjection().session?.processes.count == 1)
         #expect(await coordinator.healthSnapshot().first?.descriptor.id == sourceID)
     }
@@ -115,7 +117,7 @@ struct ProcessSourceTests {
             sourceID: sourceID
         )
         await coordinator.start()
-        try await Task.sleep(for: .milliseconds(50))
+        try await waitUntil { await !store.snapshot().runs.isEmpty }
         let snapshot = await store.snapshot()
         #expect(snapshot.runs.count == 1)
         #expect(snapshot.events.count == 1)
@@ -288,7 +290,9 @@ struct ProcessSourceTests {
             sourceID: codexSourceID
         )
         await coordinator.start()
-        try await Task.sleep(for: .milliseconds(100))
+        // Wait for both sources: stopping at the first run could read the store
+        // before the workspace event had any chance to be wrongly captured.
+        try await waitUntil { await coordinator.healthSnapshot().allSatisfy { $0.eventCount == 1 } }
 
         let runs = await store.snapshot().runs
         #expect(runs.count == 1)
@@ -602,6 +606,17 @@ struct ProcessSourceTests {
         let targetSessionID = await target.currentProjection().session?.id
         let sourceSessionID = await source.currentProjection().session?.id
         #expect(targetSessionID == sourceSessionID)
+    }
+
+    /// Polls until the asynchronous work a test started has finished. The suite
+    /// runs in parallel, so any fixed sleep short enough to keep tests fast loses
+    /// the race under load. The deadline is only reached when something is broken.
+    private func waitUntil(_ condition: () async -> Bool) async throws {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(30))
+        while !(await condition()) {
+            guard ContinuousClock.now < deadline else { throw TestTimeout.expired }
+            try await Task.sleep(for: .milliseconds(5))
+        }
     }
 
     private func waitForHealthEvent(

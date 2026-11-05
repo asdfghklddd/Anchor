@@ -370,7 +370,6 @@ CI（`.github/workflows/native-ci.yml`）：包测试、两端 Release 构建、
 - `PlanStepSplitter` 在 NLTagger 找不到动词时会丢掉那一段。含「崩溃」的中文容易分词出错，iOS 模拟器的英文标注器也不可用。
 - Claude Code 和 WorkBuddy 里，轮次中途的提问只有对话摘要显示等待，任务仍算运行中；DeepSeek Harness 不同。
 - 回溯卡的 `%lld files changed` 没有处理单复数。
-- `ProcessSourceTests` 里有 3 个测试不稳定，会偶发失败：`A source registered after coordinator start…`、`A source event for an old session…`、`A confirmed session association…`（偶尔还有 `A source association cannot capture…`）。它们用 `Task.sleep(for: .milliseconds(50))` 硬等异步结果，负载一高就超时。2026-11-05 对比过干净的 HEAD，失败率相同（各 6/10），与当时的改动无关。看到这几个失败，先单独重跑再判断。
 
 ### 没有界面在用的代码
 

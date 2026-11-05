@@ -218,7 +218,6 @@ SwiftUI：
 - 拿起页只有从横屏转到竖屏才会出现，测试时要真的旋转。
 - 模拟器跑不了真实语音（`kLSRErrorDomain 300`）。
 - 桌面文件夹的构建缓存可能导致签名报错：用 `--scratch-path` 把构建产物放到桌面之外。
-- `ProcessSourceTests` 有几个测试偶发失败，见 [说明书第 13 节](PROJECT_MANUAL.md#13-现状和已知缺口)。
 
 ## 7. 改完怎么验证
 
