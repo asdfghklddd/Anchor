@@ -48,6 +48,7 @@ public actor CodexSessionBinder {
         let conversation = CodexSessionMetadata.read(from: fileURL)
         let isClaudeCode = conversation?.originator == CodexSessionMetadata.claudeCodeOriginator
         let isHarness = conversation?.originator == HarnessSessionStatus.originator
+        let isWorkBuddy = conversation?.originator == WorkBuddyLog.originator
         try await taskRunStore.host(task: task)
         try await taskRunStore.upsert(workItem: workItem)
         let repository = self.repository
@@ -63,8 +64,8 @@ public actor CodexSessionBinder {
             id: sourceID,
             name: conversation?.sourceName ?? "Codex",
             kind: .integration,
-            symbol: isHarness ? "DS" : (isClaudeCode ? "CC" : "C"),
-            tone: isHarness ? "periwinkle" : (isClaudeCode ? "coral" : "cyan"),
+            symbol: isWorkBuddy ? "WB" : (isHarness ? "DS" : (isClaudeCode ? "CC" : "C")),
+            tone: isWorkBuddy ? "seafoam" : (isHarness ? "periwinkle" : (isClaudeCode ? "coral" : "cyan")),
             capabilities: [.observe],
             permission: .granted
         )

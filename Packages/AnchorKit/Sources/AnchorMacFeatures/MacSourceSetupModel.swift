@@ -22,15 +22,20 @@ public final class MacSourceSetupModel {
     public private(set) var claudeProjectsFolderName: String?
     /// Set once the person granted DeepSeek Harness's session status folder.
     public private(set) var harnessFolderName: String?
+    /// Set once the person granted WorkBuddy's `projects` folder.
+    public private(set) var workBuddyFolderName: String?
     public private(set) var taskState: AnchorTaskState?
 
-    /// Any agent's conversations can be read: Codex, Claude Code, DeepSeek Harness.
+    /// Any agent's conversations can be read: Codex, Claude Code, DeepSeek Harness, WorkBuddy.
     public var hasConversationSource: Bool {
         codexSessionsFolderName != nil || claudeProjectsFolderName != nil || harnessFolderName != nil
+            || workBuddyFolderName != nil
     }
     public var errorMessage: String?
     /// The granted log folders, for counting the day's tokens.
-    public var agentLogRoots: [URL] { [codexSessionsRootURL, claudeRootURL, harnessRootURL].compactMap { $0 } }
+    public var agentLogRoots: [URL] {
+        [codexSessionsRootURL, claudeRootURL, harnessRootURL, workBuddyRootURL].compactMap { $0 }
+    }
 
     public var showsCodexOnboarding = false
     public var onNeedsAttention: (@MainActor () -> Void)?
@@ -168,6 +173,9 @@ public final class MacSourceSetupModel {
     private var harnessRootURL: URL?
     private var harnessRootSecurityScopedURL: URL?
     private var harnessSupervisor: DeepSeekHarnessSupervisor?
+    private var workBuddyRootURL: URL?
+    private var workBuddyRootSecurityScopedURL: URL?
+    private var workBuddySupervisor: CodexTaskSupervisor?
     private var codexDiscoveryTask: Task<Void, Never>?
     private var registeredBindings = Set<TrackedCodexSession>()
     private var observedAnchorSessionID: UUID?
@@ -188,6 +196,7 @@ public final class MacSourceSetupModel {
         if let root = codexSessionsRootURL, let path = Self.relativePath(for: url, under: root) { return (nil, path) }
         if let root = claudeRootURL, let path = Self.relativePath(for: url, under: root) { return (.claudeCode, path) }
         if let root = harnessRootURL, let path = Self.relativePath(for: url, under: root) { return (.deepseekHarness, path) }
+        if let root = workBuddyRootURL, let path = Self.relativePath(for: url, under: root) { return (.workBuddy, path) }
         return nil
     }
 
@@ -195,6 +204,7 @@ public final class MacSourceSetupModel {
         switch source {
         case .claudeCode: claudeRootURL
         case .deepseekHarness: harnessRootURL
+        case .workBuddy: workBuddyRootURL
         case .codex, nil: codexSessionsRootURL
         }
     }
@@ -270,6 +280,7 @@ public final class MacSourceSetupModel {
         await restoreCodexSessionsRoot()
         await restoreClaudeRoot()
         await restoreHarnessRoot()
+        await restoreWorkBuddyRoot()
         await restoreTrackedCodexSessions()
 
         if codexSecurityScopedURL == nil,
@@ -299,9 +310,9 @@ public final class MacSourceSetupModel {
     /// Grants one persistent, folder-scoped access flow for the local agent logs.
     /// The panel opens on the home folder, so a single click on Connect grants
     /// it; Anchor then saves read-only bookmarks for only Codex `sessions`,
-    /// Claude Code `projects` and DeepSeek Harness's status folder, and lets the
-    /// wider grant go. Picking `.codex`, `.claude`, `.dsh` or the log folders
-    /// themselves works the same way.
+    /// Claude Code `projects`, DeepSeek Harness's status folder and WorkBuddy
+    /// `projects`, and lets the wider grant go. Picking `.codex`, `.claude`,
+    /// `.dsh`, `.workbuddy` or the log folders themselves works the same way.
     public func authorizeAgentSessionFolders() async {
         guard !isWorking else { return }
         isWorking = true
@@ -329,16 +340,19 @@ public final class MacSourceSetupModel {
         let codexPath = homePath + "/.codex/sessions"
         let claudePath = homePath + "/.claude/projects"
         let harnessPath = homePath + "/" + HarnessSessionStatus.rootPath
+        let workBuddyPath = homePath + "/" + WorkBuddyLog.rootPath
         var codexFolder: URL?
         var claudeFolder: URL?
         var harnessFolder: URL?
+        var workBuddyFolder: URL?
         var grantedURLs: [URL] = []
         for url in panel.urls {
             let path = url.standardizedFileURL.path
             let codex = [homePath, homePath + "/.codex", codexPath].contains(path)
             let claude = [homePath, homePath + "/.claude", claudePath].contains(path)
             let harness = [homePath, homePath + "/.dsh", harnessPath].contains(path)
-            guard codex || claude || harness, url.startAccessingSecurityScopedResource() else { continue }
+            let workBuddy = [homePath, homePath + "/.workbuddy", workBuddyPath].contains(path)
+            guard codex || claude || harness || workBuddy, url.startAccessingSecurityScopedResource() else { continue }
             grantedURLs.append(url)
             if codex {
                 codexFolder = url.appending(path: String(codexPath.dropFirst(path.count)), directoryHint: .isDirectory)
@@ -348,6 +362,9 @@ public final class MacSourceSetupModel {
             }
             if harness {
                 harnessFolder = url.appending(path: String(harnessPath.dropFirst(path.count)), directoryHint: .isDirectory)
+            }
+            if workBuddy {
+                workBuddyFolder = url.appending(path: String(workBuddyPath.dropFirst(path.count)), directoryHint: .isDirectory)
             }
         }
         defer { for url in grantedURLs { url.stopAccessingSecurityScopedResource() } }
@@ -362,7 +379,8 @@ public final class MacSourceSetupModel {
         let codexBookmark = readableBookmark(codexFolder)
         let claudeBookmark = readableBookmark(claudeFolder)
         let harnessBookmark = readableBookmark(harnessFolder)
-        guard codexBookmark != nil || claudeBookmark != nil || harnessBookmark != nil else {
+        let workBuddyBookmark = readableBookmark(workBuddyFolder)
+        guard codexBookmark != nil || claudeBookmark != nil || harnessBookmark != nil || workBuddyBookmark != nil else {
             errorMessage = L10n.sourceSetupAgentFoldersSelectionError
             return
         }
@@ -384,6 +402,12 @@ public final class MacSourceSetupModel {
             harnessRootSecurityScopedURL = nil
             defaults.set(harnessBookmark, forKey: Self.harnessRootBookmarkKey)
             await restoreHarnessRoot()
+        }
+        if let workBuddyBookmark {
+            workBuddyRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
+            workBuddyRootSecurityScopedURL = nil
+            defaults.set(workBuddyBookmark, forKey: Self.workBuddyRootBookmarkKey)
+            await restoreWorkBuddyRoot()
         }
         if hasConversationSource { finishCodexOnboarding() }
     }
@@ -470,7 +494,8 @@ public final class MacSourceSetupModel {
     }
 
     public func refreshCodexCandidates() async {
-        guard codexSupervisor != nil || claudeSupervisor != nil || harnessSupervisor != nil else {
+        guard codexSupervisor != nil || claudeSupervisor != nil || harnessSupervisor != nil
+                || workBuddySupervisor != nil else {
             codexCandidates = []
             codexConversations = []
             return
@@ -483,6 +508,7 @@ public final class MacSourceSetupModel {
         var summaries = await codexSupervisor?.summaries() ?? []
         summaries += await claudeSupervisor?.summaries() ?? []
         summaries += await harnessSupervisor?.summaries() ?? []
+        summaries += await workBuddySupervisor?.summaries() ?? []
         return summaries.sorted { lhs, rhs in
             if lhs.candidate.modifiedAt != rhs.candidate.modifiedAt {
                 return lhs.candidate.modifiedAt > rhs.candidate.modifiedAt
@@ -551,6 +577,30 @@ public final class MacSourceSetupModel {
         restartCodexDiscovery()
     }
 
+    /// The same for WorkBuddy's `projects` folder.
+    func observeAuthorizedWorkBuddyFolder(_ url: URL) async {
+        workBuddyRootURL = url
+        workBuddyFolderName = url.lastPathComponent
+        workBuddySupervisor = CodexTaskSupervisor(rootURL: url, dialect: .workBuddy)
+        await restoreTrackedCodexSessions()
+        restartCodexDiscovery()
+    }
+
+    private func restoreWorkBuddyRoot() async {
+        guard workBuddyRootSecurityScopedURL == nil,
+              let url = resolveBookmarkedURL(for: Self.workBuddyRootBookmarkKey),
+              url.startAccessingSecurityScopedResource() else { return }
+        do {
+            _ = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
+        } catch {
+            url.stopAccessingSecurityScopedResource()
+            errorMessage = MacWorkBuddyCopy.lostAccess
+            return
+        }
+        workBuddyRootSecurityScopedURL = url
+        await observeAuthorizedWorkBuddyFolder(url)
+    }
+
     private func restoreHarnessRoot() async {
         guard harnessRootSecurityScopedURL == nil,
               let url = resolveBookmarkedURL(for: Self.harnessRootBookmarkKey),
@@ -588,14 +638,16 @@ public final class MacSourceSetupModel {
         codexSessionsRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
         claudeRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
         harnessRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
+        workBuddyRootSecurityScopedURL?.stopAccessingSecurityScopedResource()
         codexSecurityScopedURL = nil
         codexSessionsRootSecurityScopedURL = nil
         claudeRootSecurityScopedURL = nil
         harnessRootSecurityScopedURL = nil
+        workBuddyRootSecurityScopedURL = nil
     }
 
     private func restoreTrackedCodexSessions() async {
-        guard codexSessionsRootURL != nil || claudeRootURL != nil || harnessRootURL != nil,
+        guard codexSessionsRootURL != nil || claudeRootURL != nil || harnessRootURL != nil || workBuddyRootURL != nil,
               let sessions = await autoAssociationSessions?(),
               let onCodexSessionAssociated else { return }
         let selectedID = await currentAnchorSessionID?()
@@ -887,6 +939,13 @@ public final class MacSourceSetupModel {
     nonisolated private static let codexTrackedSessionsKey = "anchor.mac.source-setup.codex-tracked.v1"
     private static let claudeRootBookmarkKey = "anchor.mac.source-setup.claude-root.v1"
     private static let harnessRootBookmarkKey = "anchor.mac.source-setup.deepseek-harness-root.v1"
+    private static let workBuddyRootBookmarkKey = "anchor.mac.source-setup.workbuddy-root.v1"
+}
+
+enum MacWorkBuddyCopy {
+    static let title = AnchorStrings.value("mac.sources.workbuddy", default: "WorkBuddy")
+    static let lostAccess = AnchorStrings.value(
+        "mac.sources.workbuddy.lost-access", default: "The WorkBuddy folder can no longer be read. Allow it again.")
 }
 
 enum MacDeepSeekHarnessCopy {

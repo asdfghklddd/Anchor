@@ -145,7 +145,8 @@ public struct ConversationTranscript: Hashable, Sendable {
         }
     }
 
-    private static let outputMarkers = [#""type":"function_call_output""#, #""type":"custom_tool_call_output""#,
+    private static let outputMarkers = [#""type":"function_call_output""#, #""type":"function_call_result""#,
+                                        #""type":"custom_tool_call_output""#,
                                         #""type":"reasoning""#, #""type":"token_count""#, #""type":"tool_result""#]
         .map { Data($0.utf8) }
 
@@ -170,6 +171,21 @@ public struct ConversationTranscript: Hashable, Sendable {
     /// Tool calls (written files, shell commands) and interruptions; `nil` for any other line.
     static func toolUse(in object: [String: Any]) -> ToolUse? {
         let type = object["type"] as? String
+        // WorkBuddy: tool calls and stops are lines of their own.
+        if type == "function_call" {
+            let input = WorkBuddyLog.arguments(of: object)
+            var use = ToolUse()
+            switch object["name"] as? String {
+            case "Edit", "Write", "MultiEdit", "NotebookEdit":
+                if let path = input["file_path"] as? String { use.files.append(path) }
+            case "Bash":
+                if let command = input["command"] as? String { use.commands.append(String(command.prefix(commandLimit))) }
+            default:
+                break
+            }
+            return use.files.isEmpty && use.commands.isEmpty ? nil : use
+        }
+        if WorkBuddyLog.isInterruption(object) { return ToolUse(interrupted: true) }
         if type == "assistant", object["isSidechain"] as? Bool != true,
            let blocks = (object["message"] as? [String: Any])?["content"] as? [[String: Any]] {
             var use = ToolUse()
@@ -216,6 +232,10 @@ public struct ConversationTranscript: Hashable, Sendable {
 
     static func message(in object: [String: Any]) -> Message? {
         let type = object["type"] as? String
+        if type == "message" {
+            if let request = WorkBuddyLog.request(in: object) { return clipped(request).map { .request($0, isItem: false) } }
+            return WorkBuddyLog.reply(in: object).flatMap(clipped).map { .reply($0, isItem: false) }
+        }
         // Claude Code: prompts the person typed and the assistant's text, never sub-agents or tools.
         if type == "user" || type == "assistant" {
             guard object["isSidechain"] as? Bool != true, object["isMeta"] as? Bool != true,

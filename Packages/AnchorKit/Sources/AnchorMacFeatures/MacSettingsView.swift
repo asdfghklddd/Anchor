@@ -201,7 +201,7 @@ struct MacSettingsView: View {
     }
 }
 
-/// Codex, Claude Code and DeepSeek Harness each on one line with where it
+/// Codex, Claude Code, DeepSeek Harness and WorkBuddy each on one line with where it
 /// stands; one button connects every folder. The terminal command sits below.
 private struct MacSourcesSection: View {
     @Bindable var model: MacSourceSetupModel
@@ -219,8 +219,12 @@ private struct MacSourcesSection: View {
                 state(model.harnessFolderName == nil ? L10n.sourceSetupNotConnected : L10n.sourceSetupReady,
                       isReady: model.harnessFolderName != nil)
             }
+            LabeledContent(MacWorkBuddyCopy.title) {
+                state(model.workBuddyFolderName == nil ? L10n.sourceSetupNotConnected : L10n.sourceSetupReady,
+                      isReady: model.workBuddyFolderName != nil)
+            }
             if model.codexSessionsFolderName == nil || model.claudeProjectsFolderName == nil
-                || model.harnessFolderName == nil {
+                || model.harnessFolderName == nil || model.workBuddyFolderName == nil {
                 Button(L10n.sourceSetupAgentFoldersConnect, systemImage: "folder.badge.plus") {
                     Task { await model.authorizeAgentSessionFolders() }
                 }

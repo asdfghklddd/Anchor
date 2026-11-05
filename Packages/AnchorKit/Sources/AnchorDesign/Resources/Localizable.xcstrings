@@ -3630,7 +3630,7 @@
     "is waiting for input" : {
 
     },
-    "Just click Connect. Anchor only reads the Codex, Claude Code and DeepSeek Harness conversation folders, remembers access, and finds new conversations automatically." : {
+    "Just click Connect. Anchor only reads the Codex, Claude Code, DeepSeek Harness and WorkBuddy conversation folders, remembers access, and finds new conversations automatically." : {
 
     },
     "just now" : {
@@ -4950,6 +4950,40 @@
         }
       }
     },
+    "mac.sources.workbuddy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WorkBuddy"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WorkBuddy"
+          }
+        }
+      }
+    },
+    "mac.sources.workbuddy.lost-access" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The WorkBuddy folder can no longer be read. Allow it again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "之前授权的 WorkBuddy 文件夹已无法读取，请重新授权。"
+          }
+        }
+      }
+    },
     "mac.sources.deepseek" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6075,7 +6109,7 @@
     "No changes received yet. This summary updates as records arrive." : {
 
     },
-    "No Codex, Claude Code or DeepSeek Harness conversations were found. Open your home folder and click Connect." : {
+    "No Codex, Claude Code, DeepSeek Harness or WorkBuddy conversations were found. Open your home folder and click Connect." : {
 
     },
     "No events yet" : {
@@ -12247,13 +12281,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Just click Connect. Anchor only reads the Codex, Claude Code and DeepSeek Harness conversation folders, remembers access, and finds new conversations automatically."
+            "value" : "Just click Connect. Anchor only reads the Codex, Claude Code, DeepSeek Harness and WorkBuddy conversation folders, remembers access, and finds new conversations automatically."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "直接点「连接」即可。Anchor 只读取 Codex、Claude Code 和 DeepSeek Harness 的对话文件夹，记住权限后会自动发现新对话。"
+            "value" : "直接点「连接」即可。Anchor 只读取 Codex、Claude Code、DeepSeek Harness 和 WorkBuddy 的对话文件夹，记住权限后会自动发现新对话。"
           }
         }
       }
@@ -12295,13 +12329,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No Codex, Claude Code or DeepSeek Harness conversations were found. Open your home folder and click Connect."
+            "value" : "No Codex, Claude Code, DeepSeek Harness or WorkBuddy conversations were found. Open your home folder and click Connect."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "没有找到 Codex、Claude Code 或 DeepSeek Harness 的对话。请回到个人文件夹后点「连接」。"
+            "value" : "没有找到 Codex、Claude Code、DeepSeek Harness 或 WorkBuddy 的对话。请回到个人文件夹后点「连接」。"
           }
         }
       }

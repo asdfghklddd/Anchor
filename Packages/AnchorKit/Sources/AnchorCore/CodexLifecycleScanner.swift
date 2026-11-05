@@ -33,7 +33,7 @@ public struct CodexIncrementalScanner: Codable, Sendable {
     private var remainder = Data()
     private var discardingOversizedLine = false
     private var maximumLineBytes = 2 * 1_024 * 1_024
-    /// Turns read so far. A checkpoint keeps only a Claude Code turn that is
+    /// Turns read so far. A checkpoint keeps only a Claude Code or WorkBuddy turn that is
     /// still open; tests and questions are not kept, so a resumed scan has not
     /// seen the turn start and never claims "not tested".
     private var reader: ConversationLogReader
@@ -72,7 +72,7 @@ public struct CodexIncrementalScanner: Codable, Sendable {
         try values.encode(work, forKey: .work)
         if reader.dialect != .codex {
             try values.encode(reader.dialect, forKey: .dialect)
-            try values.encodeIfPresent(reader.claude.openTurn, forKey: .openTurn)
+            try values.encodeIfPresent(reader.openTurn, forKey: .openTurn)
         }
     }
 

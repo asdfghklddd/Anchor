@@ -1,3 +1,4 @@
+#if os(iOS)
 import Foundation
 import Testing
 import AnchorCore
@@ -94,3 +95,4 @@ struct ProfileStatsTests {
         return projection
     }
 }
+#endif
